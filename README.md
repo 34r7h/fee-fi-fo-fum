@@ -47,12 +47,13 @@ All four happened on Ethereum Sepolia in the one live run, 12:43–13:03 UTC on 
 | 3 | A Uniswap v4 swap on the Castle's pool is filled just in time from the Castle. The pool holds no LP deposit. | [`0x53f773de…e116`](https://sepolia.etherscan.io/tx/0x53f773ded5f3f8c8586d05c9129a897a0796a92ee0a1c27a1711ba708290e116) | in one tx: `JitFill`, router `Swapped` with hen's order hash, Aqua `Pushed` and `Pulled`; the PoolManager's `Swap` reads 0 by design ([why](docs/uniswap.md#reading-a-hook-filled-swap)) |
 | 4 | The miniapp tells all three from a clean browser. | the miniapp link in [Live](#live) | the hoard, fum's promises, the harp's quote and the hen's fill, as they happen |
 
-The run, step by step, as [docs/SPEC.md](docs/SPEC.md) sets it:
+The run, step by step, as [docs/SPEC.md](docs/SPEC.md) sets it and as it went on Sepolia:
 
-1. The treasury funds the Castle with 5 USDC and 5/mid WETH ([`0x7e0b4a9f…e8a6`](https://sepolia.etherscan.io/tx/0x7e0b4a9f0fa7b8920b2f5188de6cfcebbed61c5dfdbf80110da4c1604cb5e8a6), [`0xd125c491…f543`](https://sepolia.etherscan.io/tx/0xd125c4919b722aeebda218b7ae2f794e5956afa6e325784829ea215b26d8f543) and [`0x34840128…eb3b`](https://sepolia.etherscan.io/tx/0x3484012803e8bc9a1b687326cfc27a727755d03d3c4ec80fd9a52b68d1a3eb3b)). fum sets leverage to 2×.
+1. The treasury funds the Castle with 5 USDC and 5/mid WETH ([`0x7e0b4a9f…e8a6`](https://sepolia.etherscan.io/tx/0x7e0b4a9f0fa7b8920b2f5188de6cfcebbed61c5dfdbf80110da4c1604cb5e8a6), [`0xd125c491…f543`](https://sepolia.etherscan.io/tx/0xd125c4919b722aeebda218b7ae2f794e5956afa6e325784829ea215b26d8f543) and [`0x34840128…eb3b`](https://sepolia.etherscan.io/tx/0x3484012803e8bc9a1b687326cfc27a727755d03d3c4ec80fd9a52b68d1a3eb3b)). fum sets leverage to 2× for WETH ([`0xcf95760d…54f9`](https://sepolia.etherscan.io/tx/0xcf95760df456850bb1db11811c887c06fae925611984c7fc4e188f838b1a54f9)) and USDC ([`0x53336098…e5f7`](https://sepolia.etherscan.io/tx/0x533360983d9b137e5f2513f88c5a8c9d63003c60d0201b5c43fd92162fa0e5f7)), and sets the caps for slots 0 to 2.
 2. fi ships `harp` and `hen`, each promising 80% of the hoard. fi ships `greedy`, asking for another 0.5×, and it reverts `OverAllocated`. The 0.4× of headroom left over means the demo's fills never make fum dock.
 3. A solver asks `quote.feefifofum.eth` for `quote:USDC:WETH:500000`. The resolver reverts `OffchainLookup`, the gateway answers with fi's signed quote, and the solver fills 0.5 USDC through AquaSwapVMRouter.
 4. The same solver swaps 0.5 USDC on the v4 pool through PoolSwapTest. CastleJITHook fills the swap from `hen` in that transaction.
+5. fee sees hen's curve drift from the mid (3,399.91 against 2,686.57) and asks for a re-centre. fi docks hen ([`0x32a20d16…638a`](https://sepolia.etherscan.io/tx/0x32a20d169556fd013eaa69cb2dc2db2108275c9513d36e24b0886ceab23d638a)) and ships it again at the mid ([`0x03dbf62b…67f3`](https://sepolia.etherscan.io/tx/0x03dbf62b16214b7bf36dce5b742ad80c7deccc466a9925328f9b26a817e267f3)). The hook follows the new hen, because it reads slot 1 on every swap.
 
 ## How to verify
 

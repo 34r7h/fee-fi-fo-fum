@@ -35,7 +35,7 @@ Every transaction shown must be a real Sepolia tx. Before recording, paste each 
 
 ## Real transactions so far
 
-These are on Sepolia now and can be used as they are. Add fi's claim, the fenced revert, fee's refused renew and the auction txs from WORKLOG.md after the failover run.
+These are on Sepolia now and can be used as they are. Add the fenced revert and fee's refused renew from WORKLOG.md after the failover run at 07:40Z.
 
 | What | Tx |
 |---|---|
@@ -44,8 +44,14 @@ These are on Sepolia now and can be used as they are. Add fi's claim, the fenced
 | fee ships 0.003 WETH and 8 USDC, centred on the ENS price | [0x7306bda6…add7](https://sepolia.etherscan.io/tx/0x7306bda652ba6ded88f5e49bc98cb9ac8408f999bda39e22ee963f0f5dfbadd7) |
 | Live fill | [0xb349a23c…fa1d](https://sepolia.etherscan.io/tx/0xb349a23c10f31273752064f5495673b39dff47cf5a3165a72e87352ddb07fa1d) |
 | Wind-down fill after the lease lapsed, with no claim | [0x0065e64a…0d6c](https://sepolia.etherscan.io/tx/0x0065e64a899acf825552777189387b0058b8fb58efc1e027cf0de18adfeb0d6c) |
+| Beat 5: nobody holds the castle, anyone calls `dissolve()` and the CCA opens | [0x273f808c…a5b5](https://sepolia.etherscan.io/tx/0x273f808c1741688f63a8a5c28f3d0859b229a9e1d4c65242f2a1f9a51044a5b5) |
+| A Jack with an ENS name (agy) bids through JackHook | [0x9b888635…f1d7](https://sepolia.etherscan.io/tx/0x9b88863540d107223c1f472a90cea2fde3210171326d2dc6e80dc537569cf1d7) |
+| Settle writes the clearing price, 2,150.21 USDC/WETH, into ENS | [0x9a813eb5…81cf](https://sepolia.etherscan.io/tx/0x9a813eb505f08ad54cc20583ba00bec9f75ee0319d6d789b5cae6d58a6c981cf) |
+| fi claims the castle in the next block | [0xa8f75f3a…be14](https://sepolia.etherscan.io/tx/0xa8f75f3a56fe29edb571139c7081d114fd20f77d5ae13773eb393ea09e68be14) |
+| fi's first renewal with fo's attestation | [0xe93fdefe…731b](https://sepolia.etherscan.io/tx/0xe93fdefec304e6ae4b07cfbee1875e15485cc1343f5deff67a4a6362e6c0731b) |
+| fi ships a book centred on the new ENS price | [0xd3b0c970…f779](https://sepolia.etherscan.io/tx/0xd3b0c970e9b31398fc972ccf863b2933503b91304bba8f8e7809a3d36feef779) |
 
-The pitch deck that goes with this script: https://claude.ai/artifact/8emvtymYBXfwNjxXsy4QDa (11 slides, private until shared).
+The pitch deck that goes with this script: https://claude.ai/artifact/8emvtymYBXfwNjxXsy4QDa (12 slides, private until shared).
 
 ## Voiceover, as one read
 

@@ -1,0 +1,509 @@
+{
+  "type": "snapshot",
+  "v": 2,
+  "seq": 61,
+  "t": 1790427803777,
+  "block": 11786389,
+  "config": {
+    "chainId": 11155111,
+    "explorer": "https://sepolia.etherscan.io",
+    "name": "castle.feefifofum.eth",
+    "quoteName": "quote.feefifofum.eth",
+    "gateway": "https://handoff.lol/t/castle/ccip/{sender}/{data}.json",
+    "castle": "0x0fa4a0Fd0bE6536d7462FF922F28500123c37A98",
+    "aqua": "0x1111113CCf1426A8E30e2bfF5E005d929bF6a90a",
+    "router": "0xeDB6933949dB941D495b23604818F9AbF55e70f9",
+    "priceExtruction": "0xda14a4e0cC06eaFcd6Da1905C033b3c1224aE757",
+    "resolver": "0x2D18c04Aec64f93255a417d56Cfdc5577712A76a",
+    "hook": "0x890125413c9FeDB770D872BbA9415f5E1B7C0888",
+    "poolManager": "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543",
+    "poolSwapTest": "0x9B6b46e2c869aa39918Db7f52f5557FE577B6eEe",
+    "poolId": "0xb1d82d460c7ddb0f881b310b4c69fcb435fcddb05317ab70cad0643eacad112a",
+    "usdc": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+    "weth": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
+    "decimals": {
+      "USDC": 6,
+      "WETH": 18
+    },
+    "slots": {
+      "0": "harp",
+      "1": "hen",
+      "2": "greedy"
+    },
+    "leverage": {
+      "WETH": 20000,
+      "USDC": 20000
+    }
+  },
+  "agents": [
+    {
+      "id": "fee",
+      "role": "prices",
+      "alive": true,
+      "lastBeat": 1790427260823,
+      "addr": "0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538",
+      "ens": "fee.feefifofum.eth",
+      "note": null
+    },
+    {
+      "id": "fi",
+      "role": "compiles and signs",
+      "alive": true,
+      "lastBeat": 1790427354040,
+      "addr": "0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2",
+      "ens": "fi.feefifofum.eth",
+      "note": null
+    },
+    {
+      "id": "fo",
+      "role": "routes",
+      "alive": true,
+      "lastBeat": 1790427260875,
+      "addr": "0x8689a407A2488A5b2f2De05d2C6978a798f93D56",
+      "ens": "fo.feefifofum.eth",
+      "note": null
+    },
+    {
+      "id": "fum",
+      "role": "guards",
+      "alive": true,
+      "lastBeat": 1790427260697,
+      "addr": "0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2",
+      "ens": "fum.feefifofum.eth",
+      "note": null
+    }
+  ],
+  "hoard": {
+    "USDC": "6000000",
+    "WETH": "1508096957536409"
+  },
+  "price": {
+    "mid": "2686.57",
+    "spreadBps": 10,
+    "hookFeeBps": null,
+    "by": "fee",
+    "block": 11786388,
+    "tx": null,
+    "t": 1790427786667,
+    "source": "chainlink ETH/USD round 18446744073709587966",
+    "henMid": 2686.56,
+    "driftBps": 0,
+    "recentre": null
+  },
+  "strategies": [
+    {
+      "slot": 0,
+      "hash": "0xc65b96a3f41cad0428e156112a2b2c6204098bc9a2b550c94ddcb7188a3bb025",
+      "label": "harp",
+      "kind": "PriceExtruction",
+      "shippedBy": "fi",
+      "alloc": {
+        "USDC": "4500000",
+        "WETH": "1301268416113408"
+      },
+      "cap": {
+        "WETH": "1858991757230548",
+        "USDC": "5000000"
+      },
+      "docked": false,
+      "fills": 1,
+      "block": 11786354,
+      "tx": "0x15711ddff90cc60b42144f8e62facb6cc4cd69bb6e3263956fe674bcc396095a"
+    },
+    {
+      "slot": 1,
+      "hash": "0xc7d3157a27bdf14540ad70e283cc5d7ef3ba2a71d0e5750d74da25b1a382f530",
+      "label": "hen",
+      "kind": "XYCSwap + flatFee",
+      "shippedBy": "fi",
+      "alloc": {},
+      "cap": {
+        "WETH": "1858991757230548",
+        "USDC": "5000000"
+      },
+      "docked": true,
+      "fills": 1,
+      "block": 11786355,
+      "tx": "0x5d7bee55fe98474b4fcdcef0940e5d03d0767da89d3f20290b19bb00fa1cd6ce",
+      "dockedBy": "fi"
+    },
+    {
+      "slot": 1,
+      "hash": "0xbdaa38fd40ba43fa99325de2054b2b826ec4ee4190a661b9dde94b7fcc4e2325",
+      "label": "hen",
+      "kind": "XYCSwap + flatFee",
+      "shippedBy": "fi",
+      "alloc": {
+        "WETH": "1206477566029127",
+        "USDC": "3241286"
+      },
+      "cap": {
+        "WETH": "1858991757230548",
+        "USDC": "5000000"
+      },
+      "docked": false,
+      "fills": 0,
+      "block": 11786374,
+      "tx": "0x03dbf62b16214b7bf36dce5b742ad80c7deccc466a9925328f9b26a817e267f3"
+    }
+  ],
+  "quotes": [
+    {
+      "v": 2,
+      "seq": 29,
+      "type": "quote.served",
+      "t": 1790427413382,
+      "block": null,
+      "tx": null,
+      "src": "gateway",
+      "id": "q-1790427443-1",
+      "via": "ccip",
+      "name": "quote.feefifofum.eth",
+      "key": "quote:USDC:WETH:500000",
+      "sender": "0x2D18c04Aec64f93255a417d56Cfdc5577712A76a",
+      "requester": null,
+      "requesterName": null,
+      "strategy": "0xc65b96a3f41cad0428e156112a2b2c6204098bc9a2b550c94ddcb7188a3bb025",
+      "tokenIn": "USDC",
+      "tokenOut": "WETH",
+      "amountIn": "500000",
+      "amountOut": "185924989671030",
+      "priceQ96": "29460990594238591966531460527769576110",
+      "price": "2689.25",
+      "validUntil": 1790427443,
+      "signer": "fi",
+      "signerAddr": "0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2",
+      "digest": "0x602c46400b5a06208e0734479119a66454fba968338ce28c5f5205f4a8a5faf0"
+    },
+    {
+      "v": 2,
+      "seq": 34,
+      "type": "quote.served",
+      "t": 1790427491292,
+      "block": null,
+      "tx": null,
+      "src": "gateway",
+      "id": "q-1790427521-2",
+      "via": "ccip",
+      "name": "quote.feefifofum.eth",
+      "key": "quote:USDC:WETH:500000",
+      "sender": "0x2D18c04Aec64f93255a417d56Cfdc5577712A76a",
+      "requester": null,
+      "requesterName": null,
+      "strategy": "0xc65b96a3f41cad0428e156112a2b2c6204098bc9a2b550c94ddcb7188a3bb025",
+      "tokenIn": "USDC",
+      "tokenOut": "WETH",
+      "amountIn": "500000",
+      "amountOut": "185924989671030",
+      "priceQ96": "29460990594238591966531460527769576110",
+      "price": "2689.25",
+      "validUntil": 1790427521,
+      "signer": "fi",
+      "signerAddr": "0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2",
+      "digest": "0x6c6733ac62b6d2d629fccc2e53269aac6504902a9cd6e48fed35b47763eb7ee0"
+    },
+    {
+      "v": 2,
+      "seq": 35,
+      "type": "quote.served",
+      "t": 1790427502972,
+      "block": null,
+      "tx": null,
+      "src": "gateway",
+      "id": "q-1790427532-3",
+      "via": "ccip",
+      "name": "quote.feefifofum.eth",
+      "key": "quote:USDC:WETH:500000",
+      "sender": "0x2D18c04Aec64f93255a417d56Cfdc5577712A76a",
+      "requester": null,
+      "requesterName": null,
+      "strategy": "0xc65b96a3f41cad0428e156112a2b2c6204098bc9a2b550c94ddcb7188a3bb025",
+      "tokenIn": "USDC",
+      "tokenOut": "WETH",
+      "amountIn": "500000",
+      "amountOut": "185924989671030",
+      "priceQ96": "29460990594238591966531460527769576110",
+      "price": "2689.25",
+      "validUntil": 1790427532,
+      "signer": "fi",
+      "signerAddr": "0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2",
+      "digest": "0xf137aebbee75bf1fd02ec089f6a5cdf6951f729c5a865f67ee71d0a18695fb4c"
+    },
+    {
+      "v": 2,
+      "seq": 37,
+      "type": "quote.served",
+      "t": 1790427511766,
+      "block": null,
+      "tx": null,
+      "src": "gateway",
+      "id": "q-1790427541-4",
+      "via": "ccip",
+      "name": "quote.feefifofum.eth",
+      "key": "quote:USDC:WETH:500000",
+      "sender": "0x2D18c04Aec64f93255a417d56Cfdc5577712A76a",
+      "requester": null,
+      "requesterName": null,
+      "strategy": "0xc65b96a3f41cad0428e156112a2b2c6204098bc9a2b550c94ddcb7188a3bb025",
+      "tokenIn": "USDC",
+      "tokenOut": "WETH",
+      "amountIn": "500000",
+      "amountOut": "185924989671030",
+      "priceQ96": "29460990594238591966531460527769576110",
+      "price": "2689.25",
+      "validUntil": 1790427541,
+      "signer": "fi",
+      "signerAddr": "0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2",
+      "digest": "0x262d17693d8552385303c17f1eea42a21db511d4d9ffd66ea059de40a630b8ba"
+    },
+    {
+      "v": 2,
+      "seq": 38,
+      "type": "quote.served",
+      "t": 1790427526505,
+      "block": null,
+      "tx": null,
+      "src": "gateway",
+      "id": "q-1790427556-5",
+      "via": "ccip",
+      "name": "quote.feefifofum.eth",
+      "key": "quote:USDC:WETH:500000",
+      "sender": "0x2D18c04Aec64f93255a417d56Cfdc5577712A76a",
+      "requester": null,
+      "requesterName": null,
+      "strategy": "0xc65b96a3f41cad0428e156112a2b2c6204098bc9a2b550c94ddcb7188a3bb025",
+      "tokenIn": "USDC",
+      "tokenOut": "WETH",
+      "amountIn": "500000",
+      "amountOut": "185924989671030",
+      "priceQ96": "29460990594238591966531460527769576110",
+      "price": "2689.25",
+      "validUntil": 1790427556,
+      "signer": "fi",
+      "signerAddr": "0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2",
+      "digest": "0xf334fbfbd9a8a6807696911913aae8170d738450a9bca4b6894fbf7e1b5d5bc7"
+    },
+    {
+      "v": 2,
+      "seq": 40,
+      "type": "quote.served",
+      "t": 1790427544599,
+      "block": null,
+      "tx": null,
+      "src": "gateway",
+      "id": "q-1790427574-6",
+      "via": "ccip",
+      "name": "quote.feefifofum.eth",
+      "key": "quote:USDC:WETH:500000",
+      "sender": "0x2D18c04Aec64f93255a417d56Cfdc5577712A76a",
+      "requester": null,
+      "requesterName": null,
+      "strategy": "0xc65b96a3f41cad0428e156112a2b2c6204098bc9a2b550c94ddcb7188a3bb025",
+      "tokenIn": "USDC",
+      "tokenOut": "WETH",
+      "amountIn": "500000",
+      "amountOut": "185924989671030",
+      "priceQ96": "29460990594238591966531460527769576110",
+      "price": "2689.25",
+      "validUntil": 1790427574,
+      "signer": "fi",
+      "signerAddr": "0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2",
+      "digest": "0x87a8347963a1d50a9bffbb78c676ec296ad00a84f5648987cf8d4d74756be80b"
+    },
+    {
+      "v": 2,
+      "seq": 48,
+      "type": "quote.served",
+      "t": 1790427601286,
+      "block": null,
+      "tx": null,
+      "src": "gateway",
+      "id": "q-1790427631-7",
+      "via": "ccip",
+      "name": "quote.feefifofum.eth",
+      "key": "quote:USDC:WETH:500000",
+      "sender": "0x2D18c04Aec64f93255a417d56Cfdc5577712A76a",
+      "requester": null,
+      "requesterName": null,
+      "strategy": "0xc65b96a3f41cad0428e156112a2b2c6204098bc9a2b550c94ddcb7188a3bb025",
+      "tokenIn": "USDC",
+      "tokenOut": "WETH",
+      "amountIn": "500000",
+      "amountOut": "185924989671030",
+      "priceQ96": "29460990594238591966531460527769576110",
+      "price": "2689.25",
+      "validUntil": 1790427631,
+      "signer": "fi",
+      "signerAddr": "0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2",
+      "digest": "0x24dc358575c4515b60bcb68cd687b3e0ca8fbb3953f548ace2580a452b7565e1"
+    },
+    {
+      "v": 2,
+      "seq": 59,
+      "type": "quote.served",
+      "t": 1790427778011,
+      "block": null,
+      "tx": null,
+      "src": "service",
+      "id": "q-1790427807-8",
+      "via": "mcp",
+      "name": null,
+      "key": "quote:USDC:WETH:500000",
+      "sender": null,
+      "requester": null,
+      "requesterName": null,
+      "strategy": "0xc65b96a3f41cad0428e156112a2b2c6204098bc9a2b550c94ddcb7188a3bb025",
+      "tokenIn": "USDC",
+      "tokenOut": "WETH",
+      "amountIn": "500000",
+      "amountOut": "185924989671030",
+      "priceQ96": "29460990594238591966531460527769576110",
+      "price": "2689.25",
+      "validUntil": 1790427807,
+      "signer": "fi",
+      "signerAddr": "0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2",
+      "digest": null
+    }
+  ],
+  "fills": [
+    {
+      "v": 2,
+      "seq": 41,
+      "type": "fill",
+      "t": 1790427552000,
+      "block": 11786370,
+      "tx": "0x763d6de1cb3312803742fa80b1eed47060a1785e038a63b1f98f5cd375ea9fe8",
+      "src": "chain",
+      "route": "aqua",
+      "strategy": "0xc65b96a3f41cad0428e156112a2b2c6204098bc9a2b550c94ddcb7188a3bb025",
+      "slot": 0,
+      "quoteId": "q-1790427574-6",
+      "intentId": null,
+      "taker": "0xddf2980efa32e9e15c9d0ece52f4bf32956eae4c",
+      "takerName": "agy.feefifofum.eth",
+      "tokenIn": "USDC",
+      "tokenOut": "WETH",
+      "amountIn": "500000",
+      "amountOut": "185924989671030",
+      "fee": null,
+      "pool": null,
+      "label": "harp",
+      "alloc": {
+        "USDC": "4500000",
+        "WETH": "1301268416113408"
+      },
+      "status": "success",
+      "revert": null
+    },
+    {
+      "v": 2,
+      "seq": 45,
+      "type": "fill",
+      "t": 1790427588000,
+      "block": 11786372,
+      "tx": "0x53f773ded5f3f8c8586d05c9129a897a0796a92ee0a1c27a1711ba708290e116",
+      "src": "chain",
+      "route": "v4",
+      "strategy": "0xc7d3157a27bdf14540ad70e283cc5d7ef3ba2a71d0e5750d74da25b1a382f530",
+      "slot": 1,
+      "quoteId": null,
+      "intentId": null,
+      "taker": "0xddf2980efa32e9e15c9d0ece52f4bf32956eae4c",
+      "takerName": "agy.feefifofum.eth",
+      "tokenIn": "USDC",
+      "tokenOut": "WETH",
+      "amountIn": "500000",
+      "amountOut": "164969810023109",
+      "fee": {
+        "USDC": "1500"
+      },
+      "pool": "0xb1d82d460c7ddb0f881b310b4c69fcb435fcddb05317ab70cad0643eacad112a",
+      "label": "hen",
+      "alloc": {
+        "USDC": "4495449",
+        "WETH": "1322223595761329"
+      },
+      "status": "success",
+      "revert": null
+    }
+  ],
+  "refusals": [
+    {
+      "v": 2,
+      "seq": 27,
+      "type": "allocation.refused",
+      "t": 1790427384000,
+      "block": 11786356,
+      "tx": "0x647aba61fbb7442ccd986346c6acb8de2dae42eab5e5160ed950277dc7a9d0ba",
+      "src": "service",
+      "slot": 2,
+      "label": "greedy",
+      "hash": null,
+      "asked": {
+        "WETH": "929495878615274",
+        "USDC": "2500000"
+      },
+      "committed": {
+        "USDC": "7995449",
+        "WETH": "2974386811568876"
+      },
+      "balance": {
+        "USDC": "5000000",
+        "WETH": "1858991757230548"
+      },
+      "limit": {
+        "USDC": "10000000",
+        "WETH": "3717983514461096"
+      },
+      "error": "OverAllocated",
+      "errorArgs": {
+        "token": "WETH",
+        "committedAfter": "3903882690184150",
+        "limit": "3717983514461096"
+      },
+      "by": "fi",
+      "status": "reverted"
+    }
+  ],
+  "intents": [
+    {
+      "v": 2,
+      "seq": 60,
+      "type": "intent.routed",
+      "t": 1790427778403,
+      "block": null,
+      "tx": null,
+      "src": "agent",
+      "id": "i-1790427777-1",
+      "source": "UniswapX",
+      "swapper": "0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c",
+      "swapperName": "agy.feefifofum.eth",
+      "tokenIn": "USDC",
+      "tokenOut": "WETH",
+      "amountIn": "500000",
+      "route": "aqua",
+      "strategy": "0xc65b96a3f41cad0428e156112a2b2c6204098bc9a2b550c94ddcb7188a3bb025",
+      "amountOut": "185924989671030",
+      "alternative": "160819112822369",
+      "by": "fo"
+    }
+  ],
+  "leverage": {
+    "WETH": 20000,
+    "USDC": 20000
+  },
+  "caps": {
+    "0": {
+      "WETH": "1858991757230548",
+      "USDC": "5000000"
+    },
+    "1": {
+      "WETH": "1858991757230548",
+      "USDC": "5000000"
+    },
+    "2": {
+      "WETH": "1858991757230548",
+      "USDC": "5000000"
+    }
+  }
+}

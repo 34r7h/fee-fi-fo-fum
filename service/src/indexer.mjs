@@ -113,6 +113,23 @@ async function mcpOf(name) {
   try { return await client.getEnsText({ name, key: 'agent-endpoint[mcp]', universalResolverAddress: ur }); } catch { return null; }
 }
 
+// The first block whose timestamp is at or after `ts`, by bisection over [lo, hi] (block times only go up).
+async function blockAtOrAfter(ts, lo, hi) {
+  lo = BigInt(lo); hi = BigInt(hi);
+  while (lo < hi) {
+    const mid = (lo + hi) / 2n;
+    if ((await blockTime(mid)) >= ts) hi = mid; else lo = mid + 1n;
+  }
+  return lo;
+}
+// A lapse is stamped at the lease's real expiry (t = expiry, the first block at or after it), not when the service
+// notices it, so a wind-down fill made in the gap sorts after the lease ran out.
+async function emitExpired({ epoch, expiry }, lo, hi) {
+  lastExpiredEpoch = epoch;
+  const block = await blockAtOrAfter(expiry, lo, hi);
+  emit('lease.expired', { epoch, expiry }, { block: Number(block), tx: null, t: expiry * 1000, src: 'derived' });
+}
+
 function leaseAt(block) {
   let cur = null;
   for (const l of leaseTimeline) { if (l.block <= block) cur = l; else break; }
@@ -160,6 +177,10 @@ async function scan(from, to) {
         const epoch = str(arg(d, 'epoch')); const expiry = Number(arg(d, 'expiry'));
         const prevEpoch = str(arg(d, 'previousEpoch', 'prevEpoch'));
         const prev = leaseTimeline.at(-1);
+        // The previous lease lapsed before this claim (a failover): its lease.expired comes first, at its expiry.
+        if (prev && prev.epoch !== epoch && prev.expiry > 0 && t / 1000 > prev.expiry && lastExpiredEpoch !== prev.epoch) {
+          await emitExpired(prev, prev.block, block);
+        }
         leaseTimeline.push({ block, epoch, expiry });
         const holder = arg(d, 'holder');
         emit('lease.claimed', { epoch, prevEpoch, holder, holderAgent: agentByAddr(holder), expiry, gapSeconds: prev ? t / 1000 - prev.expiry : null }, meta);
@@ -338,9 +359,8 @@ async function tick() {
     const holderAgent = agentByAddr(lease.holder);
     state.lease = { holder: lease.holder, holderAgent, epoch: lease.epoch, expiry: lease.expiry, state: leaseState(lease, h.timestamp) };
     if (!leaseTimeline.length) leaseTimeline.push({ block: Number(deployBlock('castle') ?? 0n), epoch: lease.epoch, expiry: lease.expiry });
-    if (h.timestamp > lease.expiry && lastExpiredEpoch !== lease.epoch) {
-      lastExpiredEpoch = lease.epoch;
-      emit('lease.expired', { epoch: lease.epoch, expiry: lease.expiry }, { block: Number(h.number), tx: null, t: h.timestamp * 1000, src: 'derived' });
+    if (lease.expiry > 0 && h.timestamp > lease.expiry && lastExpiredEpoch !== lease.epoch) {
+      await emitExpired({ epoch: lease.epoch, expiry: lease.expiry }, leaseTimeline.at(-1)?.block ?? 0, h.number);
     }
   }
   state.inventory = await inventory();

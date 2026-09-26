@@ -62,7 +62,7 @@ A bag may leave out a token, which means zero. The page never adds USDC to WETH 
 ```json
 { "type": "snapshot", "v": 2, "t": 1790440000000, "block": 9412000,
   "config": { "chainId": 11155111, "explorer": "https://sepolia.etherscan.io",
-    "name": "castle.feefifofum.eth", "quoteName": "quote.feefifofum.eth",
+    "quoteName": "quote.feefifofum.eth",
     "gateway": "https://handoff.lol/t/castle/ccip/{sender}/{data}.json",
     "castle": "0x…", "aqua": "0x…", "router": "0x…", "resolver": "0x…",
     "hook": "0x…", "poolManager": "0x…", "poolId": "0x…",

@@ -1030,7 +1030,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     var m = S.mode, src = R('src');
     src.setAttribute('data-m', m);
     R('srcTxt').textContent = m === 'live' ? 'Live from the castle' : m === 'mock' ? 'Mock stream · synthetic' : 'Connecting';
-    R('ens').textContent = S.config.name || 'castle.feefifofum.eth';
+    R('ens').textContent = S.config.quoteName || 'quote.feefifofum.eth';
   }
 
   var dirty = true;
@@ -1126,7 +1126,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       if (a) { a.u += du; a.w += dw; ev.alloc = B(a.u, a.w); }
       at(s, { type: 'hoard', tx: ev.tx, hoard: B(hoard.u, hoard.w), reason: 'fill' });
     }
-    at(0, { type: 'snapshot', tx: null, config: { chainId: 11155111, name: 'castle.feefifofum.eth', quoteName: 'quote.feefifofum.eth', explorer: '', decimals: { USDC: 6, WETH: 18 } },
+    at(0, { type: 'snapshot', tx: null, config: { chainId: 11155111, quoteName: 'quote.feefifofum.eth', explorer: '', decimals: { USDC: 6, WETH: 18 } },
       agents: S.order.map(function (id) { return { id: id, role: ROLE[id], alive: true }; }), hoard: B(965, 0.4), price: null, leverage: {}, caps: {}, strategies: [], quotes: [], fills: [], refusals: [], intents: [] });
     at(2, { type: 'price', mid: '2412.50', spreadBps: 12, source: 'Chainlink ETH/USD', by: 'fee' });
     beat(4, 'fum lets each coin be promised twice');

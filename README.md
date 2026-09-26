@@ -23,7 +23,7 @@ The build scope is [docs/SPEC.md](docs/SPEC.md). Where this file and the spec di
 Everything runs on Ethereum Sepolia.
 
 - **Watch the castle.** The miniapp at https://handoff.lol/app/impecc/fee-fi-fo-fum tells the hoard, fum's promises, the harp's quotes and the hen's fills as they happen, from the castle service's stream at https://handoff.lol/t/castle/stream. It retells the whole live run from a clean browser (version 1.1.0, validator 100/100).
-- **Ask the harp.** `quote.feefifofum.eth` answers any ENS client that follows CCIP-Read, for example viem `getEnsText` through UniversalResolverV2 ([docs/ens.md](docs/ens.md#try-it) has the commands). Today the key `castle` returns the vault's address through the gateway, checked against fi's signature. Once the live run has shipped `harp`, the key `quote:USDC:WETH:500000` returns a signed price for 0.5 USDC, good for 30 s. The name was registered in [0xebd3cb53…b258](https://sepolia.etherscan.io/tx/0xebd3cb532669b8c6a6ea2a2dbe0a1f6c30586a861105980f7fa726123e01b258).
+- **Ask the harp.** `quote.feefifofum.eth` answers any ENS client that follows CCIP-Read, for example viem `getEnsText` through UniversalResolverV2 ([docs/ens.md](docs/ens.md#try-it) has the commands). The key `quote:USDC:WETH:500000` returns a price for 0.5 USDC that fi signed, good for 30 s, and the key `castle` returns the vault's address. Both come through the gateway and are checked against fi's signature. The name was registered in [0xebd3cb53…b258](https://sepolia.etherscan.io/tx/0xebd3cb532669b8c6a6ea2a2dbe0a1f6c30586a861105980f7fa726123e01b258).
 - **The contracts.** All four are Sourcify exact_match, recorded in [contracts/deployments/sepolia.json](contracts/deployments/sepolia.json).
 
 | Contract | Address |
@@ -33,8 +33,6 @@ Everything runs on Ethereum Sepolia.
 | OffchainQuoteResolver (`quote.feefifofum.eth`) | [`0x2D18c04Aec64f93255a417d56Cfdc5577712A76a`](https://sepolia.etherscan.io/address/0x2D18c04Aec64f93255a417d56Cfdc5577712A76a) |
 | CastleJITHook (the hen) | [`0x890125413c9FeDB770D872BbA9415f5E1B7C0888`](https://sepolia.etherscan.io/address/0x890125413c9FeDB770D872BbA9415f5E1B7C0888) |
 | v4 pool {USDC, WETH, fee 0, tickSpacing 60} | pool id `0xb1d82d460c7ddb0f881b310b4c69fcb435fcddb05317ab70cad0643eacad112a` |
-
-The live run's transactions are added to the beats below when it lands.
 
 ## The four beats
 

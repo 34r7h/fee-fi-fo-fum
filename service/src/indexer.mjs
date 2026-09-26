@@ -163,7 +163,7 @@ async function scan(from, to) {
       case 'Docked': {
         const by = crewId(arg(d, 'by')) ?? 'owner';
         forgetHarp();
-        emit('strategy.docked', { hash: arg(d, 'strategyHash'), slot: slotOf.get(arg(d, 'strategyHash')) ?? null, by, reason: by === 'fum' ? 'risk: the hoard can no longer cover its biggest promise' : by === 'fi' ? 're-centre' : null }, m);
+        emit('strategy.docked', { hash: arg(d, 'strategyHash'), slot: slotOf.get(arg(d, 'strategyHash')) ?? null, by, reason: by === 'fum' ? 'risk: fills pushed committed past balance x leverage' : by === 'fi' ? 're-centre' : null }, m);
         break;
       }
       case 'CapSet': {
@@ -177,7 +177,9 @@ async function scan(from, to) {
       case 'LeverageSet': {
         const sym = symbolOf(arg(d, 'token'));
         leverage[sym] = Number(arg(d, 'bps'));
-        emit('leverage.set', { token: sym, bps: Number(arg(d, 'bps')), by: 'fum' }, m);
+        // fum sets it; the constructor's 1x comes from the deploy tx.
+        const from = (await client.getTransaction({ hash: l.transactionHash }).catch(() => null))?.from;
+        emit('leverage.set', { token: sym, bps: Number(arg(d, 'bps')), by: crewId(from) ?? 'deploy' }, m);
         break;
       }
       default: break;

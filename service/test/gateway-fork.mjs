@@ -21,7 +21,10 @@ const A = {
   vault: at(D.contracts.castleVault), resolver: at(D.contracts.offchainQuoteResolver), priceEx: at(D.contracts.priceExtruction),
   router: at(D.contracts.aquaSwapVMRouter), ur: D.external.universalResolverV2,
 };
-const pub = createPublicClient({ chain: { ...sepolia, rpcUrls: { default: { http: [RPC] } } }, transport: http(RPC) });
+const chain = { ...sepolia, rpcUrls: { default: { http: [RPC] } } };
+const pub = createPublicClient({ chain, transport: http(RPC) });
+// viem follows OffchainLookup by itself (ccipRead); this one surfaces the revert, to send the request by hand.
+const raw = createPublicClient({ chain, transport: http(RPC), ccipRead: false });
 const RESOLVER = parseAbi(['function resolve(bytes name, bytes data) view returns (bytes)', 'error OffchainLookup(address sender, string[] urls, bytes callData, bytes4 callbackFunction, bytes extraData)']);
 const SWAPVM = parseAbi(['struct Order { address maker; uint256 traits; bytes data; }', 'function quote(Order order, address tokenIn, address tokenOut, uint256 amount, bytes takerTraitsAndData) view returns (uint256 amountIn, uint256 amountOut, bytes32 orderHash)']);
 
@@ -39,7 +42,7 @@ const FI = health.body?.fi;
 // The resolver's own OffchainLookup for text(quote.feefifofum.eth, key): the exact request a client sends.
 async function lookup(key) {
   const data = encodeFunctionData({ abi: RESOLVER, functionName: 'resolve', args: [C.dnsEncodeName(NAME), C.encodeTextCall(NAME, key)] });
-  try { await pub.call({ to: A.resolver, data }); } catch (e) {
+  try { await raw.call({ to: A.resolver, data }); } catch (e) {
     const raw = e?.walk?.((x) => typeof x?.data === 'string')?.data;
     const d = decodeErrorResult({ abi: RESOLVER, data: raw });
     if (d.errorName === 'OffchainLookup') return { sender: d.args[0], urls: d.args[1], callData: d.args[2] };

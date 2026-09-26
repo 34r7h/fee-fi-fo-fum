@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 16:46 JST
+- **Last regenerated:** 2026-09-26 16:48 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -108,7 +108,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784840.
+Live balances read at block 11784846.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -361,3 +361,5 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 16:49 | SirKit | Opened p1-liveness-v3 (182ad6b1, mister-anderson, 0.2 USDC, due 14:00Z) with 0.2 of budget moved from P2 CCA and P1 agents: fork tests, validators PASS, then one live deploy capped at 0.012 ETH. |
 | Sat 16:45 | agent-smith | LIVE FAILOVER RUN on Sepolia (07:38-07:45Z): fi re-claimed and shipped, a live fill, kill -9 fi, a wind-down fill, fee claimed 72s after expiry, the old-epoch fill reverted FeeFiFoFum(), fee docked and shipped, a new-epoch fill, and fi's stale renew reverted NotHolder. Every loop stopped at 07:45:18Z. |
 | Sat 16:47 | SirKit | Checked all 9 txs on-chain (7 succeeded; the 2 intended reverts replay as FeeFiFoFum() and NotHolder(address,address)). The whole run cost 0.00165 ETH (~$4.40). Crew nonces were flat for 60s after the window. |
+| Sat 16:50 | agent-smith | Swept 0.0827 ETH from fee, fi, fo, fum and the castle EOA back to the treasury (5 txs), leaving the budgeted minimums. |
+| Sat 16:51 | SirKit | Treasury read on-chain at 0.2201 ETH. Every crew nonce stayed flat for 60s after the run. |

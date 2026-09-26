@@ -86,7 +86,7 @@ New, in this repo: Castle, the ENSv2 parent `feefifofum.eth` and its subregistry
 ## Live
 
 - Castle service (MCP, REST, SSE): https://handoff.lol/t/castle/, with MCP at `/mcp`, tools at `/tools` and the stream at `/stream`
-- Miniapp: https://handoff.lol/app/impecc/fee-fi-fo-fum (v1.0.4, app hash `c2f1a196a452f650329133eabafaa33f3a05443e0509e995`, validator 100/100). It reads the castle stream. If the service is quiet, it reads Castle, Aqua and the CCA on Sepolia directly and says "Chain replay". The labelled mock plays only if neither answers. Build it with `node miniapp/build.mjs --live`.
+- Miniapp: https://handoff.lol/app/impecc/fee-fi-fo-fum (v1.0.5, app hash `bb5c4695d1688f490aebde9161535f9405cfd4498d550278`, validator 100/100). It reads the castle stream. If the service is quiet, it reads Castle, Aqua and the CCA on Sepolia directly and says "Chain replay". The labelled mock plays only if neither answers. Build it with `node miniapp/build.mjs --live`.
 
 ## Trust assumptions
 

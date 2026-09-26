@@ -203,6 +203,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
 .tl text{font-family:var(--sans);font-size:11.5px;fill:var(--ink2)}
 
 /* mock controls */
+[hidden]{display:none!important}
 .mockbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:22px;padding:12px 14px;border:1.6px solid var(--thread);border-radius:16px;font-size:13.5px;color:var(--ink2)}
 .mockbar b{color:var(--madder)}
 .mocktxt{flex-basis:100%;margin:0 0 4px}
@@ -878,12 +879,27 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     GI.eyeO.style.opacity = mood === 'o' ? 1 : 0; GI.eyeS.style.opacity = mood === 's' ? 1 : 0; GI.eyeW.style.opacity = mood === 'w' ? 1 : 0;
     GI.mO.style.opacity = mood === 'o' ? 1 : 0; GI.mS.style.opacity = mood === 's' ? 1 : 0; GI.mW.style.opacity = mood === 'w' ? 1 : 0;
     flag(root, 'data-shout', shout);
-    var buckets = { live: [], wind: [], fenced: [] };
+    // Books that read the same (same epoch, centre and state) share one line with a count, newest three lines per state.
+    var groups = { live: [], wind: [], fenced: [] }, seen = {};
     S.strategies.forEach(function (st) {
       var s = stratState(st);
       if (s === 'DOCKED' && S.lease && st.epoch === S.lease.epoch) return;
       var k = s === 'LIVE' ? 'live' : s === 'WIND-DOWN' ? 'wind' : 'fenced';
-      buckets[k].push(h('div', { class: 'bk num', 'data-s': s, title: 'strategy ' + st.hash }, [stitch(k === 'wind' ? 'wind-down' : k, ''), 'epoch ' + ep(st.epoch) + ' book, centred at ' + px(st.center) + ' USDC/WETH' + (s === 'DOCKED' ? ', docked' : '')]));
+      var key = k + '|' + s + '|' + st.epoch + '|' + px(st.center);
+      if (seen[key]) { seen[key].n++; seen[key].hs.push(st.hash); return; }
+      groups[k].push(seen[key] = { s: s, k: k, st: st, n: 1, hs: [st.hash] });
+    });
+    var buckets = {};
+    Object.keys(groups).forEach(function (k) {
+      var gs = groups[k], old = gs.length > 3 ? gs.splice(0, gs.length - 3) : [];
+      buckets[k] = gs.map(function (g) {
+        return h('div', { class: 'bk num', 'data-s': g.s, title: 'strategy ' + g.hs.join('\nstrategy ') }, [stitch(k === 'wind' ? 'wind-down' : k, ''),
+          (g.n > 1 ? g.n + ' epoch ' + ep(g.st.epoch) + ' books' : 'epoch ' + ep(g.st.epoch) + ' book') + ', centred at ' + px(g.st.center) + ' USDC/WETH' + (g.s === 'DOCKED' ? ', docked' : '')]);
+      });
+      if (old.length) {
+        var n = old.reduce(function (a, g) { return a + g.n; }, 0);
+        buckets[k].unshift(h('div', { class: 'bk num', 'data-s': old[old.length - 1].s }, [stitch(k === 'wind' ? 'wind-down' : k, ''), n + ' older book' + (n > 1 ? 's' : '')]));
+      }
     });
     var lis = R('states').children;
     for (var i = 0; i < lis.length; i++) {
@@ -1084,7 +1100,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   // the replay: every fill judged again from the lease history, then compared with what the chain did
   var drawnReplay = -1;
   function drawReplay() {
-    var key = S.fills.length + '|' + S.leases.length;
+    var key = S.fills.length + '|' + S.leases.length + '|' + root.getAttribute('data-size');
     if (drawnReplay === key) return;
     drawnReplay = key;
     fill(R('replayNote'), S.mode === 'chain'
@@ -1112,7 +1128,9 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   function drawTimeline() {
     var el = R('timeline');
     if (!S.leases.length) { el.replaceChildren(); return; }
-    var W = 1000, H = 120, L = 10, Rr = 10;
+    // Narrow frames get a narrow viewBox and short labels, so the text stays at reading size.
+    var narrow = root.getAttribute('data-size') !== 'full';
+    var W = narrow ? 360 : 1000, H = 126, L = 10, Rr = 10, ends = [-1e9, -1e9];
     var t0 = S.leases[0].t, t1 = Math.max(clock(), S.lease ? S.lease.expiry * 1000 : 0);
     S.fills.forEach(function (f) { t1 = Math.max(t1, f.t); });
     function X(t) { return L + (W - L - Rr) * (t - t0) / Math.max(1, t1 - t0); }
@@ -1128,17 +1146,20 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       var nx = runs[k + 1], gapEnd = nx ? nx.start : t1;
       if (r.end > r.start) g.push(sv('path', { d: 'M' + X(r.start).toFixed(1) + ' 60H' + X(r.end).toFixed(1), stroke: '#4C7743', 'stroke-width': 18 }));
       if (gapEnd > r.expiry) g.push(sv('path', { d: 'M' + X(r.expiry).toFixed(1) + ' 60H' + X(gapEnd).toFixed(1), stroke: '#2F4A7A', 'stroke-width': 4, 'stroke-dasharray': '7 6' }));
-      var x = X(r.start);
+      // Labels of leases close in time would overprint, so a label that would hit the one before it goes up a line.
+      var x = X(r.start), txt = up(r.who) + (narrow ? ' ' : ', epoch ') + ep(r.epoch), w = txt.length * 7, an = x < W * 0.12 ? 'start' : x > W * 0.88 ? 'end' : 'middle';
+      var lx = an === 'start' ? x : an === 'end' ? x - w : x - w / 2, row = lx > ends[0] + 12 ? 0 : lx > ends[1] + 12 ? 1 : ends[0] <= ends[1] ? 0 : 1;
+      ends[row] = lx + w;
       g.push(sv('path', { d: 'M' + x.toFixed(1) + ' 40V80', stroke: '#1F2433', 'stroke-width': 2.4 }));
-      g.push(sv('text', { x: x.toFixed(1), y: 32, 'text-anchor': x < 120 ? 'start' : x > W - 120 ? 'end' : 'middle', class: 'num' }, up(r.who) + ', epoch ' + ep(r.epoch)));
+      g.push(sv('text', { x: x.toFixed(1), y: row ? 14 : 32, 'text-anchor': an, class: 'num' }, txt));
     });
     S.fills.forEach(function (f) {
       var x = X(f.t).toFixed(1), c = f.decision === 'fenced' ? '#B0412A' : f.decision === 'wind-down' ? '#2F4A7A' : '#C8961E';
       g.push(f.decision === 'fenced' ? sv('path', { d: 'M' + (x - 6) + ' 94l12 12M' + (+x + 6) + ' 94l-12 12', stroke: c, 'stroke-width': 3, 'stroke-linecap': 'round' })
         : sv('circle', { cx: x, cy: 100, r: 6, fill: c, stroke: '#1F2433', 'stroke-width': 1.6 }));
     });
-    g.push(sv('text', { x: L, y: 12, class: 'num' }, hhmmss(t0)));
-    g.push(sv('text', { x: W - Rr, y: 12, 'text-anchor': 'end', class: 'num' }, hhmmss(t1)));
+    g.push(sv('text', { x: L, y: H - 3, class: 'num' }, hhmmss(t0)));
+    g.push(sv('text', { x: W - Rr, y: H - 3, 'text-anchor': 'end', class: 'num' }, hhmmss(t1)));
     fill(el, [sv('svg', { class: 'tl', viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': 'Lease timeline: green is a held lease, dashed blue is wind-down, marks below are fills' }, g),
       h('p', { class: 'legend' }, [h('span', { class: 'lg lg-held' }), 'lease held', h('span', { class: 'lg lg-wind' }), 'wind-down, nobody holds it', h('span', { class: 'lg lg-coin' }), 'a fill', stitch('fenced', 'lg-x'), 'a fenced fill'])]);
   }

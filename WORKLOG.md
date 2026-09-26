@@ -25,7 +25,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
-| Foundry scaffold, then deploy the SwapVM router (release/1.0.2) on Sepolia <br>`p1-router` `902378f6` | mister-anderson | mister-anderson | Sat 16:00 | in_progress | 3301492, 6463060 | router 0xeDB6…70f9 live (tx 0xb2b319a2…); verification pending the Etherscan key |
+| Foundry scaffold, then deploy the SwapVM router (release/1.0.2) on Sepolia <br>`p1-router` `902378f6` | mister-anderson | mister-anderson | Sat 16:00 | done | swap-vm release/1.0.2; 0xeDB6…70f9 | AQUA() = official Aqua; Sourcify exact_match; both live fills routed through it; verified by SirKit, co-sign pending |
 | **BLOCKER** Castle.sol: the giant's castle (desk treasury, Aqua maker and ENSv2 lease) <br>`p1-castle` `c3a2dfdf` | mister-anderson | mister-anderson | Sat 19:00 | done | 7b86321; 0x6bF5…E8Ec | security review PASS (crew-only claim, multicall allowlist, program built on-chain); root roles read true on-chain; residual risks R1/R2 go into README; co-signed, paid on ethereum-sepolia (receipt 2b91c423, eip3009-rail) |
 | **BLOCKER** FeeFiFoFumExtruction.sol: the giant smells a stale shift (the ENS-lease fence in the SwapVM program) <br>`p1-extruction` `9019b3b9` | mister-anderson | mister-anderson | Sat 19:00 | done | 7b86321; 0xfA04…f271 | bytecode identical to a local build, Sourcify exact_match; decision table and quote==swap; wind-down fill on-chain; co-signed, paid on ethereum-sepolia (receipt 5215b877, eip3009-rail) |
 | Validate Castle and FeeFiFoFumExtruction on a Sepolia fork (validation only, no code) <br>`p1-forktests` `f4d2ae68` | agy | agy | Sat 19:45 | done | validated at 2ca27aa (agy); reproduced at 90d4001 by SirKit and handoff-advisor | forge test 144/0; CastleFork 10/10 on a Sepolia fork; paid (receipt 83ba78b0) |
@@ -107,7 +107,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784395.
+Live balances read at block 11784398.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -298,3 +298,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 15:52 | korg | Drafted FEEDBACK.md (f7aa1d5). The Uniswap feedback form is still to be submitted by the operator. |
 | Sat 15:55 | agent-smith | R1: the castle EOA revoked its own root UNREGISTER on the registry ([0x14b20820…](https://sepolia.etherscan.io/tx/0x14b20820366ad908fc06bb3a3d16a6c86977b42db464d3a32df503147586b844)); readback: UNREGISTER false, REGISTRAR true. |
 | Sat 15:57 | SirKit | Decision: also revoke UNREGISTER_ADMIN, SET_RESOLVER and SET_SUBREGISTRY (+admin) from the castle EOA, keeping only REGISTRAR and RENEW_ADMIN, so it cannot repoint castle.* mid-lease or re-grant itself unregister. |
+| Sat 16:00 | SirKit | Verified p1-router on-chain (code, AQUA(), Sourcify exact_match, live fills through it) and requested the co-sign. |

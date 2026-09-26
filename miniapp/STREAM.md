@@ -11,10 +11,10 @@ The lease edition's schema (v1: leases, heartbeats, fences, the CCA) is retired 
 | Section | Question it answers | Events |
 |---|---|---|
 | The hoard | How much gold is in the Castle? | `hoard`, `price` |
-| The promises | How much of that gold is promised, to which strategy, and did fum refuse a promise the hoard can't keep? | `strategy.shipped`, `strategy.docked`, `cap.set`, `allocation.refused`, `fill` |
-| The bargains | Which SwapVM strategies does the one balance back? | `strategy.shipped`, `strategy.docked`, `fill` |
-| The harp | Which quotes did solvers find by asking `quote.feefifofum.eth` (CCIP-Read), and were they filled? | `quote.served`, `fill` |
-| The hen | Which Uniswap v4 swaps did the hook fill just in time from the Castle? | `fill` with `route: "v4"`, `intent.routed` |
+| The promises | How much of that gold is promised, to which strategy, how far fum lets it stretch, and did the Castle refuse a promise past fum's line? | `leverage.set`, `strategy.shipped`, `strategy.docked`, `cap.set`, `allocation.refused`, `fill` |
+| The strategies | Which SwapVM strategies (`harp`, `hen`) does the one balance back? | `strategy.shipped`, `strategy.docked`, `fill` |
+| The harp | Which quotes did solvers find by asking `quote.feefifofum.eth` (CCIP-Read), and were they filled or did they expire? | `quote.served`, `fill` |
+| The hen | Which Uniswap v4 swaps did CastleJITHook fill just in time from the `hen` strategy? | `fill` with `route: "v4"`, `intent.routed` |
 | The tapestry | Every event above, told as a scene | all |
 
 ## Transport
@@ -69,10 +69,12 @@ A bag may leave out a token, which means zero. The page never adds USDC to WETH 
     "usdc": "0x…", "weth": "0x…", "decimals": { "USDC": 6, "WETH": 18 } },
   "agents": [ { "id": "fee", "role": "prices", "addr": "0x…", "ens": "fee.feefifofum.eth", "alive": true, "lastBeat": 1790439990000 } ],
   "hoard": { "USDC": "10150000000", "WETH": "4200000000000000000" },
-  "price": { "mid": "2412.50", "spreadBps": 12, "hookFeeBps": 30, "block": 9411990, "tx": "0x…" },
-  "strategies": [ { "hash": "0x…", "label": "Tight curve", "kind": "curve", "shippedBy": "fi",
-    "alloc": { "USDC": "6000000000", "WETH": "2000000000000000000" },
-    "cap": { "USDC": "7000000000", "WETH": "2500000000000000000" },
+  "price": { "mid": "2412.50", "spreadBps": 12, "source": "Chainlink ETH/USD", "block": 9411990, "tx": null },
+  "leverage": { "USDC": 20000, "WETH": 20000 },
+  "caps": { "0": { "USDC": "10000000", "WETH": "4000000000000000" }, "1": { "USDC": "10000000", "WETH": "4000000000000000" } },
+  "strategies": [ { "slot": 0, "hash": "0x…", "label": "harp", "kind": "PriceExtruction", "shippedBy": "fi",
+    "alloc": { "USDC": "10000000", "WETH": "4000000000000000" },
+    "cap": { "USDC": "10000000", "WETH": "4000000000000000" },
     "docked": false, "fills": 3, "block": 9411000, "tx": "0x…" } ],
   "quotes":   [ /* the last 20 quote.served bodies, oldest first */ ],
   "fills":    [ /* the last 50 fill bodies, oldest first */ ],
@@ -80,66 +82,68 @@ A bag may leave out a token, which means zero. The page never adds USDC to WETH 
   "intents":  [ /* the last 20 intent.routed bodies, oldest first */ ] }
 ```
 
-`hoard` is `balanceOf(castle)` for each token at `block`. `strategies` lists every strategy shipped from the Castle that is still live, plus docked ones that have fills in `fills`.
+`hoard` is `balanceOf(castle)` for each token at `block`. `leverage` is `leverageOf(token)` in bps, and `caps` is `capOf(slot)` for each slot, keyed by slot number. `strategies` lists every strategy shipped from the Castle that is still live, plus docked ones that have fills in `fills`. `alloc` is the strategy's Aqua balance per token (what `committed` sums).
 
 ### The hoard and the price
 
 | type | body | source |
 |---|---|---|
 | `hoard` | `{ hoard: bag, reason: "fill" \| "deposit" \| "withdraw" }`. The Castle's balances **after** the tx in `tx`. Send one after every fill, deposit and withdrawal. | `balanceOf(castle)` at that block |
-| `price` | `{ mid, spreadBps, hookFeeBps, by: "fee" }`. fee's current price. `tx` is set when fee wrote it on chain (the hook fee), and `null` when it's off-chain only. | agent or chain |
+| `price` | `{ mid, spreadBps, source, by: "fee" }`. fee's current price, from `source` (Chainlink ETH/USD). It's off-chain, so `tx` is `null`. | agent |
 
-### The promises: allocations and fum's caps
+### The promises: allocations, fum's leverage and caps
 
-In Aqua the Castle's tokens never leave it when it ships a strategy. `ship` records a virtual balance per token for that strategy, and `dock` revokes it at no cost. The Castle refuses any ship that would take the total promised past its balance, and fum sets a cap per strategy.
+In Aqua the Castle's tokens never leave it when it ships a strategy. `ship` records a virtual balance per token for that strategy, and `dock` revokes it at no cost. The promises may add up to **more** than the balance (that is the shared liquidity): CastleVault refuses a ship when `committed(token) + amount > balanceOf(token) × leverageBps / 1e4`. fum sets the leverage per token and a cap per slot (docs/SPEC.md).
 
 | type | body | source |
 |---|---|---|
-| `strategy.shipped` | `{ hash, label, kind, alloc: bag, cap: bag \| null, shippedBy: "fi" }`. `label` is a short human name ("Tight curve"). `kind` names the SwapVM program's shape (SPEC.md lists them). | Castle ship event plus Aqua's |
-| `strategy.docked` | `{ hash, by: "fi" \| "fum", reason }`. The promise goes back to the hoard. | Castle dock event plus Aqua's |
-| `cap.set` | `{ hash, cap: bag, by: "fum" }` | Castle cap event |
-| `allocation.refused` | `{ label, hash, asked: bag, allocated: bag, balance: bag, cap: bag \| null, error, by: "fi", status: "reverted" }`. `allocated` is the total already promised **before** this ship, across every strategy. `error` is the Castle's revert, as SPEC.md names it (for example `OverAllocated(address token, uint256 asked, uint256 free)`). `tx` is the reverted tx, or `null` if it was refused in simulation, never sent. | service (reverted tx) |
+| `leverage.set` | `{ token: "USDC" \| "WETH", bps, by: "fum" }`. `20000` means promises may total 2× the balance. | `LeverageSet` |
+| `cap.set` | `{ slot, label, cap: bag, by: "fum" }`. `label` is the slot's strategy name when known (`harp`, `hen`, `greedy`). | `CapSet` |
+| `strategy.shipped` | `{ slot, hash, label, kind, alloc: bag, shippedBy: "fi" }`. `label` is `harp`, `hen` or `greedy`. `kind` names the program: `PriceExtruction` for `harp`, `XYCSwap + flatFee` for `hen`. | `Shipped` |
+| `strategy.docked` | `{ hash, by: "fi" \| "fum" \| "owner", reason }`. The promise goes back to the hoard. | `Docked` |
+| `allocation.refused` | `{ slot, label, hash, asked: bag, committed: bag, balance: bag, limit: bag, error, errorArgs, by: "fi", status: "reverted" }`. `committed` is the total promised **before** this ship, and `limit` is balance × leverage. `error` is `"OverAllocated"` or `"OverCap"`. For `OverAllocated`, `errorArgs` is `{ token: "USDC" \| "WETH", committedAfter, limit }` as raw amounts; for `OverCap` it's `{ slot, token, amount, cap }`. `tx` is the reverted tx, or `null` if it was refused in simulation and never sent. | service (reverted tx) |
 
 ### The harp: quotes found through CCIP-Read
 
-A solver resolves `quote.feefifofum.eth`. The resolver reverts `OffchainLookup` to the gateway, the gateway answers with an order signed by fi, and the resolver's callback checks fi's signature and the expiry.
+A solver asks `quote.feefifofum.eth` for the text record `quote:<tokenIn>:<tokenOut>:<amountIn>`. OffchainQuoteResolver reverts `OffchainLookup` to the gateway, the gateway answers with a quote signed by fi, and `resolveWithProof` checks fi's signature and the expiry. PriceExtruction checks fi's EIP-712 quote signature again when the solver fills.
 
 | type | body | source |
 |---|---|---|
-| `quote.served` | `{ id, name, sender, requester, requesterName, strategy, tokenIn, tokenOut, amountIn, amountOut, price, expiry, signer: "fi", signerAddr, digest }`. `sender` is the `OffchainLookup` sender (the resolver). `requester` is the solver when the request names one, or `null`. `tokenIn` is what the solver pays. `expiry` is unix seconds. `id` is what a later `fill` quotes as `quoteId`. | `gateway` (no tx) |
+| `quote.served` | `{ id, name, key, sender, requester, requesterName, strategy, tokenIn, tokenOut, amountIn, amountOut, priceQ96, validUntil, signer: "fi", signerAddr, digest }`. `key` is the text-record key asked (`quote:USDC:WETH:1000000`). `sender` is the `OffchainLookup` sender (the resolver). `requester` is the solver when the gateway can tell, or `null`. `tokenIn` is what the solver pays. `validUntil` is the quote's unix seconds (now + 30 s). `id` is the quote JSON's `id`, which a later `fill` repeats as `quoteId`. | `gateway` (no tx) |
 
 ### Fills: Aqua and the v4 hook
 
 ```json
 { "type": "fill", "route": "aqua", "strategy": "0x…", "quoteId": "q-17", "intentId": null,
   "taker": "0x…", "takerName": "agy.feefifofum.eth",
-  "tokenIn": "USDC", "tokenOut": "WETH", "amountIn": "1206250000", "amountOut": "500000000000000000",
-  "fee": null, "pool": null, "alloc": { "USDC": "7206250000", "WETH": "1500000000000000000" },
+  "tokenIn": "USDC", "tokenOut": "WETH", "amountIn": "1000000", "amountOut": "414000000000000",
+  "fee": null, "pool": null, "alloc": { "USDC": "11000000", "WETH": "3586000000000000" },
   "status": "success", "revert": null }
 ```
 
 - `route` is `aqua` (a SwapVM strategy through the router) or `v4` (the Uniswap v4 hook's `beforeSwap`, filled just in time from the Castle).
 - `tokenIn` and `amountIn` are what the **taker paid the Castle**, and `tokenOut` and `amountOut` are what the Castle paid out. A successful fill moves the hoard by exactly `+amountIn tokenIn` and `−amountOut tokenOut`, and the `hoard` event that follows shows it.
-- `strategy` is the strategy the fill drew on. For `v4` it's the strategy whose quote the hook priced at, or `null` if SPEC.md gives the hook no strategy.
+- `strategy` is the strategy the fill drew on: `harp` for a quote a solver filled, `hen` for a v4 swap.
 - `alloc` is that strategy's allocation **after** the fill, when the service knows it. The page never guesses it.
-- `fee` is the v4 hook fee as a bag (usually in `tokenIn`), and `pool` is the v4 pool id. Both are `null` for `aqua`.
+- `fee` is `hen`'s SwapVM `flatFee` as a bag, already inside `amountIn`, when the service can tell it; `pool` is the v4 pool id. Both are `null` for `aqua`.
 - `quoteId` links a fill to the `quote.served` it filled. `intentId` links it to the `intent.routed` fo sent it through.
-- `status` is `success` or `reverted`. A reverted tx emits no logs, so the service records the reverted fills it relays and sends them with the error in `revert`. The tx hash is still real and verifiable on Etherscan.
+- `status` is `success` or `reverted`. A reverted tx emits no logs, so the service records the reverted fills it relays and sends them with the error in `revert`, such as `QuoteExpired(1790440030)` (the page shows the unix time as a clock time). The tx hash is still real and verifiable on Etherscan.
 
 ### fo's orders and the crew
 
 | type | body | source |
 |---|---|---|
-| `intent.routed` | `{ id, source: "UniswapX" \| "mcp" \| "ccip", swapper, swapperName, tokenIn, tokenOut, amountIn, route: "aqua" \| "v4", strategy, by: "fo" }`. `tokenIn` is what the swapper pays. | agent |
+| `intent.routed` | `{ id, source: "UniswapX" \| "mcp", swapper, swapperName, tokenIn, tokenOut, amountIn, route: "aqua" \| "v4", strategy, by: "fo" }`. fo's answer to `castle_route` for a UniswapX-format order: `aqua` means the harp, `v4` the hen. `tokenIn` is what the swapper pays. | agent |
 | `agent` | `{ id, role, alive, lastBeat, note }`. Send it when an agent's `agent_heartbeat` goes stale or comes back, not once per beat. | agent |
 
 ## The demo, in stream order
 
-The mock plays this loop, with time squeezed. The live run should tell the same story:
+The mock plays docs/SPEC.md's demo on a loop. The live run should tell the same story:
 
 1. `snapshot` with the hoard, then fee's `price`.
-2. fi ships two strategies from the one balance (`strategy.shipped` ×2). The promises gauge fills.
-3. fum sets caps (`cap.set`). fi tries a third ship that would promise more than the hoard holds, and it reverts (`allocation.refused`).
-4. A solver resolves `quote.feefifofum.eth` (`quote.served`) and fills it (`fill`, `route: "aqua"`, `quoteId` set, then `hoard`).
-5. fo routes a UniswapX-style order to the hook (`intent.routed`), and the v4 swap is filled just in time (`fill`, `route: "v4"`, then `hoard`).
-6. fum docks a strategy (`strategy.docked`) and the promise goes back to the hoard.
+2. fum sets leverage to 2× (`leverage.set` ×2) and the slot caps (`cap.set` ×3).
+3. fi ships `harp` and `hen` from the one balance, each promising the full hoard (`strategy.shipped` ×2): 2× promised.
+4. fi ships `greedy`, and it reverts `OverAllocated` (`allocation.refused`).
+5. agy resolves `quote.feefifofum.eth` (`quote.served`) and fills it (`fill`, `route: "aqua"`, `quoteId` set, then `hoard`).
+6. fo routes a UniswapX-format order to the hen (`intent.routed`), and agy's v4 swap is filled just in time (`fill`, `route: "v4"`, then `hoard`).
+7. On a fork, the same quote 31 s later reverts (`fill`, `status: "reverted"`, `revert: "QuoteExpired(…)"`).

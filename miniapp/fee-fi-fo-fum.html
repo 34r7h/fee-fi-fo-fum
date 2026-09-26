@@ -98,7 +98,7 @@ h2.reg .lt{height:26px}
 .row .k .cn{display:inline-block;width:13px;height:13px;border-radius:50%;background:var(--gold);box-shadow:inset 0 0 0 2px var(--ink);margin-right:8px;vertical-align:-1px}
 .row .sub{display:block;font-size:12.5px;font-weight:500;color:var(--ink3)}
 
-/* the promises: fum's gauge, one bar per token, one thread per bargain */
+/* the promises: fum's gauge, one per token, one thread per strategy, fum's line at the end */
 .prom{display:grid;grid-template-columns:minmax(0,112px) minmax(0,1fr);gap:4px 18px;align-items:start}
 .giant{width:112px;height:auto;display:block}
 .giant .eye-o,.giant .eye-s,.giant .eye-w,.giant .m-o,.giant .m-s,.giant .m-w{transition:opacity .3s var(--ease)}
@@ -108,13 +108,19 @@ h2.reg .lt{height:26px}
 .gh b{font-size:15px;font-weight:800}
 .gh .pv{font-weight:800;font-size:17px;text-align:right}
 .gh .pv small{font-size:13px;font-weight:600;color:var(--ink2)}
-.gw{display:flex;align-items:center}
-.gbar{display:flex;flex:0 0 100%;height:26px;border:1.8px solid var(--ink);border-radius:13px;overflow:hidden;background:var(--linen);transition:flex-basis .8s var(--ease)}
-.seg{flex:0 0 0;height:100%;transition:flex-basis .9s var(--ease);box-shadow:inset -1.8px 0 0 var(--ink)}
+.gw{position:relative;height:30px;margin:0 0 20px}
+.trk{position:absolute;left:0;top:0;height:30px;border:1.8px solid var(--ink);border-radius:15px;background:var(--linen);overflow:hidden;transition:width .8s var(--ease)}
+.twice{position:absolute;right:0;top:0;bottom:0;background:repeating-linear-gradient(90deg,transparent 0 7px,var(--thread) 7px 9.5px);transition:width .8s var(--ease)}
+.seg{position:absolute;top:5px;height:20px;border-radius:10px;box-shadow:inset 0 0 0 1.8px var(--ink);transition:left .9s var(--ease),width .9s var(--ease)}
 .seg[data-z]{box-shadow:none}
-.ask{flex:0 0 0;height:100%;background:repeating-linear-gradient(135deg,var(--madder) 0 2.5px,transparent 2.5px 7px);transition:flex-basis .6s var(--ease)}
-.gover{flex:0 0 0;height:26px;margin-left:-1.8px;border:1.8px dashed var(--madder);border-left:0;border-radius:0 13px 13px 0;background:repeating-linear-gradient(135deg,var(--madder) 0 2.5px,transparent 2.5px 7px);transition:flex-basis .6s var(--ease)}
-.gover[data-z]{border:0}
+.ovr{position:absolute;top:1px;height:28px;border:1.8px dashed var(--madder);border-radius:14px;background:repeating-linear-gradient(135deg,var(--madder) 0 2.5px,transparent 2.5px 7px);transition:left .6s var(--ease),width .6s var(--ease)}
+.ovr[data-z]{border:0}
+.mk{position:absolute;top:-5px;height:40px;width:0;border-left:2.4px solid var(--ink);transition:left .8s var(--ease)}
+.mk span{position:absolute;top:40px;left:0;font-size:11.5px;font-weight:700;white-space:nowrap;color:var(--ink2);transform:translateX(-50%)}
+.mk.lim{border-left-color:var(--madder)}
+.mk.lim span{left:auto;right:0;transform:none;color:var(--madder)}
+.gwatch{font-size:12.5px;color:var(--ink3);font-style:italic;margin-top:2px}
+.gwatch:empty{display:none}
 .gf{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 10px;font-size:13px;color:var(--ink2);margin-top:4px}
 .gf[data-over]{color:var(--madder);font-weight:700}
 .refused{display:grid;grid-template-columns:30px minmax(0,1fr);gap:2px 10px;align-items:start;margin:4px 0 0;padding:10px 12px;border:1.6px solid var(--madder);border-radius:16px;background:var(--linen);font-size:13.5px}
@@ -126,7 +132,7 @@ h2.reg .lt{height:26px}
 .fff[data-shout] .shout{opacity:1;transform:none;height:34px}
 @keyframes shake{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 
-/* the bargains: each strategy the one hoard backs */
+/* the strategies the one hoard backs */
 .bargains{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:0}
 .bg{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:2px 12px;align-items:baseline;padding:9px 0;border-top:1.4px solid var(--thread);animation:unroll .6s var(--ease) both}
 .bg .sw{width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--ink);align-self:center}
@@ -150,7 +156,7 @@ h2.reg .lt{height:26px}
 .qname span{font-weight:600;font-size:12px;color:var(--ink3);letter-spacing:.05em;text-transform:uppercase}
 .steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;position:relative;font-size:12px;color:var(--ink2);line-height:1.25}
 .steps::before{content:"";position:absolute;left:11px;right:calc(25% - 11px);top:10px;height:3px;background:var(--gold);border-radius:2px}
-.steps li{position:relative;padding-top:28px}
+.steps li{position:relative;padding-top:28px;overflow-wrap:anywhere}
 .steps li::before{content:"";position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;background:var(--ground);border:1.8px solid var(--ink);box-sizing:border-box}
 .steps li::after{content:"";position:absolute;left:7px;top:4px;width:6px;height:10px;border:solid var(--sage);border-width:0 2.6px 2.6px 0;transform:rotate(45deg);opacity:0;animation:tick .35s var(--ease) forwards}
 .steps li:nth-child(2)::after{animation-delay:.35s}
@@ -280,13 +286,13 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       </section>
       <section class="panel" aria-labelledby="h-prom">
         <h2 class="reg" id="h-prom" data-lt="THE PROMISES"></h2>
-        <p class="note lead">One balance backs every bargain at once, and no gold leaves the castle to do it. fum guards the hoard: a promise the hoard can’t keep is refused.</p>
+        <p class="note lead">One balance backs every strategy at once, and no gold leaves the castle to do it. The promises may add up to more than the hoard, because each coin can be taken only once. fum sets how far they may stretch, and the castle refuses a promise past fum’s line.</p>
         <div class="prom">
           <div><div data-r="giant"></div><p class="gcap">fum, the guard</p></div>
           <div><div data-r="gauges"></div><div class="refused" data-r="refused" aria-live="assertive" hidden></div></div>
           <div class="shout" data-r="shout" aria-hidden="true"></div>
         </div>
-        <ul class="bargains" data-r="bargains" aria-label="The bargains the hoard backs"></ul>
+        <ul class="bargains" data-r="bargains" aria-label="The strategies the hoard backs"></ul>
       </section>
     </div>
 
@@ -295,12 +301,12 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     <div class="main two">
       <section class="panel" aria-labelledby="h-harp">
         <h2 class="reg" id="h-harp" data-lt="THE HARP"></h2>
-        <p class="note lead">A Jack finds the price by asking the castle’s name. The resolver sends it to the castle’s gateway, fi signs the answer, and the resolver checks fi’s seal and the expiry. No gas is spent to ask.</p>
+        <p class="note lead">A Jack finds a firm price by asking the castle’s name. The resolver sends it to the castle’s gateway, fi signs the answer, and the resolver checks fi’s seal. Asking costs no gas, and a song more than 30 seconds old no longer fills.</p>
         <div data-r="harp"></div>
       </section>
       <section class="panel" aria-labelledby="h-hen">
         <h2 class="reg" id="h-hen" data-lt="THE HEN"></h2>
-        <p class="note lead">A swap comes to the Uniswap v4 pool, and the castle’s hook fills it from the hoard in the same transaction. No gold waits in the pool: the hen lays just in time.</p>
+        <p class="note lead">A swap comes to the Uniswap v4 pool, which holds no liquidity of its own. The castle’s hook fills it from the hen strategy in the same transaction: no gold waits in the pool, and the hen lays just in time.</p>
         <div data-r="hen"></div>
       </section>
     </div>
@@ -538,21 +544,44 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   // ---------------------------------------------------------------- state and the one reducer
   var S, sceneId = 0;
   function reset(mode) {
-    S = { mode: mode, config: {}, agents: {}, order: ['fee', 'fi', 'fo', 'fum'], hoard: null, price: null, strategies: [], quotes: [], fills: [],
-      refusals: [], intents: [], scenes: [], seq: 0, shoutUntil: 0, overUntil: 0, act: {}, startedAt: clock() };
+    S = { mode: mode, config: {}, agents: {}, order: ['fee', 'fi', 'fo', 'fum'], hoard: null, price: null, leverage: {}, caps: {}, strategies: [], quotes: [],
+      fills: [], refusals: [], intents: [], scenes: [], seq: 0, shoutUntil: 0, overUntil: 0, act: {}, startedAt: clock() };
   }
   function agent(id) { return S.agents[id] || (S.agents[id] = { id: id, alive: null }); }
   function strat(hash) { for (var i = 0; i < S.strategies.length; i++) if (same(S.strategies[i].hash, hash)) return S.strategies[i]; return null; }
   function live() { return S.strategies.filter(function (s) { return !s.docked; }); }
   function promised(sym) { return live().reduce(function (a, s) { return a + bag(s.alloc, sym); }, Z); }
-  function freeOf(r) { var o = {}; TOK.forEach(function (s) { var f = bag(r.balance, s) - bag(r.allocated, s); o[s] = (f < Z ? Z : f).toString(); }); return o; }
+  // fum's leverage: the promises on one token may total its balance × bps / 10,000. Before fum sets it, it reads 1×.
+  function lev(sym) { var l = S.leverage && S.leverage[sym]; return l ? Number(l) : 10000; }
+  function limitOf(sym) { return bag(S.hoard, sym) * BigInt(lev(sym)) / BigInt(10000); }
+  function times(bps) { return fx(Number(bps) / 10000, Number(bps) % 10000 ? 2 : 0) + '×'; }
+  // How many times over the hoard is promised, on its most promised token.
+  function overX() { var m = 0; TOK.forEach(function (s) { var b = bag(S.hoard, s); if (b > Z) m = Math.max(m, Number(promised(s) * BigInt(10000) / b) / 10000); }); return m; }
+  // A live strategy promising more of a token than the Castle holds: the case fum watches for, after fills.
+  function uncovered() {
+    var out = [];
+    TOK.forEach(function (s) { var b = bag(S.hoard, s); live().forEach(function (st) { if (bag(st.alloc, s) > b) out.push({ st: st, sym: s, bal: b }); }); });
+    return out;
+  }
+  // The harp and the hen are things; any other strategy is a name: "the harp", but "greedy".
+  function the(nm) { return /^(harp|hen)$/.test(nm) ? 'the ' + nm : nm; }
+  // A revert, with any unix time in it told as a clock time: QuoteExpired(20:26:25).
+  function revText(r) { return String(r || '').replace(/\((\d{10})\)/, function (m, u) { return '(' + hhmmss(Number(u) * 1000) + ')'; }); }
+  function strategies(n) { return n + (n === 1 ? ' strategy' : ' strategies'); }
   // When an event happened, for motion: now if it just arrived live, its own time if it's history (so a replayed
   // refusal doesn't roar again), and always its own time in the mock, where the clock is exact.
   function when(ev) { return S.mode === 'mock' || !ev.t || clock() - ev.t > 60000 ? ev.t || clock() : clock(); }
   function acted(id, ev) { if (id) S.act[id] = when(ev); }
-  var HUE = ['#C8961E', '#2F4A7A', '#4C7743', '#7A4B2A', '#B0412A', '#474C5A'];
-  function hue(st) { var i = S.strategies.indexOf(st); return HUE[(i < 0 ? 0 : i) % HUE.length]; }
-  function nameOf(hash) { var st = strat(hash); return st ? st.label || short(st.hash) : hash ? short(hash) : 'a bargain'; }
+  // Colours follow the vault's slots, so the harp is always gold and the hen always woad, even after a re-ship.
+  var HUE = ['#C8961E', '#2F4A7A', '#4C7743', '#7A4B2A', '#B0412A', '#474C5A', '#83600F', '#6A6E79'];
+  function hue(st) { var i = st && st.slot != null ? Number(st.slot) : S.strategies.indexOf(st); return HUE[(i < 0 ? 0 : i) % HUE.length]; }
+  function nameOf(hash) { var st = strat(hash); return st ? st.label || short(st.hash) : hash ? short(hash) : 'a strategy'; }
+  // The Castle's revert, with its amounts in token units: OverAllocated(USDC, 2,330.00, 1,930.00).
+  function errText(r) {
+    var a = r.errorArgs;
+    if (!a || !a.token) return r.error || '';
+    return (r.error || 'OverAllocated') + '(' + a.token + ', ' + amt(a.committedAfter, a.token) + ', ' + amt(a.limit, a.token) + ')';
+  }
 
   function apply(ev) {
     if (ev.seq != null) S.seq = Math.max(S.seq, ev.seq);
@@ -563,20 +592,26 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         (ev.agents || []).forEach(function (x) { Object.assign(agent(x.id), x); });
         if (ev.hoard) S.hoard = ev.hoard;
         if (ev.price) S.price = ev.price;
+        S.leverage = Object.assign({}, ev.leverage || {}); S.caps = Object.assign({}, ev.caps || {});
         S.strategies = (ev.strategies || []).map(function (x) { return Object.assign({ fills: 0 }, x); });
         S.quotes = (ev.quotes || []).slice(); S.fills = (ev.fills || []).slice();
         S.refusals = (ev.refusals || []).slice(); S.intents = (ev.intents || []).slice();
         break;
       case 'hoard': if (ev.hoard) S.hoard = ev.hoard; return;
       case 'price': S.price = ev; acted(ev.by || 'fee', ev); break;
+      case 'leverage.set': S.leverage[ev.token] = ev.bps; acted(ev.by || 'fum', ev); break;
+      case 'cap.set':
+        S.caps[ev.slot] = ev.cap;
+        live().forEach(function (x) { if (String(x.slot) === String(ev.slot)) x.cap = ev.cap; });
+        acted(ev.by || 'fum', ev);
+        break;
       case 'strategy.shipped':
         st = strat(ev.hash);
         if (!st) S.strategies.push(st = { hash: ev.hash, fills: 0 });
-        Object.assign(st, { label: ev.label, kind: ev.kind, alloc: ev.alloc || {}, cap: ev.cap || st.cap || null, shippedBy: ev.shippedBy, docked: false, t: ev.t, tx: ev.tx });
+        Object.assign(st, { slot: ev.slot, label: ev.label, kind: ev.kind, alloc: ev.alloc || {}, cap: ev.cap || S.caps[ev.slot] || null, shippedBy: ev.shippedBy, docked: false, t: ev.t, tx: ev.tx });
         acted(ev.shippedBy || 'fi', ev);
         break;
       case 'strategy.docked': st = strat(ev.hash); if (st) { st.docked = true; st.dockedBy = ev.by; } acted(ev.by || 'fi', ev); break;
-      case 'cap.set': st = strat(ev.hash); if (st) st.cap = ev.cap; acted(ev.by || 'fum', ev); break;
       case 'allocation.refused':
         S.refusals.push(ev); S.shoutUntil = when(ev) + 3600; S.overUntil = when(ev) + 12000; S.freshRefusal = S.shoutUntil > clock();
         acted(ev.by || 'fi', ev); acted('fum', ev);
@@ -592,8 +627,11 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       case 'agent': Object.assign(agent(ev.id), ev); break;
       default: return;
     }
-    var sc = scene(ev);
-    if (sc) { sc.id = ++sceneId; S.scenes.push(sc); if (S.scenes.length > 60) S.scenes.shift(); }
+    var sc = scene(ev), last = S.scenes[S.scenes.length - 1];
+    if (!sc) return;
+    // A run of the same small deed (fum setting three caps) is one scene, retold with the newest line.
+    if (sc.fold && last && last.fold === sc.fold && (ev.t || 0) - (last.ev.t || 0) < 15000) { sc.id = last.id; S.scenes[S.scenes.length - 1] = sc; S.redraw = sc.id; return; }
+    sc.id = ++sceneId; S.scenes.push(sc); if (S.scenes.length > 60) S.scenes.shift();
   }
 
   // ---------------------------------------------------------------- the tapestry: one scene per event worth telling
@@ -602,18 +640,20 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   function scene(ev) {
     var nm = nameOf(ev.hash || ev.strategy);
     switch (ev.type) {
-      case 'snapshot': return { ev: ev, v: 'begin', ti: 'HERE THE TALE BEGINS', gl: [S.hoard ? 'One hoard: ' + bagStr(S.hoard) : 'The hoard is still being counted', live().length ? 'backing ' + plural(live().length, 'bargain') : 'no bargain shipped yet'] };
-      case 'price': return { ev: ev, v: 'price', ti: 'HERE FEE SETS THE PRICE', gl: [fx(Number(ev.mid)) + ' USDC per WETH', 'spread ' + ev.spreadBps + ' bps' + (ev.hookFeeBps != null ? ' · hook fee ' + pct(ev.hookFeeBps) : '')] };
-      case 'strategy.shipped': return { ev: ev, v: 'ship', tone: 'gold', ti: 'HERE ' + up(ev.shippedBy || 'fi') + ' SHIPS A BARGAIN', gl: [nm + ' promises ' + bagStr(ev.alloc), 'from the one hoard: no gold moves'] };
-      case 'strategy.docked': return { ev: ev, v: 'dock', ti: 'HERE ' + up(ev.by || 'fi') + ' DOCKS A BARGAIN', gl: [nm + '’s promise comes home', ev.reason || 'the gold never left'] };
-      case 'cap.set': return { ev: ev, v: 'cap', ti: 'HERE FUM SETS A CAP', gl: [nm + ' may promise up to', bagStr(ev.cap)] };
-      case 'allocation.refused': return { ev: ev, v: 'refused', tone: 'madder', ti: 'HERE THE GIANT WILL NOT PROMISE TWICE', gl: [(ev.label || 'A bargain') + ' asked for ' + bagStr(ev.asked), 'only ' + bagStr(freeOf(ev)) + ' was free · reverted ' + (ev.error || '')] };
+      case 'snapshot': return { ev: ev, v: 'begin', ti: 'HERE THE TALE BEGINS', gl: [S.hoard ? 'One hoard: ' + bagStr(S.hoard) : 'The hoard is still being counted', live().length ? 'backing ' + strategies(live().length) : 'no strategy shipped yet'] };
+      case 'price': return { ev: ev, v: 'price', ti: 'HERE FEE SETS THE PRICE', gl: [fx(Number(ev.mid)) + ' USDC per WETH', (ev.source ? 'from ' + ev.source + ' · ' : '') + 'spread ' + ev.spreadBps + ' bps'] };
+      case 'leverage.set': return { ev: ev, v: 'cap', fold: 'lev', ti: Number(ev.bps) === 20000 ? 'HERE FUM LETS EACH COIN BE PROMISED TWICE' : 'HERE FUM SETS HOW FAR THE HOARD STRETCHES',
+        gl: ['promises may total ' + times(ev.bps) + ' the hoard', TOK.filter(function (s) { return S.leverage[s]; }).map(function (s) { return s + ' ' + times(S.leverage[s]); }).join(' · ')] };
+      case 'cap.set': return { ev: ev, v: 'cap', fold: 'cap', ti: 'HERE FUM SETS THE CAPS', gl: ['slot ' + ev.slot + (ev.label ? ', ' + ev.label : '') + ': up to', bagStr(ev.cap)] };
+      case 'strategy.shipped': return { ev: ev, v: 'ship', tone: 'gold', ti: 'HERE ' + up(ev.shippedBy || 'fi') + ' SHIPS ' + up(the(ev.label || 'a strategy')), gl: [nm + ' promises ' + bagStr(ev.alloc), 'from the one hoard: no gold moves'] };
+      case 'strategy.docked': return { ev: ev, v: 'dock', ti: 'HERE ' + up(ev.by || 'fi') + ' DOCKS ' + up(the((strat(ev.hash) || {}).label || 'a strategy')), gl: [nm + '’s promise comes home', ev.reason || 'the gold never left'] };
+      case 'allocation.refused': return { ev: ev, v: 'refused', tone: 'madder', ti: 'HERE FUM REFUSES A PROMISE TOO MANY', gl: [(ev.label || 'A strategy') + ' asked for ' + bagStr(ev.asked), 'past fum’s line · reverted ' + errText(ev)] };
       case 'quote.served': return { ev: ev, v: 'harp', tone: 'gold', ti: 'HERE THE HARP SINGS A PRICE', gl: [who(ev) + ' asked ' + (ev.name || S.config.quoteName || 'the castle’s name'), deal(ev) + ' at ' + fx(rate(ev)) + ', signed by fi'] };
-      case 'intent.routed': return { ev: ev, v: 'order', tone: 'woad', ti: 'HERE FO CARRIES AN ORDER', gl: [who(ev) + ' offers ' + money(ev.amountIn, ev.tokenIn) + ' for ' + ev.tokenOut, (ev.source ? 'a ' + ev.source + ' order, ' : '') + 'sent to ' + (ev.route === 'v4' ? 'the hen, the v4 hook' : nm)] };
+      case 'intent.routed': return { ev: ev, v: 'order', tone: 'woad', ti: 'HERE FO CARRIES AN ORDER', gl: [who(ev) + ' offers ' + money(ev.amountIn, ev.tokenIn) + ' for ' + ev.tokenOut, (ev.source ? 'a ' + ev.source + '-style order, ' : '') + 'sent to ' + (ev.route === 'v4' ? 'the hen on Uniswap v4' : 'the harp')] };
       case 'fill':
-        if (ev.status === 'reverted') return { ev: ev, v: 'no', tone: 'madder', ti: 'HERE THE GIANT SAYS NO', gl: [who(ev) + ' offered ' + money(ev.amountIn, ev.tokenIn), 'reverted ' + (ev.revert || '')] };
+        if (ev.status === 'reverted') return { ev: ev, v: 'no', tone: 'madder', ti: 'HERE THE GIANT SAYS NO', gl: [who(ev) + ' offered ' + money(ev.amountIn, ev.tokenIn), 'reverted ' + revText(ev.revert)] };
         if (ev.route === 'v4') return { ev: ev, v: 'hen', tone: 'gold', ti: 'HERE THE HEN LAYS JUST IN TIME', gl: [who(ev) + ' paid ' + money(ev.amountIn, ev.tokenIn), 'got ' + money(ev.amountOut, ev.tokenOut) + ' at ' + fx(rate(ev)) + ' on Uniswap v4'] };
-        return { ev: ev, v: 'fill', tone: 'gold', ti: ev.quoteId ? 'HERE A JACK TAKES THE HARP’S PRICE' : 'HERE A JACK TRADES WITH THE GIANT', gl: [who(ev) + ' paid ' + money(ev.amountIn, ev.tokenIn), 'got ' + money(ev.amountOut, ev.tokenOut) + ' at ' + fx(rate(ev)) + ' from ' + nm] };
+        return { ev: ev, v: 'fill', tone: 'gold', ti: ev.quoteId ? 'HERE A JACK TAKES THE HARP’S PRICE' : 'HERE A JACK TRADES WITH THE GIANT', gl: [who(ev) + ' paid ' + money(ev.amountIn, ev.tokenIn), 'got ' + money(ev.amountOut, ev.tokenOut) + ' at ' + fx(rate(ev)) + ' from ' + the(nm)] };
       case 'agent':
         return ev.alive ? { ev: ev, v: 'wake', ti: 'HERE ' + up(ev.id) + ' WAKES', gl: [ROLE[ev.id] || ''] }
           : { ev: ev, v: 'fall', tone: 'madder', ti: 'HERE ' + up(ev.id) + ' FALLS ASLEEP', gl: ['no heartbeat', ROLE[ev.id] || ''] };
@@ -622,12 +662,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   }
 
   // ---------------------------------------------------------------- views
-  var ROLE = { fee: 'prices the hoard', fi: 'writes the bargains', fo: 'carries the orders', fum: 'guards the hoard' };
-  function promisedPct() {
-    var m = 0;
-    TOK.forEach(function (s) { var b = bag(S.hoard, s); if (b > Z) m = Math.max(m, Number(promised(s) * BigInt(10000) / b) / 100); });
-    return m;
-  }
+  var ROLE = { fee: 'prices the hoard', fi: 'writes the strategies', fo: 'carries the orders', fum: 'guards the hoard' };
 
   function drawChant() {
     var el = R('chant');
@@ -643,9 +678,9 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     var now = clock(), q = S.quotes.length, v4 = S.fills.filter(function (f) { return f.route === 'v4' && f.status !== 'reverted'; }).length;
     var line = {
       fee: S.price ? fx(Number(S.price.mid)) + ' USDC per WETH' : 'no price yet',
-      fi: plural(live().length, 'bargain') + (q ? ' · ' + plural(q, 'price') + ' signed' : ''),
+      fi: strategies(live().length) + (q ? ' · ' + plural(q, 'price') + ' signed' : ''),
       fo: plural(S.intents.length, 'order') + ' carried' + (v4 ? ' · ' + v4 + ' to the hen' : ''),
-      fum: S.hoard ? fx(promisedPct(), 0) + '% promised' + (S.refusals.length ? ' · ' + S.refusals.length + ' refused' : '') : 'counting the gold'
+      fum: S.hoard ? fx(overX(), 2) + '× promised' + (S.refusals.length ? ' · ' + S.refusals.length + ' refused' : '') : 'counting the gold'
     };
     S.order.forEach(function (id) {
       var n = el.querySelector('[data-a="' + id + '"]'), a = agent(id);
@@ -655,7 +690,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     });
   }
 
-  // the giant is fum: calm while the hoard has room, one eye open when nearly all is promised, roaring at a refusal
+  // the giant is fum: calm while there's room under his line, one eye open near it, roaring at a refusal
   var GI = null;
   function buildGiant() {
     function P(d, f, extra) { return sv('path', Object.assign({ d: d, fill: f || 'none', stroke: '#1F2433', 'stroke-width': 3, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, extra || {})); }
@@ -679,52 +714,64 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     fill(R('shout'), letters('FEE-FI-FO-FUM!', true));
   }
   function drawGiant() {
-    var shout = clock() < S.shoutUntil, mood = shout ? 'w' : promisedPct() >= 90 ? 's' : 'o';
+    var near = TOK.some(function (s) { var l = limitOf(s); return l > Z && promised(s) * BigInt(100) >= l * BigInt(95); });
+    var shout = clock() < S.shoutUntil, mood = shout ? 'w' : near || uncovered().length ? 's' : 'o';
     GI.eyeO.style.opacity = mood === 'o' ? 1 : 0; GI.eyeS.style.opacity = mood === 's' ? 1 : 0; GI.eyeW.style.opacity = mood === 'w' ? 1 : 0;
     GI.mO.style.opacity = mood === 'o' ? 1 : 0; GI.mS.style.opacity = mood === 's' ? 1 : 0; GI.mW.style.opacity = mood === 'w' ? 1 : 0;
     flag(root, 'data-shout', shout);
   }
 
-  // fum's gauge: one bar per token, as long as the hoard. Each bargain's promise is a thread of its colour; the
-  // linen left over is free. A refused ship shows what it asked for, hatched, running past the hoard's edge.
+  // fum's gauge, one per token. The track runs to fum's line (the hoard × leverage); a mark shows where the hoard
+  // itself ends, so promises past it are the shared liquidity. Each strategy's promise is a thread of its colour.
+  // A refused ship shows what it asked for, hatched, running past fum's line.
   var GA = null;
   function buildGauges() {
     GA = {};
     fill(R('gauges'), TOK.map(function (sym) {
-      var g = { head: h('div', { class: 'gh num' }), bar: h('div', { class: 'gbar' }), ask: h('i', { class: 'ask' }), over: h('div', { class: 'gover', 'data-z': '' }), foot: h('div', { class: 'gf num' }), segs: {} };
-      g.bar.appendChild(g.ask);
+      var g = { head: h('div', { class: 'gh num' }), trk: h('div', { class: 'trk' }), twice: h('div', { class: 'twice' }), ovr: h('div', { class: 'ovr' }),
+        hd: h('div', { class: 'mk hd' }, h('span')), lim: h('div', { class: 'mk lim' }, h('span')), foot: h('div', { class: 'gf num' }), watch: h('div', { class: 'gwatch num' }), segs: {} };
       GA[sym] = g;
-      return h('div', { class: 'gauge' }, [g.head, h('div', { class: 'gw', role: 'img', 'aria-label': sym + ' promised against the hoard' }, [g.bar, g.over]), g.foot]);
+      g.trk.appendChild(g.twice);
+      return h('div', { class: 'gauge' }, [g.head, h('div', { class: 'gw', role: 'img', 'aria-label': sym + ' promised against the hoard and fum’s line' }, [g.trk, g.ovr, g.hd, g.lim]), g.foot, g.watch]);
     }));
   }
   var drawnGauges = '';
   function drawGauges() {
     var rf = S.refusals[S.refusals.length - 1], over = rf && clock() < S.overUntil ? rf : null;
-    var key = JSON.stringify([S.hoard, S.strategies.map(function (s) { return [s.hash, s.docked, s.alloc]; }), over && over.seq, rf && rf.seq, S.mode]);
+    var key = JSON.stringify([S.hoard, S.leverage, S.strategies.map(function (s) { return [s.hash, s.docked, s.alloc]; }), over && over.seq, rf && rf.seq, S.mode]);
     if (key === drawnGauges) return;
     drawnGauges = key;
+    var unc = uncovered();
     TOK.forEach(function (sym) {
-      var g = GA[sym], bal = bag(S.hoard, sym), pr = promised(sym), ask = over ? bag(over.asked, sym) : Z;
-      var free = bal > pr ? bal - pr : Z, past = over && pr + ask > bal ? pr + ask - bal : Z, scale = Number(bal + past) || 1;
-      g.bar.style.flexBasis = (Number(bal) / scale * 100).toFixed(3) + '%';
-      g.over.style.flexBasis = (Number(past) / scale * 100).toFixed(3) + '%';
-      flag(g.over, 'data-z', past === Z);
+      var g = GA[sym], bal = bag(S.hoard, sym), pr = promised(sym), lim = limitOf(sym), ask = over ? bag(over.asked, sym) : Z;
+      var top = [bal, lim, pr + ask].reduce(function (a, b) { return b > a ? b : a; }, Z), sc = Number(top) || 1;
+      function P(v) { return (Number(v) / sc * 100).toFixed(3) + '%'; }
+      g.trk.style.width = P(lim);
+      g.twice.style.width = lim > bal ? (Number(lim - bal) / Number(lim) * 100).toFixed(3) + '%' : '0%';
+      g.hd.style.left = P(bal); g.lim.style.left = P(lim);
+      g.hd.hidden = lim === bal;
+      g.hd.firstChild.textContent = 'the hoard';
+      g.lim.firstChild.textContent = 'fum’s line, ' + times(lev(sym));
+      var cum = Z;
       S.strategies.forEach(function (st) {
         var seg = g.segs[st.hash];
-        if (!seg) { seg = g.segs[st.hash] = h('i', { class: 'seg', style: 'background:' + hue(st) }); g.bar.insertBefore(seg, g.ask); }
+        if (!seg) { seg = g.segs[st.hash] = h('i', { class: 'seg', style: 'background:' + hue(st) + ';left:' + P(cum) }); g.trk.parentNode.insertBefore(seg, g.ovr); }
         var a = st.docked ? Z : bag(st.alloc, sym);
-        seg.style.flexBasis = (bal > Z ? Number(a) / Number(bal) * 100 : 0).toFixed(3) + '%';
+        seg.style.left = P(cum); seg.style.width = P(a);
         flag(seg, 'data-z', a === Z);
         seg.title = (st.label || short(st.hash)) + ': ' + money(a.toString(), sym);
+        cum += a;
       });
-      for (var k in g.segs) if (!strat(k)) { g.segs[k].style.flexBasis = '0%'; flag(g.segs[k], 'data-z', true); }
-      var inBar = ask < free ? ask : free;
-      g.ask.style.flexBasis = (bal > Z ? Number(inBar) / Number(bal) * 100 : 0).toFixed(3) + '%';
-      var p = bal > Z ? Number(pr * BigInt(10000) / bal) / 100 : 0;
-      fill(g.head, [h('b', { text: sym }), h('span', { class: 'pv' }, [amt(pr.toString(), sym), h('small', { text: ' of ' + money(bal.toString(), sym) + ' promised' })])]);
-      flag(g.foot, 'data-over', !!over && past > Z);
-      fill(g.foot, over && past > Z ? [h('span', { text: 'asked ' + money(ask.toString(), sym) + ': ' + money(past.toString(), sym) + ' past the hoard' }), h('span', { text: 'refused' })]
-        : [h('span', { text: fx(p, 1) + '% promised' }), h('span', { text: money(free.toString(), sym) + ' free' })]);
+      for (var k in g.segs) if (!strat(k)) { g.segs[k].style.width = '0%'; flag(g.segs[k], 'data-z', true); }
+      g.ovr.style.left = P(pr); g.ovr.style.width = P(ask);
+      flag(g.ovr, 'data-z', ask === Z);
+      var room = lim > pr ? lim - pr : Z;
+      fill(g.head, [h('b', { text: sym }), h('span', { class: 'pv' }, [amt(pr.toString(), sym), h('small', { text: ' promised · the hoard holds ' + money(bal.toString(), sym) })])]);
+      flag(g.foot, 'data-over', !!over && ask > Z);
+      fill(g.foot, over && ask > Z ? [h('span', { text: (over.label || 'It') + ' asked ' + money(ask.toString(), sym) + ' more: ' + amt((pr + ask).toString(), sym) + ' would pass fum’s line of ' + amt(lim.toString(), sym) }), h('span', { text: 'refused' })]
+        : [h('span', { text: (bal > Z ? fx(Number(pr * BigInt(10000) / bal) / 10000, 2) : '0') + '× the hoard promised' }), h('span', { text: money(room.toString(), sym) + ' of room under fum’s line' })]);
+      var u = unc.filter(function (x) { return x.sym === sym; });
+      fill(g.watch, u.length ? 'fum watches: ' + u.map(function (x) { return 'the ' + (x.st.label || short(x.st.hash)) + ' promises ' + money(x.st.alloc[sym], sym); }).join(' and ') + ', more than the ' + money(bal.toString(), sym) + ' in the hoard.' : null);
     });
     var el = R('refused');
     el.hidden = !rf;
@@ -732,8 +779,8 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       var ls = strat(rf.hash), later = !!ls && !ls.docked && (ls.t || 0) > (rf.t || 0), k = rf.seq + '|' + rf.t + later;
       if (el.getAttribute('data-k') !== k) {
         el.setAttribute('data-k', k);
-        fill(el, [cross(''), h('div', null, [h('b', { text: 'fum refused ' + (rf.label || 'a bargain') + '. ' }),
-          'It asked for ' + bagStr(rf.asked) + ', but only ' + bagStr(freeOf(rf)) + ' of the hoard was free. The castle reverted ' + (rf.error || 'the ship') + ' at ' + hhmmss(rf.t) + '. ',
+        fill(el, [cross(''), h('div', null, [h('b', { text: 'fum refused ' + the(rf.label || 'a strategy') + '. ' }),
+          'It asked for ' + bagStr(rf.asked) + ' more, but the promises already stood at ' + bagStr(rf.committed || rf.allocated) + (rf.limit ? ', and fum’s line is ' + bagStr(rf.limit) : '') + '. The castle reverted ' + errText(rf) + ' at ' + hhmmss(rf.t) + '. ',
           txEl(rf.tx, rf), later ? ' It was shipped later, once there was room.' : ''])]);
         if (S.freshRefusal) { el.removeAttribute('data-fresh'); void el.offsetWidth; el.setAttribute('data-fresh', ''); S.freshRefusal = false; }
       }
@@ -745,14 +792,14 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     if (key === drawnBargains) return;
     drawnBargains = key;
     var el = R('bargains');
-    if (!S.strategies.length) { fill(el, h('li', { class: 'empty', text: 'No bargain shipped yet. When fi ships one, its promise threads into the gauge above.' })); return; }
+    if (!S.strategies.length) { fill(el, h('li', { class: 'empty', text: 'No strategy shipped yet. When fi ships one, its promise threads into the gauge above.' })); return; }
     fill(el, S.strategies.slice(-6).map(function (st) {
       return h('li', { class: 'bg num', 'data-docked': st.docked || null }, [
         h('span', { class: 'sw', style: 'background:' + hue(st) }),
         h('div', null, [
-          h('div', { class: 'nm' }, [st.label || short(st.hash), h('span', { text: (st.kind ? st.kind + ' · ' : '') + short(st.hash) })]),
+          h('div', { class: 'nm' }, [st.label || short(st.hash), h('span', { text: (st.slot != null ? 'slot ' + st.slot + ' · ' : '') + (st.kind ? st.kind + ' · ' : '') + short(st.hash) })]),
           h('div', { class: 'al', text: st.docked ? 'docked: its promise went back to the hoard' : 'promises ' + bagStr(st.alloc) }),
-          h('div', { class: 'cp', text: st.cap ? 'fum’s cap: ' + bagStr(st.cap) : 'no cap from fum yet' })
+          h('div', { class: 'cp', text: st.cap ? 'fum’s cap for the slot: ' + bagStr(st.cap) : 'no cap from fum yet' })
         ]),
         h('div', { class: 'r' }, [plural(st.fills || 0, 'fill'), h('br'), h('span', { class: 'chip', 'data-s': st.docked ? 'docked' : 'live', text: st.docked ? 'DOCKED' : 'LIVE' })])
       ]);
@@ -780,27 +827,31 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   }
   var drawnHoard = '';
   function drawHoard() {
-    var hd = S.hoard, p = S.price, el = R('hoard'), key = JSON.stringify([hd, p && p.mid, p && p.spreadBps, p && p.hookFeeBps, live().length]);
+    var hd = S.hoard, p = S.price, el = R('hoard'), key = JSON.stringify([hd, p && p.mid, p && p.spreadBps, S.leverage, live().length]);
     if (key === drawnHoard) return;
     drawnHoard = key;
     if (!hd) { fill(el, h('p', { class: 'empty', text: 'Counting the gold…' })); return; }
     var mid = p ? Number(p.mid) : NaN, val = num(hd.WETH, 'WETH') * mid + num(hd.USDC, 'USDC');
+    var levs = TOK.filter(function (s) { return S.leverage[s]; });
     fill(el, [
       h('div', { class: 'row gold' }, [h('span', { class: 'k' }, [h('i', { class: 'cn' }), 'USDC in the castle']), h('span', { class: 'v' }, [amt(hd.USDC, 'USDC'), h('small', { text: 'USDC' })])]),
       h('div', { class: 'row gold' }, [h('span', { class: 'k' }, [h('i', { class: 'cn' }), 'WETH in the castle']), h('span', { class: 'v' }, [amt(hd.WETH, 'WETH'), h('small', { text: 'WETH' })])]),
-      h('div', { class: 'row' }, [h('span', { class: 'k' }, ['fee’s price', h('span', { class: 'sub', text: p ? 'spread ' + p.spreadBps + ' bps' + (p.hookFeeBps != null ? ' · v4 hook fee ' + pct(p.hookFeeBps) : '') : 'not set yet' })]),
+      h('div', { class: 'row' }, [h('span', { class: 'k' }, ['fee’s price', h('span', { class: 'sub', text: p ? (p.source ? p.source + ' · ' : '') + 'spread ' + p.spreadBps + ' bps' : 'not set yet' })]),
         h('span', { class: 'v' }, [fx(mid), h('small', { text: 'USDC / WETH' })])]),
       h('div', { class: 'row' }, [h('span', { class: 'k' }, ['The hoard’s worth', h('span', { class: 'sub', text: 'WETH at fee’s price, plus USDC' })]),
         h('span', { class: 'v' }, [fx(val), h('small', { text: 'USDC' })])]),
+      h('div', { class: 'row' }, [h('span', { class: 'k' }, ['fum’s leverage', h('span', { class: 'sub', text: 'how far the promises may stretch' })]),
+        h('span', { class: 'v', text: levs.length ? levs.map(function (s) { return times(S.leverage[s]) + ' ' + s; }).join(' · ') : 'not set' })]),
       h('div', { class: 'row' }, [h('span', { class: 'k' }, ['It backs', h('span', { class: 'sub', text: 'at once, from this one balance' })]),
-        h('span', { class: 'v', text: plural(live().length, 'bargain') + ' + the hen' })])
+        h('span', { class: 'v', text: strategies(live().length) })])
     ]);
   }
 
   // the harp: the newest price a Jack found by asking the castle's name, and what became of it
+  function until(q) { return Number(q.validUntil || q.expiry); }
   function quoteFate(q) {
     for (var i = S.fills.length - 1; i >= 0; i--) { var f = S.fills[i]; if (f.quoteId && f.quoteId === q.id) return { s: f.status === 'reverted' ? 'expired' : 'filled', f: f }; }
-    return { s: clock() / 1000 < Number(q.expiry) ? 'open' : 'expired' };
+    return { s: clock() / 1000 < until(q) ? 'open' : 'expired' };
   }
   var HP = null, drawnHarp = '';
   function drawHarp() {
@@ -817,10 +868,11 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       var older = S.quotes.slice(-5, -1).reverse();
       fill(el, [
         h('div', { class: 'card' }, [
-          h('div', { class: 'qname num' }, [q.name || S.config.quoteName || 'quote.feefifofum.eth', h('span', { text: 'ENS · CCIP-Read' })]),
+          h('div', { class: 'qname num' }, [q.name || S.config.quoteName || 'quote.feefifofum.eth', h('span', { text: 'ENS · CCIP-Read · good 30 s' })]),
+          q.key ? h('div', { class: 'seal num', text: 'text record ' + q.key }) : null,
           h('ol', { class: 'steps', 'aria-label': 'How the price was found' }, [
-            h('li', { text: who(q) + ' asks the name' }), h('li', { text: 'the resolver says: ask the gateway' }),
-            h('li', { text: 'fi signs a price' }), h('li', { text: 'fi’s seal and the expiry check out' })]),
+            h('li', { text: who(q) + ' asks the name' }), h('li', { text: 'the resolver reverts OffchainLookup: ask the gateway' }),
+            h('li', { text: 'the gateway answers; fi signs the quote' }), h('li', { text: 'the resolver checks fi’s seal and the expiry' })]),
           h('div', { class: 'deal num' }, [who(q) + ' pays ', h('b', { text: money(q.amountIn, q.tokenIn) }), ' and gets ', h('b', { text: money(q.amountOut, q.tokenOut) }),
             h('span', { class: 'by', text: fx(rate(q)) + ' USDC per WETH, from ' + nameOf(q.strategy) })]),
           exp,
@@ -837,10 +889,10 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   }
   function tickHarp() {
     if (!HP) return;
-    var q = HP.q, fate = quoteFate(q), rem = Number(q.expiry) - clock() / 1000, span = Math.max(1, Number(q.expiry) - HP.t0 / 1000);
+    var q = HP.q, fate = quoteFate(q), rem = until(q) - clock() / 1000, span = Math.max(1, until(q) - HP.t0 / 1000);
     HP.exp.setAttribute('data-s', fate.s);
     HP.bar.style.width = (fate.s === 'open' ? Math.max(0, Math.min(1, rem / span)) * 100 : fate.s === 'filled' ? 100 : 0).toFixed(1) + '%';
-    HP.txt.textContent = fate.s === 'open' ? 'good for ' + left(rem) : fate.s === 'filled' ? 'taken by ' + who(fate.f) + ' at ' + hhmmss(fate.f.t) : 'expired unfilled at ' + hhmmss(Number(q.expiry) * 1000);
+    HP.txt.textContent = fate.s === 'open' ? 'good for ' + left(rem) : fate.s === 'filled' ? 'taken by ' + who(fate.f) + ' at ' + hhmmss(fate.f.t) : 'expired at ' + hhmmss(until(q) * 1000) + (fate.f ? '; ' + who(fate.f) + ' tried at ' + hhmmss(fate.f.t) + ' and was refused' : ', unfilled');
   }
 
   // the hen: every Uniswap v4 swap the hook filled from the hoard
@@ -851,7 +903,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     if (key === drawnHen) return;
     drawnHen = key;
     if (!eggs.length) {
-      fill(el, h('div', { class: 'hen-top' }, [vignette('hen', 'big'), h('p', { class: 'empty', text: 'No swap has come to the pool yet. When one does, the hook fills it from the hoard at fee’s price, in the swap’s own transaction.' })]));
+      fill(el, h('div', { class: 'hen-top' }, [vignette('hen', 'big'), h('p', { class: 'empty', text: 'No swap has come to the pool yet. When one does, the hook fills it from the hen, at the curve’s price, in the swap’s own transaction.' })]));
       return;
     }
     var f = eggs[eggs.length - 1], it = null;
@@ -864,9 +916,9 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     fill(el, [
       h('div', { class: 'card' }, [
         h('div', { class: 'hen-top' }, [vignette('hen', 'sm'), h('div', { class: 'eggs', 'aria-label': plural(eggs.length, 'swap') + ' filled just in time' }, eggs.slice(-14).map(function () { return egg(); }))]),
-        h('div', { class: 'deal num' }, [who(f) + ' paid ', h('b', { text: money(f.amountIn, f.tokenIn) }), h('span', { class: 'by', text: 'and got ' + money(f.amountOut, f.tokenOut) + ' at ' + fx(rate(f)) + ' USDC per WETH' + (feeTxt ? ' · hook fee ' + feeTxt : '') })]),
+        h('div', { class: 'deal num' }, [who(f) + ' paid ', h('b', { text: money(f.amountIn, f.tokenIn) }), h('span', { class: 'by', text: 'and got ' + money(f.amountOut, f.tokenOut) + ' at ' + fx(rate(f)) + ' USDC per WETH' + (feeTxt ? ', the hen’s fee ' + feeTxt + ' included' : '') })]),
         h('div', { class: 'delta num' }, ['The hoard: ', h('span', { class: 'p', text: '+' + money(f.amountIn, f.tokenIn) }), ', ', h('span', { class: 'm', text: '−' + money(f.amountOut, f.tokenOut) })]),
-        h('div', { class: 'seal num' }, [(it ? 'fo carried it from a ' + (it.source || '') + ' order · ' : '') + 'filled ' + hhmmss(f.t) + ' · ', txEl(f.tx, f)])
+        h('div', { class: 'seal num' }, ['one tx: the v4 swap, and Aqua’s pull from the castle and push into it · ' + (it ? 'fo sent it from a ' + (it.source || '') + '-style order · ' : '') + hhmmss(f.t) + ' · ', txEl(f.tx, f)])
       ]),
       h('p', { class: 'note num', text: plural(eggs.length, 'swap') + ' filled just in time. Swappers paid ' + str(paid) + ' and got ' + str(got) + '.' })
     ]);
@@ -879,7 +931,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     return h('a', { class: 'tx num', href: S.config.explorer + '/tx/' + tx, target: '_blank', rel: 'noopener' }, short(tx));
   }
 
-  var drawnFor = null, drawnId = 0;
+  var drawnFor = null, drawnId = 0, nodes = {};
   function sceneEl(sc) {
     var ev = sc.ev;
     var gloss = sc.gl.filter(Boolean).map(function (x, i) { return h('div', null, i === 0 ? h('b', { text: x }) : x); });
@@ -891,11 +943,16 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   }
   function drawFrieze() {
     var el = R('frieze');
-    if (drawnFor !== S) { el.replaceChildren(); drawnFor = S; drawnId = 0; }
+    if (drawnFor !== S) { el.replaceChildren(); drawnFor = S; drawnId = 0; nodes = {}; }
+    if (S.redraw && nodes[S.redraw] && nodes[S.redraw].parentNode) {
+      var sc0 = S.scenes[S.scenes.length - 1], nn = sceneEl(sc0);
+      nn.style.animation = 'none'; nodes[S.redraw].replaceWith(nn); nodes[S.redraw] = nn;
+    }
+    S.redraw = 0;
     S.scenes.forEach(function (sc) {
       if (sc.id <= drawnId) return;
       drawnId = sc.id;
-      el.insertBefore(sceneEl(sc), el.firstChild);
+      el.insertBefore(nodes[sc.id] = sceneEl(sc), el.firstChild);
     });
     while (el.children.length > 40) el.removeChild(el.lastChild);
     var n = el.children.length, t = R('unroll');
@@ -906,7 +963,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   function routeEl(f) {
     if (f.route === 'v4') return h('span', { class: 'route' }, [egg(), 'the hen, v4 hook']);
     var st = strat(f.strategy);
-    return h('span', { class: 'route' }, [h('i', { style: 'background:' + (st ? hue(st) : VC.gold) }), nameOf(f.strategy) + (f.quoteId ? ', harp price' : '')]);
+    return h('span', { class: 'route' }, [h('i', { style: 'background:' + (st ? hue(st) : VC.gold) }), the(nameOf(f.strategy)) + (f.quoteId ? ', a price found by name' : '') + ', Aqua']);
   }
   var drawnFills = '';
   function drawFills() {
@@ -922,7 +979,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         h('td', { text: who(f) }),
         h('td', null, routeEl(f)),
         h('td', { class: 'num' }, [h('span', { class: 'u', text: 'paid ' }), money(f.amountIn, f.tokenIn)]),
-        h('td', { class: 'num' }, bad ? [h('span', { class: 'muted', text: 'nothing' }), h('div', { class: 'rv', text: 'reverted ' + (f.revert || '') })] : [h('span', { class: 'u', text: 'got ' }), money(f.amountOut, f.tokenOut)]),
+        h('td', { class: 'num' }, bad ? [h('span', { class: 'muted', text: 'nothing' }), h('div', { class: 'rv', text: 'reverted ' + revText(f.revert) })] : [h('span', { class: 'u', text: 'got ' }), money(f.amountOut, f.tokenOut)]),
         h('td', { class: 'r num' }, bad ? '—' : [fx(rate(f)), h('span', { class: 'u', text: ' USDC/WETH' })]),
         h('td', null, txEl(f.tx, f))
       ]);
@@ -934,12 +991,12 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   }
 
   function drawFace() {
-    var el = R('face'), last = S.fills[S.fills.length - 1], hd = S.hoard, sym = 'USDC', bal = bag(hd, sym);
+    var el = R('face'), last = S.fills[S.fills.length - 1], hd = S.hoard, sym = 'USDC', bal = limitOf(sym);
     fill(el, [
       h('div', { class: 'f1' }, [letters('fee·fi·fo·fum'), R('src').cloneNode(true)]),
       hd ? h('div', { class: 'f2 num', text: money(hd.USDC, 'USDC') + ' · ' + money(hd.WETH, 'WETH') }) : null,
       h('div', { class: 'bar' }, live().map(function (st) { return h('i', { style: 'background:' + hue(st) + ';width:' + (bal > Z ? Number(bag(st.alloc, sym)) / Number(bal) * 100 : 0).toFixed(1) + '%' }); })),
-      h('div', { class: 'f3 num' }, [h('b', { text: fx(promisedPct(), 0) + '%' }), ' promised to ' + plural(live().length, 'bargain') + (S.refusals.length ? ' · ' + S.refusals.length + ' refused' : '')]),
+      h('div', { class: 'f3 num' }, [h('b', { text: fx(overX(), 2) + '×' }), ' the hoard promised to ' + strategies(live().length) + (S.refusals.length ? ' · ' + S.refusals.length + ' refused' : '')]),
       last ? h('div', { class: 'f4 num', text: 'Last: ' + who(last) + (last.status === 'reverted' ? ' was refused' : ' paid ' + money(last.amountIn, last.tokenIn) + (last.route === 'v4' ? ' on v4' : '')) }) : null
     ]);
   }
@@ -958,7 +1015,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   }
 
   // ---------------------------------------------------------------- sources
-  var TYPES = ['snapshot', 'hoard', 'price', 'strategy.shipped', 'strategy.docked', 'cap.set', 'allocation.refused', 'quote.served', 'intent.routed', 'fill', 'agent'];
+  var TYPES = ['snapshot', 'hoard', 'price', 'leverage.set', 'strategy.shipped', 'strategy.docked', 'cap.set', 'allocation.refused', 'quote.served', 'intent.routed', 'fill', 'agent'];
   function feed(ev) { if (!ev || !ev.type) return; apply(ev); dirty = true; }
 
   var es = null, liveOk = 0, MOCK = null;
@@ -1008,9 +1065,9 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   }
   var retries = 0;
 
-  // ---------------------------------------------------------------- the mock: the demo on a loop, with time squeezed
-  // Every fill moves the hoard and its bargain's promise by exactly what the Jack paid and got, so the gauge,
-  // the hoard and the ledger always agree.
+  // ---------------------------------------------------------------- the mock: the demo on a loop
+  // It follows docs/SPEC.md's demo. Every fill moves the hoard and its strategy's promise by exactly what the Jack
+  // paid and got, so the gauge, the hoard and the ledger always agree. Quotes keep SPEC's 30 s life.
   function startMock(why) {
     if (es) { es.close(); es = null; }
     reset('mock');
@@ -1021,20 +1078,19 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     function U(x) { return String(Math.round(x * 1e6)); }
     function B(u, w) { return { USDC: U(u), WETH: W(w) }; }
     function A(sym, x) { return sym === 'USDC' ? U(x) : W(x); }
-    function V(s) { return Math.round(t0 / 1000 + s); }
+    function V(s) { return Math.floor(t0 / 1000 + s); }
     function at(s, ev) { ev.tx = ev.tx === null ? null : (ev.tx || hx(64)); T.push({ at: s, ev: ev }); return ev; }
     function beat(s, label) { beats.push({ at: s, label: label }); }
-    var hoard = { u: 10000, w: 4 }, al = {}, sA = hx(64), sB = hx(64), sC = hx(64), pool = hx(64), fiAddr = hx(40), resolver = hx(40);
-    function ship(s, hash, label, kind, u, w) { al[hash] = { u: u, w: w }; at(s, { type: 'strategy.shipped', hash: hash, label: label, kind: kind, alloc: B(u, w), cap: null, shippedBy: 'fi' }); }
-    function cap(s, hash, u, w) { at(s, { type: 'cap.set', hash: hash, cap: B(u, w), by: 'fum' }); }
-    function quote(s, id, name, hash, pay, get, ttl) {
-      at(s, { type: 'quote.served', tx: null, id: id, name: 'quote.feefifofum.eth', sender: resolver, requester: hx(40), requesterName: name, strategy: hash,
-        tokenIn: pay[0], tokenOut: get[0], amountIn: A(pay[0], pay[1]), amountOut: A(get[0], get[1]), expiry: V(s + ttl), signer: 'fi', signerAddr: fiAddr, digest: hx(64) });
+    var hoard = { u: 965, w: 0.4 }, al = {}, sH = hx(64), sE = hx(64), pool = hx(64), fiAddr = hx(40), resolver = hx(40), agy = '0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c';
+    function ship(s, slot, hash, label, kind, u, w) { al[hash] = { u: u, w: w }; at(s, { type: 'strategy.shipped', slot: slot, hash: hash, label: label, kind: kind, alloc: B(u, w), shippedBy: 'fi' }); }
+    function quote(s, id, hash, pay, get) {
+      at(s, { type: 'quote.served', tx: null, id: id, name: 'quote.feefifofum.eth', key: 'quote:' + pay[0] + ':' + get[0] + ':' + A(pay[0], pay[1]), sender: resolver, requester: agy,
+        requesterName: 'agy.feefifofum.eth', strategy: hash, tokenIn: pay[0], tokenOut: get[0], amountIn: A(pay[0], pay[1]), amountOut: A(get[0], get[1]), validUntil: V(s + 30),
+        signer: 'fi', signerAddr: fiAddr, digest: hx(64) });
     }
-    function order(s, id, name, pay, want, hash) { at(s, { type: 'intent.routed', tx: null, id: id, source: 'UniswapX', swapper: hx(40), swapperName: name, tokenIn: pay[0], tokenOut: want, amountIn: A(pay[0], pay[1]), route: 'v4', strategy: hash, by: 'fo' }); }
     function fillEv(s, x) {
       var ok = !x.revert, inU = x.pay[0] === 'USDC';
-      var ev = at(s, { type: 'fill', route: x.route || 'aqua', strategy: x.hash, quoteId: x.q || null, intentId: x.i || null, taker: hx(40), takerName: x.name,
+      var ev = at(s, { type: 'fill', route: x.route || 'aqua', strategy: x.hash, quoteId: x.q || null, intentId: x.i || null, taker: agy, takerName: 'agy.feefifofum.eth',
         tokenIn: x.pay[0], tokenOut: x.get[0], amountIn: A(x.pay[0], x.pay[1]), amountOut: A(x.get[0], x.get[1]), fee: x.fee || null, pool: x.route === 'v4' ? pool : null,
         status: ok ? 'success' : 'reverted', revert: x.revert || null });
       if (!ok) return;
@@ -1044,36 +1100,32 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       at(s, { type: 'hoard', tx: ev.tx, hoard: B(hoard.u, hoard.w), reason: 'fill' });
     }
     at(0, { type: 'snapshot', tx: null, config: { chainId: 11155111, name: 'castle.feefifofum.eth', quoteName: 'quote.feefifofum.eth', explorer: '', decimals: { USDC: 6, WETH: 18 } },
-      agents: S.order.map(function (id) { return { id: id, role: ROLE[id], alive: true }; }), hoard: B(10000, 4), price: null, strategies: [], quotes: [], fills: [], refusals: [], intents: [] });
-    at(2, { type: 'price', mid: '2412.50', spreadBps: 12, hookFeeBps: 30, by: 'fee' });
-    beat(5, 'fi ships two bargains from one hoard');
-    ship(5, sA, 'Tight curve', 'curve', 6000, 2);
-    ship(8, sB, 'Wide ladder', 'limit', 3000, 1.5);
-    cap(11, sA, 9000, 2.5);
-    cap(12, sB, 4000, 2);
-    beat(15, 'fum refuses a promise too many');
-    at(15, { type: 'allocation.refused', label: 'Deep pool', hash: sC, asked: B(2500, 1), allocated: B(9000, 3.5), balance: B(10000, 4), cap: null, error: 'OverAllocated()', by: 'fi', status: 'reverted' });
-    beat(22, 'a Jack asks the castle’s name');
-    quote(22, 'q-1', 'agy.feefifofum.eth', sA, ['USDC', 1207.7], ['WETH', 0.5], 30);
-    fillEv(27, { hash: sA, q: 'q-1', name: 'agy.feefifofum.eth', pay: ['USDC', 1207.7], get: ['WETH', 0.5] });
-    quote(32, 'q-2', 'horner.eth', sB, ['WETH', 0.4], ['USDC', 963.84], 14);
-    beat(40, 'fo carries swaps to the hen');
-    order(40, 'i-1', 'frost.eth', ['WETH', 0.3], 'USDC', sA);
-    fillEv(43, { route: 'v4', hash: sA, i: 'i-1', name: 'frost.eth', pay: ['WETH', 0.3], get: ['USDC', 722.88], fee: { WETH: W(0.0009) } });
-    order(47, 'i-2', 'tar.eth', ['USDC', 1000], 'WETH', sA);
-    fillEv(50, { route: 'v4', hash: sA, i: 'i-2', name: 'tar.eth', pay: ['USDC', 1000], get: ['WETH', 0.414], fee: { USDC: U(3) } });
-    at(55, { type: 'price', tx: null, mid: '2420.00', spreadBps: 12, hookFeeBps: 30, by: 'fee' });
-    quote(58, 'q-3', 'agy.feefifofum.eth', sA, ['USDC', 605.73], ['WETH', 0.25], 30);
-    fillEv(61, { hash: sA, q: 'q-3', name: 'agy.feefifofum.eth', pay: ['USDC', 605.73], get: ['WETH', 0.25] });
-    fillEv(64, { hash: sB, q: 'q-2', name: 'spriggs.eth', pay: ['WETH', 0.4], get: ['USDC', 963.84], revert: 'QuoteExpired()' });
-    beat(68, 'fum docks a bargain, and the refused one fits');
-    at(68, { type: 'strategy.docked', hash: sB, by: 'fum', reason: 'no fills; fum wants the room' });
-    ship(72, sC, 'Deep pool', 'curve', 2500, 1);
-    cap(74, sC, 3000, 1.5);
-    fillEv(78, { hash: sC, name: 'horner.eth', pay: ['WETH', 0.2], get: ['USDC', 483.42] });
+      agents: S.order.map(function (id) { return { id: id, role: ROLE[id], alive: true }; }), hoard: B(965, 0.4), price: null, leverage: {}, caps: {}, strategies: [], quotes: [], fills: [], refusals: [], intents: [] });
+    at(2, { type: 'price', mid: '2412.50', spreadBps: 12, source: 'Chainlink ETH/USD', by: 'fee' });
+    beat(4, 'fum lets each coin be promised twice');
+    at(4, { type: 'leverage.set', token: 'USDC', bps: 20000, by: 'fum' });
+    at(4.5, { type: 'leverage.set', token: 'WETH', bps: 20000, by: 'fum' });
+    at(6, { type: 'cap.set', slot: 0, label: 'harp', cap: B(965, 0.4), by: 'fum' });
+    at(6.5, { type: 'cap.set', slot: 1, label: 'hen', cap: B(965, 0.4), by: 'fum' });
+    at(7, { type: 'cap.set', slot: 2, label: 'greedy', cap: B(500, 0.2), by: 'fum' });
+    beat(9, 'fi ships the harp and the hen from one hoard');
+    ship(9, 0, sH, 'harp', 'PriceExtruction', 965, 0.4);
+    ship(11, 1, sE, 'hen', 'XYCSwap + flatFee', 965, 0.4);
+    beat(15, 'fi ships greedy, and fum’s line refuses it');
+    at(15, { type: 'allocation.refused', slot: 2, label: 'greedy', hash: hx(64), asked: B(400, 0.1), committed: B(1930, 0.8), balance: B(965, 0.4), limit: B(1930, 0.8),
+      error: 'OverAllocated', errorArgs: { token: 'USDC', committedAfter: U(2330), limit: U(1930) }, by: 'fi', status: 'reverted' });
+    beat(21, 'agy asks the castle’s name, and fills the price');
+    quote(21, 'q-1', sH, ['USDC', 120.77], ['WETH', 0.05]);
+    fillEv(25, { hash: sH, q: 'q-1', pay: ['USDC', 120.77], get: ['WETH', 0.05] });
+    quote(29, 'q-2', sH, ['USDC', 50], ['WETH', 0.0207]);
+    beat(34, 'fo carries an order to the hen');
+    at(34, { type: 'intent.routed', tx: null, id: 'i-1', source: 'UniswapX', swapper: agy, swapperName: 'agy.feefifofum.eth', tokenIn: 'USDC', tokenOut: 'WETH', amountIn: U(10), route: 'v4', strategy: sE, by: 'fo' });
+    fillEv(37, { route: 'v4', hash: sE, i: 'i-1', pay: ['USDC', 10], get: ['WETH', 0.00409], fee: { USDC: U(0.03) } });
+    beat(60, 'the same song, 31 s old, no longer fills');
+    fillEv(60, { hash: sH, q: 'q-2', pay: ['USDC', 50], get: ['WETH', 0.0207], revert: 'QuoteExpired(' + V(59) + ')' });
     T.sort(function (a, b) { return a.at - b.at; });
     T.forEach(function (x, i) { x.ev.seq = i + 1; x.ev.v = 2; x.ev.t = t0 + x.at * 1000; x.ev.block = x.ev.tx ? B0 + Math.floor(x.at / 12) : null; x.ev.src = 'mock'; });
-    MOCK = { T: T, beats: beats, i: 0, t0: t0, end: 88, why: why };
+    MOCK = { T: T, beats: beats, i: 0, t0: t0, end: 70, why: why };
     drawMockbar();
   }
   function mockTick() {
@@ -1087,7 +1139,10 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   function jump(at) {
     startMock(MOCK.why);
     var shift = at * 1000;
-    MOCK.T.forEach(function (x) { x.ev.t -= shift; if (x.ev.expiry) x.ev.expiry -= at; });
+    MOCK.T.forEach(function (x) {
+      x.ev.t -= shift; if (x.ev.validUntil) x.ev.validUntil -= at;
+      if (x.ev.revert) x.ev.revert = x.ev.revert.replace(/\((\d{9,})\)/, function (m, u) { return '(' + (Number(u) - at) + ')'; });
+    });
     MOCK.t0 -= shift;
     mockTick();
     dirty = true;

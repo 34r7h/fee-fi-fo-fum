@@ -1,79 +1,35 @@
-# End-to-End Live Validation: Web3 Dapp (`v-dapp`)
+# Live validation of the dapp (v-dapp)
 
-- **Task**: `ffff2-v-dapp` (`93e81dc2-9b78-4ea0-8398-5c243b83b0d3`)
-- **Validator**: `agy` (`0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c`)
-- **Target URL**: `https://handoff.lol/app/impecc/fee-fi-fo-fum` (v2.0.2)
-- **Network**: Ethereum Sepolia (Chain ID 11155111)
-- **Outcome**: **PASS**
+This is the record of task v-dapp (`93e81dc2-9b78-4ea0-8398-5c243b83b0d3`). The validator agy tested the published dapp, `fee-fi-fo-fum` version 2.0.2 at https://handoff.lol/app/impecc/fee-fi-fo-fum, on Ethereum Sepolia on 26 September 2026 between 17:08 and 17:12 UTC. The result is a pass.
 
----
+## Method
 
-## 1. Overview and Execution Method
+agy opened the page in a fresh Chrome profile with an injected EIP-1193 wallet backed by its own Sepolia key, for the address `0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c`. Every action went through the page's own buttons. agy connected the wallet, kept the page's default amount of 0.25 USDC, filled the RFQ strategy's quote with "Fill this quote", and then swapped the same amount on the v4 pool with "Swap through the v4 pool". Each trade needed an approval for the exact amount first, so the test sent four transactions. The page sent them with a maximum fee of 1.8 gwei.
 
-The published feefifofum dapp was validated live on Ethereum Sepolia from an isolated, fresh Chrome browser profile with an injected EIP-1193 provider backed by `agy`'s private key (`~/.handoff/agents/agy/sepolia.key`).
+## Transactions
 
-All user actions were performed strictly through the page's UI elements:
-1. Connected the wallet (`0xDDf2...AE4c`), verifying that balances, network status, and strategy cards loaded properly.
-2. Verified the default 0.25 USDC trade amount.
-3. Filled the RFQ strategy quote from the Harp via the **"Fill this quote"** button.
-4. Swapped through the Uniswap v4 pool from the Hen via the **"Swap through the v4 pool"** button.
-5. Verified all 4 resulting on-chain transactions, events, and balance updates.
+| Step | Transaction | Block | Gas used | Effective gas price |
+|---|---|---|---|---|
+| Approve 0.25 USDC for the 1inch SwapVM router | [`0x66f9863b…850d`](https://sepolia.etherscan.io/tx/0x66f9863bfee8e11149355c606b3476eb57cb163c0ca75d2dc59dcdad44aa850d) | 11787567 | 55,437 | 1.203 gwei |
+| Fill the RFQ quote through the router | [`0x84bd78b6…1414`](https://sepolia.etherscan.io/tx/0x84bd78b6613915c92ca3a8be2e022578450dcb0f3594690fd9998e4b16151414) | 11787568 | 157,005 | 1.137 gwei |
+| Approve 0.25 USDC for PoolSwapTest | [`0x9dd4e78a…3b5e`](https://sepolia.etherscan.io/tx/0x9dd4e78aef85df87747761666178ee278a233f1590deadb46ad491bed67f3b5e) | 11787577 | 55,437 | 1.169 gwei |
+| Swap on the v4 pool | [`0x2cc0d568…b86c`](https://sepolia.etherscan.io/tx/0x2cc0d568d8234715a7d9748092491f95ad443f2e838ff0048e9089d5e04cb86c) | 11787578 | 278,636 | 1.091 gwei |
 
-Gas constraints were strictly maintained within the 1.8 gwei maximum fee cap (0.1 gwei priority fee).
+All four succeeded. Together they used 546,515 gas, which cost 0.000614 ETH. [txs.json](txs.json) lists the same hashes with their targets and calldata.
 
----
+## What the transactions show
 
-## 2. On-Chain Transaction Record
+The fill `0x84bd78b6…1414` used quote `q-1790442385-3`, which the page read from `quote.feefifofum.eth` over CCIP-Read. In that transaction agy paid 0.25 USDC to CastleVault and received 92,770,501,331,752 WETH units (0.0000928 WETH) from it, and Aqua emitted `Pulled` and `Pushed` for the vault.
 
-| Beat / Action | Hash | Block | Gas Used | Effective Gas Price | Status |
-|---|---|---|---|---|---|
-| **Harp USDC Approval** | `0x66f9863bfee8e11149355c606b3476eb57cb163c0ca75d2dc59dcdad44aa850d` | 11787567 | 55,437 | 1.203 gwei | Success (1) |
-| **Harp CCIP-Read Fill** | `0x84bd78b6613915c92ca3a8be2e022578450dcb0f3594690fd9998e4b16151414` | 11787568 | 157,005 | 1.137 gwei | Success (1) |
-| **Hen USDC Approval** | `0x9dd4e78aef85df87747761666178ee278a233f1590deadb46ad491bed67f3b5e` | 11787577 | 55,437 | 1.169 gwei | Success (1) |
-| **Hen Uniswap v4 Swap** | `0x2cc0d568d8234715a7d9748092491f95ad443f2e838ff0048e9089d5e04cb86c` | 11787578 | 278,636 | 1.091 gwei | Success (1) |
+The swap `0x2cc0d568…b86c` went through PoolSwapTest to the v4 pool. In the same transaction the hook CastleJITHook filled it from the vault's hen strategy and emitted `JitFill(poolId, hen, sender, USDC, 250000, 86476092014462)`, Aqua emitted `Pulled` and `Pushed` for the vault, and the PoolManager emitted its `Swap` event. agy paid 0.25 USDC and received 86,476,092,014,462 WETH units (0.0000865 WETH).
 
-- **Total Gas Used**: 546,515
-- **Total Gas Cost**: 0.00061399 ETH (within the ~0.00066 ETH budget)
+## Balances afterwards
 
----
+After the test, agy's wallet held 0.000829 ETH, 13.90 USDC and 0.000530 WETH. It had spent 0.000614 ETH on gas and 0.50 USDC on the two trades, and received 0.000179 WETH. The vault held 4.910627 USDC and 0.001950 WETH. CastleJITHook held no USDC and no WETH, as it should after a swap, because it passes every token straight through.
 
-## 3. On-Chain Event Verification
+## Screenshots
 
-1. **Harp Fill (`0x84bd...1414`)**:
-   - Emitted 1inch Aqua `Pulled` and `Pushed` events between `CastleVault` and `SwapVM Router`.
-   - Transferred 0.25 USDC from `agy` to `CastleVault`.
-   - Transferred 0.00009277 WETH from `CastleVault` to `agy`.
-
-2. **Hen Swap (`0x2cc0...866c`)**:
-   - Emitted atomic events in a single transaction:
-     - Uniswap v4 `PoolManager` swap initialization and settlement.
-     - 1inch Aqua `Pulled` and `Pushed` events between `CastleVault` and `SwapVM Router`.
-     - `CastleJITHook.JitFill(poolId, hen, sender, USDC, 250000, 86476092014462)`.
-   - Transferred 0.25 USDC from `agy` to the pool/vault.
-   - Transferred 0.00008647 WETH to `agy`.
-
----
-
-## 4. Post-Run Balances
-
-- **`agy` (`0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c`)**:
-  - ETH: 0.0008289 ETH (-0.000614 ETH spent on gas across 4 txs)
-  - USDC: 13.90 USDC (-0.50 USDC paid)
-  - WETH: 0.0005301 WETH (+0.0001792 WETH received)
-- **`CastleVault` (`0x0fa4a0Fd0bE6536d7462FF922F28500123c37A98`)**:
-  - USDC: 4.910627 USDC
-  - WETH: 0.0019496 WETH
-- **`CastleJITHook` (`0x890125413c9FeDB770D872BbA9415f5E1B7C0888`)**:
-  - USDC: 0 (transient strictly 0)
-  - WETH: 0 (transient strictly 0)
-
----
-
-## 5. Artifacts and Screenshots
-
-The browser test captured visual artifacts confirming UI and wallet states:
-- `01-connected.png`: Wallet connected, Sepolia balances rendered, trade input set to 0.25 USDC.
-- `02-hen-quote-ready.png`: Quotes loaded for both Harp and Hen strategies.
-- `03-hen-swapped.png`: Hen swap confirmed in the UI.
-- `04-final-full.png`: Full page view showing trades populated under the trades table and updated Castle metrics.
-- `txs.json`: Machine-readable array of all sent transaction hashes.
+- [01-initial.png](01-initial.png) shows the page after the wallet connected, before any trade, with 14.40 USDC in the wallet and both quotes loaded.
+- [02-hen-quote-ready.png](02-hen-quote-ready.png) shows the page after the RFQ fill, with 14.15 USDC in the wallet and the v4 pool's quote ready.
+- [03-hen-swapped.png](03-hen-swapped.png) shows the page after the v4 swap, with 13.90 USDC in the wallet.
+- [04-final-full.png](04-final-full.png) shows the whole page at the end. Your trades lists this test's fill and swap at the top, above agy's two trades from the live run at 12:59 UTC. The page prints times in the browser's time zone, UTC+9.

@@ -238,15 +238,15 @@ The rule: everything is fork-tested first (v-e2e, two clean passes), then there 
 
 mister-anderson replaces these estimates with fork-measured numbers before c-deploy. The approval asked of the operator is a **0.02 ETH gas ceiling** for c-deploy plus a-live. The hoard is small: about 10 USDC and 0.004 WETH.
 
-## Research gates and fallbacks
+## Research gates
 
-korg answers these in [research.md](research.md). The primary path is built now, and the fallback is named, so no builder waits.
+korg answered these on a fork of live Sepolia ([research.md](research.md), probe `contracts/probes/quote-register/`).
 
-| Gate | Primary | Fallback |
+| Gate | Answer | What the build does |
 |---|---|---|
-| Can 0x67Cc register `quote` with a custom resolver in one call? | `register` on registry `0x2F21…e09` with resolver = OffchainQuoteResolver | korg names the cheapest path from the fork test |
-| Does UniversalResolverV2 surface `OffchainLookup` to viem? | `getEnsText` with the UR override | the solver finds the resolver through the registry, then calls `resolve` with viem `ccipRead`. That is still ERC-3668. |
-| Is UniswapX on Sepolia? | fo takes UniswapX-format orders off-chain | if the reactors exist, fo filling them live is stretch S3 |
+| Can 0x67Cc register `quote` with a custom resolver in one call? | **Yes.** 0x67Cc holds root `ROLE_REGISTRAR` on `0x2F21…e09`. | One call: `register("quote", 0x67Cc…0C99, address(0), OffchainQuoteResolver, 0, now + 365 days)`. |
+| Does UniversalResolverV2 surface `OffchainLookup` for `text()`? | **Yes**, but only when the resolver advertises `IExtendedResolver` (`0x9061b923`). Without it, the UR returns `ResolverError`. | The resolver must answer `supportsInterface(0x9061b923) == true`. The solver uses viem `getEnsText` with the UR override. The gateway's `{sender}`, and the signature's target, is the OffchainQuoteResolver. |
+| Is UniswapX on Sepolia? | **No.** No reactor is published for Sepolia, and the published addresses have no code there. | fo takes UniswapX-format orders off-chain through `castle_route`. Filling live UniswapX orders is stretch S3, on a chain that has reactors. |
 
 ## Schedule and cut lines (UTC, Sat 26 Sep)
 

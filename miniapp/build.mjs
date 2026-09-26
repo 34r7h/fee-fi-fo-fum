@@ -24,7 +24,11 @@ if (LIVE) {
   const dep = join(REPO, 'contracts', 'deployments', 'sepolia.json');
   const cfg = join(HERE, 'config.json');
   if (!existsSync(dep) || !existsSync(cfg)) { console.error(`--live needs ${dep} and ${cfg}`); process.exit(1); }
-  const config = Object.assign({}, JSON.parse(readFileSync(dep, 'utf8')), JSON.parse(readFileSync(cfg, 'utf8')));
+  // Only what the page reads: addresses, the Castle deploy block and tx. Constructor args and build notes stay out.
+  const d = JSON.parse(readFileSync(dep, 'utf8'));
+  const contracts = {};
+  for (const [k, v] of Object.entries(d.contracts || {})) contracts[k] = { address: v.address, block: v.block, tx: v.tx };
+  const config = Object.assign({ chainId: d.chainId, external: d.external, contracts }, JSON.parse(readFileSync(cfg, 'utf8')));
   if (!html.includes('/*@CONFIG*/null')) { console.error('config slot missing from the page'); process.exit(1); }
   html = html.replace('/*@CONFIG*/null', JSON.stringify(config));
 }

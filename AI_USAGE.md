@@ -41,7 +41,7 @@ These are AI agents on handoff.lol, directed by the human operator.
 
 ## Files
 
-Commit identity: commits in this repo authored as `34r7h` were made by **SirKit** (AI orchestrator) using the operator's local git identity: WORKLOG.md, AI_USAGE.md, docs/NAMING.md, docs/PLAN.md (handoff-advisor's research, committed by SirKit) and README drafts. PRODUCT.md and .impeccable/surfaces/ also landed in a SirKit commit, but impecc wrote them. Every other agent commits under its own name.
+Commit identity: this repo's commits authored `34r7h` come from two sources. The 95 with `i34r7h@gmail.com` are **SirKit** (AI orchestrator) using the operator's local git identity: WORKLOG.md, AI_USAGE.md, docs/NAMING.md, docs/PLAN.md (handoff-advisor's research, committed by SirKit) and README drafts. PRODUCT.md and .impeccable/surfaces/ also landed in a SirKit commit, but impecc wrote them. The 49 with `2566560+34r7h@users.noreply.github.com` are empty `task: … submitted for review / verified` commits (0 files changed) from handoff.lol's GitHub task sync, not a person or an agent. Every other agent commits under its own name.
 
 | Path | Written by (per `git log`) | AI-written? | Notes |
 |---|---|---|---|
@@ -51,16 +51,18 @@ Commit identity: commits in this repo authored as `34r7h` were made by **SirKit*
 | WORKLOG.md | SirKit | yes | generated from the handoff board, submitted evidence and live chain reads |
 | AI_USAGE.md | SirKit | yes | this file |
 | contracts/src/, contracts/script/, contracts/out-abi/, contracts/broadcast/, foundry config | mister-anderson | yes | Castle, FeeFiFoFumExtruction, JackHook, deploy scripts, exported ABIs |
-| contracts/test/ | mister-anderson, agy | yes | unit and Sepolia-fork tests; agy's 4 commits predate the validator-only ruling |
+| contracts/test/ | mister-anderson, agy | yes | unit and Sepolia-fork tests; agy wrote FoAttestation.t.sol (6376485) and three fork-test commits (8cc9a7f, 84b369d, 3ccbe78), all before the validator-only ruling |
 | contracts/deployments/ | mister-anderson, handoff-claude, agent-smith | yes | addresses, txs and constructor args for contracts, the ENS registry and the agent names |
 | contracts/scripts/ (ENS) | handoff-claude, then agent-smith | yes | ENSv2 agent-registry scripts |
 | contracts/probes/, docs/ens-probes.md, docs/ens.md, docs/1inch.md, docs/uniswap.md, FEEDBACK.md | korg | yes | ENSv2 probes, sponsor write-ups, builder feedback |
 | docs/cca-auction.md | mister-anderson | yes | the live CCA run and its parameters |
-| agents/ | agent-smith (agy: 3 early commits) | yes | fee, fi, fo, fum: roles, shift library, scripts, tests |
+| agents/ | agent-smith; agy (one commit) | yes | fee, fi, fo, fum: roles, shift library, scripts, tests. agy's commit 6376485 wrote fo's first version (roles/fo.mjs, lib/attest, fo-policy, incidents, lease and replay .mjs, test/fo.test.mjs; 495 lines) before the validator-only ruling. agent-smith owns and maintains it since |
 | service/ | handoff-claude (scaffold), then agent-smith | yes | the castle service: MCP tools, SSE stream, indexer |
 | miniapp/ | impecc | yes | fee-fi-fo-fum.html, build.mjs, config.json, STREAM.md |
 | docs/video-script.md, DESIGN.md, PRODUCT.md, .impeccable/ | impecc | yes | video script and shot list, design system, product brief |
 | Deck (claude.ai artifact) | impecc | yes | 12 slides; shared by the operator |
+| contracts/lib/ (aqua, swap-vm v1.0.2, solidity-utils, openzeppelin-contracts, forge-std), .gitmodules, contracts/foundry.lock, contracts/.gitignore | third-party, pinned by mister-anderson | no | git submodules at pinned commits; not written in this entry |
+| private handoff repo: 95932ef, 0115146, 105f1dd, 3cfdb3f, 0495862 | handoff-claude | yes | new work after baseline 079f8f0 that the entry depends on (ENSv2 ens_name, Sepolia settlement, wallet proof of possession, payout dedupe); listed in README 'Pre-existing and new' |
 
 ## Prompts and specs
 

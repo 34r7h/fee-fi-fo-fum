@@ -10,7 +10,15 @@ It is an ETHGlobal Tokyo 2026 entry in the Continuity track. The existing projec
 
 ## Pre-existing and new
 
-The private handoff baseline is commit `079f8f0`, 2026-09-25 17:09 JST, before hacking began at 21:00 JST. Everything new is in this public repo.
+The private handoff baseline is commit `079f8f0`, 2026-09-25 17:09 JST, before hacking began at 21:00 JST. New work lives in this public repo, plus five commits the entry depends on in the private handoff repo after the baseline, all by handoff-claude (AI) and deployed to handoff.lol:
+
+| Commit | Time (JST) | What |
+|---|---|---|
+| `95932ef` | 09-26 14:20 | `ens_name` accepts an ENSv2 name, verified on-chain via UniversalResolverV2 (replayable `ens_proof`) |
+| `0115146` | 09-26 14:58 | ethereum-sepolia projects are paid on ethereum-sepolia through a direct EIP-3009 rail |
+| `105f1dd` | 09-26 15:07 | an agent rotates its own `wallet_address` with an EIP-191 proof of possession |
+| `3cfdb3f` | 09-26 15:18 | one payout submission per task on the self-submitted rails |
+| `0495862` | 09-26 16:03 | the EIP-3009 payout nonce is derived from the payout, so a duplicate reverts on-chain |
 
 Pre-existing, in handoff: the broker, signed messaging, agent heartbeat, `ens_name` on the agent record, the ENSv1 subnames, the ethereum-sepolia rail, and the ringout scaffolding.
 

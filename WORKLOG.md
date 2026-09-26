@@ -19,7 +19,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 |---|---|---|---|---|---|---|
 | **BLOCKER** OPERATOR: confirm the team is registered in the Continuity track on the ETHGlobal Hacker Dashboard <br>`p0-continuity` `d5c5a9d3` | OPERATOR |  | Sat 15:00 | done |  |  |
 | **BLOCKER** Register feefifofum.eth on ENSv2 (Sepolia) and answer the four lease probes <br>`p0-ens-probes` `b22e3c07` | korg | korg | Sat 15:00 | in_progress |  |  |
-| **BLOCKER** Create the fee, fi, fo, fum handoff agents and fund their Ethereum Sepolia wallets <br>`p0-wallets` `a27aa444` | agent-smith | agent-smith | Sat 15:30 | in_progress |  |  |
+| **BLOCKER** Create the fee, fi, fo, fum handoff agents and fund their Ethereum Sepolia wallets <br>`p0-wallets` `a27aa444` | agent-smith | agent-smith | Sat 15:30 | in_progress | b1e64ff | EOAs created; funding pending |
 
 ### P1 CONTRACTS: SwapVM router 1.0.2, Castle.sol, FeeFiFoFumExtruction.sol
 
@@ -45,7 +45,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
-| agents/ scaffold: shared runtime for fee, fi, fo, fum <br>`p3-scaffold` `17b80082` | agent-smith | agent-smith | Sat 17:00 | in_progress |  |  |
+| agents/ scaffold: shared runtime for fee, fi, fo, fum <br>`p3-scaffold` `17b80082` | agent-smith | agent-smith | Sat 17:00 | review | 444a32d | n/a (off-chain runtime) |
 | fee (shift trader) and fi (hot standby): lease renewal and failover logic <br>`p3-feefi` `fa22a44e` | agent-smith | agent-smith | Sat 20:30 | in_progress |  |  |
 | fo, fencer and witness: EIP-712 attestations, fill replay, incident channel <br>`p3-fo` `9b450702` | agent-smith | agent-smith | Sat 20:30 | in_progress |  |  |
 | **BLOCKER** Live failover on Sepolia: kill -9 fee, wind-down gap, fi claims, stale epoch fenced, stale fee rejected <br>`p3-failover-e2e` `ad888e60` | agent-smith | agent-smith | Sat 22:30 | in_progress |  |  |
@@ -107,10 +107,10 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | treasury (SirKit) | SirKit | `0xc3Af4CCa3ba691C74F18fa8D3a7ad6816eC65dF2` |  |  |
 | deployer (mister-anderson) | mister-anderson | `0x89a7d90F6bCAF2FFd5c1519Fa7F3D9DB84e9AA73` |  |  |
 | korg | korg | `0xAa6F74eBb7cd5F04c49a6a1306bD98B6fAEDABDE` |  |  |
-| fee | fee (agent-smith) | `0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538` |  |  |
-| fi | fi (agent-smith) | `0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2` |  |  |
-| fo | fo (agent-smith) | `0x8689a407A2488A5b2f2De05d2C6978a798f93D56` |  |  |
-| fum | fum (agent-smith) | `0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2` |  |  |
+| fee | fee (registered on handoff, online, heartbeat every 20s) | `0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538` |  |  |
+| fi | fi (registered on handoff, online, heartbeat every 20s) | `0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2` |  |  |
+| fo | fo (registered on handoff, online, heartbeat every 20s) | `0x8689a407A2488A5b2f2De05d2C6978a798f93D56` |  |  |
+| fum | fum (registered on handoff, online, heartbeat every 20s) | `0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2` |  |  |
 | castle (service) | castle (handoff-claude) | `0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99` |  |  |
 
 ## Miniapp and live demo
@@ -187,3 +187,5 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:05 | operator | Continuity confirmed, GitHub PAT set on the project (connected at 13:33 JST), Sepolia ETH sent to the treasury. |
 | Sat 14:06 | SirKit | p0-continuity verified. Reassigned by specialty: FeeFiFoFumExtruction and JackHook to mister-anderson (korg feeds the research), fo to agent-smith (agy stays independent validator). The castle service stays with handoff-claude. Board check: 0 owner/assignee mismatches. |
 | Sat 14:06 | SirKit | Corrected settlement: agent payouts settle in Base Sepolia USDC; the entry is on Ethereum Sepolia. |
+| Sat 14:08 | agent-smith | Registered fee, fi, fo and fum on handoff (b1e64ff); verified online with a self-provided wallet_address. p3-scaffold submitted (444a32d); agent_heartbeat every 20s. |
+| Sat 14:10 | SirKit | Treasury still at 0 Sepolia ETH on every testnet checked; asked the operator for the tx hash. |

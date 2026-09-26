@@ -25,6 +25,8 @@ const PORT = Number(env('FO_PORT', 8711));
 const LOOKBACK_BLOCKS = BigInt(env('FO_LOOKBACK_BLOCKS', 900));   // about 3h of Sepolia blocks
 // Before the first strategy exists (p1-deploy), FO_REQUIRE_SHIPS=0 lets renewals run on liveness alone.
 const REQUIRE_SHIPS = env('FO_REQUIRE_SHIPS', '1') !== '0';
+// After a CCA writes a new price the holder gets this many blocks to re-centre before its book counts as off-market.
+const RECENTRE_GRACE_BLOCKS = BigInt(env('FO_RECENTRE_GRACE_BLOCKS', 5));
 const LIMITS = {
   ...DEFAULT_LIMITS,
   ...(env('FO_STALE_QUOTES_S') ? { staleQuotesS: Number(env('FO_STALE_QUOTES_S')) } : {}),
@@ -72,8 +74,11 @@ async function observe(ctx) {
   // price and the holder never re-centred).
   let market = {};
   if (ship?.anchorQ96) {
-    const now = await ctx.pc.readContract({ address: lease.castle, abi: abi('Castle'), functionName: 'anchorPriceQ96' }).catch(() => null);
-    if (now) market = { centre: String(ship.anchorQ96), reference: String(now), deviationBps: deviationBps(ship.anchorQ96, now) };
+    const anchorAt = (blockNumber) => ctx.pc.readContract({ address: lease.castle, abi: abi('Castle'), functionName: 'anchorPriceQ96', blockNumber }).catch(() => null);
+    const now = await anchorAt(lease.block);
+    const then = now && lease.block > RECENTRE_GRACE_BLOCKS ? await anchorAt(lease.block - RECENTRE_GRACE_BLOCKS) : null;
+    if (now && then && then !== now) market = { centre: String(ship.anchorQ96), reference: String(now), deviationBps: null, recentring: { anchorMovedWithinBlocks: Number(RECENTRE_GRACE_BLOCKS) } };
+    else if (now) market = { centre: String(ship.anchorQ96), reference: String(now), deviationBps: deviationBps(ship.anchorQ96, now) };
   }
   return { lease, trader: { id: traderId, heartbeatAgeS }, quotes: { ageS: quotesAgeS, lastShipTx: ship?.tx ?? null }, market };
 }

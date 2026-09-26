@@ -227,11 +227,14 @@ async function scan(from, to) {
     }
   }
 
-  // One fill per swap tx.
+  // One fill per swap tx: the taker's tokenIn pushed and tokenOut pulled. A ship or dock also moves Castle's
+  // balances through Aqua, so a tx that ships or docks is never a fill.
   const usdc = addr('usdc'); const weth = addr('weth');
   const sym = (tk) => (sameAddr(tk, usdc) ? 'USDC' : sameAddr(tk, weth) ? 'WETH' : tk);
+  const books = new Set(all.filter((l) => ['Shipped', 'Docked'].includes(evName(tryDecode(sameAddr(l.address, aqua) ? 'Aqua' : 'Castle', l)))).map((l) => l.transactionHash));
   for (const [txHash, f] of fillTx) {
     const pulled = f.legs.find((l) => l.kind === 'Pulled'); const pushed = f.legs.find((l) => l.kind === 'Pushed');
+    if (books.has(txHash) || !pulled || !pushed) continue;
     const tx = await client.getTransaction({ hash: txHash });
     const lease = leaseAt(f.meta.block);
     const programEpoch = strategies.get((pulled || pushed)?.hash)?.epoch ?? null;

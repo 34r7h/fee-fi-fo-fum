@@ -52,7 +52,7 @@ const ALIASES = {
   castle: ['castle', 'Castle'],
   aqua: ['aqua', 'Aqua'],
   router: ['router', 'aquaSwapVMRouter', 'swapVmRouter', 'AquaSwapVMRouter', 'SwapVMRouter'],
-  extruction: ['extruction', 'FeeFiFoFumExtruction', 'fence'],
+  extruction: ['extruction', 'feeFiFoFumExtruction', 'FeeFiFoFumExtruction', 'fence'],
   jackHook: ['jackHook', 'JackHook'],
   ccaFactory: ['ccaFactory', 'CCAFactory', 'ContinuousClearingAuctionFactory'],
   registry: ['registry', 'ensRegistry', 'ETHRegistry', 'castleRegistry', 'agentRegistry'],

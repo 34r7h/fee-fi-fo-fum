@@ -233,7 +233,8 @@ async function findRegistrar() {
 // ---- 2b. Castle holds the lease name castle.<parent> in this same registry ---------------------------------
 // Castle.claim() registers `castle` here (ROLE_REGISTRAR), renew() extends it (ROLE_RENEW), relink() links
 // castle.* to the holder's record in this resolver (ROLE_LINK), and fum's price goes to ENS data (ROLE_SET_DATA).
-const CASTLE = opt('castle', process.env.CASTLE_ADDRESS || ext.castle || null);
+// contracts.castle may be "0x…" or {address, tx, block} (the contracts lane's shape for the router).
+const CASTLE = opt('castle', process.env.CASTLE_ADDRESS || (typeof ext.castle === 'string' ? ext.castle : ext.castle?.address) || null);
 if (CASTLE) {
   const castle = getAddress(CASTLE);
   const regRoles = R.REGISTRAR | R.RENEW;

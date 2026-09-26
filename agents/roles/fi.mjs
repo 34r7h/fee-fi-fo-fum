@@ -126,6 +126,7 @@ export default {
       const ask = { WETH: (l.tokens.WETH.balance * GREEDY_BPS) / 10_000n, USDC: (l.tokens.USDC.balance * GREEDY_BPS) / 10_000n };
       ctx.log('compiled', { strategy: 'greedy', slot: SLOTS.greedy, kind: 'hen', weth: ask.WETH, usdc: ask.USDC, headroom: { WETH: l.tokens.WETH.headroom, USDC: l.tokens.USDC.headroom } });
       const res = await send(ctx, 'ship', [SLOTS.greedy, hen(HEN_FEE_BPS), ask.WETH, ask.USDC], { force: true, gas: BigInt(env('FI_GREEDY_GAS', 90_000)) });
+      if (res.deferred) { greedyDone = false; return; }   // over the fee cap: nothing went out, try again later
       ctx.log(res.ok ? 'greedy-shipped' : 'greedy-refused', { tx: res.hash, reason: res.reason });
       if (res.mined && !res.ok) await report(ctx, 'allocation.refused', { tx: res.hash });
     }

@@ -1,8 +1,11 @@
 // The crew's view of the CastleVault (docs/SPEC.md): reads of the hoard, the slots and the Aqua ledger, and the one
 // way the crew writes to it. Every write is simulated first; a revert the simulation predicts is logged and not
-// sent, unless the caller forces it (fi's greedy ship, whose OverAllocated revert is the point).
-import { decodeErrorResult, encodeFunctionData } from 'viem';
+// sent, unless the caller forces it (fi's greedy ship, whose OverAllocated revert is the point). Every tx goes out at
+// a max fee of MAX_FEE_GWEI (1.8) with a TIP_GWEI (0.1) tip, and none goes out while the base fee is over that: the
+// write is deferred, and the caller tries again on a later tick.
+import { decodeErrorResult, encodeFunctionData, parseGwei, formatGwei, formatEther } from 'viem';
 import { contractAddress, abi, txLink } from './chain.mjs';
+import { env } from './env.mjs';
 
 export const SLOTS = { harp: 0, hen: 1, greedy: 2 };
 export const SLOT_NAMES = ['harp', 'hen', 'greedy'];
@@ -49,7 +52,7 @@ export function decodeVaultError(e) {
   return e?.shortMessage || e?.message || String(e);
 }
 
-// Simulate, then send and wait. {ok, hash, receipt, reason, mined}.
+// Simulate, then send and wait. {ok, hash, receipt, reason, mined}, or {ok: false, deferred: true} over the fee cap.
 export async function send(ctx, functionName, args, { force = false, gas } = {}) {
   const address = vaultAddress();
   let expected = null;
@@ -57,10 +60,19 @@ export async function send(ctx, functionName, args, { force = false, gas } = {})
   catch (e) { expected = decodeVaultError(e); }
   if (expected && !force) { ctx.log('tx-skipped', { fn: functionName, reason: expected }); return { ok: false, reason: expected, mined: false }; }
   const data = encodeFunctionData({ abi: abi('CastleVault'), functionName, args });
-  const hash = await ctx.wallet.sendTransaction({ to: address, data, ...(expected ? { gas: gas ?? 400_000n } : {}) });
-  const receipt = await ctx.pc.waitForTransactionReceipt({ hash, timeout: 120_000 });
+  const maxFee = parseGwei(env('MAX_FEE_GWEI', '1.8'));
+  const tip = [parseGwei(env('TIP_GWEI', '0.1')), maxFee].reduce((a, b) => (a < b ? a : b));
+  const base = (await ctx.pc.getBlock()).baseFeePerGas ?? 0n;
+  if (base + tip > maxFee) {
+    const reason = `the base fee is ${formatGwei(base)} gwei: with the ${formatGwei(tip)} tip that is over the ${formatGwei(maxFee)} gwei cap`;
+    ctx.logChange(`defer-${functionName}`, 'tx-deferred', { fn: functionName, reason });
+    return { ok: false, deferred: true, reason, mined: false };
+  }
+  const hash = await ctx.wallet.sendTransaction({ to: address, data, maxFeePerGas: maxFee, maxPriorityFeePerGas: tip, ...(expected ? { gas: gas ?? 400_000n } : {}) });
+  ctx.log('tx-sent', { fn: functionName, hash, link: txLink(hash) });
+  const receipt = await ctx.pc.waitForTransactionReceipt({ hash, timeout: 300_000 });
   const ok = receipt.status === 'success';
-  ctx.log(ok ? 'tx' : 'tx-reverted', { fn: functionName, hash, link: txLink(hash), block: receipt.blockNumber, gasUsed: receipt.gasUsed, ...(ok ? {} : { reason: expected }) });
+  ctx.log(ok ? 'tx' : 'tx-reverted', { fn: functionName, hash, link: txLink(hash), block: receipt.blockNumber, gasUsed: receipt.gasUsed, gasPriceGwei: formatGwei(receipt.effectiveGasPrice), costEth: formatEther(receipt.gasUsed * receipt.effectiveGasPrice), ...(ok ? {} : { reason: expected }) });
   return { ok, hash, receipt, reason: ok ? null : expected, mined: true };
 }
 

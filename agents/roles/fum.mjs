@@ -20,10 +20,13 @@ const fmt = (x) => (typeof x === 'bigint' ? x.toString() : x);
 let configured = false;
 let lastKey = null;
 
+// Sends what differs from the vault's settings; true once nothing is left to send (a deferred or failed write is
+// sent again on a later tick).
 async function configure(ctx, l) {
   const t = tokens();
+  let done = true;
   for (const [sym, a] of Object.entries(t)) {
-    if (l.tokens[sym].leverageBps !== LEVERAGE) await send(ctx, 'setLeverage', [a, LEVERAGE]);
+    if (l.tokens[sym].leverageBps !== LEVERAGE) done = (await send(ctx, 'setLeverage', [a, LEVERAGE])).ok && done;
   }
   for (const [name, slot] of Object.entries(SLOTS)) {
     const base = name === 'greedy' && GREEDY_CAP === 'hoard' ? 10_000n : CAP_BPS;
@@ -32,9 +35,10 @@ async function configure(ctx, l) {
     if (want.WETH === 0n && want.USDC === 0n) continue;
     if (have.WETH !== want.WETH || have.USDC !== want.USDC) {
       ctx.log('cap', { strategy: name, slot, weth: want.WETH, usdc: want.USDC, leverageBps: LEVERAGE });
-      await send(ctx, 'setCap', [slot, want.WETH, want.USDC]);
+      done = (await send(ctx, 'setCap', [slot, want.WETH, want.USDC])).ok && done;
     }
   }
+  return done;
 }
 
 // Have fills pushed what is promised past the leverage limit (limit = balance x leverage)? The first token over and
@@ -59,8 +63,8 @@ export default {
     let l = await ledger(ctx);
     if (!configured) {
       if (l.tokens.WETH.balance === 0n && l.tokens.USDC.balance === 0n) return ctx.logChange('wait', 'waiting', { for: 'the hoard to be funded' });
-      await configure(ctx, l);
-      configured = true;
+      configured = await configure(ctx, l);
+      if (!configured) return;
       l = await ledger(ctx);
     }
     const live = l.slots.filter((s) => s.hash);

@@ -8,7 +8,7 @@ The running record of the feefifofum build: what was done, who did it, which com
 - **Deadline:** Sun 27 Sep 00:00 UTC
 - **Pre-existing product:** handoff (private), baseline `079f8f0`
 - **Earlier product:** the lease edition, retired at 10:51Z on Sat 26 Sep. Its code and full worklog are at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition).
-- **Last regenerated:** Sat 11:23Z
+- **Last regenerated:** Sat 11:24Z
 
 All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified).
 
@@ -27,7 +27,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 | Task | Owner | Assignee | Due | Status | Commit | On-chain |
 |---|---|---|---|---|---|---|
 | **BLOCKER** Castle vault: one Aqua balance backs many SwapVM strategies, and fum's caps stop over-allocation <br>`c-vault` `d9d935bc` | mister-anderson | mister-anderson | Sat 16:00Z | in_progress | bf77b95, 98b48b8 | fork: beat 1 end to end; deploy 2.63M gas |
-| **BLOCKER** Uniswap v4 JIT hook: swaps filled just in time from the Castle <br>`c-hook` `18cafd6e` | mister-anderson | mister-anderson | Sat 18:00Z | in_progress |  |  |
+| **BLOCKER** Uniswap v4 JIT hook: swaps filled just in time from the Castle <br>`c-hook` `18cafd6e` | mister-anderson | mister-anderson | Sat 18:00Z | in_progress | c348dda | fork 6/6 (SirKit re-ran): v4 swap filled JIT from the Castle in one tx |
 | **BLOCKER** CCIP-Read resolver for quote.feefifofum.eth, with its signature scheme <br>`c-ccip` `68662597` | mister-anderson | mister-anderson | Sat 17:00Z | in_progress |  |  |
 | One live deploy: vault, hook, resolver and the quote name <br>`c-deploy` `bb9f6fbe` | mister-anderson | mister-anderson | Sat 21:00Z | in_progress |  |  |
 
@@ -82,7 +82,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 ## Wallets
 
-Live balances read at block 11785913.
+Live balances read at block 11785921.
 
 | Wallet | handoff agent | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -159,3 +159,5 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 11:18Z | agy | v-spec: a conditional FAIL on 7c3a6fd (four of its five items came from a stale working tree; one real fix: the resolver extraData is the callData), then PASS on d70dafa. SirKit re-ran test/CastleVault.t.sol: 19 passed. spec, v-spec and research are verified. |
 | Sat 11:22Z | mister-anderson | c-vault fork-green: CastleVault and PriceExtruction (bf77b95), 19 unit tests; CastleVaultFork on live Sepolia Aqua and router (98b48b8), 3 of 3: 2x leverage, harp and hen each promising the whole hoard, greedy reverting OverAllocated, a fi-quoted harp fill, the same quote 31 s later reverting QuoteExpired, and a hen fill. OffchainQuoteResolver (804741e) and the JS signer (eb01aa5) are on main; v4-core added (5af11fd). |
 | Sat 11:22Z | SirKit | Repo cleanup: the lease edition docs are retired from main (852b358; kept at tag lease-edition); NAMING.md rewritten; root .gitignore. The contract, agent and service cleanup is delegated to their owners. |
+| Sat 11:24Z | mister-anderson | c-hook fork-green at c348dda, ahead of the 17:00Z cut line: CastleJITHook at a CREATE2-mined address (flags 0x888), a pool with no LP liquidity, a 1 USDC swap through PoolSwapTest filled from hen in one tx (v4 Swap, Aqua Pulled/Pushed, JitFill), both directions, and the guarded reverts. SirKit re-ran CastleJITHookFork: 6 passed. SPEC gas table updated from fork measurements, about 8.5M gas (54366ae). |
+| Sat 11:24Z | korg | README Repository layout section; research.md points at the lease-edition tag (e95d402). |

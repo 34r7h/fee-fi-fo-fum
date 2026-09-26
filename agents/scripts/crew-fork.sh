@@ -22,7 +22,8 @@
 # The Jack's fills are FILL (0.5 USDC) each, as in the live run.
 #   ./scripts/crew-fork.sh    env: ANVIL_PORT (18841), SVC_PORT (18842), FO_PORT (18843), FORK_URL, FORK_WORK,
 #                                  ARTIFACTS (contracts/out, for a fresh deploy), FILL (500000), STRESS (1),
-#                                  RECORD (a directory for the run's record)
+#                                  RECORD (a directory for the run's record), KEEP=1 (leave it all running),
+#                                  STOP=1 (stop what a KEEP=1 run left)
 set -uo pipefail
 AGENTS=$(cd "$(dirname "$0")/.." && pwd)
 ROOT=$(cd "$AGENTS/.." && pwd)
@@ -64,6 +65,7 @@ state() { curl -sf "$SVC/state"; }
 jack() { local name=$1; shift; guard; (cd "$AGENTS" && node scripts/jack.mjs "$@" 2>&1) | tail -1 | tee "$WORK/steps/$name.json"; }
 
 mkdir -p "$WORK"; stop_all > /dev/null
+[ "${STOP:-0}" = 1 ] && exit 0
 for p in "$PORT" "$SVC_PORT" "$FO_PORT"; do [ -z "$(listener "$p")" ] || { echo "127.0.0.1:$p is taken by pid $(listener "$p"); set ANVIL_PORT / SVC_PORT / FO_PORT" >&2; exit 1; }; done
 [ -f "$FI_KEY" ] || { echo "no fi key at $FI_KEY: the service signs quotes with it" >&2; exit 1; }
 rm -rf "$WORK/logs" "$WORK/steps" "$WORK/svc-data" "$WORK/run.log" "$WORK/deployments.json"; mkdir -p "$WORK/logs" "$WORK/steps"
@@ -140,4 +142,8 @@ if [ -n "$RECORD" ]; then
   cp "$WORK"/steps/*.json "$WORK/steps/stream.jsonl" "$RECORD/" 2>/dev/null
   for id in fee fi fo fum service; do cp "$WORK/logs/$id.log" "$RECORD/logs/"; done
   say "record: $RECORD"
+fi
+if [ "${KEEP:-0}" = 1 ]; then
+  trap - EXIT
+  say "kept up for inspection: anvil $RPC, service $SVC, fo :$FO_PORT; STOP=1 FORK_WORK=$WORK $0 stops them"
 fi

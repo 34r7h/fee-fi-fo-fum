@@ -304,7 +304,8 @@ export function config() {
   const book = addressBook();
   return {
     chainId: env.chainId, explorer: 'https://sepolia.etherscan.io',
-    name: 'castle.feefifofum.eth', quoteName: process.env.CASTLE_QUOTE_NAME || 'quote.feefifofum.eth',
+    // The Castle's one ENS name. The lease edition's castle.feefifofum.eth resolves to the retired castle.
+    name: process.env.CASTLE_QUOTE_NAME || 'quote.feefifofum.eth', quoteName: process.env.CASTLE_QUOTE_NAME || 'quote.feefifofum.eth',
     gateway: `${env.publicUrl || ''}/ccip/{sender}/{data}.json`,
     castle: book.castle, aqua: book.aqua, router: book.router, priceExtruction: book.priceExtruction, resolver: book.quoteResolver,
     hook: book.hook, poolManager: book.poolManager, poolSwapTest: book.poolSwapTest, poolId: value('poolId'),

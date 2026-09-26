@@ -14,6 +14,7 @@ export const env = {
   rpcs: [process.env.SEPOLIA_RPC_URL, ...(process.env.SEPOLIA_RPC_URL_FALLBACK || '').split(',')]
     .map((s) => (s || '').trim()).filter(Boolean),
   deploymentsPath: fromRoot(process.env.CASTLE_DEPLOYMENTS || '../contracts/deployments/sepolia.json'),
+  ensDeploymentsPath: fromRoot(process.env.CASTLE_ENS_DEPLOYMENTS || '../contracts/deployments/ens-agents.sepolia.json'),
   abiDir: fromRoot(process.env.CASTLE_ABI_DIR || '../contracts/out-abi'),
   miniappConfigPath: fromRoot(process.env.CASTLE_MINIAPP_CONFIG || '../miniapp/config.json'),
   crewPath: fromRoot(process.env.CASTLE_CREW || '../agents/crew.json'),
@@ -32,10 +33,12 @@ const isAddr = (v) => typeof v === 'string' && /^0x[0-9a-fA-F]{40}$/.test(v);
 
 // deployments/sepolia.json is owned by the contracts lane: {external: {name: "0x…"}, contracts: {name: "0x…" |
 // {address, block}}}. A flat {name: "0x…"} map works too. Normalised to {name: {address, block}}; ours win.
+// The agent registry and resolver (agent-registry.mjs's state file) fill in below, never over, the contracts lane.
 export function deployments() {
   const raw = readJson(env.deploymentsPath) || {};
+  const ens = readJson(env.ensDeploymentsPath) || {};
   const obj = (v) => (v && typeof v === 'object' ? v : {});
-  const src = { ...raw, ...obj(raw.external), ...obj(raw.contracts) };
+  const src = { agentRegistry: ens.agentRegistry, agentResolver: ens.resolver, ...raw, ...obj(raw.external), ...obj(raw.contracts) };
   const out = {};
   for (const [k, v] of Object.entries(src)) {
     if (isAddr(v)) out[k] = { address: v, block: null };
@@ -48,12 +51,12 @@ export function deployments() {
 const ALIASES = {
   castle: ['castle', 'Castle'],
   aqua: ['aqua', 'Aqua'],
-  router: ['router', 'swapVmRouter', 'AquaSwapVMRouter', 'SwapVMRouter'],
+  router: ['router', 'aquaSwapVMRouter', 'swapVmRouter', 'AquaSwapVMRouter', 'SwapVMRouter'],
   extruction: ['extruction', 'FeeFiFoFumExtruction', 'fence'],
   jackHook: ['jackHook', 'JackHook'],
   ccaFactory: ['ccaFactory', 'CCAFactory', 'ContinuousClearingAuctionFactory'],
   registry: ['registry', 'ensRegistry', 'ETHRegistry', 'castleRegistry', 'agentRegistry'],
-  resolver: ['resolver', 'PermissionedResolver', 'ensResolver'],
+  resolver: ['resolver', 'PermissionedResolver', 'ensResolver', 'agentResolver'],
   universalResolver: ['universalResolver', 'universalResolverV2', 'UniversalResolverV2'],
   usdc: ['usdc', 'USDC'],
   weth: ['weth', 'WETH'],

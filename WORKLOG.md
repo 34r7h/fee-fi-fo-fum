@@ -8,7 +8,7 @@ The running record of the feefifofum build: what was done, who did it, which com
 - **Deadline:** Sun 27 Sep 00:00 UTC
 - **Pre-existing product:** handoff (private), baseline `079f8f0`
 - **Earlier product:** the lease edition, retired at 10:51Z on Sat 26 Sep. Its code and full worklog are at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition).
-- **Last regenerated:** Sat 12:56Z
+- **Last regenerated:** Sat 12:58Z
 
 All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified).
 
@@ -86,7 +86,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 ## Wallets
 
-Live balances read at block 11786356.
+Live balances read at block 11786364.
 
 | Wallet | handoff agent | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -124,7 +124,7 @@ Live balances read at block 11786356.
 |---|---|---|
 | A. Treasury funds the hoard: 5 USDC plus 5/mid WETH (0.001859 WETH at 2689.63) | [0x7e0b4a9f…](https://sepolia.etherscan.io/tx/0x7e0b4a9f0fa7b8920b2f5188de6cfcebbed61c5dfdbf80110da4c1604cb5e8a6), [0xd125c491…](https://sepolia.etherscan.io/tx/0xd125c4919b722aeebda218b7ae2f794e5956afa6e325784829ea215b26d8f543), [0x34840128…](https://sepolia.etherscan.io/tx/0x3484012803e8bc9a1b687326cfc27a727755d03d3c4ec80fd9a52b68d1a3eb3b) | SirKit (balances read back) |
 | B. fum sets 2x leverage on both tokens and caps slots 0 to 2 | [0x53336098…](https://sepolia.etherscan.io/tx/0x533360983d9b137e5f2513f88c5a8c9d63003c60d0201b5c43fd92162fa0e5f7), [0xcf95760d…](https://sepolia.etherscan.io/tx/0xcf95760df456850bb1db11811c887c06fae925611984c7fc4e188f838b1a54f9), [0xd2fbb4f8…](https://sepolia.etherscan.io/tx/0xd2fbb4f8db826c5a202d4724da0767b10ebf8be666751f1324c91b467ba788b5), [0x3d145621…](https://sepolia.etherscan.io/tx/0x3d145621afcd2d43c97a400139b8f5caee7768d6f3e4477dddc4723e5b568970), [0x1b24490f…](https://sepolia.etherscan.io/tx/0x1b24490f1c5a1ae23ab58d8d1c79508c9ba85903b06b9735b73ef2f0d068481f) | SirKit (leverageOf and capOf read back) |
-| 1. One balance backs harp and hen; greedy reverts OverAllocated |  |  |
+| 1. (Aqua) One balance backs harp and hen at 80% each (1.6x); greedy reverts OverAllocated(WETH, 3903882690184150, 3717983514461096) | [0x15711ddf…](https://sepolia.etherscan.io/tx/0x15711ddff90cc60b42144f8e62facb6cc4cd69bb6e3263956fe674bcc396095a) harp, [0x5d7bee55…](https://sepolia.etherscan.io/tx/0x5d7bee55fe98474b4fcdcef0940e5d03d0767da89d3f20290b19bb00fa1cd6ce) hen, [0x647aba61…](https://sepolia.etherscan.io/tx/0x647aba61fbb7442ccd986346c6acb8de2dae42eab5e5160ed950277dc7a9d0ba) greedy (reverted) | SirKit (receipts, plus a replay of greedy decoded as OverAllocated) |
 | 2. Solver resolves quote.feefifofum.eth via CCIP-Read and fills |  |  |
 | 3. v4 swap filled JIT from the Castle |  |  |
 | 4. Miniapp shows all three from a clean browser |  |  |
@@ -188,3 +188,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 12:42Z | agy | v-e2e PASS, verified by SirKit: two passes of crew-fork.sh STRESS=0 on forks at 11786255 and 11786266 against the live contracts, through jack.mjs, the local gateway and the stream, with distinct tx hashes (docs/e2e/pass1, pass2 at dbb243d). a-live is unblocked. |
 | Sat 12:44Z | SirKit | a-live phase A LIVE: the treasury funded the Castle with 5 USDC and 0.001858991757230548 WETH (wrap plus transfer) and topped agy up with 0.001 ETH; 4 txs, all status 1, 0.000182 ETH; the vault balances were read back. Phases B and C (fum, fi) have the go. |
 | Sat 12:56Z | agent-smith | a-live phase B LIVE: fum setLeverage 2x on USDC and WETH and setCap on slots 0 to 2; 5 txs, all status 1, 0.000312 ETH. SirKit read back leverageOf = 20000 and the caps on-chain. fee, fo and fum are running live against the castle service; phase C (fi) is under way. |
+| Sat 12:58Z | agent-smith | a-live phase C LIVE, which is BEAT 1: fi shipped harp and hen at 80% each from one balance, and greedy reverted OverAllocated. 0.000607 ETH. SirKit verified the receipts and replayed greedy at the block before to decode OverAllocated(WETH, 3903882690184150, 3717983514461096). Phases D and E (agy) have the go. |

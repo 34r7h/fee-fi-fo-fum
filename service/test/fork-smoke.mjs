@@ -1,10 +1,12 @@
 #!/usr/bin/env node
-// Castle service against a real Castle on an anvil fork of Sepolia, with live Aqua, WETH and USDC. It deploys
-// Castle + our own SwapVM router (contracts/out) with the mock ENSv2 registry/resolver the contracts lane tests
-// with, starts the service on that fork, then drives the demo beats through the service's own tools and checks
-// what /state, /fills and /stream report:
-//   fee claims -> ships a book -> castle_quote -> castle_fill (build, sign as a Jack, report tx) -> fo-attested
-//   renew -> lease expires -> fi joins and claims via castle_claim -> a fill that reverts is reported and shows.
+// Castle service against Castle v2 on an anvil fork of Sepolia, wired as the live deploy will be: the live Aqua,
+// WETH, USDC, AquaSwapVMRouter and handoff's ENSv2 agent registry and resolver. Only Castle and the fence are
+// deployed (contracts/out). The registry admin is impersonated to grant Castle its root roles, and fee and fi (who
+// own fee/fi.feefifofum.eth on the live registry) are impersonated as crew. It starts the service on that fork,
+// then drives the demo beats through the service's own tools and checks what /state, /fills and /stream report:
+//   fee claims + relinks -> ships a book on the ENS anchor -> castle_quote -> castle_fill (build, sign as a Jack,
+//   report tx) -> fo-attested renew -> lease expires -> fi joins (name checked) and claims via castle_claim ->
+//   a fill that reverts is reported with its decoded reason.
 //
 //   anvil --fork-url $SEPOLIA_RPC_URL --port 8546 &
 //   node test/fork-smoke.mjs --rpc http://127.0.0.1:8546
@@ -14,7 +16,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import {
-  createPublicClient, createWalletClient, http, encodeAbiParameters, keccak256, pad, toHex, parseEther, getAddress,
+  createPublicClient, createWalletClient, http, encodeAbiParameters, encodeFunctionData, keccak256, pad, toHex, parseEther, getAddress,
 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { sepolia } from 'viem/chains';
@@ -27,8 +29,13 @@ const RPC = argv[argv.indexOf('--rpc') + 1] || 'http://127.0.0.1:8546';
 const PORT = 8798;
 const SVC = `http://127.0.0.1:${PORT}`;
 
-const deps = JSON.parse(fs.readFileSync(path.join(repo, 'contracts/deployments/sepolia.json'), 'utf8')).external;
+const deployments = JSON.parse(fs.readFileSync(path.join(repo, 'contracts/deployments/sepolia.json'), 'utf8'));
+const deps = deployments.external;
+const ens = JSON.parse(fs.readFileSync(path.join(repo, 'contracts/deployments/ens-agents.sepolia.json'), 'utf8'));
 const AQUA = getAddress(deps.aqua), WETH = getAddress(deps.weth), USDC = getAddress(deps.usdc);
+const ROUTER = getAddress(deployments.contracts.aquaSwapVMRouter?.address ?? deployments.contracts.router);
+const REGISTRY = getAddress(ens.agentRegistry), RESOLVER = getAddress(ens.resolver), ENS_ADMIN = getAddress(ens.registrar);
+const crewFile = JSON.parse(fs.readFileSync(path.join(repo, 'agents/crew.json'), 'utf8')).agents;
 
 const chain = { ...sepolia, rpcUrls: { default: { http: [RPC] } } };
 const pub = createPublicClient({ chain, transport: http(RPC) });
@@ -36,7 +43,8 @@ const pub = createPublicClient({ chain, transport: http(RPC) });
 const deployer = privateKeyToAccount('0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80');
 const fo = privateKeyToAccount('0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d');
 const w = createWalletClient({ account: deployer, chain, transport: http(RPC) });
-const [fee, fi, jack] = ['0x000000000000000000000000000000000000fee1', '0x000000000000000000000000000000000000f1f1', '0x000000000000000000000000000000000000ac4a'].map((a) => getAddress(a));
+// fee and fi are the real crew EOAs: Castle v2's claim() checks that the caller owns its crew name in the registry.
+const [fee, fi, jack] = [crewFile.fee.address, crewFile.fi.address, '0x000000000000000000000000000000000000ac4a'].map((a) => getAddress(a));
 
 const rpc = (method, params) => pub.request({ method, params });
 const checks = [];
@@ -77,25 +85,26 @@ async function waitFor(pred, ms = 20_000) {
 }
 
 // ---- deploy ------------------------------------------------------------------------------------------------
-const registry = await deploy('MockENSv2.sol', 'MockENSv2Registry');
-const resolver = await deploy('MockENSv2.sol', 'MockENSv2Resolver');
-const router = await deploy('AquaSwapVMRouter.sol', 'AquaSwapVMRouter', [AQUA, WETH, deployer.address, 'AquaSwapVMRouter', '1.0.2']);
-const programs = await deploy('CastleFork.t.sol', 'AquaForkProgram');
+const fence = await deploy('FeeFiFoFumExtruction.sol', 'FeeFiFoFumExtruction');
 const dnsName = toHex(new Uint8Array([6, ...Buffer.from('castle'), 10, ...Buffer.from('feefifofum'), 3, ...Buffer.from('eth'), 0]));
 const castle = await deploy('Castle.sol', 'Castle', [{
-  aqua: AQUA, registry: registry.address, resolver: resolver.address, weth: WETH, usdc: USDC, fo: fo.address,
-  owner: deployer.address, label: 'castle', dnsName, leasePeriod: 120n, registryEpoch: false,
+  aqua: AQUA, router: ROUTER, fence: fence.address, registry: REGISTRY, resolver: RESOLVER, weth: WETH, usdc: USDC, fo: fo.address,
+  owner: deployer.address, label: 'castle', dnsName, leasePeriod: 120n, registryEpoch: true, windDownFeeBps: 50_000_000, decayPeriod: 60,
 }]);
-await w.writeContract({ address: registry.address, abi: registry.abi, functionName: 'grantRootRoles', args: [(1n << 0n) | (1n << 16n), castle.address] });
-await w.writeContract({ address: resolver.address, abi: resolver.abi, functionName: 'grantRootRoles', args: [(1n << 28n) | (1n << 36n), castle.address] });
-for (const m of [fee, fi]) await pub.waitForTransactionReceipt({ hash: await w.writeContract({ address: castle.address, abi: castle.abi, functionName: 'setCrew', args: [m, true] }) });
+const router = { address: ROUTER };
+const grant = [{ type: 'function', name: 'grantRootRoles', stateMutability: 'nonpayable', inputs: [{ type: 'uint256' }, { type: 'address' }], outputs: [{ type: 'bool' }] }];
+await as(ENS_ADMIN, { address: REGISTRY, abi: grant, functionName: 'grantRootRoles', args: [(1n << 0n) | (1n << 16n), castle.address] });   // REGISTRAR | RENEW
+await as(ENS_ADMIN, { address: RESOLVER, abi: grant, functionName: 'grantRootRoles', args: [(1n << 24n) | (1n << 28n), castle.address] }); // SET_DATA | LINK
+for (const [m, label] of [[fee, 'fee'], [fi, 'fi']]) await pub.waitForTransactionReceipt({ hash: await w.writeContract({ address: castle.address, abi: castle.abi, functionName: 'setCrew', args: [m, label] }) });
+const ANCHOR_Q96 = (2500n * 10n ** 6n * (1n << 96n)) / 10n ** 18n;   // 2500 USDC per WETH
+await pub.waitForTransactionReceipt({ hash: await w.writeContract({ address: castle.address, abi: castle.abi, functionName: 'setAnchorPrice', args: [ANCHOR_Q96] }) });
 await setBalance(WETH, castle.address, 3, parseEther('10'));
 await setBalance(USDC, castle.address, 9, 25_000_000_000n);
 console.log(`Castle ${castle.address}  router ${router.address}`);
 
 // ---- the service, pointed at this fork ---------------------------------------------------------------------
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'castle-smoke-'));
-fs.writeFileSync(path.join(tmp, 'sepolia.json'), JSON.stringify({ chainId: 11155111, external: deps, contracts: { castle: { address: castle.address, block: castle.block }, router: router.address } }));
+fs.writeFileSync(path.join(tmp, 'sepolia.json'), JSON.stringify({ chainId: 11155111, external: deps, contracts: { castle: { address: castle.address, block: castle.block }, extruction: fence.address, router: router.address, agentRegistry: REGISTRY, agentResolver: RESOLVER } }));
 fs.writeFileSync(path.join(tmp, 'crew.json'), JSON.stringify({ agents: { fee: { role: 'shift trader', address: fee }, fi: { role: 'hot standby', address: fi } } }));
 const svc = spawn(process.execPath, ['src/server.mjs'], {
   cwd: path.join(repo, 'service'),
@@ -107,17 +116,17 @@ process.on('exit', stop);
 await waitFor(async () => (await fetch(`${SVC}/health`).catch(() => null))?.ok);
 
 try {
-  // (1) fee takes the castle and ships the book.
-  await as(fee, { address: castle.address, abi: castle.abi, functionName: 'claim' });
-  const program = await pub.readContract({ address: programs.address, abi: programs.abi, functionName: 'xycWithSalt', args: [1n] });
-  const order = { maker: castle.address, traits: 1n << 254n, data: program };   // MakerTraits: useAquaInsteadOfSignature, no hooks
-  const strategy = encodeAbiParameters([{ type: 'tuple', components: [{ name: 'maker', type: 'address' }, { name: 'traits', type: 'uint256' }, { name: 'data', type: 'bytes' }] }], [order]);
-  await as(fee, { address: castle.address, abi: castle.abi, functionName: 'ship', args: [router.address, strategy, [WETH, USDC], [parseEther('10'), 25_000_000_000n]] });
+  // (1) fee takes the castle (claim + relink, as the crew does) and ships a book Castle builds on the ENS anchor.
+  const calls = ['claim', 'relink'].map((functionName) => encodeFunctionData({ abi: castle.abi, functionName }));
+  await as(fee, { address: castle.address, abi: castle.abi, functionName: 'multicall', args: [calls] });
+  await as(fee, { address: castle.address, abi: castle.abi, functionName: 'ship', args: [{ maxWeth: parseEther('10'), maxUsdc: 25_000_000_000n, feeBps: 3_000_000, rangeBps: 50_000_000 }] });
 
   const st = await waitFor(async () => { const s = await tool('castle_status'); return s.lease?.epoch && s.strategies.length ? s : null; });
   check(st?.lease?.holder && getAddress(st.lease.holder) === getAddress(fee) && st.lease.holderAgent === 'fee', 'castle_status: fee holds the castle', `epoch ${st?.lease?.epoch} state ${st?.lease?.state}`);
   check(st?.strategies?.length === 1 && st.strategies[0].epoch === st.lease.epoch, 'castle_status: the shipped strategy carries the lease epoch');
   check(st?.inventory?.weth === parseEther('10').toString(), 'castle_status: WETH inventory read from chain', st?.inventory?.weth);
+  const centre = Number(st?.strategies?.[0]?.center?.usdcPerWeth);
+  check(Math.abs(centre - 2500) < 0.5, 'castle_status: the book is centred on the ENS anchor (2500 USDC/WETH)', String(centre));
 
   // (2) a Jack quotes and fills 1,000 USDC for WETH through the service.
   const q = await tool('castle_quote', { tokenIn: 'USDC', tokenOut: 'WETH', amount: '1000000000', taker: jack });
@@ -140,7 +149,10 @@ try {
 
   // (4) fee goes quiet; the lease lapses; fi applies and claims through castle_claim.
   await rpc('evm_increaseTime', [200]); await rpc('evm_mine', []);
-  await tool('castle_join', { agent_id: 'fi', addr: fi });
+  const joined = await tool('castle_join', { agent_id: 'fi', addr: fi, ens: 'fi.feefifofum.eth' });
+  check(joined.joined && joined.ensChecked === 'agent registry', 'castle_join: fi joins with its own name, checked in the agent registry');
+  const refused = await tool('castle_join', { agent_id: 'mallory', addr: jack, ens: 'fi.feefifofum.eth' });
+  check(refused.joined === false, 'castle_join: a name the applicant does not own is refused');
   const c = await tool('castle_claim', { agent_id: 'fi' });
   check(c.ok && c.simulation === 'ok', 'castle_claim: crew claim is built and simulates', c.simulation);
   const claimed = await as(fi, c.tx);

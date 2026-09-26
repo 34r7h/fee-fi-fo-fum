@@ -18,6 +18,17 @@ const token = (t) => {
   return isAddress(t) ? getAddress(t) : null;
 };
 const need = (v, what) => { if (!v) throw new Error(`${what} is not deployed yet (contracts/deployments/sepolia.json has no address for it)`); return v; };
+// An amount in atomic units, as a decimal string: a validation error instead of BigInt's raw TypeError/SyntaxError.
+const atomic = (name, v, { required = true } = {}) => {
+  if (v === undefined || v === null || v === '') {
+    if (!required) return null;
+    throw new Error(`${name} is required: atomic units as a decimal string (e.g. "500000" is 0.5 USDC, "1000000000000000" is 0.001 WETH)`);
+  }
+  if (!/^\d+$/.test(String(v))) throw new Error(`${name} must be a decimal string of atomic units, got ${JSON.stringify(v)}`);
+  const n = BigInt(v);
+  if (n === 0n) throw new Error(`${name} must be above zero`);
+  return n;
+};
 
 // SwapVM 1.0.2 TakerTraitsLib.build, in JS: uint160 slice indexes + uint16 flags, then the slices.
 export function takerData({ taker, isExactIn = true, threshold, to, deadline = 0, useTransferFromAndAquaPush = true, isFirstTransferFromTaker = false, instructionsArgs = '0x' }) {
@@ -88,6 +99,8 @@ export const tools = {
     description: 'Quote a swap against the castle book through the SwapVM router: the view path runs the same FeeFiFoFumExtruction fence the swap will, so a stale epoch quotes as a FeeFiFoFum() revert. tokenIn/tokenOut are "USDC", "WETH" or addresses (tokenOut defaults to the other one); amount is atomic units (exact in by default).',
     input: { tokenIn: z.string(), tokenOut: z.string().optional(), amount: z.string(), exactIn: z.boolean().optional(), strategy: z.string().optional(), taker: z.string().optional() },
     run: async ({ tokenIn, tokenOut, amount, exactIn = true, strategy, taker }) => {
+      if (!tokenIn) throw new Error('tokenIn is required: "USDC", "WETH" or a token address');
+      const amt = atomic('amount', amount);
       const router = need(addr('router'), 'the SwapVM router');
       const { s, order } = pickStrategy(strategy);
       const tIn = token(tokenIn), tOut = tokenOut ? token(tokenOut) : otherToken(tIn);
@@ -96,7 +109,7 @@ export const tools = {
       const decision = fenceDecision(s.epoch, lease?.epoch, lease?.expiry, h.timestamp);
       const data = takerData({ taker, isExactIn: exactIn });
       try {
-        const [amountIn, amountOut, orderHash] = await client.readContract({ address: router, abi: abi('SwapVM'), functionName: 'quote', args: [order, tIn, tOut, BigInt(amount), data], account: taker && isAddress(taker) ? taker : undefined });
+        const [amountIn, amountOut, orderHash] = await client.readContract({ address: router, abi: abi('SwapVM'), functionName: 'quote', args: [order, tIn, tOut, amt, data], account: taker && isAddress(taker) ? taker : undefined });
         return { ok: true, strategy: s.hash, programEpoch: s.epoch, leaseEpoch: lease?.epoch ?? null, decision, amountIn: amountIn.toString(), amountOut: amountOut.toString(), orderHash, block: Number(h.number) };
       } catch (e) {
         const raw = e?.walk?.((x) => typeof x?.data === 'string')?.data;
@@ -133,11 +146,13 @@ export const tools = {
         return { recorded: true, ...entry, etherscan: `https://sepolia.etherscan.io/tx/${tx_hash}` };
       }
       const router = need(addr('router'), 'the SwapVM router');
-      if (!tokenIn || !amount) throw new Error('tokenIn and amount are required to build a fill (tokenOut defaults to the other token)');
+      if (!tokenIn) throw new Error('tokenIn is required to build a fill (tokenOut defaults to the other token)');
+      const amt = atomic('amount', amount);
+      const min = atomic('minOut', minOut, { required: false });
       const { s, order } = pickStrategy(strategy);
       const tIn = token(tokenIn), tOut = tokenOut ? token(tokenOut) : otherToken(tIn);
-      const data = encodeFunctionData({ abi: abi('SwapVM'), functionName: 'swap', args: [order, tIn, tOut, BigInt(amount), takerData({ taker, isExactIn: true, threshold: minOut ?? 1n, deadline })] });
-      const approve = encodeFunctionData({ abi: [{ type: 'function', name: 'approve', stateMutability: 'nonpayable', inputs: [{ type: 'address' }, { type: 'uint256' }], outputs: [{ type: 'bool' }] }], functionName: 'approve', args: [router, BigInt(amount)] });
+      const data = encodeFunctionData({ abi: abi('SwapVM'), functionName: 'swap', args: [order, tIn, tOut, amt, takerData({ taker, isExactIn: true, threshold: min ?? 1n, deadline })] });
+      const approve = encodeFunctionData({ abi: [{ type: 'function', name: 'approve', stateMutability: 'nonpayable', inputs: [{ type: 'address' }, { type: 'uint256' }], outputs: [{ type: 'bool' }] }], functionName: 'approve', args: [router, amt] });
       return {
         strategy: s.hash, programEpoch: s.epoch,
         approve: { to: tIn, data: approve, value: '0' },
@@ -203,7 +218,7 @@ export const tools = {
       if (!a) throw new Error('no CCA is open on the castle right now');
       if (!isAddress(a)) throw new Error('auction must be an address');
       if (!isAddress(owner)) throw new Error('owner must be an address');
-      const A = getAddress(a), O = getAddress(owner), amt = BigInt(amount);
+      const A = getAddress(a), O = getAddress(owner), amt = atomic('amount', amount);
       const read = (functionName, args = []) => client.readContract({ address: A, abi: abi('CCA'), functionName, args });
       const [currency, tick, floor, clearing] = await Promise.all([read('currency'), read('tickSpacing'), read('floorPrice'), read('clearingPrice')]);
       let q96 = maxPriceQ96 != null ? BigInt(maxPriceQ96) : null;

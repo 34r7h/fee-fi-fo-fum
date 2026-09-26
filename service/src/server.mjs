@@ -7,6 +7,7 @@
 //   GET  /health
 // CORS is open (Access-Control-Allow-Origin: *): the miniapp reads this cross-origin from handoff.lol.
 import http from 'node:http';
+import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { env } from './config.mjs';
@@ -95,7 +96,10 @@ const srv = http.createServer(async (req, res) => {
     if (m && req.method === 'POST') {
       const t = tools[m[1]];
       if (!t) return send(res, 404, { error: `no tool ${m[1]}` });
-      try { return send(res, 200, await t.run(await readBody(req))); }
+      // The same input schema the MCP tool enforces, so a REST call gets a validation error, not a TypeError.
+      const parsed = z.object(t.input).safeParse(await readBody(req));
+      if (!parsed.success) return send(res, 400, { error: 'invalid arguments', issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })) });
+      try { return send(res, 200, await t.run(parsed.data)); }
       catch (e) { return send(res, 400, { error: String(e?.shortMessage || e?.message || e) }); }
     }
     if (p === '/') return send(res, 200, { service: 'castle', mcp: '/mcp', tools: '/tools', stream: '/stream', state: '/state', fills: '/fills', health: '/health' });

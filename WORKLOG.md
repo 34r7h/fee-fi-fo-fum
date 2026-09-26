@@ -8,7 +8,7 @@ The running record of the feefifofum build: what was done, who did it, which com
 - **Deadline:** Sun 27 Sep 00:00 UTC
 - **Pre-existing product:** handoff (private), baseline `079f8f0`
 - **Earlier product:** the lease edition, retired at 10:51Z on Sat 26 Sep. Its code and full worklog are at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition).
-- **Last regenerated:** Sat 13:12Z
+- **Last regenerated:** Sat 13:14Z
 
 All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified).
 
@@ -63,7 +63,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 | Task | Owner | Assignee | Due | Status | Commit | On-chain |
 |---|---|---|---|---|---|---|
-| README, sponsor write-ups and FEEDBACK <br>`s-writeups` `ae2058f7` | mister-anderson | mister-anderson | Sat 23:00Z | review |  |  |
+| README, sponsor write-ups and FEEDBACK <br>`s-writeups` `ae2058f7` | mister-anderson | mister-anderson | Sat 23:00Z | done | fadf7a4..4ac2fba | 102 links, 0 bad; live txs filled |
 | AI_USAGE.md and WORKLOG.md <br>`s-ai` `e16fb6a1` | SirKit | SirKit | Sat 23:30Z | todo |  |  |
 | OPERATOR: record the video and submit on ETHGlobal <br>`s-submit` `fd56d78b` | OPERATOR |  | Sat 23:59Z | todo |  |  |
 
@@ -86,7 +86,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 ## Wallets
 
-Live balances read at block 11786432.
+Live balances read at block 11786443.
 
 | Wallet | handoff agent | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -117,6 +117,8 @@ Live balances read at block 11786432.
 | docs/research.md (gates) | korg | verified d6d21a1 (SirKit re-ran the fork probe) |
 | miniapp/STREAM.md (stream v2) | impecc | 08ba999 |
 | docs/NAMING.md (voice and identifier map) | SirKit | rewritten 852b358 |
+| README.md, docs/1inch.md, docs/uniswap.md, docs/ens.md, FEEDBACK.md | mister-anderson (from korg's skeletons); README voice by impecc | verified |
+| Deck (claude.ai artifact, 10 slides) and docs/video-script.md | impecc | live txs filled |
 
 ## Demo evidence
 
@@ -193,3 +195,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 13:00Z | agy | a-live phases D and E LIVE, which are BEATS 2 and 3. D: CCIP-Read quote q-1790427574-6 through UniversalResolverV2 and the gateway, signed by fi, filled through router.swap (0x763d6de1). E: the v4 swap through PoolSwapTest, filled by CastleJITHook from hen in one tx (0x53f773de: Aqua Pulled and Pushed, JitFill, v4 Swap). 0.000631 ETH. Then F: fee re-centred hen (dock 0x32a20d16, ship 0x03dbf62b). SirKit verified every receipt and its events, and matched the stream quote.served to the fill. |
 | Sat 13:04Z | agy | v-live PASS, verified by SirKit after one send-back (phase F added, the leverage labels corrected, greedy replayed to OverAllocated). Live spend in total: 0.0091 ETH of the 0.02 ETH ceiling (deploy 0.006927, register 0.000144, a-live 0.002033). |
 | Sat 13:12Z | SirKit | Verified a-live (all 17 live txs match SirKit's own receipt and event checks; record at agents/live-run/11786346) and m-miniapp (published; a fresh Chrome profile shows LIVE FROM THE CASTLE and all three beats with 0 console errors, which is beat 4). Requested follow-ups: header name quote.feefifofum.eth, and two stale README lines. |
+| Sat 13:14Z | SirKit | s-writeups verified (README and the sponsor docs read and grepped; the live tx links match the on-chain checks). Miniapp 1.1.1 republished with quote.feefifofum.eth in the header (checked in a fresh profile). The deck and video script were checked against the live run. |

@@ -2,12 +2,12 @@
 
 This is the running record of the fee-fi-fo-fum build: what was done, who did it, which commit, and where it lives on-chain. SirKit (orchestrator) regenerates it from the handoff board and the evidence agents submit. Agents do not edit it by hand.
 
-- **Handoff project:** `2af16779-4c0f-4c93-94b7-6a0281fc6846`: team `team_d5195308`, requester SirKit, budget 12 USDC, settles on `ethereum-sepolia`
+- **Handoff project:** `2af16779-4c0f-4c93-94b7-6a0281fc6846`: team `team_d5195308`, requester SirKit, X
 - **Repo:** https://github.com/34r7h/fee-fi-fo-fum
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 13:46 JST
+- **Last regenerated:** 2026-09-26 13:51 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -17,7 +17,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
-| **BLOCKER** OPERATOR: confirm the team is registered in the Continuity track on the ETHGlobal Hacker Dashboard <br>`p0-continuity` `d5c5a9d3` | OPERATOR |  | Sat 15:00 | todo |  |  |
+| **BLOCKER** OPERATOR: confirm the team is registered in the Continuity track on the ETHGlobal Hacker Dashboard <br>`p0-continuity` `d5c5a9d3` | OPERATOR |  | Sat 15:00 | done |  |  |
 | **BLOCKER** Register feefifofum.eth on ENSv2 (Sepolia) and answer the four lease probes <br>`p0-ens-probes` `b22e3c07` | korg | korg | Sat 15:00 | in_progress |  |  |
 | **BLOCKER** Create the fee, fi, fo, fum handoff agents and fund their Ethereum Sepolia wallets <br>`p0-wallets` `a27aa444` | agent-smith | agent-smith | Sat 15:30 | in_progress |  |  |
 
@@ -27,7 +27,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 |---|---|---|---|---|---|---|
 | Foundry scaffold, then deploy the SwapVM router (release/1.0.2) on Sepolia <br>`p1-router` `902378f6` | mister-anderson | mister-anderson | Sat 16:00 | in_progress | 3301492 (scaffold) |  |
 | **BLOCKER** Castle.sol: the giant's castle (desk treasury, Aqua maker and ENSv2 lease) <br>`p1-castle` `c3a2dfdf` | mister-anderson |  | Sat 19:00 | todo |  |  |
-| **BLOCKER** FeeFiFoFumExtruction.sol: the giant smells a stale shift (the ENS-lease fence in the SwapVM program) <br>`p1-extruction` `9019b3b9` | korg |  | Sat 19:00 | todo |  |  |
+| **BLOCKER** FeeFiFoFumExtruction.sol: the giant smells a stale shift (the ENS-lease fence in the SwapVM program) <br>`p1-extruction` `9019b3b9` | mister-anderson | mister-anderson | Sat 19:00 | todo |  |  |
 | Independent Sepolia-fork test suite for Castle and FeeFiFoFumExtruction <br>`p1-forktests` `f4d2ae68` | agy | agy | Sat 19:45 | in_progress |  |  |
 | **BLOCKER** Deploy and verify Castle and FeeFiFoFumExtruction on Sepolia, then ship the first live strategy <br>`p1-deploy` `1fed769f` | mister-anderson |  | Sat 20:30 | todo |  |  |
 | **BLOCKER** ICastleLease interface, published before 15:30 JST so the fence and fo can build in parallel <br>`p1-iface` `17a2de4c` | mister-anderson | mister-anderson | Sat 15:30 | review | 3301492, 980fd97, f0c7d65, e11f755 |  |
@@ -47,7 +47,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 |---|---|---|---|---|---|---|
 | agents/ scaffold: shared runtime for fee, fi, fo, fum <br>`p3-scaffold` `17b80082` | agent-smith | agent-smith | Sat 17:00 | in_progress |  |  |
 | fee (shift trader) and fi (hot standby): lease renewal and failover logic <br>`p3-feefi` `fa22a44e` | agent-smith | agent-smith | Sat 20:30 | in_progress |  |  |
-| fo, fencer and witness: EIP-712 attestations, fill replay, incident channel <br>`p3-fo` `9b450702` | agy | agy | Sat 20:30 | in_progress |  |  |
+| fo, fencer and witness: EIP-712 attestations, fill replay, incident channel <br>`p3-fo` `9b450702` | agent-smith | agent-smith | Sat 20:30 | in_progress |  |  |
 | **BLOCKER** Live failover on Sepolia: kill -9 fee, wind-down gap, fi claims, stale epoch fenced, stale fee rejected <br>`p3-failover-e2e` `ad888e60` | agent-smith | agent-smith | Sat 22:30 | in_progress |  |  |
 | fum, auctioneer: shift-change and dissolution CCAs, checkpoint, sweep, setData <br>`p3-fum` `c78ba379` | agent-smith | agent-smith | Sun 00:00 | in_progress |  |  |
 
@@ -55,7 +55,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
-| JackHook.sol: any Jack with an ENSv2 name can climb and bid (CCA validation hook) <br>`p4-jackhook` `67f5a962` | korg |  | Sat 20:00 | todo |  |  |
+| JackHook.sol: any Jack with an ENSv2 name can climb and bid (CCA validation hook) <br>`p4-jackhook` `67f5a962` | mister-anderson | mister-anderson | Sat 21:30 | todo |  |  |
 | **BLOCKER** Castle and CCA: shift-change and dissolution auctions, with the clearing price written back to ENS <br>`p4-cca` `d4a7c73a` | mister-anderson |  | Sat 23:30 | todo |  |  |
 | **BLOCKER** Live: an outside agent bids via MCP, a shift-change CCA clears on Sepolia, and the next curve moves <br>`p4-cca-e2e` `3becce17` | agy | agy | Sun 01:30 | in_progress |  |  |
 
@@ -89,8 +89,8 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | Circle USDC (pre-existing) | `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238` | n/a | Circle |  |
 | SwapVM router release/1.0.2 |  |  | mister-anderson |  |
 | Castle.sol |  |  | mister-anderson |  |
-| FeeFiFoFumExtruction.sol |  |  | korg |  |
-| JackHook.sol |  |  | korg |  |
+| FeeFiFoFumExtruction.sol |  |  | mister-anderson |  |
+| JackHook.sol |  |  | mister-anderson |  |
 | ENSv2 agent registry |  |  | handoff-claude |  |
 
 ## ENS names
@@ -156,6 +156,9 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 13:20 | Chose Option A from handoff-advisor's research; appointed SirKit orchestrator and picked the swarm |
 | Sat 13:25 | Ruled that nothing for the entry goes in the handoff repo; all work lives in feefifofum |
 | Sat 13:40 | Renamed the entry fee-fi-fo-fum, with Jack the Giant Killer overtones for forward-facing copy |
+| Sat 14:05 | Confirmed Continuity-track registration |
+| Sat 14:05 | Linked the GitHub repo (PAT) to handoff project 2af16779 |
+| Sat 14:05 | Sent Sepolia ETH to the treasury 0xc3Af4CCa3ba691C74F18fa8D3a7ad6816eC65dF2 |
 
 ## Log
 
@@ -181,3 +184,6 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 13:58 | handoff-claude | ens_name cannot take an ENSv2 name without a platform change (escalated to the operator). Durable host approved: the existing sandbox host. castle agent approved. |
 | Sat 13:59 | handoff-claude | Registered the castle agent on handoff.lol with a self-custodied EOA, 0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99. |
 | Sat 14:00 | agy | Accepted the tester/witness role; claimed p3-fo, p1-forktests, p4-cca-e2e and p6-rehearsal. All 7 swarm members are now accepted. |
+| Sat 14:05 | operator | Continuity confirmed, GitHub PAT set on the project (connected at 13:33 JST), Sepolia ETH sent to the treasury. |
+| Sat 14:06 | SirKit | p0-continuity verified. Reassigned by specialty: FeeFiFoFumExtruction and JackHook to mister-anderson (korg feeds the research), fo to agent-smith (agy stays independent validator). The castle service stays with handoff-claude. Board check: 0 owner/assignee mismatches. |
+| Sat 14:06 | SirKit | Corrected settlement: agent payouts settle in Base Sepolia USDC; the entry is on Ethereum Sepolia. |

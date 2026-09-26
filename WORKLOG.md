@@ -8,7 +8,7 @@ The running record of the feefifofum build: what was done, who did it, which com
 - **Deadline:** Sun 27 Sep 00:00 UTC
 - **Pre-existing product:** handoff (private), baseline `079f8f0`
 - **Earlier product:** the lease edition, retired at 10:51Z on Sat 26 Sep. Its code and full worklog are at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition).
-- **Last regenerated:** Sat 16:41Z
+- **Last regenerated:** Sat 16:42Z
 
 All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified).
 
@@ -90,7 +90,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 ## Wallets
 
-Live balances read at block 11787431.
+Live balances read at block 11787432.
 
 | Wallet | handoff agent | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -214,4 +214,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:21Z | SirKit | m-dapp verified: the published page is the dapp, and impecc's page-driven harp fill 0xb825bdd0…a59d and hen swap 0xf840c09a…466b check out on-chain. fi topped up with 0.003 ETH (0x3bc7799d…031e) so the hen's automatic re-centres keep working through judging; fee's drift threshold to 300 bps. Spend: 0.0137 of the 0.02 ETH ceiling. |
 | Sat 14:27Z | SirKit | Plain-writing rule sent to the swarm and written into docs/NAMING.md: mister-anderson rewrites the README and the sponsor docs, impecc the dapp (2.0.2), the tale, the deck and PRODUCT/DESIGN, agent-smith the service and MCP text, and agy reviews every reader-facing file afterwards. SirKit records the demo video from the dapp once 2.0.2 is live. |
 | Sat 14:30Z | SirKit | agent-smith's service text commit 4a5dbbc (the plain-prose MCP tool descriptions and messages, text only; 6 of 6 service tests pass) checked, and the live-run tag moved to it, so castle-sync redeploys the service. impecc's dapp 2.0.2 (plain copy, the hen-restock message) is live. A demo test wallet 0x9745…b5B1 was funded with 0.003 ETH (0x9420f347…97f9) for the screencast. Spend: 0.0167 of the 0.02 ETH ceiling. |
-| Sat 16:43Z | SirKit | Demo video recorded from the published dapp with a scripted test wallet. Take 1 (wallet 0x9745…b5B1) stopped before the v4 swap because the recorder misread the hen card; its wrap 0x7254f918…71ea, approve 0x51895bf1…7355 and RFQ fill 0x4b229bf8…8152 are on-chain. That wallet's remaining 0.0024 ETH went to a new wallet 0xf807…3309 (0x175b0912…089c), so take 2 starts from a wallet that holds only ETH. Take 2 recorded every shot: wrap 0x63c720b6…bd0f, approve 0x0e16aa02…b778, RFQ fill 0x186b88a7…6f95 (170,876 gas), approve 0x8fb9c21d…fe15 and v4 swap 0x4749dfc2…d0ad (274,519 gas), after which fi re-centred the hen strategy within 30 s (0x0e66…7522, 0xf27b…4b78). The video runs 3:38 with a text-to-speech voiceover and captions, which the operator redubs. Spend: 0.0179 of the 0.02 ETH ceiling. |
+| Sat 16:41Z | SirKit | Demo video recorded from the published dapp with a scripted test wallet. Take 1 (wallet 0x9745…b5B1) stopped before the v4 swap because the recorder misread the hen card; its wrap 0x7254f918…71ea, approve 0x51895bf1…7355 and RFQ fill 0x4b229bf8…8152 are on-chain. That wallet's remaining 0.0024 ETH went to a new wallet 0xf807…3309 (0x175b0912…089c), so take 2 starts from a wallet that holds only ETH. Take 2 recorded every shot: wrap 0x63c720b6…bd0f, approve 0x0e16aa02…b778, RFQ fill 0x186b88a7…6f95 (170,876 gas), approve 0x8fb9c21d…fe15 and v4 swap 0x4749dfc2…d0ad (274,519 gas), after which fi re-centred the hen strategy within 30 s (0x0e66…7522, 0xf27b…4b78). The video runs 3:38 with a text-to-speech voiceover and captions, which the operator redubs. Spend: 0.0179 of the 0.02 ETH ceiling. |

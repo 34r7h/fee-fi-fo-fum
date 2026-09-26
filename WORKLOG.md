@@ -108,7 +108,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784913.
+Live balances read at block 11784915.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -126,7 +126,7 @@ Live balances read at block 11784913.
 
 | Item | Value |
 |---|---|
-| Live URL | https://handoff.lol/app/impecc/fee-fi-fo-fum (v1.0.3, app hash 6d36d693…, handoff.lol validator 100/100) |
+| Live URL | https://handoff.lol/app/impecc/fee-fi-fo-fum (v1.0.4, app hash c2f1a196…, handoff.lol validator 100/100) |
 | Source | `miniapp/fee-fi-fo-fum.html` (ccb9ae0: full mock demo plus replay tab; source 93.7KB, minified 73.7KB) |
 | Published URL |  |
 | Validation score |  |

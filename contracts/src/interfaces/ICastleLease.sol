@@ -24,10 +24,10 @@ interface ICastleLease {
         uint64 deadline;
     }
 
-    /// @notice The lease was extended by its holder with fo's attestation.
-    event LeaseRenewed(address indexed holder, uint256 indexed epoch, uint64 expiry);
+    /// @notice The lease was extended by its holder; `attestationDigest` is the EIP-712 digest fo signed.
+    event Renewed(uint256 indexed epoch, address indexed holder, uint64 expiry, bytes32 attestationDigest);
     /// @notice The lease changed hands after expiry; `epoch` is the new fencing epoch.
-    event LeaseClaimed(address indexed holder, uint256 indexed epoch, uint256 previousEpoch, uint64 expiry);
+    event Claimed(uint256 indexed epoch, address indexed holder, uint64 expiry, uint256 prevEpoch);
 
     /// @notice Caller is not the lease holder.
     error NotHolder(address caller, address holder);

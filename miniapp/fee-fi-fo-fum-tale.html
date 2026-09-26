@@ -692,7 +692,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     var line = {
       fee: S.price ? fx(Number(S.price.mid)) + ' USDC per WETH' : 'no price yet',
       fi: strategies(live().length) + (q ? ' · ' + plural(q, 'price') + ' signed' : ''),
-      fo: plural(S.intents.length, 'order') + ' routed' + (v4 ? ' · ' + v4 + ' to the v4 pool' : ''),
+      fo: plural(S.intents.length, 'order') + ' routed' + (v4 ? ' · ' + plural(v4, 'v4 pool fill') : ''),
       fum: S.hoard ? fx(overX(), 2) + '× allocated' + (S.refusals.length ? ' · ' + S.refusals.length + ' reverted' : '') : 'reading the vault'
     };
     S.order.forEach(function (id) {

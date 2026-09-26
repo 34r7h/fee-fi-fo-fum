@@ -18,7 +18,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
 | **BLOCKER** OPERATOR: confirm the team is registered in the Continuity track on the ETHGlobal Hacker Dashboard <br>`p0-continuity` `d5c5a9d3` | OPERATOR |  | Sat 15:00 | done |  |  |
-| **BLOCKER** Register feefifofum.eth on ENSv2 (Sepolia) and answer the four lease probes <br>`p0-ens-probes` `b22e3c07` | korg | korg | Sat 15:00 | done | docs/ens-probes.md | live register [0xc51ab266…](https://sepolia.etherscan.io/tx/0xc51ab2660dd9a0029a201a4acd5330d7e7c2eac063cbfe58bb31039d30338378); fork: 0xb167…, 0x8b83…, 0xa14f… |
+| **BLOCKER** Register feefifofum.eth on ENSv2 (Sepolia) and answer the four lease probes <br>`p0-ens-probes` `b22e3c07` | korg | korg | Sat 15:00 | done | docs/ens-probes.md | live register [0xc51ab266…](https://sepolia.etherscan.io/tx/0xc51ab2660dd9a0029a201a4acd5330d7e7c2eac063cbfe58bb31039d30338378); fork: 0xb167…, 0x8b83…, 0xa14f…; paid 0.5 USDC (receipt 07ea6eab) |
 | **BLOCKER** Create the fee, fi, fo, fum handoff agents and fund their Ethereum Sepolia wallets <br>`p0-wallets` `a27aa444` | agent-smith | agent-smith | Sat 15:30 | done | b1e64ff | WETH wraps confirmed; paid 0.4 USDC (receipt 8b3e00be) |
 
 ### P1 CONTRACTS: SwapVM router 1.0.2, Castle.sol, FeeFiFoFumExtruction.sol
@@ -105,7 +105,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784088.
+Live balances read at block 11784091.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -229,3 +229,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:27 | SirKit | Confirmed with an eth_call that feefifofum.eth resolves via UniversalResolverV2 to 0x48EB…5d3E; asked handoff-advisor to re-check p0-ens-probes. |
 | Sat 14:29 | handoff-advisor | p0-ens-probes PASS: every DoD clause met. |
 | Sat 14:29 | SirKit | Verified p0-ens-probes; co-sign requested. korg to add the subregistry design consequence to docs/ens-probes.md. |
+| Sat 14:30 | handoff-advisor | Co-signed p0-ens-probes (paid, receipt 07ea6eab). Goal P0 is complete: every blocker verified. |

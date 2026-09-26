@@ -39,6 +39,12 @@ auctioneer, seeds the anchor and funds the book. `scripts/rehearse.sh` then driv
 ./scripts/down.sh && ./scripts/local-castle.sh --stop
 ```
 
+`scripts/withhold-fork.sh` and `scripts/auction-fork.sh` fork the LIVE castle as it stands (lease, books, ENS
+anchor) and run an isolated copy of the crew, stopping every process they started on exit. The first is p3-fo's
+withheld seal: fi renews with fo's seal, fee hangs and forges its own, Castle.renew reverts BadAttestation. The
+second is p3-fum's shift-change CCA, with a bid through the castle service's MCP tool auction_bid
+(`scripts/mcp-bid.mjs`; `scripts/mcp-call.mjs` calls any tool) and the settle traced.
+
 A local primary RPC disables the fallbacks, so a rehearsal can't leak a transaction onto Sepolia, and fo's
 incidents go to `fee-fi-fo-fum-rehearsal`, not the live channel. Before a live window, `node scripts/preflight.mjs`
 checks the deployed castle read-only (roles, crew, anchor, book, gas) and exits 1 if the crew must not start.
@@ -68,7 +74,7 @@ moves. fo's `FO_STALE_QUOTES_S` (300) is how long an epoch may go without its fi
 | `lib/listener.mjs` | One `handoff-realtime` listener per agent, reaping only this agent's orphan after a `kill -9` |
 | `crew.json` | Public crew data: roles, addresses, capabilities, personas |
 | `abi/` | The ICastleLease ABI (Castle's full ABI comes from `contracts/out-abi/`) |
-| `scripts/` | `new-wallets.mjs`, `register-crew.mjs`, `balances.mjs`, `wrap-weth.mjs`, `preflight.mjs`, `up.sh`, `down.sh`, `local-castle.sh`, `rehearse.sh`, `genesis.mjs`, `jack.mjs` |
+| `scripts/` | `new-wallets.mjs`, `register-crew.mjs`, `balances.mjs`, `wrap-weth.mjs`, `preflight.mjs`, `up.sh`, `down.sh`, `local-castle.sh`, `rehearse.sh`, `withhold-fork.sh`, `auction-fork.sh`, `mcp-bid.mjs`, `mcp-call.mjs`, `genesis.mjs`, `jack.mjs` |
 
 ## Rules the runtime keeps
 

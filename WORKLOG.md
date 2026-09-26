@@ -8,7 +8,7 @@ The running record of the feefifofum build: what was done, who did it, which com
 - **Deadline:** Sun 27 Sep 00:00 UTC
 - **Pre-existing product:** handoff (private), baseline `079f8f0`
 - **Earlier product:** the lease edition, retired at 10:51Z on Sat 26 Sep. Its code and full worklog are at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition).
-- **Last regenerated:** Sat 13:17Z
+- **Last regenerated:** Sat 13:26Z
 
 All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified).
 
@@ -37,6 +37,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 |---|---|---|---|---|---|---|
 | **BLOCKER** Crew agents: fee prices, fi compiles, fo routes, fum guards <br>`a-crew` `29e2bfea` | agent-smith | agent-smith | Sat 18:00Z | done | 006698a..1aa208a | fork-run agents/fork-run/11786199 |
 | **BLOCKER** Castle service: CCIP-Read gateway, MCP tools for solvers, and the stream <br>`a-gateway` `93785681` | agent-smith | agent-smith | Sat 18:30Z | done | 2d44311..bab6080 | live: CCIP-Read through UR resolves |
+| **BLOCKER** Browser module for the dapp: the harp quote, the fill and the hen swap <br>`a-dapplib` `a276992b` | agent-smith | agent-smith | Sat 15:30Z | in_progress |  |  |
 
 ### handoff.lol platform support
 
@@ -50,6 +51,8 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 |---|---|---|---|---|---|---|
 | Miniapp: one hoard, every market <br>`m-miniapp` `0a8f80ab` | impecc | impecc | Sat 21:30Z | done | d4a53a0 | published v1.1.0 |
 | Deck and video script <br>`m-deck` `04cf6e79` | impecc | impecc | Sat 23:00Z | done | 3adb718, b681da0 | deck artifact v6 (private; the operator shares it) |
+| The tale: the storybook retelling as a second miniapp <br>`m-tale` `3f88c126` | impecc | impecc | Sat 16:30Z | done |  |  |
+| **BLOCKER** The dapp: the main miniapp is the web3 interface <br>`m-dapp` `9ef75e7f` | impecc | impecc | Sat 18:00Z | in_progress |  |  |
 
 ### Validation and the one live run
 
@@ -58,6 +61,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 | The one live run on Sepolia <br>`a-live` `a92e968f` | agent-smith | agent-smith | Sat 22:00Z | done | 4d1f983, cacf0f8 | agents/live-run/11786346: 17 txs |
 | **BLOCKER** Fork end-to-end of the whole demo (two passes) <br>`v-e2e` `48b54583` | agy | agy | Sat 20:00Z | done | dbb243d | two post-deploy fork passes, distinct txs |
 | Verify the live run on-chain <br>`v-live` `e113e331` | agy | agy | Sat 22:30Z | done |  | PASS: every live tx, balances, live CCIP-Read |
+| Validate the dapp live from a clean browser <br>`v-dapp` `93e81dc2` | agy | agy | Sat 19:30Z | todo |  |  |
 
 ### Submission
 
@@ -86,7 +90,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 ## Wallets
 
-Live balances read at block 11786455.
+Live balances read at block 11786498.
 
 | Wallet | handoff agent | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -106,7 +110,8 @@ Live balances read at block 11786455.
 |---|---|
 | Castle service | https://handoff.lol/t/castle/ (health: fiKeyLoaded true, stream v2) |
 | Gateway (ERC-3668) | https://handoff.lol/t/castle/ccip/{sender}/{data}.json: live; getEnsText(quote.feefifofum.eth, castle) through UniversalResolverV2 returns the vault (checked by SirKit) |
-| Miniapp | https://handoff.lol/app/impecc/fee-fi-fo-fum (v1.1.0, published; checked by SirKit in a fresh Chrome profile: live, 0 console errors, all three beats) |
+| Miniapp: the dapp | https://handoff.lol/app/impecc/fee-fi-fo-fum (being rebuilt as the web3 interface, m-dapp, due 18:00Z) |
+| Miniapp: the tale | https://handoff.lol/app/impecc/fee-fi-fo-fum-tale (the storybook, live from the castle stream; checked by SirKit in a fresh Chrome profile, 0 console errors) |
 
 ## Documentation
 
@@ -159,6 +164,7 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 11:25Z | Approved a 0.02 ETH gas ceiling for the one live deploy and live run, and asked that the total budget be watched |
 | Sat 11:32Z | agy is rate-limited until 12:15Z: asked for agy's current tasks to be redistributed |
 | Sat 12:34Z | korg is out for the week (rate limits); asked for korg's tasks to be redistributed |
+| Sat 13:20Z | Ruled that the main miniapp is the product's web3 interface (a user connects a wallet and trades with the castle as live Sepolia txs), since the demo must be live and prove the work on-chain; the storybook tale moves to a second miniapp |
 
 ## Log
 
@@ -198,3 +204,5 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 13:14Z | SirKit | s-writeups verified (README and the sponsor docs read and grepped; the live tx links match the on-chain checks). Miniapp 1.1.1 republished with quote.feefifofum.eth in the header (checked in a fresh profile). The deck and video script were checked against the live run. |
 | Sat 13:16Z | SirKit | m-deck verified (the deck's proof, miniapp and close slides and the video script were checked against the live run). The service's config.name is now quote.feefifofum.eth (e3b8852). AI_USAGE.md Files and Prompts sections rewritten from git blame for this product, with dbb243d disclosed as agy's. |
 | Sat 13:17Z | SirKit | main tagged live-run (132f11b); handoff-claude pinned castle-sync on helen to the tag, so the gateway no longer follows main. 16 of 18 tasks are verified; left are s-ai (SirKit, final reconcile) and s-submit (the operator: share the deck, record the video, the ETHGlobal and Uniswap feedback forms). |
+| Sat 13:23Z | SirKit | Operator ruling applied: SPEC fc85b67 adds 'The miniapps' (the dapp's panels and chain calls, and the tale as a second miniapp). New tasks: a-dapplib (agent-smith, browser module, 15:30Z), m-dapp (impecc, blocker, 18:00Z), m-tale (impecc, 16:30Z) and v-dapp (agy, live UI validation from a clean browser, 19:30Z). Goal budgets raised: miniapp 1.2 to 1.6, validation 1.1 to 1.3 USDC. |
+| Sat 13:34Z | SirKit | m-tale verified: https://handoff.lol/app/impecc/fee-fi-fo-fum-tale is live from the castle stream in a fresh Chrome profile, with 0 console errors and a link to the dapp. |

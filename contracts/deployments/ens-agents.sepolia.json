@@ -60,6 +60,11 @@
       "what": "records for fum.feefifofum.eth (3)",
       "hash": "0x255e1122f54fc5282361d0605f7d5d46c5ed58ed2a176c85d07ea5af0092c50a",
       "block": 11784066
+    },
+    {
+      "what": "addr(feefifofum.eth) -> its owner 0x48EB8a8c5dC69Dc578f861dAf987882206aF5d3E",
+      "hash": "0x74042211deb8e9f9081e1aad0787281ee5bb73598555d483c6e1e7eee00cb570",
+      "block": 11784082
     }
   ],
   "agentRegistry": "0x2F2164507471a1a46506f902aBfdfB9d22e4bE09",
@@ -79,7 +84,7 @@
         "urAddr": "0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538",
         "urMcp": "https://handoff.lol/t/castle/mcp",
         "ok": true,
-        "block": 11784066
+        "block": 11784082
       }
     },
     "fi": {
@@ -96,7 +101,7 @@
         "urAddr": "0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2",
         "urMcp": "https://handoff.lol/t/castle/mcp",
         "ok": true,
-        "block": 11784066
+        "block": 11784082
       }
     },
     "fo": {
@@ -113,7 +118,7 @@
         "urAddr": "0x8689a407A2488A5b2f2De05d2C6978a798f93D56",
         "urMcp": "https://handoff.lol/mcp",
         "ok": true,
-        "block": 11784066
+        "block": 11784082
       }
     },
     "fum": {
@@ -130,8 +135,14 @@
         "urAddr": "0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2",
         "urMcp": "https://handoff.lol/mcp",
         "ok": true,
-        "block": 11784066
+        "block": 11784082
       }
     }
+  },
+  "parentOwner": "0x48EB8a8c5dC69Dc578f861dAf987882206aF5d3E",
+  "parentVerified": {
+    "urAddr": "0x48EB8a8c5dC69Dc578f861dAf987882206aF5d3E",
+    "ok": true,
+    "block": 11784082
   }
 }

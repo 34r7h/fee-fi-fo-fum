@@ -5,6 +5,7 @@
 //   addr                  the agent's Sepolia wallet (handoff.lol wallet_address, or crew.json)
 //   agent-endpoint[mcp]   ENSIP-26, the MCP endpoint that reaches the agent (handoff.lol's MCP by default)
 //   handoff-agent         the handoff agent id, so a resolver of the name can find the agent on handoff.lol
+// The parent itself gets one record here as well: addr(feefifofum.eth) = its owner in the .eth registry.
 // Idempotent: every step reads chain state first and skips what is already true. Then it VERIFIES from the
 // outside: registry.findOwner/findExpiry (the contract-level read JackHook makes) and UniversalResolverV2.
 //
@@ -205,6 +206,17 @@ if (!sameAddr(curParent, ethRegistry)) {
 }
 saveState();
 
+// ---- 2c. the parent resolves to its owner ------------------------------------------------------------------
+// feefifofum.eth's resolver is this resolver, so its addr record lives here too; without it UniversalResolverV2
+// returns 0x0 for the parent. It points at the parent's owner as the .eth registry reports it.
+const parentOwnerNow = await pub.readContract({ address: ethRegistry, abi: REG, functionName: 'findOwner', args: [PARENT] });
+const parentResolver = await pub.readContract({ address: ethRegistry, abi: REG, functionName: 'getResolver', args: [PARENT] });
+if (sameAddr(parentResolver, state.resolver) && parentOwnerNow !== zeroAddress && !sameAddr(await record(parentName, 'addr', [namehash(parentName)]), parentOwnerNow)) {
+  await send(wallet, { address: state.resolver, abi: RES, functionName: 'setAddress', args: [dnsName(parentName), 60n, parentOwnerNow] }, `addr(${parentName}) -> its owner ${parentOwnerNow}`);
+}
+state.parentOwner = getAddress(parentOwnerNow);
+saveState();
+
 async function findRegistrar() {
   // The .eth registry's registrations are sent by the ETHRegistrar; the most recent LabelRegistered tx names it.
   const head = await pub.getBlockNumber();
@@ -291,6 +303,11 @@ for (const [label, n] of Object.entries(state.names)) {
   Object.assign(n, { verified: { owner, expiry: Number(expiry), urAddr, urMcp, ok, block: Number(await pub.getBlockNumber()) } });
   log(`  ${ok ? 'OK ' : 'BAD'} ${n.name}  owner ${owner}  expiry ${new Date(Number(expiry) * 1000).toISOString()}  UR addr ${urAddr}  mcp ${urMcp}`);
 }
+const urParent = await pub.getEnsAddress({ name: parentName, universalResolverAddress: A.universalResolver }).catch((e) => `ERR ${e.shortMessage || e.message}`);
+const parentOk = sameAddr(urParent, state.parentOwner);
+if (!parentOk) bad++;
+state.parentVerified = { urAddr: urParent, ok: parentOk, block: Number(await pub.getBlockNumber()) };
+log(`  ${parentOk ? 'OK ' : 'BAD'} ${parentName}  UR addr ${urParent}  (owner ${state.parentOwner})`);
 saveState();
-log(`\n${Object.keys(state.names).length - bad}/${Object.keys(state.names).length} names verified; state in ${path.relative(repo, stateFile)}`);
+log(`\n${Object.keys(state.names).length + 1 - bad}/${Object.keys(state.names).length + 1} names verified (the parent included); state in ${path.relative(repo, stateFile)}`);
 process.exit(bad ? 1 : 0);

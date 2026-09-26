@@ -1,0 +1,14 @@
+{"check":"health","ok":true,"fi":"0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2","vault":"0x0fa4a0fd0be6536d7462ff922f28500123c37a98","cors":"*"}
+{"check":"gateway GET: signed response verifies (SignatureVerifier, signer fi)","ok":true,"status":200,"signer":"0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2","expires":"1790425585","quoteId":"q-1790425585-3","gatewayTemplate":"http://127.0.0.1:18842/ccip/{sender}/{data}.json"}
+{"check":"gateway POST: the castle key answers the vault address","ok":true,"value":"0x0fa4a0Fd0bE6536d7462FF922F28500123c37A98"}
+{"check":"gateway: an unknown key is a 404 with a message","ok":true,"status":404,"message":"unknown key \"avatar\": use quote:<tokenIn>:<tokenOut>:<amountIn> (USDC or WETH, base units) or castle"}
+{"check":"viem getEnsText through UniversalResolverV2 (CCIP-Read): a quote that verifies and that router.quote honours","ok":true,"quoteId":"q-1790425585-4","signer":"0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2","amountIn":"100000000000000","amountOut":"268694","routerQuote":"268694","validUntil":1790425585}
+{"check":"mcp tools/list","ok":true,"tools":["castle_status","castle_quote","castle_fill","castle_allocations","castle_route"]}
+{"check":"mcp castle_status","ok":true,"hoard":{"USDC":"6500000","WETH":"1322761881150331"},"price":"2689.63","strategies":["harp","hen"],"agents":["fee:up","fi:up","fo:up","fum:up"]}
+{"check":"mcp castle_quote","ok":true,"quoteId":"q-1790425585-5","amountOut":"92856731130397"}
+{"check":"mcp castle_fill","ok":true,"to":"0xeDB6933949dB941D495b23604818F9AbF55e70f9","secondsLeft":30}
+{"check":"mcp castle_allocations","ok":true,"tokens":{"USDC":{"balance":"6500000","committed":"8245792","headroom":"4754208","leverageBps":20000},"WETH":{"balance":"1322761881150331","committed":"2322546755991750","headroom":"322977006308912","leverageBps":20000}},"strategies":[{"slot":0,"label":"harp","alloc":{"USDC":"5000000","WETH":"1115766481262850"},"fills":2},{"slot":1,"label":"hen","alloc":{"USDC":"3245792","WETH":"1206780274728900"},"fills":0}]}
+{"check":"mcp castle_route (fo)","ok":true,"route":"harp","compared":{"harp":"74285384904317","v4":"69845740609215"},"intent":"i-1790425555-2"}
+{"check":"stream (SSE, ?since=0)","ok":true,"events":42,"counts":{"snapshot":1,"leverage.set":4,"hoard":4,"agent":8,"price":5,"cap.set":3,"strategy.shipped":3,"allocation.refused":1,"quote.served":6,"fill":4,"strategy.docked":1,"intent.routed":2},"missing":[],"cors":"*"}
+{"check":"state","ok":true,"seq":41,"hoard":{"USDC":"6500000","WETH":"1322761881150331"},"leverage":{"WETH":20000,"USDC":20000},"strategies":["harp","hen (docked)","hen"]}
+{"done":true,"failed":0,"via":"q-1790425585-4"}

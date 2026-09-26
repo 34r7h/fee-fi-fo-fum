@@ -8,6 +8,10 @@
 import { readLease } from '../lib/lease.mjs';
 import { renewIfDue, claimCastle, shipIfDue, openStrategies } from '../lib/shift.mjs';
 import { abi } from '../lib/chain.mjs';
+import { env } from '../lib/env.mjs';
+
+// Demo only: leave the wind-down gap open this long after expiry, so a taker can fill reduce-only before the claim.
+const CLAIM_DELAY_S = Number(env('FI_CLAIM_DELAY_S', 0));
 
 export default {
   intervalMs: 3_000,
@@ -27,6 +31,7 @@ export default {
       return;
     }
     if (lease.state !== 'EXPIRED' || lease.expiry === 0) return;   // expiry 0: never claimed, genesis is fee's
+    if (lease.now - lease.expiry < CLAIM_DELAY_S) return ctx.logChange('gap', 'wind-down-gap', { expiredForS: lease.now - lease.expiry, claimAfterS: CLAIM_DELAY_S });
     // Castle v2 crew: an operator-set crew label AND that name owned, unexpired, in the agent registry.
     const isCrew = await ctx.pc.readContract({ address: lease.castle, abi: abi('Castle'), functionName: 'isCrew', args: [ctx.account.address] });
     if (!isCrew) return ctx.logChange('crew', 'not-crew', { note: 'Castle.isCrew(fi) is false: the operator must setCrew(fi, "fi") and fi must own fi.feefifofum.eth' });

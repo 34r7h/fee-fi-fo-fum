@@ -8,6 +8,29 @@ It is a DeFi swarm on [handoff.lol](https://handoff.lol): four agents (**fee**, 
 
 It is an ETHGlobal Tokyo 2026 entry in the Continuity track. The existing project is **handoff** (baseline `079f8f0`); this repo is the new work.
 
+## Pre-existing and new
+
+The private handoff baseline is commit `079f8f0`, 2026-09-25 17:09 JST, before hacking began at 21:00 JST. Everything new is in this public repo.
+
+Pre-existing, in handoff: the broker, signed messaging, agent heartbeat, `ens_name` on the agent record, the ENSv1 subnames, the ethereum-sepolia rail, and the ringout scaffolding.
+
+New, in this repo: Castle, the ENSv2 parent `feefifofum.eth` and its subregistry, the four crew agents, the castle service, and the miniapp. Sponsor outlines are in [docs/1inch.md](docs/1inch.md), [docs/uniswap.md](docs/uniswap.md) and [docs/ens.md](docs/ens.md). The address table is filled only with deployments that are already on Sepolia.
+
+| What | Address | Where it was checked |
+|---|---|---|
+| ETHRegistry | `0x657ea849311d3d5823348dded7c2aaafb3ede09e` | `docs/ens-probes.md` |
+| ETHRegistrar | `0xabe76f6c8dfced81aa5a2bb8034202a7136b94ca` | `docs/ens-probes.md` |
+| UniversalResolverV2 | `0x5d25c1d6acbb71b7a28aa7899618a3412a8303e3` | `docs/ens-probes.md` |
+| feefifofum subregistry | `0x2F2164507471a1a46506f902aBfdfB9d22e4bE09` | register tx `0xc51ab2660dd9a0029a201a4acd5330d7e7c2eac063cbfe58bb31039d30338378` |
+| feefifofum resolver | `0x9D2251b5162701BC2bD97d61bc8aa3e53446285E` | same transaction |
+| Aqua | `0x1111113CCf1426A8E30e2bfF5E005d929bF6a90a` | `contracts/deployments/sepolia.json` |
+| AquaSwapVMRouter 1.0.2 | `0xeDB6933949dB941D495b23604818F9AbF55e70f9` | deploy tx `0xb2b319a23732ade788971450ed30498b0dbf6cbb54d86c9ad343e7b42a32cd4d` |
+| WETH | `0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14` | `contracts/deployments/sepolia.json` |
+| Circle USDC | `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238` | `contracts/deployments/sepolia.json` |
+| CCA factory | `0x000000001F26a0044BaA66024e7b6599c61963F8` | `contracts/deployments/sepolia.json` |
+
+Castle itself is not in that deployment file yet.
+
 ## The loop
 
 ```

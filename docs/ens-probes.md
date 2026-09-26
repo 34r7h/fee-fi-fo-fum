@@ -175,3 +175,22 @@ The name resolver refuses this EOA. The same calls were sent to an EIP-1167 clon
 | `linkToNode` | `0x1f5215fd97990683e183abcd20a9d664348c2439dd2360c872c970f784bb0fa1` |
 
 `getRecordId` is `1` for both `alpha.eth` and `beta.eth`.
+
+## Design consequence
+
+Live `eth_call`s on Ethereum Sepolia, 2026-09-26:
+
+| Call | Result |
+|---|---|
+| `ETHRegistrar.MIN_REGISTER_DURATION()` at `0xabe76f6c8dfced81aa5a2bb8034202a7136b94ca` | `2419200` (28 days) |
+| `ETHRegistry.hasRoles(tokenId, 65536, 0x48EB8a8c5dC69Dc578f861dAf987882206aF5d3E)` | `false` |
+| `ETHRegistry.hasRoles(tokenId, 1, 0x48EB8a8c5dC69Dc578f861dAf987882206aF5d3E)` | `false` |
+| `renew(labelId, now+30)` from that owner | revert `EACUnauthorizedAccountRoles(tokenId, 65536, owner)` |
+
+`65536` is `ROLE_RENEW` (`1 << 16`). `1` is `ROLE_REGISTRAR`. The token id is the live `feefifofum` token `45412221461747854181285245383596175825201150978450840387305249746410167861248`.
+
+The .eth registrar cannot create the short lease a shift needs, and the registrant it creates does not hold the role `renew` checks. The fork showed that `PermissionedRegistry.renew` itself accepts a sub-minute expiry when the caller has `ROLE_RENEW`.
+
+`castle.feefifofum.eth` therefore has to be registered as a label on the feefifofum subregistry `0x2F2164507471a1a46506f902aBfdfB9d22e4bE09`, not through ETHRegistrar. That `register` must grant the Castle contract `ROLE_REGISTRAR` (`1`) and `ROLE_RENEW` (`65536`). `ROLE_RENEW` is the bit `Castle.renew` needs: `contracts/src/Castle.sol` calls `REGISTRY.renew` as Castle, not as the holder. `ROLE_REGISTRAR` is checked on the registry root, not on the name token, so a bit set only on the castle token does not let Castle register other labels. If Castle must register later names, the subregistry root has to grant it `ROLE_REGISTRAR` as well.
+
+`Castle.claim` currently calls `register` with role bitmap `0` (`Castle.sol` line 167). A later claim burns the old token and mints a new one. Unless that bitmap also grants Castle `ROLE_RENEW`, the new token will not let `Castle.renew` succeed.

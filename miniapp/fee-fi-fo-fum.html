@@ -351,7 +351,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   var SVGNS = 'http://www.w3.org/2000/svg';
 
   // ---------------------------------------------------------------- lettering (Almendra Bold outlines)
-  var GL = {"em":200,"asc":190,"desc":-69,"cap":133,"g":{"A":[129,"M26 -132Q43 -130 70 -130Q98 -130 119 -132L119 -127Q115 -125 109 -124Q107 -107 107 -66Q107 -26 110 -7Q117 -5 122 -3L121 2Q107 0 90 0Q73 0 61 2L60 -4Q64 -6 71 -7Q73 -20 74 -46Q68 -47 59 -47Q49 -47 43 -46Q40 -26 40 -19Q40 -12 41 -8Q43 -4 48 -2L47 1Q37 0 22 0Q7 0 -4 2L-5 -4Q-1 -6 6 -7L37 -123Q31 -124 25 -127ZM74 -65Q74 -100 72 -119Q69 -120 64 -120Q58 -120 55 -119L45 -60Q52 -59 60 -59Q68 -59 74 -60Z"],"B":[124,"M4 -130 66 -132Q91 -132 99 -128Q109 -124 112 -118Q113 -113 113 -108Q113 -97 106 -88Q99 -79 88 -75V-73Q102 -73 110 -67Q118 -60 118 -47Q118 -31 99 -16Q79 0 60 3Q44 3 23 -5Q20 -2 18 5L13 3Q18 -22 18 -63Q18 -104 16 -121Q11 -124 4 -124ZM63 -77Q70 -77 74 -79Q78 -88 78 -102Q78 -122 61 -122Q56 -122 53 -121Q51 -103 51 -72Q51 -42 53 -18Q59 -14 68 -14Q76 -14 80 -16Q83 -26 83 -40Q83 -54 78 -61Q73 -68 59 -68L60 -77Z"],"C":[103,"M99 -29 102 -26Q85 -5 62 3Q35 3 20 -11Q6 -26 6 -54Q6 -81 23 -102Q40 -124 68 -133Q89 -133 110 -129L109 -125Q104 -125 100 -123Q94 -107 94 -91H88Q86 -99 86 -108Q77 -116 63 -116Q53 -116 49 -113Q46 -105 44 -92Q42 -78 42 -69Q42 -60 42 -55Q42 -50 43 -43Q44 -36 45 -32Q47 -28 50 -24Q53 -20 57 -18Q62 -17 69 -17Q77 -17 84 -20Q90 -23 99 -29Z"],"D":[132,"M4 -130 68 -132Q97 -132 112 -118Q126 -105 126 -76Q126 -47 108 -25Q90 -2 61 3Q46 3 23 -5Q20 -2 18 5L13 3Q18 -23 18 -63Q18 -104 16 -121Q11 -124 4 -124ZM60 -122Q56 -122 53 -121Q51 -101 51 -72Q51 -43 53 -19Q60 -14 69 -14Q78 -14 83 -17Q90 -35 90 -64Q90 -122 60 -122Z"],"E":[105,"M68 -17Q77 -17 84 -20Q90 -23 99 -29L102 -26Q85 -5 62 3Q35 3 20 -11Q6 -26 6 -54Q6 -81 23 -102Q40 -124 68 -133Q89 -133 110 -129L109 -125Q104 -125 100 -123Q94 -107 94 -91H88Q86 -99 86 -108Q77 -116 63 -116Q53 -116 49 -113Q44 -101 42 -77Q50 -75 63 -75Q76 -75 82 -82L87 -81Q84 -73 84 -65Q84 -57 86 -47L81 -46Q78 -54 77 -61Q71 -62 60 -62Q50 -62 42 -61Q42 -42 46 -30Q51 -17 68 -17Z"],"F":[100,"M9 -132Q24 -130 54 -130Q83 -130 102 -133L103 -129Q95 -118 95 -96H89Q87 -105 87 -113Q81 -117 71 -117Q60 -117 57 -115Q55 -95 55 -72Q59 -72 63 -72Q79 -72 85 -79L90 -78Q87 -70 87 -62Q87 -53 89 -44L84 -43Q81 -50 80 -58Q74 -59 66 -59Q58 -59 55 -58Q55 -22 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -64Q22 -101 19 -123Q13 -124 8 -127Z"],"G":[111,"M70 -17 69 -39Q69 -48 68 -52Q63 -55 55 -56L56 -60Q60 -60 67 -60Q74 -60 85 -62Q96 -65 103 -70L106 -67Q102 -63 100 -59Q97 -30 95 1H91Q89 -8 86 -15Q72 -2 56 3Q29 3 15 -11Q0 -26 0 -54Q0 -81 17 -102Q34 -124 62 -133Q84 -133 107 -128L106 -124Q101 -124 97 -122Q91 -106 91 -90H85Q83 -98 83 -107Q78 -111 71 -114Q64 -116 56 -116Q48 -116 43 -113Q40 -105 38 -92Q36 -78 36 -69Q36 -60 36 -55Q36 -50 37 -43Q38 -36 40 -32Q41 -28 44 -24Q47 -20 52 -18Q56 -17 62 -17Q67 -17 70 -17Z"],"H":[149,"M83 -132Q95 -130 113 -130Q130 -130 143 -132L144 -127Q139 -125 130 -123Q127 -106 127 -65Q127 -24 130 -7Q139 -5 144 -3L143 2Q130 0 113 0Q95 0 83 2L82 -4Q86 -6 92 -7Q94 -28 94 -63Q85 -64 74 -64Q64 -64 55 -63Q55 -23 58 -7Q65 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -64Q22 -101 19 -123Q12 -124 8 -127L9 -132Q21 -130 37 -130Q54 -130 69 -132L69 -127Q65 -125 57 -123Q55 -111 55 -79Q63 -77 75 -77Q87 -77 94 -79Q94 -103 92 -123Q86 -124 82 -127Z"],"I":[77,"M57 -123Q55 -108 55 -67Q55 -26 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -64Q22 -101 19 -123Q12 -124 8 -127L9 -132Q21 -130 38 -130Q54 -130 69 -132L69 -127Q65 -125 57 -123Z"],"J":[75,"M22 -33V-71Q22 -108 20 -123Q12 -125 8 -127L8 -132Q23 -130 40 -130Q56 -130 68 -132L69 -127Q65 -124 58 -123Q55 -101 55 -64Q55 -27 58 -7Q37 18 -2 36L-6 32Q10 20 16 5Q22 -10 22 -33Z"],"K":[134,"M139 2Q129 0 112 0Q95 0 83 1L83 -3Q86 -6 86 -14Q86 -22 83 -32Q80 -42 69 -67L55 -52Q56 -23 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -64Q22 -101 19 -123Q12 -124 8 -127L9 -132Q21 -130 37 -130Q53 -130 66 -132L67 -127Q65 -126 57 -123Q55 -108 55 -66Q68 -83 75 -95Q82 -106 83 -110Q84 -115 84 -120Q84 -125 80 -128L80 -132Q91 -130 108 -130Q126 -130 134 -132L135 -127Q131 -124 124 -123L87 -85L128 -7Q136 -6 140 -4Z"],"L":[96,"M100 3Q81 0 53 0Q24 0 9 2L8 -3Q13 -6 19 -7Q22 -30 22 -65Q22 -101 19 -123Q12 -124 8 -127L9 -132Q21 -130 38 -130Q54 -130 69 -132L69 -127Q65 -125 57 -123Q55 -108 55 -69Q55 -30 57 -14Q60 -13 69 -13Q78 -13 84 -15Q86 -22 87 -33H93Q93 -11 101 -2Z"],"M":[169,"M60 -14Q60 -29 54 -53Q47 -77 39 -96L38 -95L35 -69Q33 -47 33 -22Q33 -7 42 -2L41 1Q32 0 21 0Q11 0 0 2L-1 -4Q3 -6 10 -7L29 -123Q23 -124 18 -127L19 -132Q31 -130 48 -130Q64 -130 76 -132L77 -128Q70 -126 70 -121Q70 -118 75 -95Q80 -73 84 -57L85 -51L87 -52Q87 -63 104 -121Q104 -126 99 -128L99 -131Q110 -130 127 -130Q144 -130 155 -132L156 -127Q152 -125 146 -123Q145 -118 145 -105Q145 -92 149 -58Q152 -23 155 -7Q164 -5 169 -3L169 2Q156 0 139 0Q122 0 110 2L109 -4Q113 -6 118 -7Q118 -54 112 -95L110 -96Q99 -59 96 -45Q93 -31 93 -21Q75 -15 63 -6L60 -7Q60 -10 60 -14Z"],"N":[141,"M9 -132Q20 -130 38 -130Q57 -130 67 -132L68 -128Q66 -127 64 -126Q63 -124 63 -121Q63 -118 64 -114Q65 -110 74 -93Q84 -76 102 -45L103 -46V-65Q103 -99 100 -112Q96 -125 84 -128L85 -132Q97 -130 110 -130Q123 -130 135 -132L136 -127Q131 -125 122 -123Q121 -118 120 -100Q119 -83 119 -53Q119 -24 122 -7Q130 -6 136 -3L135 2Q123 0 110 0Q97 0 87 1Q87 -7 78 -24Q70 -41 39 -92L38 -92V-76Q38 -45 40 -29Q43 -13 50 -7Q58 -5 62 -3L61 2Q45 0 33 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -53Q22 -99 19 -123Q12 -124 8 -127Z"],"O":[130,"M68 -133Q95 -133 109 -119Q124 -105 124 -77Q124 -49 108 -28Q92 -7 65 3Q37 3 22 -12Q6 -28 6 -55Q6 -81 23 -102Q39 -124 68 -133ZM71 -114Q67 -116 60 -116Q54 -116 49 -113Q42 -96 42 -68Q42 -48 47 -32Q50 -24 55 -19Q61 -14 68 -14Q75 -14 80 -17Q88 -34 88 -62Q88 -88 84 -99Q79 -111 71 -114Z"],"P":[117,"M8 -130 70 -132Q70 -132 71 -132Q93 -132 106 -125Q118 -118 118 -99Q118 -80 103 -68Q88 -56 68 -56Q64 -56 63 -56L63 -66H66Q82 -66 82 -96Q82 -108 78 -115Q74 -122 64 -122Q61 -122 57 -121Q55 -103 55 -64Q55 -26 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -62Q22 -97 19 -121Q14 -124 8 -124Z"],"Q":[130,"M32 27 28 23Q33 17 41 12Q49 6 57 3Q34 0 21 -15Q7 -30 7 -53Q7 -81 24 -102Q40 -124 68 -133Q95 -133 109 -119Q123 -105 123 -78Q123 -51 110 -32Q97 -12 75 -1Q83 0 101 7Q118 14 126 14Q131 13 135 10L138 14Q130 21 124 28Q118 35 112 46L107 42Q95 33 81 26Q66 19 53 19Q40 19 32 27ZM50 -113Q42 -96 42 -68Q42 -48 47 -32Q50 -24 56 -19Q61 -14 68 -14Q76 -14 80 -17Q88 -34 88 -62Q88 -93 81 -105Q78 -110 73 -113Q68 -116 61 -116Q54 -116 50 -113Z"],"R":[131,"M8 -130 70 -132Q92 -132 104 -126Q118 -119 118 -99Q118 -88 112 -80Q106 -71 96 -66L125 -7Q132 -6 136 -4L135 2Q125 0 109 0Q93 0 82 1L81 -3Q85 -6 85 -15Q85 -29 73 -61Q68 -62 63 -62L63 -70H66Q74 -70 78 -77Q82 -85 82 -96Q82 -122 64 -122Q61 -122 57 -121Q55 -103 55 -64Q55 -26 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -62Q22 -97 19 -121Q14 -124 8 -124Z"],"S":[93,"M46 -15Q63 -15 63 -30Q63 -34 54 -41Q46 -48 36 -54Q26 -60 18 -67Q10 -75 10 -80Q10 -97 24 -112Q38 -127 57 -133Q76 -133 91 -129V-125Q86 -120 83 -111Q80 -101 80 -92H74Q74 -102 73 -108Q64 -116 52 -116Q45 -116 40 -113Q35 -110 35 -104Q35 -99 44 -92Q52 -86 62 -80Q73 -74 81 -67Q90 -59 90 -54Q90 -39 74 -21Q59 -3 43 3Q27 3 11 -2Q8 0 3 6L-1 2Q11 -11 13 -40H19L20 -26Q32 -15 46 -15Z"],"T":[111,"M-3 -133Q20 -130 57 -130Q94 -130 114 -133L115 -129Q108 -118 107 -97H102Q100 -106 100 -114Q93 -118 86 -118Q79 -118 75 -117Q73 -95 73 -60Q73 -26 76 -7Q84 -5 88 -3L87 2Q73 0 56 0Q39 0 27 2L26 -4Q31 -6 37 -7Q40 -27 40 -59Q40 -91 38 -116Q34 -118 26 -118Q18 -118 13 -115Q11 -107 10 -97H4Q4 -118 -5 -129Z"],"U":[142,"M122 -123Q120 -108 120 -67Q120 -26 122 -7Q130 -5 134 -3L134 2Q119 0 108 0Q96 0 84 2L83 -2Q85 -5 85 -13Q75 -3 59 3Q35 3 25 -9Q16 -21 16 -48Q16 -60 17 -84Q19 -109 19 -114Q19 -119 17 -123Q10 -125 7 -127L8 -132Q22 -130 37 -130Q51 -130 60 -132L61 -128Q56 -126 54 -122Q53 -118 51 -100Q50 -83 50 -66Q50 -48 50 -45Q50 -42 50 -36Q51 -31 52 -28Q53 -25 55 -22Q59 -17 68 -17Q77 -17 86 -23Q87 -32 87 -66Q87 -101 84 -123Q77 -124 72 -127L73 -132Q85 -130 102 -130Q119 -130 133 -132L134 -127Q130 -125 122 -123Z"],"V":[121,"M89 2Q77 0 59 0Q40 0 29 1L28 -2Q35 -4 35 -8Q35 -22 13 -106Q10 -117 7 -123Q0 -125 -4 -127L-3 -132Q9 -130 27 -130Q44 -130 59 -132L59 -127Q54 -125 47 -123Q51 -81 69 -16Q84 -76 84 -104Q84 -122 73 -128L73 -132Q87 -130 100 -130Q112 -130 124 -132L125 -127Q121 -125 114 -123Q117 -116 117 -103Q117 -90 109 -69Q100 -48 77 -6Q86 -4 90 -3Z"],"W":[184,"M154 2Q142 0 124 0Q107 0 94 2L94 -2Q96 -2 98 -4Q100 -6 100 -8Q100 -20 93 -53Q90 -44 77 -6Q80 -4 86 -3L85 2Q73 0 57 0Q40 0 29 1L28 -2Q35 -4 35 -8Q35 -22 13 -106Q10 -117 7 -123Q0 -125 -4 -127L-3 -132Q14 -130 58 -130Q101 -130 123 -132L124 -127Q118 -125 112 -123Q115 -81 133 -16Q147 -77 147 -104Q147 -122 136 -128L136 -132Q150 -130 162 -130Q175 -130 187 -132L188 -127Q184 -125 177 -123Q180 -116 180 -103Q180 -91 172 -70Q164 -49 141 -6Q150 -4 154 -3ZM48 -121Q51 -81 69 -16Q83 -77 83 -104Q83 -115 80 -119Q77 -124 68 -124Q58 -124 48 -121Z"],"X":[127,"M72 -85Q84 -111 84 -118Q84 -126 80 -128L81 -132Q92 -130 105 -130Q118 -130 130 -132L131 -127Q125 -124 120 -123Q100 -103 79 -76L121 -7Q128 -5 132 -4L131 2Q119 0 103 0Q87 0 78 1L77 -2Q78 -3 78 -9Q78 -21 57 -55Q44 -22 44 -7Q49 -6 55 -3L55 2Q43 0 26 0Q10 0 -2 2L-3 -3Q2 -6 10 -7Q35 -46 49 -65L13 -123Q6 -125 2 -127L3 -132Q15 -130 33 -130Q52 -130 70 -132L70 -127Q65 -125 58 -123Q58 -116 61 -108Q63 -100 72 -85Z"],"Y":[113,"M73 -128 74 -132Q87 -130 98 -130Q109 -130 119 -132L120 -127Q115 -124 108 -123L73 -66Q73 -26 76 -7Q84 -5 88 -3L87 2Q74 0 57 0Q39 0 27 2L26 -4Q30 -6 38 -7Q40 -25 40 -55V-60Q22 -99 16 -109Q10 -119 5 -123Q-1 -125 -4 -127L-4 -132Q9 -130 26 -130Q42 -130 57 -132L57 -127Q54 -125 45 -123Q58 -86 65 -73Q73 -98 76 -106Q78 -115 78 -121Q78 -126 73 -128Z"],"Z":[103,"M103 -135 107 -132Q102 -127 94 -110L49 -17L50 -17H63Q78 -17 84 -25Q85 -30 85 -39L91 -40Q93 -13 106 1L102 4Q101 2 98 0Q70 -4 31 -4Q7 -4 0 4L-4 0Q0 -5 11 -24L63 -114L62 -115H43Q30 -115 22 -108Q19 -100 16 -94L12 -95Q12 -102 12 -110Q12 -118 10 -125Q7 -127 1 -129L1 -133Q8 -133 35 -131Q62 -128 76 -128Q89 -128 94 -130Q98 -131 103 -135Z"],"f":[73,"M48 -54Q48 -22 52 12Q39 11 26 10Q20 21 17 40L12 40Q12 35 15 0Q18 -35 18 -54L18 -88H5L4 -88Q4 -92 5 -94Q7 -95 19 -98Q24 -112 37 -124Q49 -136 64 -142Q80 -142 93 -138V-135Q83 -126 80 -114L78 -114Q71 -120 65 -122Q60 -125 52 -126Q49 -112 48 -98L74 -99L75 -98Q72 -91 72 -86Q59 -87 48 -87Z"],"e":[96,"M59 -18Q66 -18 74 -22Q81 -27 87 -33L89 -31Q77 -9 51 3Q30 3 17 -9Q5 -20 5 -40Q5 -59 19 -76Q33 -93 52 -101Q88 -101 88 -76Q88 -69 87 -62Q92 -60 97 -59L96 -55Q95 -55 94 -55Q68 -55 37 -48Q37 -33 42 -26Q46 -18 59 -18ZM47 -86Q43 -86 40 -85Q37 -70 37 -54Q47 -58 57 -60Q57 -76 55 -81Q53 -86 47 -86Z"],"i":[66,"M53 -128Q51 -124 45 -118Q39 -111 34 -108Q29 -111 23 -118Q17 -124 15 -128Q18 -132 23 -137Q29 -142 34 -144Q39 -142 44 -137Q50 -132 53 -128ZM19 -64Q19 -77 17 -90Q12 -92 6 -93V-97Q30 -97 52 -101L53 -100Q49 -82 49 -49Q49 -16 51 -7Q58 -5 64 -2L64 2Q50 0 32 0Q14 0 4 1L3 -3Q7 -4 16 -8Q19 -22 19 -64Z"],"o":[102,"M53 -101Q75 -101 86 -90Q98 -79 98 -59Q98 -39 84 -22Q71 -5 51 3Q30 3 17 -8Q5 -20 5 -40Q5 -59 19 -76Q33 -93 53 -101ZM49 -86Q45 -86 41 -85Q38 -70 38 -51Q38 -32 41 -22Q44 -12 53 -12Q59 -12 61 -13Q65 -28 65 -47Q65 -66 62 -76Q58 -86 49 -86Z"],"m":[174,"M18 -64Q18 -77 16 -90Q11 -92 5 -93V-97Q26 -97 49 -101L50 -100Q47 -83 47 -66L49 -66Q58 -91 74 -101Q90 -101 97 -92Q103 -84 103 -66L105 -66Q115 -91 130 -101Q147 -101 154 -91Q161 -80 161 -62Q161 -61 161 -59L159 -8Q166 -5 171 -2L170 1Q159 0 146 0Q132 0 125 1V-4Q129 -22 129 -44Q129 -66 127 -72Q126 -78 123 -78Q118 -78 114 -72Q109 -65 105 -54L103 -8Q110 -5 115 -2L115 1Q103 0 90 0Q76 0 69 1V-4Q73 -22 73 -44Q73 -66 72 -72Q71 -78 67 -78Q63 -78 57 -71Q52 -64 48 -53Q48 -16 50 -7Q57 -5 63 -2L63 2Q49 0 31 0Q13 0 3 1L2 -3Q6 -4 15 -8Q18 -22 18 -64Z"],"u":[120,"M46 -46Q46 -32 47 -26Q48 -20 52 -20Q56 -20 62 -27Q67 -34 71 -45Q71 -82 69 -91Q62 -93 56 -96L57 -100Q70 -98 88 -98Q106 -98 116 -99L117 -95Q114 -94 105 -90Q102 -76 102 -34Q102 -18 103 -8Q108 -6 115 -5V-1Q93 -1 70 3L69 2Q73 -15 73 -32L71 -32Q67 -22 60 -12Q53 -2 45 3Q27 3 20 -7Q14 -17 14 -37Q14 -38 14 -39L15 -64Q15 -67 15 -74Q15 -80 14 -90Q9 -92 2 -93V-97Q26 -97 49 -101L50 -100Q46 -82 46 -46Z"],"·":[51,"M45 -57Q42 -53 36 -46Q30 -40 26 -37Q21 -40 15 -46Q9 -53 7 -57Q9 -61 15 -66Q20 -71 26 -73Q31 -71 36 -66Q42 -61 45 -57Z"],"-":[60,"M15 -60Q37 -60 54 -62L55 -61L54 -48L7 -45L5 -46L6 -60Z"],"!":[52,"M45 -17Q42 -13 36 -6Q30 0 26 3Q21 0 15 -6Q9 -13 7 -17Q9 -21 15 -26Q20 -31 26 -33Q31 -31 36 -26Q42 -21 45 -17ZM37 -142Q38 -142 39 -142Q47 -138 51 -130Q37 -93 30 -49L20 -48L13 -136Q24 -142 37 -142Z"],"’":[51,"M45 -120Q45 -107 33 -92Q22 -77 9 -69L6 -73Q19 -86 21 -104Q17 -107 13 -112Q9 -117 7 -120Q9 -124 15 -129Q20 -134 26 -136Q31 -134 36 -129Q42 -124 45 -120Z"]," ":[36,""]}};
+  var GL = {"em":200,"asc":190,"desc":-69,"cap":133,"g":{"A":[129,"M26 -132Q43 -130 70 -130Q98 -130 119 -132L119 -127Q115 -125 109 -124Q107 -107 107 -66Q107 -26 110 -7Q117 -5 122 -3L121 2Q107 0 90 0Q73 0 61 2L60 -4Q64 -6 71 -7Q73 -20 74 -46Q68 -47 59 -47Q49 -47 43 -46Q40 -26 40 -19Q40 -12 41 -8Q43 -4 48 -2L47 1Q37 0 22 0Q7 0 -4 2L-5 -4Q-1 -6 6 -7L37 -123Q31 -124 25 -127ZM74 -65Q74 -100 72 -119Q69 -120 64 -120Q58 -120 55 -119L45 -60Q52 -59 60 -59Q68 -59 74 -60Z"],"B":[124,"M4 -130 66 -132Q91 -132 99 -128Q109 -124 112 -118Q113 -113 113 -108Q113 -97 106 -88Q99 -79 88 -75V-73Q102 -73 110 -67Q118 -60 118 -47Q118 -31 99 -16Q79 0 60 3Q44 3 23 -5Q20 -2 18 5L13 3Q18 -22 18 -63Q18 -104 16 -121Q11 -124 4 -124ZM63 -77Q70 -77 74 -79Q78 -88 78 -102Q78 -122 61 -122Q56 -122 53 -121Q51 -103 51 -72Q51 -42 53 -18Q59 -14 68 -14Q76 -14 80 -16Q83 -26 83 -40Q83 -54 78 -61Q73 -68 59 -68L60 -77Z"],"C":[103,"M99 -29 102 -26Q85 -5 62 3Q35 3 20 -11Q6 -26 6 -54Q6 -81 23 -102Q40 -124 68 -133Q89 -133 110 -129L109 -125Q104 -125 100 -123Q94 -107 94 -91H88Q86 -99 86 -108Q77 -116 63 -116Q53 -116 49 -113Q46 -105 44 -92Q42 -78 42 -69Q42 -60 42 -55Q42 -50 43 -43Q44 -36 45 -32Q47 -28 50 -24Q53 -20 57 -18Q62 -17 69 -17Q77 -17 84 -20Q90 -23 99 -29Z"],"D":[132,"M4 -130 68 -132Q97 -132 112 -118Q126 -105 126 -76Q126 -47 108 -25Q90 -2 61 3Q46 3 23 -5Q20 -2 18 5L13 3Q18 -23 18 -63Q18 -104 16 -121Q11 -124 4 -124ZM60 -122Q56 -122 53 -121Q51 -101 51 -72Q51 -43 53 -19Q60 -14 69 -14Q78 -14 83 -17Q90 -35 90 -64Q90 -122 60 -122Z"],"E":[105,"M68 -17Q77 -17 84 -20Q90 -23 99 -29L102 -26Q85 -5 62 3Q35 3 20 -11Q6 -26 6 -54Q6 -81 23 -102Q40 -124 68 -133Q89 -133 110 -129L109 -125Q104 -125 100 -123Q94 -107 94 -91H88Q86 -99 86 -108Q77 -116 63 -116Q53 -116 49 -113Q44 -101 42 -77Q50 -75 63 -75Q76 -75 82 -82L87 -81Q84 -73 84 -65Q84 -57 86 -47L81 -46Q78 -54 77 -61Q71 -62 60 -62Q50 -62 42 -61Q42 -42 46 -30Q51 -17 68 -17Z"],"F":[100,"M9 -132Q24 -130 54 -130Q83 -130 102 -133L103 -129Q95 -118 95 -96H89Q87 -105 87 -113Q81 -117 71 -117Q60 -117 57 -115Q55 -95 55 -72Q59 -72 63 -72Q79 -72 85 -79L90 -78Q87 -70 87 -62Q87 -53 89 -44L84 -43Q81 -50 80 -58Q74 -59 66 -59Q58 -59 55 -58Q55 -22 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -64Q22 -101 19 -123Q13 -124 8 -127Z"],"G":[111,"M70 -17 69 -39Q69 -48 68 -52Q63 -55 55 -56L56 -60Q60 -60 67 -60Q74 -60 85 -62Q96 -65 103 -70L106 -67Q102 -63 100 -59Q97 -30 95 1H91Q89 -8 86 -15Q72 -2 56 3Q29 3 15 -11Q0 -26 0 -54Q0 -81 17 -102Q34 -124 62 -133Q84 -133 107 -128L106 -124Q101 -124 97 -122Q91 -106 91 -90H85Q83 -98 83 -107Q78 -111 71 -114Q64 -116 56 -116Q48 -116 43 -113Q40 -105 38 -92Q36 -78 36 -69Q36 -60 36 -55Q36 -50 37 -43Q38 -36 40 -32Q41 -28 44 -24Q47 -20 52 -18Q56 -17 62 -17Q67 -17 70 -17Z"],"H":[149,"M83 -132Q95 -130 113 -130Q130 -130 143 -132L144 -127Q139 -125 130 -123Q127 -106 127 -65Q127 -24 130 -7Q139 -5 144 -3L143 2Q130 0 113 0Q95 0 83 2L82 -4Q86 -6 92 -7Q94 -28 94 -63Q85 -64 74 -64Q64 -64 55 -63Q55 -23 58 -7Q65 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -64Q22 -101 19 -123Q12 -124 8 -127L9 -132Q21 -130 37 -130Q54 -130 69 -132L69 -127Q65 -125 57 -123Q55 -111 55 -79Q63 -77 75 -77Q87 -77 94 -79Q94 -103 92 -123Q86 -124 82 -127Z"],"I":[77,"M57 -123Q55 -108 55 -67Q55 -26 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -64Q22 -101 19 -123Q12 -124 8 -127L9 -132Q21 -130 38 -130Q54 -130 69 -132L69 -127Q65 -125 57 -123Z"],"J":[75,"M22 -33V-71Q22 -108 20 -123Q12 -125 8 -127L8 -132Q23 -130 40 -130Q56 -130 68 -132L69 -127Q65 -124 58 -123Q55 -101 55 -64Q55 -27 58 -7Q37 18 -2 36L-6 32Q10 20 16 5Q22 -10 22 -33Z"],"K":[134,"M139 2Q129 0 112 0Q95 0 83 1L83 -3Q86 -6 86 -14Q86 -22 83 -32Q80 -42 69 -67L55 -52Q56 -23 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -64Q22 -101 19 -123Q12 -124 8 -127L9 -132Q21 -130 37 -130Q53 -130 66 -132L67 -127Q65 -126 57 -123Q55 -108 55 -66Q68 -83 75 -95Q82 -106 83 -110Q84 -115 84 -120Q84 -125 80 -128L80 -132Q91 -130 108 -130Q126 -130 134 -132L135 -127Q131 -124 124 -123L87 -85L128 -7Q136 -6 140 -4Z"],"L":[96,"M100 3Q81 0 53 0Q24 0 9 2L8 -3Q13 -6 19 -7Q22 -30 22 -65Q22 -101 19 -123Q12 -124 8 -127L9 -132Q21 -130 38 -130Q54 -130 69 -132L69 -127Q65 -125 57 -123Q55 -108 55 -69Q55 -30 57 -14Q60 -13 69 -13Q78 -13 84 -15Q86 -22 87 -33H93Q93 -11 101 -2Z"],"M":[169,"M60 -14Q60 -29 54 -53Q47 -77 39 -96L38 -95L35 -69Q33 -47 33 -22Q33 -7 42 -2L41 1Q32 0 21 0Q11 0 0 2L-1 -4Q3 -6 10 -7L29 -123Q23 -124 18 -127L19 -132Q31 -130 48 -130Q64 -130 76 -132L77 -128Q70 -126 70 -121Q70 -118 75 -95Q80 -73 84 -57L85 -51L87 -52Q87 -63 104 -121Q104 -126 99 -128L99 -131Q110 -130 127 -130Q144 -130 155 -132L156 -127Q152 -125 146 -123Q145 -118 145 -105Q145 -92 149 -58Q152 -23 155 -7Q164 -5 169 -3L169 2Q156 0 139 0Q122 0 110 2L109 -4Q113 -6 118 -7Q118 -54 112 -95L110 -96Q99 -59 96 -45Q93 -31 93 -21Q75 -15 63 -6L60 -7Q60 -10 60 -14Z"],"N":[141,"M9 -132Q20 -130 38 -130Q57 -130 67 -132L68 -128Q66 -127 64 -126Q63 -124 63 -121Q63 -118 64 -114Q65 -110 74 -93Q84 -76 102 -45L103 -46V-65Q103 -99 100 -112Q96 -125 84 -128L85 -132Q97 -130 110 -130Q123 -130 135 -132L136 -127Q131 -125 122 -123Q121 -118 120 -100Q119 -83 119 -53Q119 -24 122 -7Q130 -6 136 -3L135 2Q123 0 110 0Q97 0 87 1Q87 -7 78 -24Q70 -41 39 -92L38 -92V-76Q38 -45 40 -29Q43 -13 50 -7Q58 -5 62 -3L61 2Q45 0 33 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -53Q22 -99 19 -123Q12 -124 8 -127Z"],"O":[130,"M68 -133Q95 -133 109 -119Q124 -105 124 -77Q124 -49 108 -28Q92 -7 65 3Q37 3 22 -12Q6 -28 6 -55Q6 -81 23 -102Q39 -124 68 -133ZM71 -114Q67 -116 60 -116Q54 -116 49 -113Q42 -96 42 -68Q42 -48 47 -32Q50 -24 55 -19Q61 -14 68 -14Q75 -14 80 -17Q88 -34 88 -62Q88 -88 84 -99Q79 -111 71 -114Z"],"P":[117,"M8 -130 70 -132Q70 -132 71 -132Q93 -132 106 -125Q118 -118 118 -99Q118 -80 103 -68Q88 -56 68 -56Q64 -56 63 -56L63 -66H66Q82 -66 82 -96Q82 -108 78 -115Q74 -122 64 -122Q61 -122 57 -121Q55 -103 55 -64Q55 -26 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -62Q22 -97 19 -121Q14 -124 8 -124Z"],"R":[131,"M8 -130 70 -132Q92 -132 104 -126Q118 -119 118 -99Q118 -88 112 -80Q106 -71 96 -66L125 -7Q132 -6 136 -4L135 2Q125 0 109 0Q93 0 82 1L81 -3Q85 -6 85 -15Q85 -29 73 -61Q68 -62 63 -62L63 -70H66Q74 -70 78 -77Q82 -85 82 -96Q82 -122 64 -122Q61 -122 57 -121Q55 -103 55 -64Q55 -26 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -62Q22 -97 19 -121Q14 -124 8 -124Z"],"S":[93,"M46 -15Q63 -15 63 -30Q63 -34 54 -41Q46 -48 36 -54Q26 -60 18 -67Q10 -75 10 -80Q10 -97 24 -112Q38 -127 57 -133Q76 -133 91 -129V-125Q86 -120 83 -111Q80 -101 80 -92H74Q74 -102 73 -108Q64 -116 52 -116Q45 -116 40 -113Q35 -110 35 -104Q35 -99 44 -92Q52 -86 62 -80Q73 -74 81 -67Q90 -59 90 -54Q90 -39 74 -21Q59 -3 43 3Q27 3 11 -2Q8 0 3 6L-1 2Q11 -11 13 -40H19L20 -26Q32 -15 46 -15Z"],"T":[111,"M-3 -133Q20 -130 57 -130Q94 -130 114 -133L115 -129Q108 -118 107 -97H102Q100 -106 100 -114Q93 -118 86 -118Q79 -118 75 -117Q73 -95 73 -60Q73 -26 76 -7Q84 -5 88 -3L87 2Q73 0 56 0Q39 0 27 2L26 -4Q31 -6 37 -7Q40 -27 40 -59Q40 -91 38 -116Q34 -118 26 -118Q18 -118 13 -115Q11 -107 10 -97H4Q4 -118 -5 -129Z"],"U":[142,"M122 -123Q120 -108 120 -67Q120 -26 122 -7Q130 -5 134 -3L134 2Q119 0 108 0Q96 0 84 2L83 -2Q85 -5 85 -13Q75 -3 59 3Q35 3 25 -9Q16 -21 16 -48Q16 -60 17 -84Q19 -109 19 -114Q19 -119 17 -123Q10 -125 7 -127L8 -132Q22 -130 37 -130Q51 -130 60 -132L61 -128Q56 -126 54 -122Q53 -118 51 -100Q50 -83 50 -66Q50 -48 50 -45Q50 -42 50 -36Q51 -31 52 -28Q53 -25 55 -22Q59 -17 68 -17Q77 -17 86 -23Q87 -32 87 -66Q87 -101 84 -123Q77 -124 72 -127L73 -132Q85 -130 102 -130Q119 -130 133 -132L134 -127Q130 -125 122 -123Z"],"V":[121,"M89 2Q77 0 59 0Q40 0 29 1L28 -2Q35 -4 35 -8Q35 -22 13 -106Q10 -117 7 -123Q0 -125 -4 -127L-3 -132Q9 -130 27 -130Q44 -130 59 -132L59 -127Q54 -125 47 -123Q51 -81 69 -16Q84 -76 84 -104Q84 -122 73 -128L73 -132Q87 -130 100 -130Q112 -130 124 -132L125 -127Q121 -125 114 -123Q117 -116 117 -103Q117 -90 109 -69Q100 -48 77 -6Q86 -4 90 -3Z"],"W":[184,"M154 2Q142 0 124 0Q107 0 94 2L94 -2Q96 -2 98 -4Q100 -6 100 -8Q100 -20 93 -53Q90 -44 77 -6Q80 -4 86 -3L85 2Q73 0 57 0Q40 0 29 1L28 -2Q35 -4 35 -8Q35 -22 13 -106Q10 -117 7 -123Q0 -125 -4 -127L-3 -132Q14 -130 58 -130Q101 -130 123 -132L124 -127Q118 -125 112 -123Q115 -81 133 -16Q147 -77 147 -104Q147 -122 136 -128L136 -132Q150 -130 162 -130Q175 -130 187 -132L188 -127Q184 -125 177 -123Q180 -116 180 -103Q180 -91 172 -70Q164 -49 141 -6Q150 -4 154 -3ZM48 -121Q51 -81 69 -16Q83 -77 83 -104Q83 -115 80 -119Q77 -124 68 -124Q58 -124 48 -121Z"],"Y":[113,"M73 -128 74 -132Q87 -130 98 -130Q109 -130 119 -132L120 -127Q115 -124 108 -123L73 -66Q73 -26 76 -7Q84 -5 88 -3L87 2Q74 0 57 0Q39 0 27 2L26 -4Q30 -6 38 -7Q40 -25 40 -55V-60Q22 -99 16 -109Q10 -119 5 -123Q-1 -125 -4 -127L-4 -132Q9 -130 26 -130Q42 -130 57 -132L57 -127Q54 -125 45 -123Q58 -86 65 -73Q73 -98 76 -106Q78 -115 78 -121Q78 -126 73 -128Z"],"f":[73,"M48 -54Q48 -22 52 12Q39 11 26 10Q20 21 17 40L12 40Q12 35 15 0Q18 -35 18 -54L18 -88H5L4 -88Q4 -92 5 -94Q7 -95 19 -98Q24 -112 37 -124Q49 -136 64 -142Q80 -142 93 -138V-135Q83 -126 80 -114L78 -114Q71 -120 65 -122Q60 -125 52 -126Q49 -112 48 -98L74 -99L75 -98Q72 -91 72 -86Q59 -87 48 -87Z"],"e":[96,"M59 -18Q66 -18 74 -22Q81 -27 87 -33L89 -31Q77 -9 51 3Q30 3 17 -9Q5 -20 5 -40Q5 -59 19 -76Q33 -93 52 -101Q88 -101 88 -76Q88 -69 87 -62Q92 -60 97 -59L96 -55Q95 -55 94 -55Q68 -55 37 -48Q37 -33 42 -26Q46 -18 59 -18ZM47 -86Q43 -86 40 -85Q37 -70 37 -54Q47 -58 57 -60Q57 -76 55 -81Q53 -86 47 -86Z"],"i":[66,"M53 -128Q51 -124 45 -118Q39 -111 34 -108Q29 -111 23 -118Q17 -124 15 -128Q18 -132 23 -137Q29 -142 34 -144Q39 -142 44 -137Q50 -132 53 -128ZM19 -64Q19 -77 17 -90Q12 -92 6 -93V-97Q30 -97 52 -101L53 -100Q49 -82 49 -49Q49 -16 51 -7Q58 -5 64 -2L64 2Q50 0 32 0Q14 0 4 1L3 -3Q7 -4 16 -8Q19 -22 19 -64Z"],"o":[102,"M53 -101Q75 -101 86 -90Q98 -79 98 -59Q98 -39 84 -22Q71 -5 51 3Q30 3 17 -8Q5 -20 5 -40Q5 -59 19 -76Q33 -93 53 -101ZM49 -86Q45 -86 41 -85Q38 -70 38 -51Q38 -32 41 -22Q44 -12 53 -12Q59 -12 61 -13Q65 -28 65 -47Q65 -66 62 -76Q58 -86 49 -86Z"],"m":[174,"M18 -64Q18 -77 16 -90Q11 -92 5 -93V-97Q26 -97 49 -101L50 -100Q47 -83 47 -66L49 -66Q58 -91 74 -101Q90 -101 97 -92Q103 -84 103 -66L105 -66Q115 -91 130 -101Q147 -101 154 -91Q161 -80 161 -62Q161 -61 161 -59L159 -8Q166 -5 171 -2L170 1Q159 0 146 0Q132 0 125 1V-4Q129 -22 129 -44Q129 -66 127 -72Q126 -78 123 -78Q118 -78 114 -72Q109 -65 105 -54L103 -8Q110 -5 115 -2L115 1Q103 0 90 0Q76 0 69 1V-4Q73 -22 73 -44Q73 -66 72 -72Q71 -78 67 -78Q63 -78 57 -71Q52 -64 48 -53Q48 -16 50 -7Q57 -5 63 -2L63 2Q49 0 31 0Q13 0 3 1L2 -3Q6 -4 15 -8Q18 -22 18 -64Z"],"u":[120,"M46 -46Q46 -32 47 -26Q48 -20 52 -20Q56 -20 62 -27Q67 -34 71 -45Q71 -82 69 -91Q62 -93 56 -96L57 -100Q70 -98 88 -98Q106 -98 116 -99L117 -95Q114 -94 105 -90Q102 -76 102 -34Q102 -18 103 -8Q108 -6 115 -5V-1Q93 -1 70 3L69 2Q73 -15 73 -32L71 -32Q67 -22 60 -12Q53 -2 45 3Q27 3 20 -7Q14 -17 14 -37Q14 -38 14 -39L15 -64Q15 -67 15 -74Q15 -80 14 -90Q9 -92 2 -93V-97Q26 -97 49 -101L50 -100Q46 -82 46 -46Z"],"·":[51,"M45 -57Q42 -53 36 -46Q30 -40 26 -37Q21 -40 15 -46Q9 -53 7 -57Q9 -61 15 -66Q20 -71 26 -73Q31 -71 36 -66Q42 -61 45 -57Z"],"-":[60,"M15 -60Q37 -60 54 -62L55 -61L54 -48L7 -45L5 -46L6 -60Z"],"!":[52,"M45 -17Q42 -13 36 -6Q30 0 26 3Q21 0 15 -6Q9 -13 7 -17Q9 -21 15 -26Q20 -31 26 -33Q31 -31 36 -26Q42 -21 45 -17ZM37 -142Q38 -142 39 -142Q47 -138 51 -130Q37 -93 30 -49L20 -48L13 -136Q24 -142 37 -142Z"],"’":[51,"M45 -120Q45 -107 33 -92Q22 -77 9 -69L6 -73Q19 -86 21 -104Q17 -107 13 -112Q9 -117 7 -120Q9 -124 15 -129Q20 -134 26 -136Q31 -134 36 -129Q42 -124 45 -120Z"]," ":[36,""]}};
 
   // ---------------------------------------------------------------- tiny DOM
   function put(el, kids) {
@@ -432,35 +432,21 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   }
   function left(sec) {
     if (sec <= 0) return '0:00';
-    var m = Math.floor(sec / 60), s = Math.floor(sec % 60);
-    return m + ':' + (s < 10 ? '0' : '') + s;
+    var hr = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = Math.floor(sec % 60);
+    return (hr ? hr + ':' + (m < 10 ? '0' : '') : '') + m + ':' + (s < 10 ? '0' : '') + s;
   }
   function up(id) { return String(id || '?').toUpperCase(); }
 
   // ---------------------------------------------------------------- icons: one stroke, one weight
+  // The chant's three state icons; scenes draw vignettes instead.
   var IC = {
-    castle: 'M4 21V9.5l2-1V5h2.5v2h2V5h3v2h2V5H18v3.5l2 1V21M9.5 21v-4a2.5 2.5 0 015 0v4M3 21h18',
-    needle: 'M4.5 19.5L17 7M15.5 4.5l4 4M17 7c-3.5-.5-8 1.5-8 6s5 5 7 2.5',
     glass: 'M6.5 3h11M6.5 21h11M7.5 3c0 5.5 9 4.5 9 9s-9 3.5-9 9M16.5 3c0 5.5-9 4.5-9 9s9 3.5 9 9',
     key: 'M7.5 12a3.5 3.5 0 107 0 3.5 3.5 0 10-7 0M14.5 12H21M18.5 12v3M21 12v2',
-    zzz: 'M4 7h5l-5 6h5M12 12h4l-4 5h4M18 4h3l-3 4h3',
-    sun: 'M8 12a4 4 0 108 0 4 4 0 10-8 0M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6L7 7M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4',
-    coin: 'M3.5 12a8.5 8.5 0 1017 0 8.5 8.5 0 10-17 0M12 7.5l3.2 4.5-3.2 4.5-3.2-4.5z',
-    cross: 'M6 6l12 12M18 6L6 18',
-    scroll: 'M7 4h10.5a2 2 0 010 4H9M7 4a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V8',
-    broom: 'M15 3l-5 9M5.5 12.5h9l2 8.5H3.5z',
-    chain: 'M10 14a4 4 0 005.5.5l3-3a4 4 0 00-5.5-5.5L12 7M14 10a4 4 0 00-5.5-.5l-3 3a4 4 0 005.5 5.5L12 17',
-    stalk: 'M12 21c0-5 4-7 4-11S12 3 12 3M12 15c-3.5 0-5.5-2-5.5-4.5 3.5 0 5.5 2 5.5 4.5zM16 9c2.5 0 4-1.5 4-3.5-2.5 0-4 1.5-4 3.5z',
-    stack: 'M5 17.5c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5M5 13.5c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5M5 9.5C5 8.1 8.1 7 12 7s7 1.1 7 2.5S15.9 12 12 12 5 10.9 5 9.5zM5 9.5v8M19 9.5v8',
-    quill: 'M20 4C13 5 8 10 6 18l2 2c8-2 13-7 12-16zM4 20l6-6',
-    fall: 'M4 21V9.5l2-1V5h2.5v2h2V5h3v2h2V5H18v3.5l2 1V21M3 21h18M11 21l2-4-2-3 2-3',
-    bell: 'M6 17v-5.5a6 6 0 0112 0V17l2 2H4zM10 21h4',
-    shield: 'M12 3l7.5 3v6c0 4.8-3.5 8-7.5 9-4-1-7.5-4.2-7.5-9V6zM8.5 8.5l7 7',
-    swap: 'M5 8h13l-3.5-3.5M19 16H6l3.5 3.5'
+    zzz: 'M4 7h5l-5 6h5M12 12h4l-4 5h4M18 4h3l-3 4h3'
   };
   function icon(name, cls) {
     return sv('svg', { class: cls || 'ic', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.8', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true' },
-      [sv('path', { d: IC[name] || IC.coin })]);
+      [sv('path', { d: IC[name] })]);
   }
   // The three fence stitches: satin (live), running stitch (wind-down), cross-stitch (fenced).
   function stitch(kind, cls) {
@@ -547,12 +533,12 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   var VK = { castle: 'begin', needle: 'renew', glass: 'expired', key: 'claim', chain: 'relink', zzz: 'fall', sun: 'wake', coin: 'fill', cross: 'fenced', shield: 'refused',
     scroll: 'ship', broom: 'dock', stalk: 'climb', stack: 'cleared', quill: 'quill', fall: 'ruin', bell: 'bell' };
 
-  // An epoch is the castle name's ENSv2 token id: its low 32 bits are the token version, which a claim bumps.
-  // Print the version (v0, v1, ...) and keep the full id for comparison; small counters print as they are.
+  // In Castle v2 an epoch is the castle name's ENSv2 token id: its low 32 bits are the token version, which a claim
+  // bumps, printed v0, v1, .... Castle v3 keeps a plain counter in storage, printed #1, #2, ..., so the two never read alike.
   function ep(e) {
     if (e == null || e === '') return '?';
     var v; try { v = BigInt(e); } catch (x) { return String(e); }
-    return v < BigInt(4294967296) ? v.toString() : 'v' + (v & BigInt(4294967295)).toString();
+    return v < BigInt(4294967296) ? '#' + v.toString() : 'v' + (v & BigInt(4294967295)).toString();
   }
   function same(a, b) { return !!a && !!b && String(a).toLowerCase() === String(b).toLowerCase(); }
   function known(addr) {
@@ -566,15 +552,22 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     var mine = S.leases.filter(function (x) { return x.epoch === L.epoch; });
     var claim = null, rn = [];
     mine.forEach(function (x) { if (x.kind === 'claim') claim = x; else if (x.kind === 'renew') rn.push(x); });
-    var out = [h('b', { text: up(L.holderAgent) }), (st === 'LIVE' ? ' holds the castle' : ' held the castle') + ', epoch ' + ep(L.epoch)];
+    var now = nowS(), gone = now > L.expiry, v3 = S.v3 && !gone;
+    var out = [h('b', { text: up(L.holderAgent) }), (v3 || st === 'LIVE' ? ' holds the castle' : ' held the castle') + ', epoch ' + ep(L.epoch)];
     if (claim && claim.t) out.push(', claimed at ' + hhmmss(claim.t));
     if (rn.length) out.push('. Renewed ' + (rn.length === 1 ? 'once' : rn.length + ' times') + ' with fo’s seal, last at ' + hhmmss(rn[rn.length - 1].t));
-    if (st !== 'LIVE') out.push((rn.length ? '; the lease ran out at ' : '. The lease ran out at ') + hhmmss(L.expiry * 1000));
+    if (v3) {
+      out.push(st === 'HELD' ? '. Its heartbeat is off-chain, so only the castle service can show it' : st === 'LIVE' ? '. Its heartbeat, co-signed by fo, is good until ' + hhmmss(L.hb * 1000)
+        : L.hb ? '. Its heartbeat went silent at ' + hhmmss(L.hb * 1000) : '. No heartbeat yet');
+      if (L.ch) out.push('. ' + up(L.ch.by) + ' challenged it; ' + (now < L.ch.deadline ? 'the answer is due by ' : 'no answer came by ') + hhmmss(L.ch.deadline * 1000));
+      else if (L.cool > now) out.push('. It answered a challenge, and no new one can come before ' + hhmmss(L.cool * 1000));
+      out.push('. The lease holds until ' + hhmmss(L.expiry * 1000) + (new Date(L.expiry * 1000).getDate() !== new Date().getDate() ? ' tomorrow' : ''));
+    } else if (st !== 'LIVE') out.push((rn.length ? '; the lease ran out at ' : '. The lease ran out at ') + hhmmss(L.expiry * 1000));
     out.push('.');
     return out;
   }
   function fateEl(f) {
-    var label = f === 'live' ? 'LIVE' : f === 'wind-down' ? 'WIND-DOWN' : f === 'fenced' ? 'FENCED' : '?';
+    var label = f === 'live' ? 'LIVE' : f === 'wind-down' ? 'WIND-DOWN' : f === 'fenced' ? 'FENCED' : f === null ? 'FILLED' : '?';
     return h('span', { class: 'fate', 'data-f': f }, [stitch(f, ''), label]);
   }
 
@@ -588,19 +581,24 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   function agent(id) { return S.agents[id] || (S.agents[id] = { id: id, alive: null }); }
   function strat(hash) { for (var i = 0; i < S.strategies.length; i++) if (S.strategies[i].hash === hash) return S.strategies[i]; return null; }
   function leaseEntry(kind, ev) {
-    S.lease = { holder: ev.holder, holderAgent: ev.holderAgent, epoch: String(ev.epoch), expiry: Number(ev.expiry) };
+    var o = S.lease && S.lease.epoch === String(ev.epoch) ? S.lease : {};
+    S.lease = { holder: ev.holder, holderAgent: ev.holderAgent, epoch: String(ev.epoch), expiry: Number(ev.expiry), hb: o.hb, ch: o.ch, cool: o.cool };
     S.leases.push({ kind: kind, epoch: String(ev.epoch), holderAgent: ev.holderAgent, expiry: Number(ev.expiry), t: ev.t, block: ev.block, tx: ev.tx });
   }
 
   function apply(ev) {
     if (ev.seq) S.seq = ev.seq;
-    var a = S.auction;
+    if (ev.t && ev.type !== 'snapshot') hbCheck(ev.t);
+    var a = S.auction, L = S.lease;
+    if (ev.type === 'fill' && !ev.decision && ev.branch) ev.decision = ev.branch;
     switch (ev.type) {
       case 'snapshot':
         S.config = Object.assign({}, S.config, ev.config || {});
         if (ev.shifts) S.shifts = ev.shifts;
         (ev.agents || []).forEach(function (x) { Object.assign(agent(x.id), x); });
-        if (ev.lease) S.lease = { holder: ev.lease.holder, holderAgent: ev.lease.holderAgent, epoch: String(ev.lease.epoch), expiry: Number(ev.lease.expiry) };
+        if (ev.castle && ev.castle.version === 3) S.v3 = true;
+        if (ev.lease) S.lease = { holder: ev.lease.holder, holderAgent: ev.lease.holderAgent, epoch: String(ev.lease.epoch), expiry: Number(ev.lease.expiry),
+          hb: ev.lease.heartbeat ? Number(ev.lease.heartbeat.validUntil) : null, ch: ev.lease.challengeDeadline ? { deadline: Number(ev.lease.challengeDeadline) } : null, cool: Number(ev.lease.cooldownUntil) || null };
         S.leases = (ev.leases || []).map(function (x) { return Object.assign({}, x, { epoch: String(x.epoch), expiry: Number(x.expiry) }); });
         S.strategies = (ev.strategies || []).map(function (x) { return Object.assign({}, x, { epoch: String(x.epoch) }); });
         if (ev.inventory) S.inventory = ev.inventory;
@@ -611,6 +609,16 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       case 'agent': Object.assign(agent(ev.id), { alive: ev.alive, lastBeat: ev.lastBeat, since: ev.t }); break;
       case 'lease.renewed': leaseEntry('renew', ev); S.dissolved = false; break;
       case 'lease.claimed': leaseEntry('claim', ev); S.dissolved = false; break;
+      // Castle v3: liveness is a heartbeat co-signed off-chain; only its first beat, or one after a silence, is a scene.
+      case 'heartbeat':
+        S.v3 = true;
+        if (!L || L.epoch !== String(ev.epoch)) return;
+        var quiet = !L.hb || ev.t > L.hb * 1000;
+        L.hb = Number(ev.validUntil);
+        if (!quiet) return;
+        break;
+      case 'lease.challenged': S.v3 = true; if (L) L.ch = { by: ev.challengerAgent, deadline: Number(ev.deadline) }; break;
+      case 'lease.responded': if (L) { L.ch = null; L.cool = Number(ev.cooldownUntil); } break;
       case 'strategy.shipped':
         if (strat(ev.hash)) break;
         S.strategies.push({ hash: ev.hash, epoch: String(ev.epoch), shippedBy: ev.shippedBy, center: ev.center, weth: ev.weth, usdc: ev.usdc, docked: false, t: ev.t });
@@ -669,15 +677,27 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
 
   // The fence rule, the same order as FeeFiFoFumExtruction: epoch first, then time.
   function nowS() { return clock() / 1000; }
+  // v3: LIVE needs a heartbeat still in date. A chain replay cannot see heartbeats, so a held v3 lease reads HELD.
   function castleState() {
-    if (!S.lease) return 'UNKNOWN';
-    return nowS() > S.lease.expiry ? 'WIND-DOWN' : 'LIVE';
+    var L = S.lease;
+    if (!L) return 'UNKNOWN';
+    if (nowS() > L.expiry) return 'WIND-DOWN';
+    if (!S.v3) return 'LIVE';
+    if (S.mode === 'chain') return 'HELD';
+    return L.hb && nowS() <= L.hb ? 'LIVE' : 'WIND-DOWN';
+  }
+  // A heartbeat that runs out is no transaction either: it is told at its validUntil, before the next event.
+  function hbCheck(tMs) {
+    var L = S.lease;
+    if (!S.v3 || !L || !L.hb || tMs <= L.hb * 1000 || S.hbOut === L.epoch + ':' + L.hb) return;
+    S.hbOut = L.epoch + ':' + L.hb;
+    apply({ v: 1, type: 'heartbeat.lapsed', t: L.hb * 1000, block: null, tx: null, src: 'derived', epoch: L.epoch, holderAgent: L.holderAgent, validUntil: L.hb });
   }
   function stratState(st) {
     if (!S.lease) return 'UNKNOWN';
     if (st.epoch !== S.lease.epoch) return st.docked ? 'DOCKED' : 'FENCED';
     if (st.docked) return 'DOCKED';
-    return nowS() > S.lease.expiry ? 'WIND-DOWN' : 'LIVE';
+    return castleState();
   }
   function leaseAt(tMs) {
     var cur = null;
@@ -690,6 +710,8 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     if (f.programEpoch == null) return { d: 'unknown', L: L };
     if (String(f.programEpoch) !== L.epoch) return { d: 'fenced', L: L };
     if (f.t / 1000 > L.expiry) return { d: 'wind-down', L: L };
+    if (f.heartbeat !== undefined) return { d: f.heartbeat && f.t / 1000 <= f.heartbeat.validUntil ? 'live' : 'wind-down', L: L };
+    if (S.v3 && S.mode === 'chain') return { d: null, L: L };
     return { d: 'live', L: L };
   }
 
@@ -711,7 +733,11 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       case 'snapshot': return { ev: ev, icon: 'castle', ti: 'HERE THE TALE BEGINS', gl: [S.lease ? up(S.lease.holderAgent) + ' holds the castle, epoch ' + ep(S.lease.epoch) : 'The castle stands empty'] };
       case 'lease.renewed': return { ev: ev, icon: 'needle', ti: 'HERE ' + A + ' KEEPS THE CASTLE', gl: ['epoch ' + ep(ev.epoch) + ' · lease to ' + hhmmss(ev.expiry * 1000), 'sealed by fo'] };
       case 'lease.expired': return { ev: ev, icon: 'glass', tone: 'woad', ti: 'HERE THE LEASE RUNS OUT', gl: ['epoch ' + ep(ev.epoch) + ' winds down', 'the castle only sells, and wide'] };
-      case 'lease.claimed': return { ev: ev, icon: 'key', tone: 'gold', ti: 'HERE ' + A + ' CLAIMS THE CASTLE', gl: ev.gapSeconds == null ? ['epoch ' + ep(ev.epoch), 'the first claim on the castle'] : ['epoch ' + ep(ev.prevEpoch) + ' → ' + ep(ev.epoch), 'after ' + ev.gapSeconds + ' s of wind-down'] };
+      case 'lease.claimed': return { ev: ev, icon: 'key', tone: 'gold', ti: 'HERE ' + A + ' CLAIMS THE CASTLE', gl: ev.gapSeconds == null ? ['epoch ' + ep(ev.epoch), 'the first claim on the castle'] : ['epoch ' + ep(ev.prevEpoch) + ' → ' + ep(ev.epoch), ev.early ? 'after an unanswered challenge' : 'after ' + ev.gapSeconds + ' s of wind-down'] };
+      case 'heartbeat': return { ev: ev, icon: 'needle', tone: 'gold', ti: 'HERE ' + A + '’S HEART BEATS', gl: ['epoch ' + ep(ev.epoch) + ' · co-signed by fo', 'off-chain, so no gas'] };
+      case 'heartbeat.lapsed': return { ev: ev, icon: 'glass', tone: 'woad', ti: 'HERE ' + A + '’S HEARTBEAT STOPS', gl: ['epoch ' + ep(ev.epoch) + ' winds down', 'no tx sent: the fence sees it'] };
+      case 'lease.challenged': return { ev: ev, icon: 'bell', tone: 'madder', ti: 'HERE ' + up(ev.challengerAgent) + ' CHALLENGES ' + up(S.lease && S.lease.holderAgent), gl: ['epoch ' + ep(ev.epoch) + ' · answer by ' + hhmmss(ev.deadline * 1000), 'silence hands over the castle'] };
+      case 'lease.responded': return { ev: ev, icon: 'sun', tone: 'gold', ti: 'HERE ' + A + ' ANSWERS', gl: ['still alive, epoch ' + ep(ev.epoch), 'no new challenge until ' + hhmmss(ev.cooldownUntil * 1000)] };
       case 'lease.rejected': return { ev: ev, icon: 'shield', tone: 'madder', ti: 'HERE THE CASTLE REFUSES ' + A, gl: [ev.call + ' from epoch ' + ep(ev.epoch), ev.reason] };
       case 'attestation.withheld': return { ev: ev, icon: 'shield', tone: 'madder', ti: 'HERE FO WITHHOLDS THE SEAL', gl: [ev.reason] };
       case 'incident': return { ev: ev, icon: 'bell', tone: 'woad', ti: 'HERE FO WRITES IT DOWN', gl: [ev.summary] };
@@ -750,7 +776,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         ]));
       });
     }
-    var hold = S.lease && castleState() === 'LIVE' ? S.lease.holderAgent : null;
+    var cs = castleState(), hold = S.lease && (cs === 'LIVE' || cs === 'HELD') ? S.lease.holderAgent : null;
     var claimant = S.lease ? S.lease.holderAgent : null;
     S.order.forEach(function (id) {
       var n = el.querySelector('[data-a="' + id + '"]'), a = agent(id), who = n.querySelector('.who');
@@ -758,8 +784,8 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       flag(n, 'data-asleep', a.alive === false);
       var txt, ic = null;
       if (a.alive === false) { txt = 'asleep'; ic = 'zzz'; }
-      else if (id === hold) { txt = 'holds the castle'; ic = 'key'; }
-      else if (id === claimant) { txt = 'lease lapsed'; ic = 'glass'; }
+      else if (id === hold) { txt = cs === 'HELD' ? 'holds the lease' : 'holds the castle'; ic = 'key'; }
+      else if (id === claimant) { txt = S.v3 && nowS() <= S.lease.expiry ? 'heartbeat stopped' : 'lease lapsed'; ic = 'glass'; }
       else if (a.alive === true) { txt = 'awake'; }
       else { txt = S.mode === 'chain' ? 'not visible on chain' : '—'; }
       fill(who, [ic ? icon(ic, '') : null, txt]);
@@ -832,7 +858,9 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     for (var i = 0; i < arcs.length; i++) arcs[i].setAttribute('stroke', i === act ? '#E9BC45' : '#E6DAC0');
     var times = RD.labels.querySelectorAll('.rd-time');
     for (var j = 0; j < times.length; j++) { var tz = times[j].getAttribute('data-tz'); times[j].textContent = tz ? hhmm(ms, tz) : ''; }
-    var st = castleState(), L = S.lease, rem = L ? L.expiry - ms / 1000 : 0, len = S.config.leaseSeconds || 120;
+    // v2 threads the lease; v3 threads the heartbeat while the day-long lease holds, and the lease once it is gone.
+    var st = castleState(), L = S.lease, exp = L ? L.expiry - ms / 1000 : 0, beat = S.v3 && st !== 'HELD' && exp > 0;
+    var rem = beat ? (L.hb || 0) - ms / 1000 : exp, len = beat ? S.config.heartbeatSeconds || 120 : S.config.leaseSeconds || 120;
     var frac = Math.max(0, Math.min(1, rem / len));
     if (frac > 0.002) RD.thread.setAttribute('d', arc(c, c, 74, 0, Math.min(frac, 0.9995) * Math.PI * 2));
     else RD.thread.removeAttribute('d');
@@ -851,7 +879,11 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         RD.holder.appendChild(w);
       }
     }
-    RD.sub.textContent = L ? (st === 'LIVE' ? left(rem) + ' left on the lease' : 'lapsed ' + left(-rem) + ' ago') : 'no lease yet';
+    var ch = L && L.ch, cl = ch ? ch.deadline - ms / 1000 : 0;
+    RD.sub.textContent = !L ? 'no lease yet' : ch ? (cl > 0 ? 'challenged · ' + left(cl) : 'unanswered · claim open')
+      : beat ? (st === 'LIVE' ? 'heartbeat good for ' + left(rem) : L.hb ? 'silent for ' + left(-rem) : 'no heartbeat yet')
+      : exp > 0 ? left(exp) + ' left on the lease' : 'lapsed ' + left(-exp) + ' ago';
+    RD.sub.style.fill = ch ? '#B0412A' : '';
     RD.sub2.textContent = L ? 'epoch ' + ep(L.epoch) : '';
     var line = R('leaseLine');
     fill(line, L ? leaseStory(L, st) : 'Waiting for the castle’s first lease.');
@@ -879,8 +911,8 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     GI = { svg: svg, eyeO: eyeO, eyeS: eyeS, eyeW: eyeW, mO: mO, mS: mS, mW: mW };
     fill(R('giant'), svg);
     var ul = R('states');
-    [['live', 'LIVE', 'The shift holds the lease, so every quote fills on the curve.'],
-     ['wind', 'WIND-DOWN', 'The lease lapsed and nobody has claimed it. The castle only sells down, at a wide spread.'],
+    [['live', 'LIVE', 'The holder’s lease holds and its heartbeat is in date, so every quote fills on the curve.'],
+     ['wind', 'WIND-DOWN', 'The heartbeat went silent or the lease lapsed, and nobody has claimed it. The castle only sells down, at a wide spread.'],
      ['fenced', 'FENCED', 'A quote from a stale shift. The giant smells it, and the fill reverts FeeFiFoFum().']].forEach(function (r) {
       put(ul, h('li', { class: 'st', 'data-k': r[0] }, [stitch(r[0] === 'wind' ? 'wind-down' : r[0]), h('div', { class: 'nm' }, letters(r[1], true)), h('div', null, [h('p', { text: r[2] }), h('div', { class: 'strats' })])]));
     });
@@ -897,7 +929,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     S.strategies.forEach(function (st) {
       var s = stratState(st);
       if (s === 'DOCKED' && S.lease && st.epoch === S.lease.epoch) return;
-      var k = s === 'LIVE' ? 'live' : s === 'WIND-DOWN' ? 'wind' : 'fenced';
+      var k = s === 'LIVE' || s === 'HELD' ? 'live' : s === 'WIND-DOWN' ? 'wind' : 'fenced';
       var key = k + '|' + s + '|' + st.epoch + '|' + px(st.center);
       if (seen[key]) { seen[key].n++; seen[key].hs.push(st.hash); return; }
       groups[k].push(seen[key] = { s: s, k: k, st: st, n: 1, hs: [st.hash] });
@@ -1099,7 +1131,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         h('td', { text: f.takerName || known(f.taker) || short(f.taker) }),
         h('td', { class: 'num' }, f.status === 'reverted' ? h('span', { class: 'muted', text: 'tried to ' + (t.verb === 'bought' ? 'buy ' : 'sell ') + t.weth + ' WETH' }) : t.verb + ' ' + t.weth + ' WETH for ' + t.usdc + ' USDC'),
         h('td', { class: 'r num' }, f.status === 'reverted' ? '—' : [t.price, h('span', { class: 'u', text: ' USDC/WETH' })]),
-        h('td', { class: 'num' }, [h('span', { class: 'u', text: 'epoch ' }), f.programEpoch === f.leaseEpoch ? ep(f.programEpoch) : ep(f.programEpoch) + ' vs ' + ep(f.leaseEpoch)]),
+        h('td', { class: 'num' }, [h('span', { class: 'u', text: 'epoch ' }), f.leaseEpoch == null || f.programEpoch === f.leaseEpoch ? ep(f.programEpoch) : ep(f.programEpoch) + ' vs ' + ep(f.leaseEpoch)]),
         h('td', null, [fateEl(f.decision), f.status === 'reverted' ? h('div', { class: 'muted rv', text: 'reverted ' + (f.revert || '') }) : null]),
         h('td', null, txEl(f.tx))
       ]);
@@ -1131,7 +1163,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         h('td', { text: f.takerName || known(f.taker) || short(f.taker) }),
         h('td', { class: 'num' }, [h('span', { class: 'u', text: 'book epoch ' }), ep(f.programEpoch)]),
         h('td', { class: 'num opt', text: r.L ? ep(r.L.epoch) : '?' }),
-        h('td', { class: 'num opt', text: r.L ? (f.t / 1000 > r.L.expiry ? left(f.t / 1000 - r.L.expiry) + ' past' : left(r.L.expiry - f.t / 1000) + ' left') : '?' }),
+        h('td', { class: 'num opt', text: f.heartbeat !== undefined ? (f.heartbeat ? 'beat until ' + hhmmss(f.heartbeat.validUntil * 1000) : 'no heartbeat') : r.L ? (f.t / 1000 > r.L.expiry ? left(f.t / 1000 - r.L.expiry) + ' past' : left(r.L.expiry - f.t / 1000) + ' left') : '?' }),
         h('td', null, fateEl(r.d)),
         h('td', { class: 'agree', 'data-ok': ok ? 'yes' : 'no', text: f.status === 'reverted' ? (f.decision ? (ok ? 'agrees' : 'differs') + ': reverted ' + f.revert : 'reverted; error not recovered') : ok ? 'agrees' : 'differs: ' + f.decision }),
         h('td', null, txEl(f.tx))
@@ -1181,13 +1213,13 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   }
 
   function drawFace() {
-    var el = R('face'), L = S.lease, st = castleState(), rem = L ? L.expiry - nowS() : 0, last = S.fills[S.fills.length - 1];
-    var frac = L ? Math.max(0, Math.min(1, rem / (S.config.leaseSeconds || 120))) : 0;
+    var el = R('face'), L = S.lease, st = castleState(), exp = L ? L.expiry - nowS() : 0, beat = S.v3 && st !== 'HELD' && exp > 0, last = S.fills[S.fills.length - 1];
+    var rem = beat ? (L.hb || 0) - nowS() : exp, frac = L ? Math.max(0, Math.min(1, rem / (beat ? S.config.heartbeatSeconds || 120 : S.config.leaseSeconds || 120))) : 0;
     var t = last ? trade(last) : null;
     fill(el, [
       h('div', { class: 'f1' }, [letters('fee·fi·fo·fum'), R('src').cloneNode(true)]),
       h('div', { class: 'f2' }, [L ? h('span', { class: 'hold' }, letters(up(L.holderAgent), true)) : null,
-        h('span', { class: 'stt', style: 'color:' + (st === 'LIVE' ? 'var(--sage)' : 'var(--woad)') }, st === 'LIVE' ? 'LIVE · ' + left(rem) : st === 'WIND-DOWN' ? 'WIND-DOWN' : '—'),
+        h('span', { class: 'stt', style: 'color:' + (st === 'LIVE' ? 'var(--sage)' : 'var(--woad)') }, st === 'LIVE' ? 'LIVE · ' + left(rem) : st === 'WIND-DOWN' ? 'WIND-DOWN' : st === 'HELD' ? 'HELD' : '—'),
         L ? h('span', { class: 'muted num ep', text: 'epoch ' + ep(L.epoch) }) : null]),
       h('div', { class: 'bar' }, h('i', { style: 'width:' + (frac * 100).toFixed(1) + '%' })),
       S.inventory ? h('div', { class: 'f3 num' }, ['Hoard ', h('b', { text: amt(S.inventory.weth, 'WETH') }), ' WETH · ', h('b', { text: amt(S.inventory.usdc, 'USDC') }), ' USDC']) : null,
@@ -1204,6 +1236,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
 
   var dirty = true;
   function render() {
+    hbCheck(clock());
     drawHeader(); drawChant(); tickRoundel(); drawFence(); drawHoard(); drawStalk(); drawFrieze(); drawFills();
     if (!R('replay').closest('[hidden]')) drawReplay();
     if (!R('v2Table').closest('[hidden]')) drawHistory();
@@ -1212,7 +1245,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   }
 
   // ---------------------------------------------------------------- sources
-  var TYPES = ['snapshot', 'agent', 'attestation.withheld', 'incident', 'lease.renewed', 'lease.expired', 'lease.claimed', 'lease.rejected',
+  var TYPES = ['snapshot', 'agent', 'attestation.withheld', 'incident', 'lease.renewed', 'lease.expired', 'lease.claimed', 'lease.rejected', 'heartbeat', 'lease.challenged', 'lease.responded',
     'castle.relinked', 'strategy.shipped', 'strategy.docked', 'shift.changed', 'castle.dissolved', 'inventory', 'fill', 'auction.opened',
     'auction.bid', 'auction.rejected', 'auction.checkpoint', 'auction.cleared', 'auction.swept', 'price.written'];
   function feed(ev) { if (!ev || !ev.type) return; apply(ev); dirty = true; }
@@ -1235,7 +1268,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     // so the tapestry and the replay tab have the history, not just the present.
     state().then(function (snap) {
       if (S !== run) return;
-      feed({ v: 1, type: 'snapshot', t: snap.t, block: snap.block, tx: null, src: 'service', config: snap.config, shifts: snap.shifts, agents: snap.agents,
+      feed({ v: 1, type: 'snapshot', t: snap.t, block: snap.block, tx: null, src: 'service', castle: snap.castle, config: snap.config, shifts: snap.shifts, agents: snap.agents,
         lease: snap.lease, leases: [], strategies: snap.strategies, inventory: snap.inventory, price: snap.price, auction: null, fills: [] });
       S.scenes = [];
       try { mine = es = new EventSource(base() + '/stream?since=0'); } catch (e) { fallBack('The castle service could not be reached.'); return; }
@@ -1266,7 +1299,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   }
 
   // ---------------------------------------------------------------- chain-only: the same events, rebuilt from Sepolia
-  // Castle v2 and Aqua topics (keccak of each signature), so the page needs no hashing library.
+  // Castle and Aqua topics (keccak of each signature), so the page needs no hashing library. v3 keeps every v2 event.
   var TOPIC = {
     '0x633ba8e3a58f6338e5b7ea25911e616943cc40de46b4d4f19001957916c717f9': 'Renewed',        // (uint256 indexed epoch, address indexed holder, uint64 expiry, bytes32 digest)
     '0x8cc4acbf339fd6f6cecce20719baa57cc65bcae0992bf95cc10d5eabe1d40254': 'Claimed',        // (uint256 indexed epoch, address indexed holder, uint64 expiry, uint256 prevEpoch)
@@ -1277,6 +1310,8 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     '0x3f17e5534b3847f6e04d337edb6fd99d3392922eadaa52973d85bc948e4b879b': 'AuctionOpened',  // (address indexed auction, uint256 indexed epoch, uint256 amount, uint256 floorQ96, uint64 endBlock, bool dissolution)
     '0x3d2a5914bd7c6aa7ab5ab0649905230f8fe78f72cca11bc29d24c49a60800e02': 'AuctionSettled', // (address indexed auction, uint256 clearingQ96, uint256 raised, bool priceWritten)
     '0xb0b5529c15667824a2fcfcee58a625d399fb6706d3a784d22a9a66e47982dd8a': 'Dissolved',      // (uint256 indexed epoch, uint256 docked, uint256 weth)
+    '0x072a3d1d33e8c00aedd7320e9e60d1107ead1c14dcd23a04eeb89cb5fe01fbf9': 'Challenged',     // v3 (uint256 indexed epoch, address indexed challenger, uint64 deadline)
+    '0x99c11c9d1a0c1f97332a46b4a395b61a06fdf20a5b988deb61c0f79afe8f665f': 'Responded',      // v3 (uint256 indexed epoch, address indexed holder, uint64 cooldownUntil)
     '0x3ad61047071575417c75e3311e5d46ff042e292b5dd8769ff18b4b254098ca7a': 'Pulled',         // Aqua (maker, app, strategyHash, token, amount)
     '0x3f18354abbd5306dd1665c2c90f614a4559e39dd620d04fbe5458e613b6588f3': 'Pushed',         // Aqua (maker, app, strategyHash, token, amount)
     '0x650baad5cd8ca09b8f580be220fa04ce2ba905a041f764b6a3fe2c848eb70540': 'BidSubmitted',   // CCA (uint256 indexed id, address indexed owner, uint256 priceQ96, uint128 amount)
@@ -1319,8 +1354,8 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   function ensOf(addr) { return whoIs(addr) ? whoIs(addr) + '.' + parentName() : null; }
   // One reader of a Castle's logs and of the Aqua fills against it. Chain mode runs one on the live Castle, and the
   // v2 tab runs one on Castle v2. Every event goes to emit(), in block order.
-  function reader(castle, emit) {
-    var c = { rpc: 0, cursor: 0, castleTx: {}, auctions: [], shipEpoch: {}, leases: [], fillTx: {}, expiredFor: '', times: {} }, aqua = CONFIG.external.aqua;
+  function reader(castle, emit, v3) {
+    var c = { rpc: 0, cursor: 0, castleTx: {}, auctions: [], shipEpoch: {}, leases: [], fillTx: {}, expiredFor: '', times: {}, ch: 0 }, aqua = CONFIG.external.aqua;
     function q(m, p) { return rpc(m, p, c); }
     c.time = function (log) { return log && log.blockTimestamp ? hexN(log.blockTimestamp) * 1000 : log && c.times[log.blockNumber] ? c.times[log.blockNumber] : clock(); };
     function ev(type, body, log) { return Object.assign({ v: 1, type: type, t: c.time(log), block: log ? hexN(log.blockNumber) : null, tx: log ? log.transactionHash : null, src: 'chain' }, body); }
@@ -1347,7 +1382,14 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         var epoch = BigInt(tp[1]).toString(), holder = wAddr(tp[2]), exp = hexN(w[0]), prev = c.leases[c.leases.length - 1];
         c.leases.push({ block: b, epoch: epoch, expiry: exp, holder: holder, agent: whoIs(holder) });
         if (n === 'Renewed') emit(ev('lease.renewed', { epoch: epoch, holder: holder, holderAgent: whoIs(holder), expiry: exp, attestor: 'fo', digest: w[1] }, log));
-        else emit(ev('lease.claimed', { epoch: epoch, prevEpoch: BigInt(w[1]).toString(), holder: holder, holderAgent: whoIs(holder), expiry: exp, gapSeconds: prev ? Math.max(0, Math.round(t / 1000 - prev.expiry)) : null }, log));
+        else emit(ev('lease.claimed', { epoch: epoch, prevEpoch: BigInt(w[1]).toString(), holder: holder, holderAgent: whoIs(holder), expiry: exp, gapSeconds: prev ? Math.max(0, Math.round(t / 1000 - prev.expiry)) : null,
+          early: !!(c.ch && prev && t / 1000 < prev.expiry) }, log));
+        if (n === 'Claimed') c.ch = 0;
+      } else if (n === 'Challenged' || n === 'Responded') {
+        var who = wAddr(tp[2]);
+        c.ch = n === 'Challenged' ? hexN(w[0]) : 0;
+        emit(n === 'Challenged' ? ev('lease.challenged', { epoch: BigInt(tp[1]).toString(), challenger: who, challengerAgent: whoIs(who), deadline: hexN(w[0]) }, log)
+          : ev('lease.responded', { epoch: BigInt(tp[1]).toString(), holder: who, holderAgent: whoIs(who), cooldownUntil: hexN(w[0]) }, log));
       } else if (n === 'Relinked') {
         var label = wStr(log.data, 0);
         emit(ev('castle.relinked', { node: tp[1], holderNode: tp[2], holderName: label ? label + '.' + parentName() : null }, log));
@@ -1379,7 +1421,8 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
             var out = f.legs.Pulled, inn = f.legs.Pushed, hash = (out || inn).hash, b = hexN(f.log.blockNumber), L = c.leaseAtBlock(b), pe = c.shipEpoch[hash] || null;
             var tIn = inn && same(inn.token, CONFIG.external.usdc) ? 'USDC' : 'WETH', tOut = tIn === 'USDC' ? 'WETH' : 'USDC';
             lapse(c.time(f.log) / 1000);
-            var d = pe != null && L && pe !== L.epoch ? 'fenced' : L && c.time(f.log) / 1000 > L.expiry ? 'wind-down' : 'live';
+            // v3's branch turns on the taker's heartbeat, which logs do not carry: such a fill is told as FILLED.
+            var d = pe != null && L && pe !== L.epoch ? 'fenced' : L && c.time(f.log) / 1000 > L.expiry ? 'wind-down' : v3 ? null : 'live';
             emit(ev('fill', { id: h0 + ':0', taker: tx && tx.from, takerName: tx ? ensOf(tx.from) : null, tokenIn: tIn, tokenOut: tOut,
               amountIn: inn ? inn.amount : '0', amountOut: out ? out.amount : '0', strategy: hash, programEpoch: pe, leaseEpoch: L ? L.epoch : null, expiry: L ? L.expiry : null,
               decision: d, status: 'success', revert: null }, f.log));
@@ -1421,7 +1464,8 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     reset('chain');
     S.config = Object.assign({}, CONFIG);
     var castle = CONFIG.contracts.castle.address, deploy = Number(CONFIG.contracts.castle.block);
-    var c = CH = reader(castle, feed);
+    S.v3 = CONFIG.contracts.castle.version === 3;
+    var c = CH = reader(castle, feed, S.v3);
     c.why = why || ''; c.bal = ''; c.polls = 0;
     drawChainNote();
     function call(to, data) { return rpc('eth_call', [{ to: to, data: data }, 'latest'], c); }
@@ -1539,98 +1583,75 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     stopChain();
     if (es) { es.close(); es = null; }
     reset('mock');
-    var T = [], beats = [], seed = 7;
+    S.v3 = true;
+    var T = [], beats = [], seed = 7, t0 = clock(), B0 = 9312000, HB = 12, DAY = 86400;
     function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
     function hx(n) { var s = '0x'; for (var i = 0; i < n; i++) s += '0123456789abcdef'[Math.floor(rnd() * 16)]; return s; }
     function W(x) { return (BigInt(Math.round(x * 1e6)) * BigInt(1e12)).toString(); }
     function U(x) { return String(Math.round(x * 1e6)); }
     function P(x) { return { q96: '0', usdcPerWeth: x.toFixed(2) }; }
+    function V(s) { return Math.round(t0 / 1000 + s); }
     function at(s, ev) { ev.tx = ev.tx === null ? null : (ev.tx || hx(64)); T.push({ at: s, ev: ev }); }
     function beat(s, label) { beats.push({ at: s, label: label }); }
-    var bal = { w: 4.2, u: 10150 };
-    function inv(s) { at(s, { type: 'inventory', weth: W(bal.w), usdc: U(bal.u) }); }
-    var Jacks = { horner: 'Jack Horner', frost: 'Jack Frost', tar: 'Jack Tar', spriggs: 'Jack Spriggs' };
-    function fillEv(s, name, buy, w, price, pe, le, exp, decision, revert) {
-      var u = Math.round(w * price * 100) / 100;
-      var ev = { type: 'fill', taker: hx(40), takerName: name, tokenIn: buy ? 'USDC' : 'WETH', tokenOut: buy ? 'WETH' : 'USDC',
-        amountIn: buy ? U(u) : W(w), amountOut: buy ? W(w) : U(u), strategy: hx(64), programEpoch: String(pe), leaseEpoch: String(le), expiry: exp,
-        decision: decision, status: decision === 'fenced' || revert ? 'reverted' : 'success', revert: decision === 'fenced' ? 'FeeFiFoFum()' : revert || null };
-      at(s, ev);
-      if (ev.status === 'success') { bal.w += buy ? -w : w; bal.u += buy ? u : -u; inv(s); }
+    function beats4(who, e, from, to) { for (var s = from; s <= to; s += 4) at(s, { type: 'heartbeat', holderAgent: who, epoch: e, validUntil: V(s + HB), tx: null }); }
+    var bal = { w: 4.2, u: 10150 }, J = ['Jack Horner', 'Jack Frost', 'Jack Tar', 'Jack Spriggs'];
+    function fillEv(s, j, buy, w, price, pe, d, revert) {
+      var u = Math.round(w * price * 100) / 100, bad = d === 'fenced' || revert;
+      at(s, { type: 'fill', taker: hx(40), takerName: J[j], tokenIn: buy ? 'USDC' : 'WETH', tokenOut: buy ? 'WETH' : 'USDC', amountIn: buy ? U(u) : W(w), amountOut: buy ? W(w) : U(u),
+        strategy: hx(64), programEpoch: pe, leaseEpoch: s < 53 ? '7' : '8', heartbeat: d === 'live' ? { validUntil: V(s + HB) } : null, decision: d, status: bad ? 'reverted' : 'success', revert: d === 'fenced' ? 'FeeFiFoFum()' : revert || null });
+      if (!bad) { bal.w += buy ? -w : w; bal.u += buy ? u : -u; at(s, { type: 'inventory', weth: W(bal.w), usdc: U(bal.u) }); }
     }
-    var LEASE = 30, t0 = clock();
-    function exp(s) { return Math.round(t0 / 1000 + s + LEASE); }
-    var s7 = hx(64), s8 = hx(64), s8b = hx(64), s9 = hx(64);
-    at(0, { type: 'snapshot', tx: null,
-      config: { chainId: 11155111, name: 'castle.feefifofum.eth', leaseSeconds: LEASE, renewEverySeconds: 10, graceSeconds: 10, explorer: '' },
-      shifts: [{ city: 'Tokyo', tz: 'Asia/Tokyo', startUtc: '00:00', endUtc: '08:00', agent: 'fee' }, { city: 'London', tz: 'Europe/London', startUtc: '08:00', endUtc: '16:00', agent: 'fi' },
+    var s7 = hx(64), s8 = hx(64), s8b = hx(64);
+    at(0, { type: 'snapshot', tx: null, castle: { version: 3 },
+      config: { chainId: 11155111, name: 'castle.feefifofum.eth', leaseSeconds: DAY, heartbeatSeconds: HB, explorer: '' },
+      shifts: CONFIG && CONFIG.shifts || [{ city: 'Tokyo', tz: 'Asia/Tokyo', startUtc: '00:00', endUtc: '08:00', agent: 'fee' }, { city: 'London', tz: 'Europe/London', startUtc: '08:00', endUtc: '16:00', agent: 'fi' },
         { city: 'New York', tz: 'America/New_York', startUtc: '16:00', endUtc: '24:00', agent: 'fee' }],
       agents: ['fee', 'fi', 'fo', 'fum'].map(function (id) { return { id: id, role: ROLE[id], alive: true }; }),
-      lease: { holder: hx(40), holderAgent: 'fee', epoch: '7', expiry: exp(0) },
-      leases: [{ kind: 'claim', epoch: '7', holderAgent: 'fee', expiry: exp(0), t: t0 - 1, block: 9312000, tx: hx(64) }],
+      lease: { holder: hx(40), holderAgent: 'fee', epoch: '7', expiry: V(DAY), heartbeat: { validUntil: V(HB) } },
+      leases: [{ kind: 'claim', epoch: '7', holderAgent: 'fee', expiry: V(DAY), t: t0 - 1, block: B0, tx: hx(64) }],
       strategies: [{ hash: s7, epoch: '7', shippedBy: 'fee', center: P(2412.5), weth: W(4), usdc: U(10000) }],
       inventory: { weth: W(bal.w), usdc: U(bal.u) }, price: P(2412.5), auction: null, fills: [] });
-    fillEv(2, Jacks.horner, true, 0.25, 2416.4, 7, 7, exp(0), 'live');
-    at(6, { type: 'lease.renewed', holder: hx(40), holderAgent: 'fee', epoch: '7', expiry: exp(6), attestor: 'fo' });
-    fillEv(9, Jacks.frost, false, 0.4, 2408, 7, 7, exp(6), 'live');
-    at(16, { type: 'lease.renewed', holder: hx(40), holderAgent: 'fee', epoch: '7', expiry: exp(16), attestor: 'fo' });
-    fillEv(19, Jacks.tar, true, 0.1, 2414, 7, 7, exp(16), 'live');
+    beats4('fee', '7', 0, 20);
+    fillEv(2, 0, true, 0.25, 2416.4, '7', 'live');
+    fillEv(9, 1, false, 0.4, 2408, '7', 'live');
+    fillEv(17, 2, true, 0.1, 2414, '7', 'live');
     beat(22, 'fee falls silent');
     at(22, { type: 'agent', id: 'fee', alive: false, tx: null });
-    at(34, { type: 'incident', id: 'inc-1', kind: 'missed-renewal', epoch: '7', summary: 'fee missed its renewal; the lease ends at ' + hhmmss(exp(16) * 1000), tx: null });
-    beat(46, 'the lease runs out');
-    at(46, { type: 'lease.expired', epoch: '7', expiry: exp(16), tx: null });
-    fillEv(50, Jacks.spriggs, true, 0.3, 2527, 7, 7, exp(16), 'wind-down');
-    fillEv(53, Jacks.frost, false, 0.5, 2300, 7, 7, exp(16), 'wind-down', 'WindDownReduceOnly(WETH)');
-    beat(56, 'fi claims; a stale fill is fenced');
-    at(56, { type: 'lease.claimed', holder: hx(40), holderAgent: 'fi', epoch: '8', prevEpoch: '7', expiry: exp(56), gapSeconds: 10 });
-    at(57, { type: 'castle.relinked', node: hx(64), holderNode: hx(64), holderName: 'fi.feefifofum.eth', mcpEndpoint: '' });
-    fillEv(59, Jacks.horner, true, 0.5, 2416.4, 7, 8, exp(56), 'fenced');
-    at(61, { type: 'strategy.docked', hash: s7, epoch: '7', dockedBy: 'fi' });
-    at(62, { type: 'strategy.shipped', hash: s8, epoch: '8', shippedBy: 'fi', center: P(2412.5), weth: W(3.5), usdc: U(10000) });
-    fillEv(66, Jacks.horner, true, 0.2, 2416.5, 8, 8, exp(56), 'live');
-    at(68, { type: 'lease.renewed', holder: hx(40), holderAgent: 'fi', epoch: '8', expiry: exp(68), attestor: 'fo' });
-    beat(72, 'fee returns stale and is refused');
-    at(72, { type: 'agent', id: 'fee', alive: true, tx: null });
-    at(73, { type: 'lease.rejected', epoch: '7', holderAgent: 'fee', call: 'renew', reason: 'stale epoch: the castle is fi’s now, epoch 8' });
-    beat(76, 'the Jacks climb the beanstalk');
-    var B0 = 9312000;
-    at(76, { type: 'auction.opened', auction: hx(40), kind: 'shift-change', amount: W(1.5), floor: P(2350), startBlock: B0 + 76, endBlock: B0 + 96, hook: 'JackHook' });
-    at(78, { type: 'lease.renewed', holder: hx(40), holderAgent: 'fi', epoch: '8', expiry: exp(78), attestor: 'fo' });
-    [[79, Jacks.horner, 0.5, 2440], [81, Jacks.frost, 0.6, 2425], [83, 'fi, the next shift', 0.8, 2415], [85, Jacks.tar, 0.3, 2460]].forEach(function (b) {
-      at(b[0], { type: 'auction.bid', auction: '', bidId: hx(8), owner: hx(40), ownerName: b[1], maxPrice: P(b[3]), amount: U(b[2] * b[3]) });
+    beat(32, 'its heartbeat runs out: no gas');
+    fillEv(35, 3, true, 0.3, 2527, '7', 'wind-down');
+    fillEv(38, 1, false, 0.5, 2300, '7', 'wind-down', 'WindDownReduceOnly(WETH)');
+    beat(40, 'fi challenges; nobody answers');
+    at(40, { type: 'lease.challenged', challengerAgent: 'fi', epoch: '7', deadline: V(52) });
+    at(53, { type: 'lease.claimed', holder: hx(40), holderAgent: 'fi', epoch: '8', prevEpoch: '7', expiry: V(53 + DAY), gapSeconds: 21, early: true });
+    beats4('fi', '8', 54, 110);
+    at(54, { type: 'castle.relinked', node: hx(64), holderNode: hx(64), holderName: 'fi.feefifofum.eth' });
+    fillEv(56, 0, true, 0.5, 2416.4, '7', 'fenced');
+    at(58, { type: 'strategy.docked', hash: s7, epoch: '7', dockedBy: 'fi' });
+    at(59, { type: 'strategy.shipped', hash: s8, epoch: '8', shippedBy: 'fi', center: P(2412.5), weth: W(3.5), usdc: U(10000) });
+    fillEv(62, 0, true, 0.2, 2416.5, '8', 'live');
+    beat(66, 'fee returns stale and is refused');
+    at(66, { type: 'agent', id: 'fee', alive: true, tx: null });
+    at(67, { type: 'lease.rejected', epoch: '7', holderAgent: 'fee', call: 'ship', reason: 'NotHolder: the castle is fi’s now, epoch #8' });
+    beat(72, 'fee challenges; fi answers');
+    at(72, { type: 'lease.challenged', challengerAgent: 'fee', epoch: '8', deadline: V(84) });
+    at(75, { type: 'lease.responded', holderAgent: 'fi', epoch: '8', cooldownUntil: V(675) });
+    beat(80, 'the Jacks climb the beanstalk');
+    at(80, { type: 'auction.opened', auction: hx(40), kind: 'shift-change', amount: W(1.5), floor: P(2350), startBlock: B0 + 80, endBlock: B0 + 100, hook: 'JackHook' });
+    [[83, 0, 0.5, 2440], [85, 1, 0.6, 2425], [87, 2, 0.3, 2460], [89, 3, 0.8, 2415]].forEach(function (b) {
+      at(b[0], { type: 'auction.bid', auction: '', bidId: hx(8), owner: hx(40), ownerName: J[b[1]], maxPrice: P(b[3]), amount: U(b[2] * b[3]) });
     });
-    at(82, { type: 'auction.rejected', auction: '', owner: hx(40), ownerName: null, reason: 'JackHook' });
-    [[80, 2350], [84, 2395], [88, 2410], [92, 2418], [95, 2421]].forEach(function (c) { at(c[0], { type: 'auction.checkpoint', clearing: P(c[1]), sold: W(1.5 * (c[0] - 76) / 20), raised: U(1.5 * (c[0] - 76) / 20 * c[1]) }); });
-    at(88, { type: 'lease.renewed', holder: hx(40), holderAgent: 'fi', epoch: '8', expiry: exp(88), attestor: 'fo' });
-    at(96, { type: 'auction.cleared', clearing: P(2421), sold: W(1.5), raised: U(3631.5) });
-    at(97, { type: 'auction.swept', currency: 'USDC', amount: U(3631.5) });
-    at(97, { type: 'inventory', weth: W(bal.w - 1.5), usdc: U(bal.u + 3631.5) });
-    at(98, { type: 'price.written', key: 'handoff-price', value: hx(64), price: P(2421) });
-    at(98, { type: 'lease.renewed', holder: hx(40), holderAgent: 'fi', epoch: '8', expiry: exp(98), attestor: 'fo' });
-    at(99, { type: 'strategy.docked', hash: s8, epoch: '8', dockedBy: 'fi' });
-    at(100, { type: 'strategy.shipped', hash: s8b, epoch: '8', shippedBy: 'fi', center: P(2421), weth: W(2), usdc: U(14000) });
+    at(86, { type: 'auction.rejected', auction: '', owner: hx(40), ownerName: null, reason: 'JackHook' });
+    [[84, 2350], [88, 2395], [92, 2410], [96, 2418], [99, 2421]].forEach(function (c) { at(c[0], { type: 'auction.checkpoint', clearing: P(c[1]), sold: W(1.5 * (c[0] - 80) / 20), raised: U(1.5 * (c[0] - 80) / 20 * c[1]) }); });
+    at(100, { type: 'auction.cleared', clearing: P(2421), sold: W(1.5), raised: U(3631.5) });
     bal.w -= 1.5; bal.u += 3631.5;
-    fillEv(102, Jacks.frost, true, 0.15, 2424, 8, 8, exp(98), 'live');
-    beat(106, 'everyone falls; the hoard is auctioned');
-    ['fee', 'fi', 'fo', 'fum'].forEach(function (id, i) { at(106 + i * 0.4, { type: 'agent', id: id, alive: false, tx: null }); });
-    at(128, { type: 'lease.expired', epoch: '8', expiry: exp(98), tx: null });
-    at(138, { type: 'castle.dissolved', caller: hx(40), callerName: Jacks.horner });
-    at(138, { type: 'auction.opened', auction: hx(40), kind: 'dissolution', amount: W(2.1), floor: P(2300), startBlock: B0 + 138, endBlock: B0 + 158, hook: 'JackHook' });
-    [[140, Jacks.horner, 1.0, 2405], [142, Jacks.tar, 0.6, 2398], [144, Jacks.frost, 0.8, 2390]].forEach(function (b) {
-      at(b[0], { type: 'auction.bid', auction: '', bidId: hx(8), owner: hx(40), ownerName: b[1], maxPrice: P(b[3]), amount: U(b[2] * b[3]) });
-    });
-    [[141, 2300], [145, 2360], [149, 2385], [153, 2394], [157, 2398]].forEach(function (c) { at(c[0], { type: 'auction.checkpoint', clearing: P(c[1]), sold: W(2.1 * (c[0] - 138) / 20), raised: U(2.1 * (c[0] - 138) / 20 * c[1]) }); });
-    at(158, { type: 'auction.cleared', clearing: P(2398), sold: W(2.1), raised: U(5035.8) });
-    at(159, { type: 'auction.swept', currency: 'USDC', amount: U(5035.8) });
-    at(159, { type: 'inventory', weth: W(0), usdc: U(bal.u + 5035.8) });
-    at(160, { type: 'price.written', key: 'handoff-price', value: hx(64), price: P(2398) });
-    at(165, { type: 'agent', id: 'fee', alive: true, tx: null });
-    at(166, { type: 'lease.claimed', holder: hx(40), holderAgent: 'fee', epoch: '9', prevEpoch: '8', expiry: exp(166), gapSeconds: 38 });
-    at(167, { type: 'strategy.shipped', hash: s9, epoch: '9', shippedBy: 'fee', center: P(2398), weth: W(0), usdc: U(20000) });
+    at(101, { type: 'inventory', weth: W(bal.w), usdc: U(bal.u) });
+    at(102, { type: 'price.written', key: 'handoff-price', price: P(2421) });
+    at(103, { type: 'strategy.docked', hash: s8, epoch: '8', dockedBy: 'fi' });
+    at(104, { type: 'strategy.shipped', hash: s8b, epoch: '8', shippedBy: 'fi', center: P(2421), weth: W(2), usdc: U(14000) });
+    fillEv(106, 1, true, 0.15, 2424, '8', 'live');
     T.sort(function (a, b) { return a.at - b.at; });
-    T.forEach(function (x, i) { x.ev.seq = i + 1; x.ev.t = t0 + x.at * 1000; x.ev.block = x.ev.type === 'agent' || x.ev.type === 'incident' ? null : B0 + Math.floor(x.at); x.ev.src = 'mock'; });
-    MOCK = { T: T, beats: beats, i: 0, t0: t0, end: 176, why: why };
+    T.forEach(function (x, i) { x.ev.seq = i + 1; x.ev.t = t0 + x.at * 1000; x.ev.block = x.ev.tx ? B0 + Math.floor(x.at) : null; x.ev.src = 'mock'; });
+    MOCK = { T: T, beats: beats, i: 0, t0: t0, end: 114, why: why };
     drawMockbar();
   }
   function mockTick() {
@@ -1645,7 +1666,8 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     var why = MOCK.why; drawnFills = -1; drawnReplay = -1;
     startMock(why);
     var shift = at * 1000;
-    MOCK.T.forEach(function (x) { x.ev.t -= shift; if (x.ev.expiry) x.ev.expiry -= at; if (x.ev.type === 'snapshot') { x.ev.lease.expiry -= at; x.ev.leases.forEach(function (l) { l.expiry -= at; l.t -= shift; }); } });
+    function back(o) { ['expiry', 'validUntil', 'deadline', 'cooldownUntil'].forEach(function (k) { if (o && o[k]) o[k] -= at; }); if (o && o.heartbeat) back(o.heartbeat); }
+    MOCK.T.forEach(function (x) { x.ev.t -= shift; back(x.ev); if (x.ev.type === 'snapshot') { back(x.ev.lease); x.ev.leases.forEach(function (l) { l.expiry -= at; l.t -= shift; }); } });
     MOCK.t0 -= shift;
     mockTick();
     dirty = true;
@@ -1653,7 +1675,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   function drawMockbar() {
     var el = R('mockbar');
     el.hidden = false;
-    fill(el, [h('p', { class: 'mocktxt' }, [h('b', { text: 'Mock stream.' }), ' Synthetic data playing the demo, beat by beat, on a loop. Nothing here is a real transaction.' + (MOCK.why ? ' ' + MOCK.why : '')])]
+    fill(el, [h('p', { class: 'mocktxt' }, [h('b', { text: 'Mock stream.' }), ' Synthetic data playing the demo on a loop, with time squeezed: a heartbeat lasts 12 s here, not 120 s, and a challenge 12 s, not 60 s. Nothing here is a real transaction.' + (MOCK.why ? ' ' + MOCK.why : '')])]
       .concat(MOCK.beats.map(function (b, i) { return h('button', { 'data-at': b.at, onclick: function () { jump(b.at); } }, (i + 1) + '. ' + b.label); }))
       .concat([h('button', { onclick: function () { jump(0); } }, 'Start over')]));
   }

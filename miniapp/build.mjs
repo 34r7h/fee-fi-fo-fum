@@ -26,9 +26,20 @@ if (LIVE) {
   if (!existsSync(dep) || !existsSync(cfg)) { console.error(`--live needs ${dep} and ${cfg}`); process.exit(1); }
   // Only what the page reads: addresses, the Castle deploy block and tx. Constructor args and build notes stay out.
   const d = JSON.parse(readFileSync(dep, 'utf8'));
-  const contracts = {};
-  for (const [k, v] of Object.entries(d.contracts || {})) contracts[k] = { address: v.address, block: v.block, tx: v.tx };
-  const config = Object.assign({ chainId: d.chainId, external: d.external, contracts }, JSON.parse(readFileSync(cfg, 'utf8')));
+  // contracts.castle is the live Castle ("version": "v3" once v3 is deployed); d.v2.castle is the retired v2, which the
+  // page shows as its history tab.
+  const { castle, jackHook } = d.contracts || {}, { aqua, weth, usdc } = d.external || {};
+  const version = castle && castle.version ? Number(String(castle.version).replace(/\D/g, '')) : 2;
+  const contracts = { castle: castle && { address: castle.address, block: castle.block, tx: castle.tx, version }, jackHook: jackHook && { address: jackHook.address } };
+  const config = Object.assign({ chainId: d.chainId, external: { aqua, weth, usdc }, contracts }, JSON.parse(readFileSync(cfg, 'utf8')));
+  config.agents = (config.agents || []).map(({ id, role, addr, ens }) => ({ id, role, addr, ens }));
+  if (version >= 3) {
+    config.leaseSeconds = (castle.config && castle.config.leasePeriod) || 86400;
+    config.heartbeatSeconds = 120;
+    delete config.renewEverySeconds;
+  }
+  const v2 = d.v2 && d.v2.castle;
+  if (config.history && v2) Object.assign(config.history, { castle: v2.address, from: v2.block });
   if (!html.includes('/*@CONFIG*/null')) { console.error('config slot missing from the page'); process.exit(1); }
   html = html.replace('/*@CONFIG*/null', JSON.stringify(config));
 }

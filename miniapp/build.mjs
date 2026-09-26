@@ -38,6 +38,8 @@ if (LIVE) {
     config.heartbeatSeconds = 120;
     delete config.renewEverySeconds;
   }
+  // Test builds only: FORK_RPC points chain mode at a local anvil fork, with no stream, so the page reads the fork.
+  if (process.env.FORK_RPC) { config.rpcs = [process.env.FORK_RPC]; config.stream = null; }
   const v2 = d.v2 && d.v2.castle;
   if (config.history && v2) Object.assign(config.history, { castle: v2.address, from: v2.block });
   if (!html.includes('/*@CONFIG*/null')) { console.error('config slot missing from the page'); process.exit(1); }

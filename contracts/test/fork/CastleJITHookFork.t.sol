@@ -3,6 +3,7 @@ pragma solidity 0.8.30;
 
 import { Vm } from "forge-std/Vm.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { TokenMock } from "@1inch/solidity-utils/contracts/mocks/TokenMock.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IAqua } from "@1inch/aqua/src/interfaces/IAqua.sol";
 import { ISwapVM } from "@1inch/swap-vm/src/interfaces/ISwapVM.sol";
@@ -208,6 +209,43 @@ contract CastleJITHookForkTest is CastleForkBase, IUnlockCallback {
             )
         );
         IPoolManager(POOL_MANAGER).unlock("");
+    }
+
+    function test_fork_hook_otherPairReverts_NotCastlePool() public {
+        TokenMock other = new TokenMock("Other", "OTH");
+        (Currency c0, Currency c1) = address(other) < USDC
+            ? (Currency.wrap(address(other)), Currency.wrap(USDC))
+            : (Currency.wrap(USDC), Currency.wrap(address(other)));
+        PoolKey memory k =
+            PoolKey({ currency0: c0, currency1: c1, fee: 0, tickSpacing: 60, hooks: IHooks(address(hook)) });
+        IPoolManager(POOL_MANAGER).initialize(k, TickMath.getSqrtPriceAtTick(0));
+        key = k;
+        vm.expectRevert(_wrapped(abi.encodeWithSelector(CastleJITHook.NotCastlePool.selector)));
+        _swap(true, -1e6, "");
+    }
+
+    function test_fork_hook_unflaggedCallbacksRevert() public {
+        IPoolManager.ModifyLiquidityParams memory m;
+        IPoolManager.SwapParams memory sp;
+        BalanceDelta z;
+        vm.expectRevert(CastleJITHook.HookNotImplemented.selector);
+        hook.beforeInitialize(address(0), key, 0);
+        vm.expectRevert(CastleJITHook.HookNotImplemented.selector);
+        hook.afterInitialize(address(0), key, 0, 0);
+        vm.expectRevert(CastleJITHook.HookNotImplemented.selector);
+        hook.afterAddLiquidity(address(0), key, m, z, z, "");
+        vm.expectRevert(CastleJITHook.HookNotImplemented.selector);
+        hook.beforeRemoveLiquidity(address(0), key, m, "");
+        vm.expectRevert(CastleJITHook.HookNotImplemented.selector);
+        hook.afterRemoveLiquidity(address(0), key, m, z, z, "");
+        vm.expectRevert(CastleJITHook.HookNotImplemented.selector);
+        hook.afterSwap(address(0), key, sp, z, "");
+        vm.expectRevert(CastleJITHook.HookNotImplemented.selector);
+        hook.beforeDonate(address(0), key, 0, 0, "");
+        vm.expectRevert(CastleJITHook.HookNotImplemented.selector);
+        hook.afterDonate(address(0), key, 0, 0, "");
+        vm.expectRevert(abi.encodeWithSelector(CastleJITHook.NotPoolManager.selector, address(this)));
+        hook.beforeAddLiquidity(address(0), key, m, "");
     }
 
     function test_fork_hook_constructor_badConfig() public {

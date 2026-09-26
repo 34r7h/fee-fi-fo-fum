@@ -232,7 +232,7 @@ contract CastleVault is Ownable2Step {
 
     /// @notice The live strategies' hashes, in slot order.
     function activeStrategies() external view returns (bytes32[] memory hashes) {
-        uint256 n;
+        uint256 n = 0;
         for (uint256 i; i < MAX_SLOTS; ++i) {
             if (_slots[i].strategyHash != bytes32(0)) ++n;
         }
@@ -280,6 +280,7 @@ contract CastleVault is Ownable2Step {
         for (uint256 i; i < MAX_SLOTS; ++i) {
             bytes32 h = _slots[i].strategyHash;
             if (h == bytes32(0)) continue;
+            // slither-disable-next-line calls-loop,unused-return (trusted immutable Aqua, at most MAX_SLOTS reads)
             (uint248 bal,) = AQUA.rawBalances(address(this), ROUTER, h, token);
             sum += bal;
         }
@@ -310,6 +311,7 @@ contract CastleVault is Ownable2Step {
     }
 
     function _order(bytes memory data) internal view returns (ISwapVM.Order memory) {
+        // slither-disable-next-line uninitialized-local (every field not set here must be zero: no hooks, no unwrap)
         MakerTraitsLib.Args memory a;
         a.maker = address(this);
         a.useAquaInsteadOfSignature = true;

@@ -87,6 +87,7 @@ contract PriceExtruction {
         if (q.validUntil > block.timestamp + MAX_QUOTE_TTL) revert QuoteTooLong(q.validUntil);
         if (swap.amountIn > q.maxAmountIn) revert QuoteTooLarge(swap.amountIn, q.maxAmountIn);
 
+        // slither-disable-next-line unused-return (the third value is the error argument, implied by err)
         (address recovered, ECDSA.RecoverError err,) = ECDSA.tryRecover(quoteDigest(q), sig);
         if (err != ECDSA.RecoverError.NoError || recovered != IQuoteSigner(query.maker).fi()) {
             revert BadQuoteSigner(recovered);
@@ -94,6 +95,7 @@ contract PriceExtruction {
 
         updatedSwap = swap;
         updatedSwap.amountOut = Math.mulDiv(swap.amountIn, q.priceQ96, 1 << 96);
+        // slither-disable-next-line divide-before-multiply (rounds sig's length up to whole ABI words, on purpose)
         return (nextPC, SIG_OFFSET + 32 + (sig.length + 31) / 32 * 32, updatedSwap);
     }
 

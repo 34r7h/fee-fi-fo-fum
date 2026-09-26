@@ -57,6 +57,7 @@ contract CastleJITHook is IHooks {
     error NoHen();
     error TooLittleOut(uint256 amountOut, uint256 minAmountOut);
     error HookNotImplemented();
+    error UnexpectedAmountIn(uint256 soldIn, uint256 amountIn);
 
     modifier onlyPoolManager() {
         if (msg.sender != address(POOL_MANAGER)) revert NotPoolManager(msg.sender);
@@ -101,13 +102,16 @@ contract CastleJITHook is IHooks {
         ISwapVM.Order memory order = VAULT.orderOf(hen);
 
         POOL_MANAGER.take(cIn, address(this), amountIn);
-        (, uint256 amountOut,) = ROUTER.swap(order, tokenIn, tokenOut, amountIn, _takerData());
+        // slither-disable-next-line unused-return (the third value is the order hash, which is `hen`)
+        (uint256 soldIn, uint256 amountOut,) = ROUTER.swap(order, tokenIn, tokenOut, amountIn, _takerData());
+        if (soldIn != amountIn) revert UnexpectedAmountIn(soldIn, amountIn);
         if (hookData.length >= 32) {
             uint256 minOut = abi.decode(hookData, (uint256));
             if (amountOut < minOut) revert TooLittleOut(amountOut, minOut);
         }
         POOL_MANAGER.sync(cOut);
         IERC20(tokenOut).safeTransfer(address(POOL_MANAGER), amountOut);
+        // slither-disable-next-line unused-return (settle pays exactly what was synced and transferred: amountOut)
         POOL_MANAGER.settle();
 
         emit JitFill(key.toId(), hen, sender, tokenIn, amountIn, amountOut);
@@ -130,6 +134,7 @@ contract CastleJITHook is IHooks {
 
     /// @dev Exact-in, tokenIn pulled from this hook and pushed into the Castle through Aqua, tokenOut to this hook.
     function _takerData() internal pure returns (bytes memory) {
+        // slither-disable-next-line uninitialized-local (every field not set here must be zero: no threshold, no hooks)
         TakerTraitsLib.Args memory a;
         a.isExactIn = true;
         a.useTransferFromAndAquaPush = true;

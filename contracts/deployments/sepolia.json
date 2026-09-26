@@ -51,7 +51,15 @@
         "https://handoff.lol/t/castle/ccip/{sender}/{data}.json"
       ],
       "name": "quote.feefifofum.eth",
-      "register": null
+      "register": {
+        "what": "register(\"quote\", 0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99, address(0), resolver, 0, 1821960360) on the feefifofum registry",
+        "from": "0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99",
+        "tx": "0xebd3cb532669b8c6a6ea2a2dbe0a1f6c30586a861105980f7fa726123e01b258",
+        "block": 11786115,
+        "gasUsed": 122841,
+        "expiry": 1821960360,
+        "verified": "registry.getResolver(\"quote\") and UniversalResolverV2.findResolver(quote.feefifofum.eth) both return the resolver"
+      }
     },
     "castleJITHook": {
       "address": "0x890125413c9FeDB770D872BbA9415f5E1B7C0888",

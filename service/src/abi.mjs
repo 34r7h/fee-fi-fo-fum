@@ -79,6 +79,11 @@ const FALLBACK = {
     'function sweepCurrency()',
   ]),
   FeeFiFoFumExtruction: parseAbi(['error FeeFiFoFum()']),
+  // ENSv2 UserRegistry (the agent registry under feefifofum.eth): the owner and expiry reads JackHook makes.
+  AgentRegistry: parseAbi([
+    'function findOwner(string label) view returns (address)',
+    'function findExpiry(string label) view returns (uint64)',
+  ]),
   CCAFactory: parseAbi([
     'event AuctionCreated(address indexed auction, address indexed token, uint256 amount, bytes configData)',
   ]),

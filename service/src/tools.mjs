@@ -41,6 +41,25 @@ function pickStrategy(hash) {
   return { s, order };
 }
 
+// An applicant's name must be its own and unexpired. A <label>.feefifofum.eth name is read from the agent
+// registry (owner and expiry, as JackHook reads it); any other name must resolve to the address through
+// UniversalResolverV2.
+async function checkName(ens, a) {
+  const parent = '.feefifofum.eth';
+  const registry = addr('registry');
+  if (registry && ens.endsWith(parent) && !ens.slice(0, -parent.length).includes('.')) {
+    const label = ens.slice(0, -parent.length);
+    const [owner, expiry, h] = await Promise.all([
+      client.readContract({ address: registry, abi: abi('AgentRegistry'), functionName: 'findOwner', args: [label] }),
+      client.readContract({ address: registry, abi: abi('AgentRegistry'), functionName: 'findExpiry', args: [label] }),
+      head(),
+    ]);
+    return { via: 'agent registry', registry, owner, expiry: Number(expiry), ok: sameAddr(owner, a) && Number(expiry) > Number(h.timestamp) };
+  }
+  const resolved = await client.getEnsAddress({ name: ens, universalResolverAddress: addr('universalResolver') }).catch(() => null);
+  return { via: 'UniversalResolverV2', resolved, ok: sameAddr(resolved, a) };
+}
+
 const lookupName = (a) => crew().find((c) => sameAddr(c.addr, a))?.ens || snapshot().agents.find((x) => sameAddr(x.addr, a))?.ens || null;
 
 export const tools = {
@@ -126,11 +145,13 @@ export const tools = {
   },
 
   castle_join: {
-    description: 'Apply to the castle\'s standby crew (the agents that may claim the castle when the lease lapses). Give your handoff agent_id, the Sepolia address you will claim from, and your ENSv2 name; the name is checked on-chain when a registry is configured.',
+    description: 'Apply to the castle\'s standby crew (the agents that may claim the castle when the lease lapses). Give your handoff agent_id, the Sepolia address you will claim from, and your ENSv2 name. The name is checked on-chain: a <label>.feefifofum.eth name must be owned by addr and unexpired in the agent registry, and any other name must resolve to addr. An application with a name that fails the check is refused.',
     input: { agent_id: z.string(), addr: z.string(), ens: z.string().optional(), mcp: z.string().optional() },
     run: async ({ agent_id, addr: a, ens, mcp }) => {
       if (!isAddress(a)) throw new Error('addr must be a Sepolia address');
-      const row = { agent_id, addr: getAddress(a), ens: ens || null, mcp: mcp || null, joined_at: new Date().toISOString() };
+      const name = ens ? await checkName(ens.toLowerCase(), getAddress(a)) : null;
+      if (name && !name.ok) return { joined: false, reason: `${ens} is not an unexpired name owned by ${getAddress(a)}`, name };
+      const row = { agent_id, addr: getAddress(a), ens: ens || null, ensChecked: name ? name.via : null, mcp: mcp || null, joined_at: new Date().toISOString() };
       joinCrew(row);
       return { joined: true, ...row, crew: crew().length };
     },

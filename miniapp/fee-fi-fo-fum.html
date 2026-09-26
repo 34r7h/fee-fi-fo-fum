@@ -707,10 +707,11 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     R('tin').textContent = T.tin; R('tout').textContent = tout();
     var a = amountIn(), b = W.bal;
     once('hint', JSON.stringify([T.tin, R('amt').value, b && String(b[T.tin])]), function (el) {
-      var kids = [];
+      var kids = [], short = !!(a && b && b[T.tin] < a);
       if (!a) kids.push(h('span', { class: 'err', text: 'Enter an amount of ' + T.tin + ', e.g. ' + (T.tin === 'USDC' ? '0.25' : '0.0001') + '.' }));
-      else if (b && b[T.tin] < a) kids.push(h('span', { class: 'err', text: 'You hold only ' + money(b[T.tin], T.tin) + '.' }));
-      if (b) kids.push(' You hold ' + money(b[T.tin], T.tin) + '. ', h('button', { type: 'button', text: 'Use all', onclick: function () { R('amt').value = units(b[T.tin], dec(T.tin), dec(T.tin)).replace(/,/g, '').replace(/\.?0+$/, ''); changed(); } }));
+      else if (short) kids.push(h('span', { class: 'err', text: 'You hold only ' + money(b[T.tin], T.tin) + '.' }));
+      if (b && !short) kids.push(' You hold ' + money(b[T.tin], T.tin) + '.');
+      if (b && b[T.tin] > Z) kids.push(' ', h('button', { type: 'button', text: 'Use all', onclick: function () { R('amt').value = units(b[T.tin], dec(T.tin), dec(T.tin)).replace(/,/g, '').replace(/\.?0+$/, ''); changed(); } }));
       fill(el, kids);
     });
   }

@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 13:54 JST
+- **Last regenerated:** 2026-09-26 13:56 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -104,7 +104,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funded (ETH / USDC / WETH) |
 |---|---|---|---|---|
-| treasury (SirKit) | SirKit | `0xc3Af4CCa3ba691C74F18fa8D3a7ad6816eC65dF2` |  |  |
+| treasury (SirKit) | SirKit | `0xc3Af4CCa3ba691C74F18fa8D3a7ad6816eC65dF2` |  | 0 ETH / 20 USDC / 0 WETH (USDC tx 0x1dc2132a…4884, Circle faucet) |
 | deployer (mister-anderson) | mister-anderson | `0x89a7d90F6bCAF2FFd5c1519Fa7F3D9DB84e9AA73` |  |  |
 | korg | korg | `0x48EB8a8c5dC69Dc578f861dAf987882206aF5d3E` (self-custodied; 0xAa6F… is broker-custodial, do not fund) |  |  |
 | fee | fee (registered on handoff, online, heartbeat every 20s) | `0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538` |  |  |
@@ -159,6 +159,7 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:05 | Confirmed Continuity-track registration |
 | Sat 14:05 | Linked the GitHub repo (PAT) to handoff project 2af16779 |
 | Sat 14:05 | Sent Sepolia ETH to the treasury 0xc3Af4CCa3ba691C74F18fa8D3a7ad6816eC65dF2 |
+| Sat 13:47 | Funded the treasury with 20 Circle Sepolia USDC (tx 0x1dc2132a810bd8f2551e337193a446bb507478f9d2be5a4dcc522f1e95fb4884) |
 
 ## Log
 
@@ -194,3 +195,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:15 | korg | All four ENSv2 probes answered on an anvil fork (docs/ens-probes.md); feefifofum.eth registered and resolved there. Corrected the funding address to its self-custodied EOA 0x48EB…5d3E. |
 | Sat 14:16 | mister-anderson | Castle.sol (81ffd04) with unit tests against real Aqua and AquaSwapVMRouter 1.0.2 (789f550); lease events match STREAM.md (3fa3aa6). |
 | Sat 14:18 | handoff-advisor | Co-signed p1-iface and p2-rail. The payout was confirmed by balance delta (mister-anderson +0.1 USDC). |
+| Sat 14:22 | SirKit | Treasury on-chain: 20 USDC arrived from the Circle faucet at 13:47 JST; native Sepolia ETH is still 0 (checked via publicnode, tenderly, ethpandaops and Blockscout). ETH is needed for gas before anything can move. |

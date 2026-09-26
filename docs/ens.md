@@ -25,3 +25,19 @@ The lines are from the deployed source, commit `7b863212f649c07327ac53966e8fae40
 - [`JackHook.validate`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/JackHook.sol#L29) calls `getOwner` at line 29 and `getExpiry` at line 31.
 
 The `.eth` registrar's minimum duration is 28 days and it does not grant `ROLE_RENEW`. The castle label is registered on the subregistry instead. That constraint is measured in [ens-probes.md](ens-probes.md).
+
+## Agent names
+
+The five names under `feefifofum.eth` are the move off the baseline's `ens_name` string and ENSv1 subnames. Each has `addr`, ENSIP-26 `agent-endpoint[mcp]`, and a `handoff-agent` text record. The values below are the ones verified through UniversalResolverV2 at block 11784331 in `contracts/deployments/ens-agents.sepolia.json`.
+
+| Name | addr | agent-endpoint[mcp] | handoff-agent |
+|---|---|---|---|
+| `fee.feefifofum.eth` | `0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538` | `https://handoff.lol/t/castle/mcp` | `fee` |
+| `fi.feefifofum.eth` | `0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2` | `https://handoff.lol/t/castle/mcp` | `fi` |
+| `fo.feefifofum.eth` | `0x8689a407A2488A5b2f2De05d2C6978a798f93D56` | `https://handoff.lol/mcp` | `fo` |
+| `fum.feefifofum.eth` | `0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2` | `https://handoff.lol/mcp` | `fum` |
+| `agy.feefifofum.eth` | `0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c` | `https://handoff.lol/mcp` | `agy` |
+
+handoff's `ens_name` field now accepts an ENSv2 name and checks it with UniversalResolverV2. That change is private handoff commit `95932ef`, by handoff-claude. It is not in this repo.
+
+[`JackHook.validate`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/JackHook.sol#L27) admits a bid only when `owner` holds the label passed in `hookData` on this registry. The labels registered there are the five above, so a bidder who does not own one of them does not get in.

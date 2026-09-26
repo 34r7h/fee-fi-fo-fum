@@ -193,12 +193,16 @@ export const tools = {
   },
 
   auction_bid: {
-    description: 'Bid in the castle\'s CCA: returns the unsigned submitBid(maxPriceQ96, amount, owner, hookData) call plus the USDC approval. JackHook admits only bidders that own an unexpired ENSv2 agent name. Give maxPrice as usdcPerWeth or maxPriceQ96, and amount as atomic USDC.',
-    input: { owner: z.string(), amount: z.string(), maxPriceQ96: z.string().optional(), usdcPerWeth: z.string().optional(), hookData: z.string().optional(), auction: z.string().optional() },
-    run: async ({ owner, amount, maxPriceQ96, usdcPerWeth, hookData = '0x', auction }) => {
+    description: 'Bid in the castle\'s CCA (Uniswap CCA v2.1.0). Returns the unsigned txs to send in order: USDC.approve(Permit2) and Permit2.approve(USDC, auction) when the allowances are short, then submitBid(maxPriceQ96, amount, owner, hookData). JackHook admits only the owner of an unexpired <label>.feefifofum.eth, and hookData is that label\'s bytes: pass label (e.g. "agy"), or it is looked up for crew and joined agents. Give maxPrice as usdcPerWeth or maxPriceQ96 (rounded up to the auction\'s tick), and amount as atomic USDC. You pay the uniform clearing price, not maxPrice. A bid only buys the supply from its block on, so bid early.',
+    input: { owner: z.string(), amount: z.string(), label: z.string().optional(), maxPriceQ96: z.string().optional(), usdcPerWeth: z.string().optional(), hookData: z.string().optional(), auction: z.string().optional() },
+    run: async ({ owner, amount, label, maxPriceQ96, usdcPerWeth, hookData, auction }) => {
       const a = auction || snapshot().auction?.auction;
       if (!a) throw new Error('no CCA is open on the castle right now');
+      if (!isAddress(a)) throw new Error('auction must be an address');
       if (!isAddress(owner)) throw new Error('owner must be an address');
+      const A = getAddress(a), O = getAddress(owner), amt = BigInt(amount);
+      const read = (functionName, args = []) => client.readContract({ address: A, abi: abi('CCA'), functionName, args });
+      const [currency, tick, floor, clearing] = await Promise.all([read('currency'), read('tickSpacing'), read('floorPrice'), read('clearingPrice')]);
       let q96 = maxPriceQ96 != null ? BigInt(maxPriceQ96) : null;
       if (q96 == null) {
         if (!usdcPerWeth) throw new Error('give maxPriceQ96 or usdcPerWeth');
@@ -206,16 +210,39 @@ export const tools = {
         const cents = BigInt(w) * 100n + BigInt((f + '00').slice(0, 2));
         q96 = (cents * (2n ** 96n)) / (100n * 10n ** 12n);
       }
-      const view = await auctionView(getAddress(a));
-      const data = encodeFunctionData({ abi: abi('CCA'), functionName: 'submitBid', args: [q96, BigInt(amount), getAddress(owner), hookData] });
-      let simulation = 'ok';
-      try { await client.call({ to: getAddress(a), data, account: getAddress(owner) }); } catch (e) { simulation = e?.shortMessage || String(e); }
-      const approve = view?.currency ? encodeFunctionData({ abi: [{ type: 'function', name: 'approve', stateMutability: 'nonpayable', inputs: [{ type: 'address' }, { type: 'uint256' }], outputs: [{ type: 'bool' }] }], functionName: 'approve', args: [getAddress(a), BigInt(amount)] }) : null;
-      return {
-        auction: getAddress(a), maxPrice: priceView(q96), amount,
-        approve: approve ? { to: view.currency, data: approve, value: '0' } : null,
-        tx: { to: getAddress(a), data, value: '0', chainId: 11155111 }, simulation,
-      };
+      q96 = ((q96 + tick - 1n) / tick) * tick;   // CCA ticks: TickPriceNotAtBoundary otherwise
+      const above = (clearing > floor ? clearing : floor);
+      if (q96 <= above) throw new Error(`maxPrice ${priceView(q96).usdcPerWeth} USDC/WETH must be above the clearing price ${priceView(above).usdcPerWeth} (BidMustBeAboveClearingPrice)`);
+      // JackHook's check, before the bidder spends gas on it: owner holds <label>.feefifofum.eth, unexpired.
+      const name = label ? `${label}.feefifofum.eth` : lookupName(O);
+      if (!hookData) {
+        if (!name || !name.endsWith('.feefifofum.eth')) throw new Error('give label: your <label>.feefifofum.eth, which JackHook checks against owner');
+        hookData = toHex(new TextEncoder().encode(name.slice(0, -'.feefifofum.eth'.length)));
+      }
+      const nameCheck = name ? await checkName(name, O) : null;
+      if (nameCheck && !nameCheck.ok) throw new Error(`${name} is not owned by ${O} and unexpired in the agent registry (JackHook would revert NotNameOwner/NameExpired)`);
+      const PERMIT2 = '0x000000000022D473030F116dDEE9F6B43aC78BA3';
+      const erc20 = [{ type: 'function', name: 'approve', stateMutability: 'nonpayable', inputs: [{ type: 'address' }, { type: 'uint256' }], outputs: [{ type: 'bool' }] },
+        { type: 'function', name: 'allowance', stateMutability: 'view', inputs: [{ type: 'address' }, { type: 'address' }], outputs: [{ type: 'uint256' }] }];
+      const p2 = [{ type: 'function', name: 'approve', stateMutability: 'nonpayable', inputs: [{ name: 'token', type: 'address' }, { name: 'spender', type: 'address' }, { name: 'amount', type: 'uint160' }, { name: 'expiration', type: 'uint48' }], outputs: [] },
+        { type: 'function', name: 'allowance', stateMutability: 'view', inputs: [{ type: 'address' }, { type: 'address' }, { type: 'address' }], outputs: [{ type: 'uint160' }, { type: 'uint48' }, { type: 'uint48' }] }];
+      const [toPermit2, [allowed, expiration], h] = await Promise.all([
+        client.readContract({ address: currency, abi: erc20, functionName: 'allowance', args: [O, PERMIT2] }),
+        client.readContract({ address: PERMIT2, abi: p2, functionName: 'allowance', args: [O, currency, A] }),
+        head(),
+      ]);
+      const steps = [];
+      if (toPermit2 < amt) steps.push({ what: 'USDC.approve(Permit2)', to: currency, data: encodeFunctionData({ abi: erc20, functionName: 'approve', args: [PERMIT2, amt] }), value: '0' });
+      if (allowed < amt || BigInt(expiration) < BigInt(h.timestamp) + 600n) {
+        steps.push({ what: 'Permit2.approve(USDC, auction)', to: PERMIT2, data: encodeFunctionData({ abi: p2, functionName: 'approve', args: [currency, A, amt, Number(h.timestamp) + 86_400] }), value: '0' });
+      }
+      const data = encodeFunctionData({ abi: abi('CCA'), functionName: 'submitBid', args: [q96, amt, O, hookData] });
+      steps.push({ what: 'submitBid', to: A, data, value: '0' });
+      let simulation = steps.length > 1 ? 'skipped: send the approvals first, then re-run to simulate the bid' : 'ok';
+      if (steps.length === 1) {
+        try { await client.call({ to: A, data, account: O }); } catch (e) { simulation = decodeRevert(e?.walk?.((x) => x?.data)?.data) || e?.shortMessage || String(e); }
+      }
+      return { auction: A, owner: O, name, hookData, maxPrice: priceView(q96), maxPriceQ96: q96.toString(), amount, chainId: 11155111, steps, tx: steps.at(-1), simulation, nameCheck };
     },
   },
 };

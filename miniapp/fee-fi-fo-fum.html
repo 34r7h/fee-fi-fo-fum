@@ -21,14 +21,14 @@
 <title>fee-fi-fo-fum</title>
 <style>
 :root,:host{
-  --linen:#FFFFFF;--linen2:#F6EFDF;--thread:#E6DAC0;--ink:#1F2433;--ink2:#474C5A;--ink3:#6A6E79;
+  --ground:#FFFFFF;--linen:#F6EFDF;--thread:#E6DAC0;--ink:#1F2433;--ink2:#474C5A;--ink3:#6A6E79;
   --gold:#C8961E;--goldhi:#E9BC45;--goldink:#83600F;--madder:#B0412A;--woad:#2F4A7A;--sage:#4C7743;
   --skin:#EDC49B;--beard:#7A4B2A;
   --sans:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --ease:cubic-bezier(.16,1,.3,1);
 }
 html,body{margin:0;background:#FFFFFF}
-.fff{contain:layout paint;container-type:inline-size;position:relative;background:var(--linen);color:var(--ink);font:15px/1.45 var(--sans);
+.fff{contain:layout paint;container-type:inline-size;position:relative;background:var(--ground);color:var(--ink);font:15px/1.45 var(--sans);
   -webkit-font-smoothing:antialiased;min-height:100%;box-sizing:border-box;overflow-wrap:anywhere}
 .fff *,.fff *::before,.fff *::after{box-sizing:border-box}
 .fff ::selection{background:var(--goldhi);color:var(--ink)}
@@ -43,7 +43,7 @@ html,body{margin:0;background:#FFFFFF}
 .muted{color:var(--ink3)}
 
 /* the embroidered band between registers: two couched rules with a trellis of stitches between */
-.band{height:14px;margin:22px 0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='14'%3E%3Cpath d='M0 1.5h28M0 12.5h28' stroke='%231F2433' stroke-width='1.6'/%3E%3Cpath d='M4 11 12 3M18 11l8-8' stroke='%23C8961E' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x left center}
+.band{height:14px;margin:22px 0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='14'%3E%3Cpath d='M0 7h36' stroke='%23D9C9A6' stroke-width='5'/%3E%3Cpath d='M18 3.2v7.6' stroke='%231F2433' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x left center}
 
 /* header */
 .top{padding:10px 0 8px;display:flex;align-items:center;gap:14px 18px;flex-wrap:wrap}
@@ -51,21 +51,19 @@ html,body{margin:0;background:#FFFFFF}
 .mark .lt{height:44px}
 .tag{font-size:15px;color:var(--ink2);font-style:italic}
 .sp{flex:1}
-.src{font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:6px 11px 5px;border-radius:999px;border:1.6px solid var(--ink);display:inline-flex;align-items:center;gap:7px}
-.src i{width:8px;height:8px;border-radius:50%;background:var(--ink3)}
-.src[data-m=live] i{background:var(--sage)}
-.src[data-m=mock]{border-color:var(--goldink);color:var(--goldink)}
-.src[data-m=mock] i{background:var(--gold)}
-.src[data-m=chain] i{background:var(--woad)}
+.src{font-size:12.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--ink2)}
+.src[data-m=live]{color:var(--sage)}
+.src[data-m=mock]{color:var(--madder)}
+.src[data-m=chain]{color:var(--woad)}
 .ens{font-size:13.5px;color:var(--ink2)}
-.tabs{display:inline-flex;border:1.6px solid var(--ink);border-radius:999px;padding:3px;gap:3px;background:var(--linen)}
+.tabs{display:inline-flex;border:1.6px solid var(--ink);border-radius:999px;padding:3px;gap:3px;background:var(--ground)}
 .tabs button{border:0;background:none;padding:6px 14px;border-radius:999px;font-weight:700;font-size:14px;color:var(--ink2);transition:background .2s var(--ease),color .2s var(--ease)}
-.tabs button[aria-selected=true]{background:var(--ink);color:var(--linen)}
-.tabs button:hover:not([aria-selected=true]){background:var(--linen2);color:var(--ink)}
+.tabs button[aria-selected=true]{background:var(--ink);color:var(--ground)}
+.tabs button:hover:not([aria-selected=true]){background:var(--linen);color:var(--ink)}
 
 /* the chant: four syllables, four agents */
-.chant{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 18px;align-items:end;margin-top:6px}
-.syl{min-width:0;text-align:left;position:relative}
+.chant{display:flex;justify-content:space-between;gap:10px 28px;align-items:flex-end;margin-top:6px}
+.syl{min-width:0;flex:0 1 auto;text-align:left;position:relative}
 .syl .word{height:clamp(40px,8.5cqw,96px);color:var(--ink);transition:color .4s var(--ease),transform .5s var(--ease)}
 .syl .word .lt{height:100%}
 .syl .word path{stroke:var(--ink);stroke-width:0;transition:fill .4s var(--ease),stroke-width .4s var(--ease)}
@@ -111,16 +109,17 @@ h2.reg .lt{height:26px}
 .st .nm{height:17px;color:var(--ink3)}
 .st .nm .lt{height:17px}
 .st p{margin:0;font-size:13.5px;color:var(--ink2)}
-.st[data-on]{background:var(--linen2);border-color:var(--ink)}
+.st[data-on]{background:var(--linen);border-color:var(--ink)}
 .st[data-on] .nm{color:var(--ink)}
 .st[data-k=live][data-on] .nm{color:var(--sage)}
 .st[data-k=wind][data-on] .nm{color:var(--woad)}
 .st[data-k=fenced][data-on] .nm{color:var(--madder)}
-.strats{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-.chip{font-size:12.5px;padding:3px 9px;border-radius:999px;border:1.4px solid var(--ink);background:var(--linen);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
-.chip[data-s=FENCED]{border-color:var(--madder);color:var(--madder);text-decoration:line-through;text-decoration-thickness:1.5px}
-.chip[data-s=DOCKED]{border-style:dashed;color:var(--ink3);border-color:var(--ink3)}
-.chip[data-s=WIND-DOWN]{border-color:var(--woad);color:var(--woad);border-style:dashed}
+.strats{display:grid;gap:3px;margin-top:6px}
+.bk{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--ink)}
+.bk svg{width:18px;height:18px;flex:none}
+.bk[data-s=FENCED],.bk[data-s=DOCKED]{color:var(--madder)}
+.bk[data-s=WIND-DOWN]{color:var(--woad)}
+.bk[data-s=LIVE] svg{color:var(--sage)}
 .shout{grid-column:1/-1;height:0;overflow:visible;color:var(--madder);opacity:0;transform:scale(.9);transform-origin:left center;transition:opacity .35s var(--ease),transform .5s var(--ease)}
 .shout .lt{height:30px}
 .fff[data-shout] .shout{opacity:1;transform:none;height:34px}
@@ -132,6 +131,7 @@ h2.reg .lt{height:26px}
 .row:last-child{border-bottom:0}
 .row .k{color:var(--ink2);font-size:14px}
 .row .v{font-weight:800;font-size:20px;text-align:right;white-space:nowrap}
+.row.gold .v{border-bottom:3.5px solid var(--gold);padding-bottom:1px}
 .row .v small{font-size:13px;font-weight:700;color:var(--ink2);margin-left:5px}
 .row .k .cn{display:inline-block;width:13px;height:13px;border-radius:50%;background:var(--gold);box-shadow:inset 0 0 0 2px var(--ink);margin-right:8px;vertical-align:-1px}
 .row .sub{display:block;font-size:12.5px;font-weight:500;color:var(--ink3)}
@@ -145,17 +145,19 @@ h2.reg .lt{height:26px}
 .bids{list-style:none;margin:0;padding:0}
 .bids li{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1.4px solid var(--thread);line-height:1.15}
 .bids li:last-child{border-bottom:0}
-.bids .who{font-weight:800}
+.bids .who{font-weight:800;font-size:16px}
 .bids .amt{text-align:right;white-space:nowrap}
 .bids li.rej .who{text-decoration:line-through;color:var(--madder)}
 .bids li.rej .amt{color:var(--madder);font-size:13px}
 .empty{color:var(--ink3);font-size:14px;margin:6px 0}
+.dormant{display:flex;align-items:center;gap:18px}
 
 /* frieze */
-.frieze{display:flex;gap:0;overflow-x:auto;padding:4px 0 10px;scroll-behavior:smooth;scrollbar-color:var(--gold) var(--linen2);scrollbar-width:thin;border-top:1.6px solid var(--ink);border-bottom:1.6px solid var(--ink)}
-.scene{flex:none;width:max-content;min-width:200px;padding:12px 18px 10px;border-right:1.4px solid var(--thread);animation:unroll .6s var(--ease) both}
-.scene:last-child{border-right:0}
-.scene .ti{height:17px;color:var(--ink);margin-bottom:10px}
+.frieze{display:flex;flex-direction:row-reverse;flex-wrap:wrap;justify-content:flex-end;align-content:flex-start;height:calc(234px + 3.2px);overflow:hidden;overflow:clip;overflow-anchor:none;border-top:1.6px solid var(--ink);border-bottom:1.6px solid var(--ink)}
+.scene{flex:1 0 auto;width:max-content;min-width:200px;max-width:100%;height:234px;padding:12px 18px 10px;border-left:1.4px solid var(--thread);animation:unroll .6s var(--ease) both}
+.vg{display:block;width:168px;height:90px;margin:4px 0 10px}
+.vg.big{width:180px;height:96px;flex:none}
+.scene .ti{display:flex;flex-wrap:wrap;gap:4px 5px;color:var(--ink);margin-bottom:10px}
 .scene .ti .lt{height:17px}
 .scene[data-tone=madder] .ti{color:var(--madder)}
 .scene[data-tone=woad] .ti{color:var(--woad)}
@@ -181,8 +183,10 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
 .fate[data-f=fenced]{color:var(--madder)}
 .fate[data-f=unknown]{color:var(--ink3)}
 .tx{font-size:13px;white-space:nowrap}
-.tx em{font-style:normal;font-size:11px;font-weight:700;color:var(--goldink);letter-spacing:.04em;text-transform:uppercase;margin-left:4px}
+.tx em{font-style:normal;font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.04em;text-transform:uppercase;margin-left:4px}
 .rv{font-size:12px;margin-top:2px}
+.led .u{display:none;font-size:12px;color:var(--ink3);font-weight:600}
+.fff[data-size=compact] .led .u{display:inline}
 .agree{font-weight:800}
 .agree[data-ok=no]{color:var(--madder)}
 .tl{width:100%;height:auto;display:block;margin:4px 0 6px}
@@ -192,16 +196,16 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
 .lg-held{background:var(--sage)}
 .lg-wind{height:0;border-top:3px dashed var(--woad);border-radius:0}
 .lg-coin{width:11px;height:11px;border-radius:50%;background:var(--gold);box-shadow:inset 0 0 0 1.6px var(--ink)}
-.lg-x{width:auto;height:auto;color:var(--madder);font-weight:900;font-size:17px;line-height:1}
+.legend svg.lg-x{width:18px;height:18px;margin-left:10px;color:var(--madder)}
 .tl text{font-family:var(--sans);font-size:11.5px;fill:var(--ink2)}
 
 /* mock controls */
-.mockbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:22px;padding:12px 14px;border:1.6px dashed var(--goldink);border-radius:16px;font-size:13.5px;color:var(--ink2)}
-.mockbar b{color:var(--goldink)}
+.mockbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:22px;padding:12px 14px;border:1.6px solid var(--thread);border-radius:16px;font-size:13.5px;color:var(--ink2)}
+.mockbar b{color:var(--madder)}
 .mocktxt{flex-basis:100%;margin:0 0 4px}
-.mockbar button{border:1.4px solid var(--ink);background:var(--linen);border-radius:999px;padding:4px 11px;font-size:13px;font-weight:700;transition:background .2s var(--ease)}
-.mockbar button:hover{background:var(--linen2)}
-.mockbar button[data-now]{background:var(--ink);color:var(--linen)}
+.mockbar button{border:1.4px solid var(--ink);background:var(--ground);border-radius:999px;padding:4px 11px;font-size:13px;font-weight:700;transition:background .2s var(--ease)}
+.mockbar button:hover{background:var(--linen)}
+.mockbar button[data-now]{background:var(--ink);color:var(--ground)}
 .foot{margin-top:18px;font-size:12.5px;color:var(--ink3);display:flex;flex-wrap:wrap;gap:6px 16px}
 
 /* the card face: what a 280x200 market card or a feed soc can hold */
@@ -211,7 +215,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
 .fff[data-size=watch] .wrap,.fff[data-size=mini] .wrap{padding:10px 12px}
 .face .f1{display:flex;align-items:center;gap:8px;justify-content:space-between}
 .face .f1 .lt{height:24px}
-.face .src{font-size:10.5px;padding:3px 7px}
+.face .src{font-size:10.5px}
 .face .f2{display:flex;align-items:center;gap:10px}
 .face .f2 .hold{height:30px;color:var(--gold)}
 .face .f2 .hold .lt{height:30px}
@@ -223,7 +227,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
 .face .f3 b{color:var(--ink)}
 .fff[data-size=watch] .face .f4,.fff[data-size=watch] .face .ep,.fff[data-size=watch] .face .src span{display:none}
 
-.fff[data-size=compact] .chant{grid-template-columns:repeat(2,minmax(0,1fr))}
+.fff[data-size=compact] .chant{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
 .fff[data-size=compact] .stalk{grid-template-columns:1fr}
 .fff[data-size=compact] .led .opt{display:none}
 .fff[data-size=compact] table.led,.fff[data-size=compact] .led tbody{display:block}
@@ -232,7 +236,6 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
 .fff[data-size=compact] .led tr:last-child{border-bottom:0}
 .fff[data-size=compact] .led td{padding:0;border:0;text-align:left}
 .fff[data-size=compact] .led td:nth-child(even){text-align:right}
-.fff[data-size=compact] .led td:nth-child(6){text-align:left}
 .fff[data-size=compact] .mark .lt{height:34px}
 
 @media (prefers-reduced-motion:reduce){.fff *{animation:none!important;transition:none!important}}
@@ -245,7 +248,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       <div class="mark" data-r="mark"></div>
       <span class="tag" data-r="tag">The giant never sleeps.</span>
       <span class="sp"></span>
-      <span class="src" data-r="src" data-m="idle"><i></i><span data-r="srcTxt">connecting</span></span>
+      <span class="src" data-r="src" data-m="idle"><span data-r="srcTxt">connecting</span></span>
       <span class="ens num" data-r="ens"></span>
       <nav class="tabs" role="tablist" aria-label="View">
         <button role="tab" aria-selected="true" data-tab="castle">The castle</button>
@@ -290,7 +293,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
 
       <section aria-labelledby="h-tale">
         <h2 class="reg" id="h-tale" data-lt="THE TAPESTRY"></h2>
-        <p class="note" style="margin:-4px 0 10px">Every event, stitched as a scene. The newest is on the right; scroll back to read the tale.</p>
+        <p class="note" style="margin:-4px 0 10px">Every event, stitched as a scene. The newest is on the right, and older scenes roll off to the left.</p>
         <div class="frieze" data-r="frieze" aria-live="polite"></div>
       </section>
 
@@ -439,11 +442,87 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   function stitch(kind, cls) {
     var k = [];
     if (kind === 'live') for (var i = 0; i < 5; i++) k.push(sv('path', { d: 'M' + (7 + i * 4.5) + ' 26L' + (12 + i * 4.5) + ' 8', stroke: 'currentColor', 'stroke-width': '3.2', 'stroke-linecap': 'round' }));
-    else if (kind === 'wind-down') k.push(sv('path', { d: 'M4 17c4.5-6 8.5-6 13 0s8.5 6 13 0', fill: 'none', stroke: 'currentColor', 'stroke-width': '3.2', 'stroke-linecap': 'round', 'stroke-dasharray': '6 5' }));
+    else if (kind === 'wind-down') k.push(sv('path', { d: 'M6 17h22', fill: 'none', stroke: 'currentColor', 'stroke-width': '3.4', 'stroke-linecap': 'round', 'stroke-dasharray': '4 5' }));
     else if (kind === 'fenced') k.push(sv('path', { d: 'M9 9l16 16M25 9L9 25', stroke: 'currentColor', 'stroke-width': '3.6', 'stroke-linecap': 'round' }));
     else k.push(sv('circle', { cx: 17, cy: 17, r: 7, fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-dasharray': '2 4' }));
     return sv('svg', { class: cls || 'stitch', viewBox: '0 0 34 34', 'aria-hidden': 'true' }, k);
   }
+  // Vignettes: one small pictured scene per kind of event, in the same stroke system as the giant and the castle.
+  var VC = { ink: '#1F2433', skin: '#EDC49B', beard: '#7A4B2A', gold: '#C8961E', woad: '#2F4A7A', madder: '#B0412A', sage: '#4C7743', linen: '#F6EFDF', white: '#FFFFFF' };
+  function vp(d, f, x) { return sv('path', Object.assign({ d: d, fill: f || 'none', stroke: VC.ink, 'stroke-width': 1.8, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, x || {})); }
+  function gat(x, y, kids, r) { return sv('g', { transform: 'translate(' + x + ' ' + y + ')' + (r ? ' rotate(' + r + ')' : '') }, kids); }
+  function vCastle(flagUp, cracked) {
+    var k = [vp('M12 0V-20h20V0z', VC.linen), vp('M0 0V-30h3v-4h3v4h2v-4h3v4h1V0z', VC.linen), vp('M32 0V-30h3v-4h3v4h2v-4h3v4h1V0z', VC.linen), vp('M18 0v-7a4 4 0 018 0v7z', VC.beard)];
+    if (flagUp) k.push(vp('M22 -20v-13'), vp('M22 -33h9l-2.5 3 2.5 3h-9z', VC.gold));
+    if (cracked) k.push(vp('M19 -20l3 6-3 5 3 5', null, { stroke: VC.madder, 'stroke-width': 2 }));
+    return k;
+  }
+  function vJack(coin, run) {
+    var k = [vp(run ? 'M-4 0l3-8M5 -2l-4-6' : 'M-3 0l1.5-8M3 0l-1.5-8'), vp('M-5 -8h10l-2-10h-6z', VC.woad),
+      sv('circle', { cx: 0, cy: -22, r: 4.5, fill: VC.skin, stroke: VC.ink, 'stroke-width': 1.8 }), vp('M-5.5 -24.5L0 -34.5l5.5 10z', VC.madder)];
+    if (coin) k.push(vp('M3 -15l6 -3'), sv('circle', { cx: 11.5, cy: -19, r: 4, fill: VC.gold, stroke: VC.ink, 'stroke-width': 1.6 }));
+    return k;
+  }
+  function vGiant(mood) {
+    var k = [vp('M-13 2c0-11 6-17 13-17s13 6 13 17', VC.beard), sv('circle', { cx: 0, cy: 1, r: 11.5, fill: VC.skin, stroke: VC.ink, 'stroke-width': 1.8 }),
+      vp('M-11 4c0 9 5 13 11 13s11-4 11-13c-5 4-17 4-22 0z', VC.beard), vp('M-1.8 2.5c0 2.6 3.6 2.6 3.6 0')];
+    if (mood === 'z') k.push(vp('M-7 -2c1.5 1.6 3.5 1.6 5 0M2 -2c1.5 1.6 3.5 1.6 5 0'));
+    else if (mood === 'w') k.push(sv('circle', { cx: -4.5, cy: -2, r: 3.2, fill: VC.white, stroke: VC.ink, 'stroke-width': 1.6 }), sv('circle', { cx: 4.5, cy: -2, r: 3.2, fill: VC.white, stroke: VC.ink, 'stroke-width': 1.6 }),
+      sv('circle', { cx: -4.5, cy: -1.6, r: 1.3, fill: VC.ink }), sv('circle', { cx: 4.5, cy: -1.6, r: 1.3, fill: VC.ink }), vp('M-9 -8l5 2M9 -8l-5 2'), vp('M-3.5 7c1 5 6 5 7 0z', VC.madder));
+    else k.push(sv('circle', { cx: -4.5, cy: -2, r: 1.6, fill: VC.ink }), sv('circle', { cx: 4.5, cy: -2, r: 1.6, fill: VC.ink }));
+    return k;
+  }
+  function vCoins(n) { var k = []; for (var i = 0; i < n; i++) k.push(sv('ellipse', { cx: 0, cy: -2.5 - i * 3.6, rx: 7, ry: 2.8, fill: VC.gold, stroke: VC.ink, 'stroke-width': 1.5 })); return k; }
+  function vStalk(small) {
+    return small ? [vp('M0 0c0-6 4-9 4-14', null, { stroke: VC.sage, 'stroke-width': 3 }), vp('M3 -9c4-4 9-4 11-1-3 3-8 4-11 1z', VC.sage), vp('M3 -14c-4-4-9-4-11-1 3 3 8 4 11 1z', VC.sage)]
+      : [vp('M0 0c0-10 6-14 6-24S0 -38 0 -50', null, { stroke: VC.sage, 'stroke-width': 3.2 }), vp('M4 -12c4-4 10-4 12-1-3 3-9 4-12 1z', VC.sage), vp('M3 -32c-4-4-10-4-12-1 3 3 9 4 12 1z', VC.sage), vp('M1 -46c3-4 8-4 10-1-3 3-7 3-10 1z', VC.sage)];
+  }
+  function vScroll(rolled) {
+    return rolled ? [vp('M-12 -6h24v6h-24z', VC.linen), sv('ellipse', { cx: -12, cy: -3, rx: 2.5, ry: 3, fill: VC.linen, stroke: VC.ink, 'stroke-width': 1.6 })]
+      : [vp('M-12 -20h24v18h-24z', VC.linen), vp('M-7 -15h14M-7 -11h14M-7 -7h9', null, { 'stroke-width': 1.2 }), sv('ellipse', { cx: -12, cy: -11, rx: 2.5, ry: 9, fill: VC.linen, stroke: VC.ink, 'stroke-width': 1.6 }), sv('ellipse', { cx: 12, cy: -11, rx: 2.5, ry: 9, fill: VC.linen, stroke: VC.ink, 'stroke-width': 1.6 })];
+  }
+  var VP = {
+    needle: function () { return [vp('M-10 6c-8-10 6-20 14-14s2 16-8 12', null, { stroke: VC.gold, 'stroke-width': 2.6 }), vp('M4 -8l10-10'), vp('M12 -16l3-3')]; },
+    glass: function () { return [vp('M-6 -22h12M-6 0h12M-5 -22c0 7 10 6 10 11s-10 4-10 11M5 -22c0 7-10 6-10 11s10 4 10 11', VC.white)]; },
+    key: function () { return [sv('circle', { cx: -8, cy: 0, r: 5, fill: VC.white, stroke: VC.ink, 'stroke-width': 1.8 }), vp('M-3 0h16M9 0v4M13 0v3')]; },
+    chain: function () { return [vp('M-10 2a5 5 0 010-10h6a5 5 0 010 10', null, { 'stroke-width': 2.2 }), vp('M2 -8a5 5 0 010 10h-6a5 5 0 010-10', null, { 'stroke-width': 2.2 })]; },
+    zzz: function () { return [vp('M0 0h6l-6 7h6M10 -8h5l-5 6h5M18 -15h4l-4 5h4')]; },
+    sun: function () { return [sv('circle', { cx: 0, cy: 0, r: 5.5, fill: VC.white, stroke: VC.ink, 'stroke-width': 1.8 }), vp('M0 -11v3M0 8v3M-11 0h3M8 0h3M-8 -8l2 2M6 6l2 2M-8 8l2-2M6 -6l2-2')]; },
+    x: function () { return [vp('M-6 -6l12 12M6 -6l-12 12', null, { stroke: VC.madder, 'stroke-width': 3 })]; },
+    shield: function () { return [vp('M0 -22l9 3.5v7c0 6-4 10-9 11.5-5-1.5-9-5.5-9-11.5v-7z', VC.white, { stroke: VC.madder, 'stroke-width': 2 }), vp('M-4 -14l8 8M4 -14l-8 8', null, { stroke: VC.madder })]; },
+    broom: function () { return [vp('M-2 -30l9 16'), vp('M1 -14h13l3 14H-2z', VC.beard)]; },
+    quill: function () { return [vp('M0 0c6-10 14-17 22-19-2 8-8 16-18 20z', VC.white), vp('M0 0l11-10')]; },
+    bell: function () { return [vp('M-7 0v-7a7 7 0 0114 0v7l2 2.5h-18z', VC.white), vp('M-2.5 5h5')]; }
+  };
+  function vignette(kind, bigger) {
+    var g = [vp('M4 58h112', null, { stroke: '#D9C9A6', 'stroke-width': 2 })];
+    function add() { for (var i = 0; i < arguments.length; i++) g.push(arguments[i]); }
+    switch (kind) {
+      case 'renew': add(gat(18, 58, vCastle(true)), gat(84, 44, VP.needle())); break;
+      case 'expired': add(gat(18, 58, vCastle(false)), gat(88, 58, VP.glass())); break;
+      case 'claim': add(gat(18, 58, vCastle(true)), gat(88, 40, VP.key())); break;
+      case 'relink': add(gat(18, 58, vCastle(true)), gat(90, 38, VP.chain())); break;
+      case 'fall': add(gat(50, 40, vGiant('z')), gat(72, 26, VP.zzz())); break;
+      case 'wake': add(gat(50, 40, vGiant('o')), gat(84, 20, VP.sun())); break;
+      case 'fill': add(gat(12, 58, vCastle(true)), gat(84, 58, vJack(true))); break;
+      case 'wide': add(gat(12, 58, vCastle(false)), gat(80, 58, vJack(true)), gat(106, 58, VP.glass())); break;
+      case 'fenced': add(gat(36, 38, vGiant('w')), gat(90, 58, vJack(false, true), -14), gat(104, 20, VP.x())); break;
+      case 'refused': add(gat(12, 58, vCastle(false)), gat(72, 52, VP.shield()), gat(98, 58, vJack(false, true), -10)); break;
+      case 'ship': add(gat(12, 58, vCastle(true)), gat(86, 56, vScroll())); break;
+      case 'dock': add(gat(46, 56, vScroll(true)), gat(80, 58, VP.broom())); break;
+      case 'climb': add(gat(40, 58, vStalk()), gat(48, 34, vJack(false), -10), gat(86, 58, vCoins(3))); break;
+      case 'cleared': add(gat(36, 58, vStalk()), gat(76, 58, vCoins(5)), gat(94, 58, vCoins(3))); break;
+      case 'quill': add(gat(40, 56, vScroll()), gat(66, 38, VP.quill())); break;
+      case 'ruin': add(gat(26, 58, vCastle(false, true), 7), gat(90, 58, vCoins(2)), gat(104, 58, vCoins(1))); break;
+      case 'bell': add(gat(44, 48, VP.bell()), gat(84, 56, vScroll())); break;
+      case 'sprout': add(gat(60, 58, vStalk(true))); break;
+      default: add(gat(34, 58, vCastle(true)), gat(90, 58, vCoins(4)), gat(104, 58, vCoins(2)));
+    }
+    return sv('svg', { class: 'vg' + (bigger ? ' big' : ''), viewBox: '0 0 120 64', 'aria-hidden': 'true' }, g);
+  }
+  var VK = { castle: 'begin', needle: 'renew', glass: 'expired', key: 'claim', chain: 'relink', zzz: 'fall', sun: 'wake', coin: 'fill', cross: 'fenced', shield: 'refused',
+    scroll: 'ship', broom: 'dock', stalk: 'climb', stack: 'cleared', quill: 'quill', fall: 'ruin', bell: 'bell' };
+
   function fateEl(f) {
     var label = f === 'live' ? 'LIVE' : f === 'wind-down' ? 'WIND-DOWN' : f === 'fenced' ? 'FENCED' : '?';
     return h('span', { class: 'fate', 'data-f': f }, [stitch(f, ''), label]);
@@ -629,7 +708,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     for (var i = 0; i < 24; i++) {
       var an = i / 24 * Math.PI * 2, r0 = i % 6 ? 105 : 100;
       g.appendChild(sv('path', { d: 'M' + (c + r0 * Math.sin(an)).toFixed(1) + ' ' + (c - r0 * Math.cos(an)).toFixed(1) + 'L' + (c + 110 * Math.sin(an)).toFixed(1) + ' ' + (c - 110 * Math.cos(an)).toFixed(1), stroke: '#6A6E79', 'stroke-width': i % 6 ? 1 : 1.8, 'stroke-linecap': 'round' }));
-      if (i % 6 === 0) g.appendChild(sv('text', { x: (c + 91 * Math.sin(an)).toFixed(1), y: (c - 91 * Math.cos(an) + 4).toFixed(1), 'text-anchor': 'middle', class: 'rd-hour' }, i + 'h'));
+      if (i % 6 === 0) g.appendChild(sv('text', { x: (c + 91 * Math.sin(an)).toFixed(1), y: (c - 91 * Math.cos(an) + 4).toFixed(1), 'text-anchor': 'middle', class: 'rd-hour' }, i ? i + 'h' : '0h UTC'));
     }
     var threadBg = sv('circle', { cx: c, cy: c, r: 74, fill: 'none', stroke: '#E6DAC0', 'stroke-width': 9 });
     var thread = sv('path', { fill: 'none', stroke: '#C8961E', 'stroke-width': 9, 'stroke-linecap': 'round' });
@@ -700,7 +779,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     RD.sub2.textContent = L ? 'epoch ' + L.epoch : '';
     var line = R('leaseLine');
     var sh = S.shifts[act];
-    fill(line, L ? [h('b', { text: up(L.holderAgent) }), st === 'LIVE' ? ' holds the castle' : ' held the castle', sh ? ' in ' + sh.city + '’s shift' + (sh.agent && sh.agent !== L.holderAgent ? ' (' + sh.agent + '’s by the roster)' : '') : '', '. Renewed every ' + (S.config.renewEverySeconds || 40) + ' s with fo’s seal.'] : 'Waiting for the castle’s first lease.');
+    fill(line, L ? [h('b', { text: up(L.holderAgent) }), st === 'LIVE' ? ' holds the castle' : ' held the castle', sh ? ' during ' + sh.city + '’s shift' + (sh.agent && sh.agent !== L.holderAgent ? ', which the roster gives to ' + sh.agent : '') : '', '. Renewed every ' + (S.config.renewEverySeconds || 40) + ' s with fo’s seal' + (S.mode === 'mock' ? ' (mock time; the live lease is 120 s, renewed every 40 s).' : '.')] : 'Waiting for the castle’s first lease.');
   }
 
   // the giant: calm when live, one eye open in wind-down, awake and roaring when a stale shift is fenced
@@ -743,7 +822,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       var s = stratState(st);
       if (s === 'DOCKED' && S.lease && st.epoch === S.lease.epoch) return;
       var k = s === 'LIVE' ? 'live' : s === 'WIND-DOWN' ? 'wind' : 'fenced';
-      buckets[k].push(h('span', { class: 'chip num', 'data-s': s, title: 'strategy ' + st.hash }, 'epoch ' + st.epoch + ' · ' + px(st.center) + (s === 'DOCKED' ? ' · docked' : '')));
+      buckets[k].push(h('div', { class: 'bk num', 'data-s': s, title: 'strategy ' + st.hash }, [stitch(k === 'wind' ? 'wind-down' : k, ''), 'epoch ' + st.epoch + ' book, centred at ' + px(st.center) + (s === 'DOCKED' ? ', docked' : '')]));
     });
     var lis = R('states').children;
     for (var i = 0; i < lis.length; i++) {
@@ -780,8 +859,8 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     var anchor = p ? Number(p.usdcPerWeth) : NaN, val = isFinite(anchor) ? wethN * anchor + usdcN : NaN;
     var live = S.strategies.filter(function (s) { return stratState(s) === 'LIVE'; });
     fill(el, [
-      h('div', { class: 'row' }, [h('span', { class: 'k' }, [h('i', { class: 'cn' }), 'WETH in the castle']), h('span', { class: 'v' }, [amt(inv.weth, 'WETH'), h('small', { text: 'WETH' })])]),
-      h('div', { class: 'row' }, [h('span', { class: 'k' }, [h('i', { class: 'cn' }), 'USDC in the castle']), h('span', { class: 'v' }, [amt(inv.usdc, 'USDC'), h('small', { text: 'USDC' })])]),
+      h('div', { class: 'row gold' }, [h('span', { class: 'k' }, [h('i', { class: 'cn' }), 'WETH in the castle']), h('span', { class: 'v' }, [amt(inv.weth, 'WETH'), h('small', { text: 'WETH' })])]),
+      h('div', { class: 'row gold' }, [h('span', { class: 'k' }, [h('i', { class: 'cn' }), 'USDC in the castle']), h('span', { class: 'v' }, [amt(inv.usdc, 'USDC'), h('small', { text: 'USDC' })])]),
       h('div', { class: 'row' }, [h('span', { class: 'k' }, ['Anchor price', h('span', { class: 'sub', text: p ? 'handoff-price in ENS' + (p.block ? ', block ' + p.block : '') : 'not written yet' })]),
         h('span', { class: 'v' }, [px(p), h('small', { text: 'USDC / WETH' })])]),
       h('div', { class: 'row' }, [h('span', { class: 'k' }, ['Hoard value', h('span', { class: 'sub', text: 'WETH at the anchor, plus USDC' })]),
@@ -795,14 +874,14 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   function drawStalk() {
     var el = R('stalk'), a = S.auction;
     if (!a) {
-      fill(el, [h('div', null, [h('p', { class: 'empty', text: 'No auction is open. When a shift hands over gold it doesn’t want, or the castle falls with nobody to claim it, the gold goes up the beanstalk: a Uniswap CCA that any Jack with an ENS name may climb.' })]), h('div')]);
+      fill(el, [h('div', { class: 'dormant' }, [vignette('sprout', true), h('p', { class: 'empty', text: 'No auction is open. When a shift hands over gold it doesn’t want, or the castle falls with nobody to claim it, the gold goes up the beanstalk: a Uniswap CCA that any Jack with an ENS name may climb.' })]), h('div')]);
       return;
     }
     var W = 640, H = 250, L = 58, Rr = 16, T = 14, B = 34;
     var pts = a.points.map(function (p) { return { b: Number(p.block), p: Number(p.price.usdcPerWeth) }; });
     var bidsP = a.bids.map(function (b) { return Number(b.maxPrice.usdcPerWeth); });
     var fl = Number(a.floor.usdcPerWeth);
-    var lo = Math.min.apply(null, [fl].concat(pts.map(function (x) { return x.p; }))), hi = Math.max.apply(null, [fl + 1].concat(pts.map(function (x) { return x.p; }), bidsP));
+    var lo = Math.min.apply(null, [fl].concat(pts.map(function (x) { return x.p; }))), hi = Math.max.apply(null, [fl * 1.02].concat(pts.map(function (x) { return x.p; }), bidsP));
     var pad = (hi - lo) * 0.12 || 10; lo -= pad; hi += pad;
     var b0 = Number(a.startBlock), b1 = Number(a.endBlock);
     function X(b) { return L + (W - L - Rr) * Math.max(0, Math.min(1, (b - b0) / Math.max(1, b1 - b0))); }
@@ -825,9 +904,9 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     // the floor
     g.push(sv('path', { d: 'M' + L + ' ' + Y(fl).toFixed(1) + 'H' + (W - Rr), stroke: '#B0412A', 'stroke-width': 1.6, 'stroke-dasharray': '6 6' }));
     g.push(sv('text', { x: W - Rr - 4, y: (Y(fl) - 6).toFixed(1), 'text-anchor': 'end', fill: '#B0412A' }, 'floor ' + px(fl)));
-    // each Jack's max price, a small flag at the right edge, sized by the gold they bid
+    // each Jack's max price, a small flag at the right edge, one size for every Jack
     a.bids.forEach(function (b) {
-      var y = Y(Number(b.maxPrice.usdcPerWeth)), sz = 4 + Math.min(8, Number(big(b.amount)) / 10 ** 18 * 8);
+      var y = Y(Number(b.maxPrice.usdcPerWeth)), sz = 7;
       g.push(sv('path', { d: 'M' + (W - Rr) + ' ' + y.toFixed(1) + 'l-' + (sz * 2).toFixed(1) + ' -' + sz.toFixed(1) + 'v' + (sz * 2).toFixed(1) + 'z', fill: '#2F4A7A', opacity: 0.85 }));
     });
     // the stalk: a smooth monotone climb through the checkpoints
@@ -849,11 +928,9 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
 
     var cur = a.clearing ? px(a.clearing) : '—';
     var status = a.status === 'open' ? 'Open, block +' + (Number(a.block || b0) - b0) + ' of ' + (b1 - b0) : a.status === 'cleared' ? 'Cleared' : 'Cleared and swept to the castle';
-    var bids = a.bids.slice().sort(function (x, y) { return Number(big(y.amount) - big(x.amount)); });
-    var maxAmt = bids.length ? Number(big(bids[0].amount)) : 1;
+    var bids = a.bids.slice().sort(function (x, y) { return Number(y.maxPrice.usdcPerWeth) - Number(x.maxPrice.usdcPerWeth); });
     var list = h('ul', { class: 'bids num' }, bids.map(function (b) {
-      var share = Number(big(b.amount)) / maxAmt;
-      return h('li', null, [h('span', { class: 'who', style: 'font-size:' + (14 + share * 8).toFixed(1) + 'px' }, b.ownerName || short(b.owner)),
+      return h('li', null, [h('span', { class: 'who' }, b.ownerName || short(b.owner)),
         h('span', { class: 'amt' }, [amt(b.amount, 'WETH') + ' WETH', h('br'), h('span', { class: 'muted', text: 'up to ' + px(b.maxPrice) })])]);
     }).concat(a.rejected.map(function (r) {
       return h('li', { class: 'rej' }, [h('span', { class: 'who', text: r.ownerName || short(r.owner) }), h('span', { class: 'amt', text: 'no ENS name: JackHook said no' })]);
@@ -868,7 +945,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         chart
       ]),
       h('div', null, [
-        h('div', { class: 'au-head num' }, [h('span', null, [h('b', { text: String(a.bids.length) }), ' Jacks bidding, billed by size'])]),
+        h('div', { class: 'au-head num' }, [h('span', null, [h('b', { text: String(a.bids.length) }), ' Jacks bidding, highest price first'])]),
         a.bids.length || a.rejected.length ? list : h('p', { class: 'empty', text: 'No bids yet.' }),
         a.status !== 'open' ? h('p', { class: 'note num', text: 'Sold ' + amt(a.sold, 'WETH') + ' WETH for ' + amt(a.raised, 'USDC') + ' USDC.' + (a.swept ? ' Swept to the castle.' : '') }) : null,
         h('p', { class: 'note', text: 'The next shift gets no privilege: it bids like any Jack. JackHook admits only bidders who hold an unexpired name in handoff’s ENSv2 agent registry.' })
@@ -880,24 +957,24 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   function txEl(tx, ev) {
     if (!tx) return h('span', { class: 'muted', text: ev && ev.type === 'agent' ? 'off-chain heartbeat' : ev && ev.type === 'lease.expired' ? 'no tx: time ran out' : ev && ev.type !== 'fill' ? 'off-chain' : '—' });
     if (S.mode === 'mock') return h('span', { class: 'tx num', title: 'Mock data: not a real transaction' }, [short(tx), h('em', { text: 'mock' })]);
-    return h('a', { class: 'tx num', href: (S.config.explorer || '') + '/tx/' + tx, target: '_blank', rel: 'noopener' }, short(tx));
+    if (!S.config.explorer) return h('span', { class: 'tx num', text: short(tx) });
+    return h('a', { class: 'tx num', href: S.config.explorer + '/tx/' + tx, target: '_blank', rel: 'noopener' }, short(tx));
   }
 
   var drawnScenes = 0, drawnRev = 0;
   function drawFrieze() {
     var el = R('frieze');
     if (drawnScenes > S.scenes.length) { el.replaceChildren(); drawnScenes = 0; drawnRev = S.sceneRev || 0; }
-    if ((S.sceneRev || 0) !== drawnRev && drawnScenes > 0) { drawnRev = S.sceneRev; if (el.lastChild) el.removeChild(el.lastChild); drawnScenes--; }
+    if ((S.sceneRev || 0) !== drawnRev && drawnScenes > 0) { drawnRev = S.sceneRev; if (el.firstChild) el.removeChild(el.firstChild); drawnScenes--; }
     for (; drawnScenes < S.scenes.length; drawnScenes++) {
       var sc = S.scenes[drawnScenes], ev = sc.ev;
       var gloss = sc.gl.filter(Boolean).map(function (x, i) { return h('div', null, i === 0 ? h('b', { text: x }) : x); });
       var meta = h('div', { class: 'gl num' }, [hhmmss(ev.t || clock()), ev.block ? ' · block ' + ev.block : '', ' · ', txEl(ev.tx, ev)]);
-      put(el, h('div', { class: 'scene', 'data-tone': sc.tone || null }, [
-        h('div', { class: 'ti' }, letters(sc.ti, true)), icon(sc.icon), h('div', { class: 'gl' }, gloss), meta
-      ]));
+      el.insertBefore(h('div', { class: 'scene', 'data-tone': sc.tone || null }, [
+        h('div', { class: 'ti', role: 'img', 'aria-label': sc.ti }, sc.ti.split(' ').map(function (w) { return letters(w, true); })), vignette(VK[sc.icon] === 'fill' && sc.tone === 'woad' ? 'wide' : VK[sc.icon] || 'begin'), h('div', { class: 'gl' }, gloss), meta
+      ]), el.firstChild);
     }
-    while (el.children.length > 60) el.removeChild(el.firstChild);
-    el.scrollLeft = el.scrollWidth;
+    while (el.children.length > 40) el.removeChild(el.lastChild);
   }
 
   var drawnFills = -1;
@@ -912,14 +989,14 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         h('td', { class: 'num', text: hhmmss(f.t) }),
         h('td', { text: f.takerName || short(f.taker) }),
         h('td', { class: 'num' }, f.status === 'reverted' ? h('span', { class: 'muted', text: 'tried to ' + (t.verb === 'bought' ? 'buy ' : 'sell ') + t.weth + ' WETH' }) : t.verb + ' ' + t.weth + ' WETH for ' + t.usdc + ' USDC'),
-        h('td', { class: 'r num', text: f.status === 'reverted' ? '—' : t.price }),
-        h('td', { class: 'num opt', text: f.programEpoch === f.leaseEpoch ? String(f.programEpoch) : f.programEpoch + ' vs ' + f.leaseEpoch }),
+        h('td', { class: 'r num' }, f.status === 'reverted' ? '—' : [t.price, h('span', { class: 'u', text: ' USDC/WETH' })]),
+        h('td', { class: 'num' }, [h('span', { class: 'u', text: 'epoch ' }), f.programEpoch === f.leaseEpoch ? String(f.programEpoch) : f.programEpoch + ' vs ' + f.leaseEpoch]),
         h('td', null, [fateEl(f.decision), f.status === 'reverted' ? h('div', { class: 'muted rv', text: 'reverted ' + (f.revert || '') }) : null]),
         h('td', null, txEl(f.tx))
       ]);
     });
     fill(el, h('table', { class: 'led' }, [
-      h('thead', null, h('tr', null, [h('th', { text: 'Time' }), h('th', { text: 'Jack' }), h('th', { text: 'Trade' }), h('th', { class: 'r', text: 'USDC / WETH' }), h('th', { class: 'opt', text: 'Epoch' }), h('th', { text: 'Fate' }), h('th', { text: 'Tx' })])),
+      h('thead', null, h('tr', null, [h('th', { text: 'Time' }), h('th', { text: 'Jack' }), h('th', { text: 'Trade' }), h('th', { class: 'r', text: 'USDC / WETH' }), h('th', { text: 'Epoch' }), h('th', { text: 'Fate' }), h('th', { text: 'Tx' })])),
       h('tbody', null, rows)
     ]));
   }
@@ -939,7 +1016,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       return h('tr', null, [
         h('td', { class: 'num', text: hhmmss(f.t) + (f.block ? ' · ' + f.block : '') }),
         h('td', { text: f.takerName || short(f.taker) }),
-        h('td', { class: 'num', text: String(f.programEpoch) }),
+        h('td', { class: 'num' }, [h('span', { class: 'u', text: 'book epoch ' }), String(f.programEpoch)]),
         h('td', { class: 'num opt', text: r.L ? r.L.epoch : '?' }),
         h('td', { class: 'num opt', text: r.L ? (f.t / 1000 > r.L.expiry ? left(f.t / 1000 - r.L.expiry) + ' past' : left(r.L.expiry - f.t / 1000) + ' left') : '?' }),
         h('td', null, fateEl(r.d)),
@@ -983,7 +1060,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     g.push(sv('text', { x: L, y: 12, class: 'num' }, hhmmss(t0)));
     g.push(sv('text', { x: W - Rr, y: 12, 'text-anchor': 'end', class: 'num' }, hhmmss(t1)));
     fill(el, [sv('svg', { class: 'tl', viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': 'Lease timeline: green is a held lease, dashed blue is wind-down, marks below are fills' }, g),
-      h('p', { class: 'legend' }, [h('span', { class: 'lg lg-held' }), 'lease held', h('span', { class: 'lg lg-wind' }), 'wind-down, nobody holds it', h('span', { class: 'lg lg-coin' }), 'a fill', h('span', { class: 'lg lg-x', text: '\u00d7' }), 'a fenced fill'])]);
+      h('p', { class: 'legend' }, [h('span', { class: 'lg lg-held' }), 'lease held', h('span', { class: 'lg lg-wind' }), 'wind-down, nobody holds it', h('span', { class: 'lg lg-coin' }), 'a fill', stitch('fenced', 'lg-x'), 'a fenced fill'])]);
   }
 
   function drawFace() {
@@ -1004,7 +1081,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   function drawHeader() {
     var m = S.mode, src = R('src');
     src.setAttribute('data-m', m);
-    R('srcTxt').textContent = m === 'live' ? 'Live from the castle' : m === 'chain' ? 'Chain replay' : m === 'mock' ? 'Mock stream' : 'Connecting';
+    R('srcTxt').textContent = m === 'live' ? 'Live from the castle' : m === 'chain' ? 'Chain replay' : m === 'mock' ? 'Mock stream · synthetic' : 'Connecting';
     R('ens').textContent = S.config.name || 'castle.feefifofum.eth';
   }
 
@@ -1075,7 +1152,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     fillEv(9, Jacks.frost, false, 0.4, 2408, 7, 7, exp(6), 'live');
     at(16, { type: 'lease.renewed', holder: hx(40), holderAgent: 'fee', epoch: '7', expiry: exp(16), attestor: 'fo' });
     fillEv(19, Jacks.tar, true, 0.1, 2414, 7, 7, exp(16), 'live');
-    beat(22, 'kill -9 fee');
+    beat(22, 'fee falls silent');
     at(22, { type: 'agent', id: 'fee', alive: false, tx: null });
     at(34, { type: 'incident', id: 'inc-1', kind: 'missed-renewal', epoch: '7', summary: 'fee missed its renewal; the lease ends at ' + hhmmss(exp(16) * 1000), tx: null });
     beat(46, 'the lease runs out');

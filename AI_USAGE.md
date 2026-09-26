@@ -45,34 +45,43 @@ These are AI agents on handoff.lol, directed by the human operator.
 
 ## Files
 
-Commit identity: this repo's commits authored `34r7h` come from two sources. The 95 with `i34r7h@gmail.com` are **SirKit** (AI orchestrator) using the operator's local git identity: WORKLOG.md, AI_USAGE.md, docs/NAMING.md, docs/PLAN.md (handoff-advisor's research, committed by SirKit) and README drafts. PRODUCT.md and .impeccable/surfaces/ also landed in a SirKit commit, but impecc wrote them. The 49 with `2566560+34r7h@users.noreply.github.com` are empty `task: … submitted for review / verified` commits (0 files changed) from handoff.lol's GitHub task sync, not a person or an agent. Every other agent commits under its own name.
+This table covers the tree on `main`, product by product. The lease edition's files, and its own AI_USAGE.md, are at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition). "Lines" counts the lines each author still has in the tree (`git blame`, excluding JSON records and lockfiles).
 
-| Path | Written by (per `git log`) | AI-written? | Notes |
+**Commit identity.** Commits authored `34r7h <i34r7h@gmail.com>` (150) come from the operator's local git identity, and every one of them is an AI agent's:
+- **SirKit** (AI orchestrator) wrote WORKLOG.md, AI_USAGE.md, docs/SPEC.md, docs/NAMING.md and .gitignore, and committed docs/PIVOT.md, which is agy's text verbatim.
+- One of those commits is **agy**'s: `dbb243d`, the v-e2e fork records under docs/e2e/.
+- Some lease-edition-era SirKit commits carried other agents' files: PRODUCT.md and .impeccable/surfaces/ (impecc) and early README drafts.
+
+The 72 commits by `2566560+34r7h@users.noreply.github.com` are empty `task: …` commits (0 files changed) from handoff.lol's GitHub task sync; no person or agent wrote them. Every other agent commits under its own name.
+
+| Path | Written by (lines in the tree) | AI-written? | Notes |
 |---|---|---|---|
-| docs/SPEC.md | SirKit | yes | the locked build scope |
+| contracts/src/ | mister-anderson (832) | yes | CastleVault, PriceExtruction, CastleJITHook, OffchainQuoteResolver, IENSv2 |
+| contracts/test/ | mister-anderson (1912), korg (195) | yes | unit, invariant and Sepolia-fork tests; korg's SpecDemoFork contract-level passes |
+| contracts/script/, contracts/broadcast/, contracts/deployments/, contracts/out-abi/, foundry config | mister-anderson | yes | DeployHoard, the live broadcast record, sepolia.json (the lease edition under `leaseEdition`), ABIs |
+| contracts/scripts/ (ENS agent registry) | handoff-claude (293), agent-smith (27) | yes | the agents' ENSv2 names, carried over from the lease edition |
+| contracts/probes/ | korg (238) | yes | the quote-register and UniversalResolverV2 fork probe |
+| service/ | agent-smith (1316), mister-anderson (650), handoff-claude (499) | yes | the castle service: the ERC-3668 gateway, stream v2, MCP tools (agent-smith); lib/ccip-sign.mjs and its tests (mister-anderson); the original scaffold and host deploy notes (handoff-claude) |
+| agents/ | agent-smith (1919), agy (15) | yes | fee, fi, fo, fum, crew-fork.sh, jack.mjs, the fork-run and live-run records. agy's 15 lines are a surviving part of roles/fo.mjs from a lease-edition commit (6376485) |
+| miniapp/ | impecc (1467) | yes | fee-fi-fo-fum.html, build.mjs, config.json, STREAM.md |
+| docs/SPEC.md, docs/NAMING.md | SirKit | yes | the locked build scope; voice and identifier map |
 | docs/PIVOT.md | agy (committed by SirKit) | yes | the architecture brief, verbatim |
-| docs/research.md, contracts/probes/quote-register/ | korg | yes | research gates and the fork probe |
-| contracts/src/CastleVault.sol, PriceExtruction.sol, CastleJITHook.sol, OffchainQuoteResolver.sol and their tests | mister-anderson | yes | this product's contracts (in progress) |
-| service/src/gateway.mjs, service/src/quote.mjs | agent-smith | yes | the CCIP-Read gateway and quote builder (in progress) |
-| README.md | SirKit, korg, impecc | yes | pitch and loop (SirKit), trust assumptions and technical sections (korg), Live section and voice (impecc) |
-| docs/PLAN.md (at tag lease-edition; removed from main) | handoff-advisor | yes | the lease edition's research |
-| docs/NAMING.md | SirKit | yes | from the operator's direction; rewritten for this product |
-| WORKLOG.md | SirKit | yes | generated from the handoff board, submitted evidence and live chain reads |
-| AI_USAGE.md | SirKit | yes | this file |
-| contracts/src/, contracts/script/, contracts/out-abi/, contracts/broadcast/, foundry config | mister-anderson | yes | Castle, FeeFiFoFumExtruction, JackHook, deploy scripts, exported ABIs |
-| contracts/test/ | mister-anderson, agy | yes | unit and Sepolia-fork tests; agy wrote FoAttestation.t.sol (6376485) and three fork-test commits (8cc9a7f, 84b369d, 3ccbe78), all before the validator-only ruling |
-| contracts/deployments/ | mister-anderson, handoff-claude, agent-smith | yes | addresses, txs and constructor args for contracts, the ENS registry and the agent names |
-| contracts/scripts/ (ENS) | handoff-claude, then agent-smith | yes | ENSv2 agent-registry scripts |
-| contracts/probes/, docs/ens-probes.md (at tag lease-edition), docs/ens.md, docs/1inch.md, docs/uniswap.md, FEEDBACK.md | korg | yes | ENSv2 probes, sponsor write-ups, builder feedback |
-| docs/cca-auction.md, docs/castle-v3.md (at tag lease-edition; removed from main) | mister-anderson | yes | the lease edition's CCA run and Castle v3 |
-| agents/ | agent-smith; agy (one commit) | yes | fee, fi, fo, fum: roles, shift library, scripts, tests. agy's commit 6376485 wrote fo's first version (roles/fo.mjs, lib/attest, fo-policy, incidents, lease and replay .mjs, test/fo.test.mjs; 495 lines) before the validator-only ruling. agent-smith owns and maintains it since |
-| service/ | handoff-claude (scaffold), then agent-smith | yes | the castle service: MCP tools, SSE stream, indexer |
-| miniapp/ | impecc | yes | fee-fi-fo-fum.html, build.mjs, config.json, STREAM.md |
-| docs/video-script.md, DESIGN.md, PRODUCT.md, .impeccable/ | impecc | yes | video script and shot list, design system, product brief |
-| Deck (claude.ai artifact) | impecc | yes | 12 slides; shared by the operator |
-| contracts/lib/ (aqua, swap-vm v1.0.2, solidity-utils, openzeppelin-contracts, forge-std), .gitmodules, contracts/foundry.lock, contracts/.gitignore | third-party, pinned by mister-anderson | no | git submodules at pinned commits; not written in this entry |
-| private handoff repo: 95932ef, 0115146, 105f1dd, 3cfdb3f, 0495862 | handoff-claude | yes | authored `34r7h` there too (the operator's git identity), but written by handoff-claude; new work after baseline 079f8f0 that the entry depends on (ENSv2 ens_name, Sepolia settlement, wallet proof of possession, payout dedupe); listed in README 'Pre-existing and new' |
+| docs/research.md | korg | yes | the research gates |
+| docs/e2e/ | korg (contract-level passes), agy (pass1 and pass2 records, `dbb243d`) | yes | v-e2e evidence |
+| docs/1inch.md, docs/uniswap.md, docs/ens.md, FEEDBACK.md | mister-anderson, from korg's skeletons | yes | sponsor write-ups and Uniswap builder feedback |
+| README.md | mister-anderson (56), korg (51), impecc (32), SirKit (14) | yes | technical sections and live links (mister-anderson); skeleton and layout (korg); opening, Live section and voice (impecc) |
+| docs/video-script.md, PRODUCT.md, DESIGN.md, .impeccable/ | impecc | yes | video script, product brief, design system |
+| Deck (claude.ai artifact) | impecc | yes | 10 slides; the operator shares it |
+| WORKLOG.md, AI_USAGE.md | SirKit | yes | generated from the handoff board, submitted evidence and live chain reads |
+| contracts/lib/ (aqua, swap-vm 1.0.2, v4-core 4.0.0, solidity-utils, openzeppelin-contracts, forge-std), .gitmodules | third-party, pinned by mister-anderson (and korg for one submodule entry) | no | git submodules at pinned commits; not written in this entry |
+| private handoff repo: 95932ef, 0115146, 105f1dd, 3cfdb3f, 0495862 | handoff-claude | yes | authored `34r7h` there (the operator's git identity) but written by handoff-claude; new work after baseline 079f8f0 that the entry depends on (ENSv2 ens_name, Sepolia settlement, wallet proof of possession, payout dedupe); listed in README 'Pre-existing and new' |
 
 ## Prompts and specs
 
-The swarm worked from the handoff project spec (project `2af16779`: description, 7 goals, 35 task definitions of done), docs/PLAN.md and docs/NAMING.md. Agents coordinated through signed handoff messages; the task results and verification reasons on the board record what each agent was asked for and what it delivered.
+The swarm worked from:
+- docs/PIVOT.md (agy's brief);
+- docs/SPEC.md (the locked scope);
+- docs/research.md;
+- the handoff project `de902056`: its description, 7 goals and 18 task definitions of done.
+
+Agents coordinated through signed handoff messages. The task results and verification reasons on the board record what each agent was asked for and what it delivered. SirKit verified every live tx on-chain before it verified the task that claimed it.

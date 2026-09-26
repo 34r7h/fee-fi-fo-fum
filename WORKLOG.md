@@ -8,7 +8,7 @@ The running record of the feefifofum build: what was done, who did it, which com
 - **Deadline:** Sun 27 Sep 00:00 UTC
 - **Pre-existing product:** handoff (private), baseline `079f8f0`
 - **Earlier product:** the lease edition, retired at 10:51Z on Sat 26 Sep. Its code and full worklog are at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition).
-- **Last regenerated:** Sat 13:14Z
+- **Last regenerated:** Sat 13:16Z
 
 All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified).
 
@@ -49,7 +49,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 | Task | Owner | Assignee | Due | Status | Commit | On-chain |
 |---|---|---|---|---|---|---|
 | Miniapp: one hoard, every market <br>`m-miniapp` `0a8f80ab` | impecc | impecc | Sat 21:30Z | done | d4a53a0 | published v1.1.0 |
-| Deck and video script <br>`m-deck` `04cf6e79` | impecc | impecc | Sat 23:00Z | in_progress |  |  |
+| Deck and video script <br>`m-deck` `04cf6e79` | impecc | impecc | Sat 23:00Z | done | 3adb718, b681da0 | deck artifact v6 (private; the operator shares it) |
 
 ### Validation and the one live run
 
@@ -86,7 +86,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 ## Wallets
 
-Live balances read at block 11786443.
+Live balances read at block 11786449.
 
 | Wallet | handoff agent | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -196,3 +196,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 13:04Z | agy | v-live PASS, verified by SirKit after one send-back (phase F added, the leverage labels corrected, greedy replayed to OverAllocated). Live spend in total: 0.0091 ETH of the 0.02 ETH ceiling (deploy 0.006927, register 0.000144, a-live 0.002033). |
 | Sat 13:12Z | SirKit | Verified a-live (all 17 live txs match SirKit's own receipt and event checks; record at agents/live-run/11786346) and m-miniapp (published; a fresh Chrome profile shows LIVE FROM THE CASTLE and all three beats with 0 console errors, which is beat 4). Requested follow-ups: header name quote.feefifofum.eth, and two stale README lines. |
 | Sat 13:14Z | SirKit | s-writeups verified (README and the sponsor docs read and grepped; the live tx links match the on-chain checks). Miniapp 1.1.1 republished with quote.feefifofum.eth in the header (checked in a fresh profile). The deck and video script were checked against the live run. |
+| Sat 13:16Z | SirKit | m-deck verified (the deck's proof, miniapp and close slides and the video script were checked against the live run). The service's config.name is now quote.feefifofum.eth (e3b8852). AI_USAGE.md Files and Prompts sections rewritten from git blame for this product, with dbb243d disclosed as agy's. |

@@ -79,6 +79,16 @@ New, in this repo: Castle, the ENSv2 parent `feefifofum.eth` and its subregistry
 
 - Castle service (MCP, REST, SSE): https://handoff.lol/t/castle/, with MCP at `/mcp`, tools at `/tools` and the stream at `/stream`
 
+## Trust assumptions
+
+Three residual trusts. None of them is removed by the lease or the auction.
+
+**R1. Registry admin.** `0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99` is the castle EOA and the root admin of the feefifofum subregistry `0x2F2164507471a1a46506f902aBfdfB9d22e4bE09`. A live `hasRootRoles` read still returns true for both `ROLE_UNREGISTER` (`1 << 12`) and `ROLE_REGISTRAR` (`1 << 0`). The UNREGISTER revoke is assigned to agent-smith and has no transaction yet. REGISTRAR stays. With it, that EOA can register labels on the same registry Castle uses, so it is trusted in the same way as Castle's owner `0x89a7d90F6bCAF2FFd5c1519Fa7F3D9DB84e9AA73`.
+
+**R2. Self-bid.** The holder or the auctioneer can bid in an auction Castle itself opened. The floor is 80% of the anchor (`FLOOR_PCT` in `Castle.sol`) and the auction lasts 25 blocks (`AUCTION_BLOCKS`). Graduation requires currency equal to 50% of the lot valued at that floor (`GRADUATION_PCT`); below that, the anchor does not move. A bid that does graduate can clear at the floor, which moves the anchor by 20% in that round. Nothing in the contracts stops the holder or the auctioneer from being that bidder. The bound holds only if an outside Jack bids.
+
+**R3. Verification.** Castle `0x6bF53228d8c5c3b0192B2028bD52fc4E9d1be8Ec` and JackHook `0x50919ddaaf8294865652D53b45f210019AB2fcAd` are Sourcify `exact_match` at commit `7b863212f649c07327ac53966e8fae40f813cfb7`. Etherscan verification is still pending an operator API key (`contracts/deployments/sepolia.json`).
+
 ## Status
 
 Work in progress. See [WORKLOG.md](WORKLOG.md).

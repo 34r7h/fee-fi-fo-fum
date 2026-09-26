@@ -35,14 +35,20 @@ const big = (_, v) => (typeof v === 'bigint' ? v.toString() : v);
 const S = { epochStart: new Map(), replayFrom: null };
 
 // The block where the live epoch began (its Claimed event), or the lookback floor if the epoch predates it.
+// Only a found Claimed block is cached: before the genesis claim the registry already reports the epoch the claim
+// will keep, so a cached miss would date the shift from the lookback floor and smell a hang that isn't there.
+// null = unknown (no live lease, or the log read failed): fo then draws no hang verdict from quote age.
 async function epochStartBlock(ctx, lease) {
   const k = String(lease.epoch);
   if (S.epochStart.has(k)) return S.epochStart.get(k);
+  if (lease.state !== 'LIVE') return null;
   const floor = lease.block > LOOKBACK_BLOCKS ? lease.block - LOOKBACK_BLOCKS : 0n;
-  const claims = await ctx.pc.getLogs({ address: lease.castle, event: CASTLE_EVENTS.Claimed, args: { epoch: lease.epoch }, fromBlock: floor, toBlock: lease.block }).catch(() => []);
-  const b = claims.length ? claims.at(-1).blockNumber : floor;
-  S.epochStart.set(k, b);
-  return b;
+  let claims;
+  try { claims = await ctx.pc.getLogs({ address: lease.castle, event: CASTLE_EVENTS.Claimed, args: { epoch: lease.epoch }, fromBlock: floor, toBlock: lease.block }); }
+  catch { return null; }
+  if (!claims.length) return floor;   // the shift began before the lookback window: date it from the floor
+  S.epochStart.set(k, claims.at(-1).blockNumber);
+  return claims.at(-1).blockNumber;
 }
 
 async function observe(ctx) {
@@ -55,9 +61,9 @@ async function observe(ctx) {
     if (a?.last_seen) heartbeatAgeS = Math.round((Date.now() - Date.parse(a.last_seen)) / 1000);
   }
   const since = await epochStartBlock(ctx, lease);
-  const ship = await lastShipAge(ctx.pc, { castle: lease.castle, epoch: lease.epoch, sinceBlock: since, now: lease.now });
+  const ship = since === null ? null : await lastShipAge(ctx.pc, { castle: lease.castle, epoch: lease.epoch, sinceBlock: since, now: lease.now });
   let quotesAgeS = ship?.ageS ?? null;
-  if (quotesAgeS === null && REQUIRE_SHIPS) {
+  if (quotesAgeS === null && REQUIRE_SHIPS && since !== null) {
     // Nothing shipped yet in this epoch, so the clock runs from the epoch's first block: a shift that never ships is also hung.
     const b = await ctx.pc.getBlock({ blockNumber: since });
     quotesAgeS = lease.now - Number(b.timestamp);

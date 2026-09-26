@@ -801,7 +801,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         RD.holder.appendChild(w);
       }
     }
-    RD.sub.textContent = L ? (st === 'LIVE' ? left(rem) + ' left on the lease' : 'lease lapsed ' + left(-rem) + ' ago') : 'no lease yet';
+    RD.sub.textContent = L ? (st === 'LIVE' ? left(rem) + ' left on the lease' : 'lapsed ' + left(-rem) + ' ago') : 'no lease yet';
     RD.sub2.textContent = L ? 'epoch ' + ep(L.epoch) : '';
     var line = R('leaseLine');
     var sh = S.shifts[act];

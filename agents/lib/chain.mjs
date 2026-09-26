@@ -42,20 +42,30 @@ export function deployments() {
 }
 
 // Keys the contracts lane uses for the same contract.
-const ALIASES = { router: ['router', 'aquaSwapVMRouter'] };
+const ALIASES = { router: ['router', 'aquaSwapVMRouter'], extruction: ['extruction', 'feeFiFoFumExtruction', 'fence'] };
+
+// Castle v3 is contracts.castle from its deploy on, and v2 lives on under the deployments' v2 block until its hoard
+// is drained. CASTLE_VERSION=2 addresses v2 (castle and its fence; everything else is shared); the default is v3.
+export const castleVersion = () => (env('CASTLE_VERSION', '3') === '2' ? 2 : 3);
+const V2_ONLY = new Set(['castle', 'extruction']);
 
 // The deployed address of a contract by its deployments.json key (e.g. "castle"), or undefined before deploy.
 export function contractAddress(name) {
   const d = deployments();
+  const v2 = castleVersion() === 2 && V2_ONLY.has(name) ? d.v2 : null;
   for (const k of ALIASES[name] || [name]) {
-    const v = d.contracts?.[k] ?? d.external?.[k];
+    const v = v2 ? v2[k] : d.contracts?.[k] ?? d.external?.[k];
     if (v) return typeof v === 'string' ? v : v.address;
   }
   return undefined;
 }
 
+// v3's Castle and fence ABIs are in contracts/out-abi/v3/; v3's Castle ABI also stands in for ICastleLease, whose v3
+// form adds the heartbeat, challenge and respond.
+const V3_ABIS = { Castle: 'Castle', ICastleLease: 'Castle', FeeFiFoFumExtruction: 'FeeFiFoFumExtruction' };
 export function abi(name) {
-  for (const p of [path.join(REPO_ROOT, 'contracts', 'out-abi', `${name}.json`), path.join(AGENTS_ROOT, 'abi', `${name}.json`)]) {
+  const v3 = castleVersion() === 3 && V3_ABIS[name] ? [path.join(REPO_ROOT, 'contracts', 'out-abi', 'v3', `${V3_ABIS[name]}.json`)] : [];
+  for (const p of [...v3, path.join(REPO_ROOT, 'contracts', 'out-abi', `${name}.json`), path.join(AGENTS_ROOT, 'abi', `${name}.json`)]) {
     if (fs.existsSync(p)) {
       const j = JSON.parse(fs.readFileSync(p, 'utf8'));
       return Array.isArray(j) ? j : j.abi;

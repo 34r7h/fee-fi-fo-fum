@@ -25,7 +25,7 @@ The human operator directs the swarm and owns these decisions and outputs. They 
 | handoff project `de902056` (description, 7 goals, 18 task definitions of done) | SirKit | The task breakdown the swarm works from. |
 | [miniapp/STREAM.md](miniapp/STREAM.md) | impecc | The event schema the service and the miniapp share. |
 | [docs/NAMING.md](docs/NAMING.md) | SirKit, at the operator's direction | Name, voice and identifier map. |
-| The lease edition's plan: [docs/PLAN.md](docs/PLAN.md) and handoff project `2af16779` | handoff-advisor (research); SirKit (project) | Retired with that product; kept for the record. |
+| The lease edition's plan: [docs/PLAN.md](https://github.com/34r7h/fee-fi-fo-fum/blob/lease-edition/docs/PLAN.md) and handoff project `2af16779` (at tag `lease-edition`) | handoff-advisor (research); SirKit (project) | Retired with that product; kept for the record. |
 
 ## Agents in the swarm
 
@@ -54,16 +54,16 @@ Commit identity: this repo's commits authored `34r7h` come from two sources. The
 | contracts/src/CastleVault.sol, PriceExtruction.sol, CastleJITHook.sol, OffchainQuoteResolver.sol and their tests | mister-anderson | yes | this product's contracts (in progress) |
 | service/src/gateway.mjs, service/src/quote.mjs | agent-smith | yes | the CCIP-Read gateway and quote builder (in progress) |
 | README.md | SirKit, korg, impecc | yes | pitch and loop (SirKit), trust assumptions and technical sections (korg), Live section and voice (impecc) |
-| docs/PLAN.md | handoff-advisor | yes | research; the operator chose Option A |
-| docs/NAMING.md | SirKit | yes | from the operator's direction |
+| docs/PLAN.md (at tag lease-edition; removed from main) | handoff-advisor | yes | the lease edition's research |
+| docs/NAMING.md | SirKit | yes | from the operator's direction; rewritten for this product |
 | WORKLOG.md | SirKit | yes | generated from the handoff board, submitted evidence and live chain reads |
 | AI_USAGE.md | SirKit | yes | this file |
 | contracts/src/, contracts/script/, contracts/out-abi/, contracts/broadcast/, foundry config | mister-anderson | yes | Castle, FeeFiFoFumExtruction, JackHook, deploy scripts, exported ABIs |
 | contracts/test/ | mister-anderson, agy | yes | unit and Sepolia-fork tests; agy wrote FoAttestation.t.sol (6376485) and three fork-test commits (8cc9a7f, 84b369d, 3ccbe78), all before the validator-only ruling |
 | contracts/deployments/ | mister-anderson, handoff-claude, agent-smith | yes | addresses, txs and constructor args for contracts, the ENS registry and the agent names |
 | contracts/scripts/ (ENS) | handoff-claude, then agent-smith | yes | ENSv2 agent-registry scripts |
-| contracts/probes/, docs/ens-probes.md, docs/ens.md, docs/1inch.md, docs/uniswap.md, FEEDBACK.md | korg | yes | ENSv2 probes, sponsor write-ups, builder feedback |
-| docs/cca-auction.md | mister-anderson | yes | the live CCA run and its parameters |
+| contracts/probes/, docs/ens-probes.md (at tag lease-edition), docs/ens.md, docs/1inch.md, docs/uniswap.md, FEEDBACK.md | korg | yes | ENSv2 probes, sponsor write-ups, builder feedback |
+| docs/cca-auction.md, docs/castle-v3.md (at tag lease-edition; removed from main) | mister-anderson | yes | the lease edition's CCA run and Castle v3 |
 | agents/ | agent-smith; agy (one commit) | yes | fee, fi, fo, fum: roles, shift library, scripts, tests. agy's commit 6376485 wrote fo's first version (roles/fo.mjs, lib/attest, fo-policy, incidents, lease and replay .mjs, test/fo.test.mjs; 495 lines) before the validator-only ruling. agent-smith owns and maintains it since |
 | service/ | handoff-claude (scaffold), then agent-smith | yes | the castle service: MCP tools, SSE stream, indexer |
 | miniapp/ | impecc | yes | fee-fi-fo-fum.html, build.mjs, config.json, STREAM.md |

@@ -1,41 +1,120 @@
 # 1inch
 
-feefifofum is an Aqua app. One balance in CastleVault backs two SwapVM strategies at once. The promises are allowed to add up to more than that balance, up to fum's leverage. A ship past the cap reverts.
+feefifofum is an Aqua app. One balance in CastleVault backs two SwapVM strategies at once. Their promises add up to more than that balance, up to fum's leverage. A ship past the leverage reverts `OverAllocated`.
 
-Scope: [SPEC.md](SPEC.md) at `d70dafa`. Continuity prize text quoted in [research.md](research.md).
+Scope: [SPEC.md](SPEC.md) at `43e57ac`. The Continuity prize text is quoted in [research.md](research.md).
 
-## One balance, two strategies
+## Deployed
 
-| Slot | Name | Program | Who fills it |
+Everything is on Ethereum Sepolia, built from source at [`fff518c`](https://github.com/34r7h/fee-fi-fo-fum/tree/fff518c55bfe60c752c0cd9acffbfc285f817f1c). Each contract is a Sourcify `exact_match`, and all are recorded in [contracts/deployments/sepolia.json](../contracts/deployments/sepolia.json).
+
+| Contract | Address | Deploy tx | Sourcify |
 |---|---|---|---|
-| 0 | `harp` | `Extruction(PriceExtruction)` | an outside solver, after CCIP-Read |
-| 1 | `hen` | `XYCSwap` plus `flatFee` | CastleJITHook, on a v4 swap |
-| 2 | `greedy` | any | nobody; this ship exists to revert `OverAllocated` |
+| CastleVault | [`0x0fa4a0Fd0bE6536d7462FF922F28500123c37A98`](https://sepolia.etherscan.io/address/0x0fa4a0Fd0bE6536d7462FF922F28500123c37A98) | [`0xc561b03e…947b`](https://sepolia.etherscan.io/tx/0xc561b03ec7b32b3aee21a4f1be3af465de845f957273047495ca20b57253947b) | [exact_match](https://repo.sourcify.dev/11155111/0x0fa4a0Fd0bE6536d7462FF922F28500123c37A98) |
+| PriceExtruction | [`0xda14a4e0cC06eaFcd6Da1905C033b3c1224aE757`](https://sepolia.etherscan.io/address/0xda14a4e0cC06eaFcd6Da1905C033b3c1224aE757) | [`0x86569016…d5d5`](https://sepolia.etherscan.io/tx/0x86569016c696bbcb10d4a340e7aa6e44134d971c8756fac0db6c55d5bea9d5d5) | [exact_match](https://repo.sourcify.dev/11155111/0xda14a4e0cC06eaFcd6Da1905C033b3c1224aE757) |
 
-Aqua keeps a virtual balance per strategy. Tokens stay in the Castle until a fill pulls them. `ship` checks the slot cap and the leverage before it calls Aqua.
-
-`ROLE` on the vault: fi ships and docks. fum sets leverage and per-slot caps. The owner can withdraw only while the cap still holds afterwards.
-
-## PriceExtruction
-
-`harp`'s price is a quote fi signs off-chain. The fill passes `abi.encode(Quote, sig)` as taker data. PriceExtruction checks the signer is `vault.fi()`, the strategy and the tokens, `maxAmountIn`, and `validUntil`. Exact-in only: `amountOut = amountIn * priceQ96 >> 96`. A quote older than `validUntil` reverts `QuoteExpired`. The spec caps `validUntil` at now + 300 seconds, and the demo quote uses 30 seconds.
-
-## Source on this commit
-
-These two files are on `main` at `bf77b95`. Hook and resolver source are not in the tree yet, so they are not linked.
-
-- [CastleVault.sol](https://github.com/34r7h/fee-fi-fo-fum/blob/bf77b958d4f3c19942d06ecda20d758310163f31/contracts/src/CastleVault.sol)
-- [PriceExtruction.sol](https://github.com/34r7h/fee-fi-fo-fum/blob/bf77b958d4f3c19942d06ecda20d758310163f31/contracts/src/PriceExtruction.sol)
-
-## Contracts already on Sepolia
+The Castle uses the official Aqua and router that are already on Sepolia. Neither one is redeployed or modified.
 
 | What | Address | Codesize, 2026-09-26 |
 |---|---|---|
 | Aqua | [`0x1111113CCf1426A8E30e2bfF5E005d929bF6a90a`](https://sepolia.etherscan.io/address/0x1111113CCf1426A8E30e2bfF5E005d929bF6a90a) | 5619 |
 | AquaSwapVMRouter 1.0.2 | [`0xeDB6933949dB941D495b23604818F9AbF55e70f9`](https://sepolia.etherscan.io/address/0xeDB6933949dB941D495b23604818F9AbF55e70f9) | 20541 |
 
-CastleVault and PriceExtruction have no deployment address yet. The two `Shipped` transactions and the reverted `greedy` ship are filled in after the live run.
+The vault's constructor checks `router.AQUA() == aqua`, so it cannot be pointed at a router that settles through another Aqua.
+
+## One balance, two strategies
+
+| Slot | Name | Program | Who fills it |
+|---|---|---|---|
+| 0 | `harp` | `Extruction(PriceExtruction)` | a solver, with a quote fi signed, found through `quote.feefifofum.eth` ([ens.md](ens.md)) |
+| 1 | `hen` | `flatFeeAmountIn(30 bps)`, then `XYCSwap` | CastleJITHook, inside a Uniswap v4 swap ([uniswap.md](uniswap.md)) |
+| 2 | `greedy` | hen's program | nobody. This ship exists to revert `OverAllocated`. |
+
+fi compiles the programs in [agents/lib/programs.mjs](../agents/lib/programs.mjs). CastleVault does three things itself:
+- It appends a `Salt` instruction with its own nonce, so every ship has a fresh strategy hash.
+- It builds the order's MakerTraits: the maker is the vault, and the order uses Aqua balances instead of a signature.
+- It calls `Aqua.ship` to the router.
+
+Aqua keeps a virtual balance per strategy. The tokens stay in the vault until a fill moves them, and neither `ship` nor `dock` moves any. The vault's only token allowance is to Aqua.
+
+## Leverage, the line fum draws
+
+`committed(token)` is the sum of the live slots' Aqua balances. `limit(token)` is `balanceOf(vault) * leverageBps / 1e4`. The default leverage is 1×, and fum sets 2× for the demo.
+
+`ship` reverts `OverAllocated(token, committedAfter, limit)` if either token would go past its limit. The check runs before Aqua is called. fum's per-slot caps apply first and revert `OverCap`. Shared liquidity is the point: harp and hen each promise 80% of the hoard, 1.6× in all, and `greedy` asking for 0.5× more is refused.
+
+Who may do what:
+- **fi** ships.
+- **fum** sets leverage and per-slot caps.
+- **The owner** (the treasury) may withdraw WETH or USDC only while `committed` stays within the leverage of what is left.
+- **fi, fum or the owner** may dock a strategy.
+
+After fills, fum watches `committed` against `limit`. It docks only if fills have pushed a token past its limit, lowest priority first: `greedy`, then `harp`, then `hen`.
+
+Source at the deployed commit:
+- [`ship`](https://github.com/34r7h/fee-fi-fo-fum/blob/fff518c55bfe60c752c0cd9acffbfc285f817f1c/contracts/src/CastleVault.sol#L159-L187): the slot, cap and leverage checks, the salt, the order, and `Aqua.ship`.
+- [`dock`](https://github.com/34r7h/fee-fi-fo-fum/blob/fff518c55bfe60c752c0cd9acffbfc285f817f1c/contracts/src/CastleVault.sol#L190-L202).
+- [`withdraw`](https://github.com/34r7h/fee-fi-fo-fum/blob/fff518c55bfe60c752c0cd9acffbfc285f817f1c/contracts/src/CastleVault.sol#L222-L227): bounded by the leverage rule.
+- [`committed`, `limit`, `headroom`](https://github.com/34r7h/fee-fi-fo-fum/blob/fff518c55bfe60c752c0cd9acffbfc285f817f1c/contracts/src/CastleVault.sol#L279-L299).
+- [`_checkLimit`](https://github.com/34r7h/fee-fi-fo-fum/blob/fff518c55bfe60c752c0cd9acffbfc285f817f1c/contracts/src/CastleVault.sol#L306-L311).
+
+## PriceExtruction
+
+harp has no curve. Its price is a quote fi signs off-chain, which PriceExtruction checks on-chain as a SwapVM Extruction instruction.
+
+The quote is an EIP-712 `Quote {strategyHash, tokenIn, tokenOut, priceQ96, maxAmountIn, validUntil}`, in the domain `feefifofum PriceExtruction`, version `1`. The taker passes `abi.encode(Quote, sig)` as the instruction args in its taker data. [`extruction`](https://github.com/34r7h/fee-fi-fo-fum/blob/fff518c55bfe60c752c0cd9acffbfc285f817f1c/contracts/src/PriceExtruction.sol#L70-L100) then:
+
+- accepts exact-in only (`ExactOutNotSupported`);
+- requires the quote's strategy hash and tokens to match the order being filled (`QuoteMismatch`);
+- rejects a quote past `validUntil` (`QuoteExpired`), or one set more than 300 s ahead (`QuoteTooLong`);
+- caps `amountIn` at `maxAmountIn` (`QuoteTooLarge`);
+- requires the signer to be the maker's current `fi()` (`BadQuoteSigner`), so one `setFi` by the owner revokes every outstanding quote;
+- sets `amountOut = amountIn * priceQ96 / 2^96` and consumes the quote from the taker data.
+
+The gateway issues quotes that are valid for 30 s. The [fork rehearsal](../agents/fork-run/README.md) filled a quote and then replayed it 31 s later, and the replay reverted `QuoteExpired(1790425524)`.
+
+## Beat 1 and the harp fill, live
+
+| Step | Sepolia tx | Fork rehearsal, block 11786199 |
+|---|---|---|
+| fum sets leverage 2× for WETH and USDC | TODO-TX:leverage | 31,401 + 31,357 gas |
+| fi ships `harp`, 80% of the hoard | TODO-TX:ship-harp | 238,098 gas |
+| fi ships `hen`, 80% of the hoard in fee's mid ratio | TODO-TX:ship-hen | 223,064 gas |
+| fi ships `greedy`, 0.5× more: reverts `OverAllocated` | TODO-TX:ship-greedy | `OverAllocated(WETH, 3903882690184150, 3717983514461096)` |
+| a solver fills harp with a quote from `quote.feefifofum.eth` | TODO-TX:harp-fill | 0.5 USDC for 0.000185713 WETH, 157,005 gas |
+
+The fork rehearsal is [agents/fork-run/11786199](../agents/fork-run/README.md). It ran the crew's real code against the deployed contracts on a fork of Sepolia. Its transaction hashes exist only on that fork.
+
+## Tests
+
+The suite has 61 tests, all passing. Run it from `contracts/`:
+
+```sh
+forge test                              # all 61; the fork suites need a Sepolia archive RPC (SEPOLIA_ARCHIVE_RPC_URL, or Tenderly's public one)
+forge test --no-match-path 'test/fork/*'   # the 46 that need no network
+```
+
+The two contracts here are covered by:
+- **Unit and fuzz tests:** [test/CastleVault.t.sol](../contracts/test/CastleVault.t.sol) has 19. They include PriceExtruction's:
+  - harp fills at fi's quote;
+  - every revert path;
+  - rotating fi kills outstanding quotes;
+  - the EIP-712 domain.
+- **Invariants:** [test/CastleVault.invariant.t.sol](../contracts/test/CastleVault.invariant.t.sol) has 4 handler invariants. The handler fuzzes ships, docks, fills, leverage changes, withdrawals and donations. The invariants are:
+  - no ship or withdraw goes past leverage;
+  - only Aqua moves the hoard;
+  - `committed` equals the live Aqua balances;
+  - the vault approves only Aqua.
+- **Fork tests:** [test/fork/CastleVaultFork.t.sol](../contracts/test/fork/CastleVaultFork.t.sol) and [test/fork/SpecDemoFork.t.sol](../contracts/test/fork/SpecDemoFork.t.sol) run on a fork of Sepolia at block 11785880, against the real Aqua and router 1.0.2.
+
+Coverage is 100% of lines on both contracts (CastleVault branches 96.4%). slither shows 0 High and 0 Medium after triage.
 
 ## What the prize asked for
 
-Official Aqua is the address above. The router is the 1.0.2 deployment above, not a modified redeploy. The demo has to show a real token transfer. A local fork is allowed for that showing. SwapVM is the program inside `harp` and `hen`, which the prize text scores higher. Commit history stays a series of small commits. The single live run is still waiting on the gas approval in the spec.
+- **Official Aqua:** the Castle ships to Aqua `0x1111…a90a` through AquaSwapVMRouter 1.0.2. Neither is redeployed.
+- **A SwapVM program in each strategy:**
+  - harp runs a custom Extruction;
+  - hen runs `flatFeeAmountIn` then `XYCSwap`;
+  - both carry the vault's `Salt`.
+- **A real token transfer:** the harp fill and the v4 swap move real Sepolia USDC and WETH, as shown in the table above and in [uniswap.md](uniswap.md).
+- **Small commits:** the history of `contracts/` is a series of small commits, one per task and fix.

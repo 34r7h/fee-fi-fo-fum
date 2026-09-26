@@ -1,0 +1,22 @@
+{
+  "chainId": 11155111,
+  "universalResolver": "0x5d25C1D6aCBb71B7a28AA7899618a3412a8303e3",
+  "rootRegistry": "0x9703DBD26dAB89504490994138cF2c575251a9cE",
+  "ethRegistry": "0x657eA849311d3D5823348ddEd7C2AaAFb3EDE09E",
+  "parent": "feefifofum.eth",
+  "registrar": "0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99",
+  "txs": [
+    {
+      "what": "deploy agent registry (UserRegistry)",
+      "hash": "0x25fb4a2ee8f0ffc2c3563a27ab08033ba5f7b01144fdf08fd3ab04fd0f0ede6e",
+      "block": 11784026
+    },
+    {
+      "what": "deploy agent resolver (PermissionedResolver)",
+      "hash": "0xb09a8cf63b937c2e48cb476626e8d5098f2609e952f95d12e0de5c47f49b9a7d",
+      "block": 11784028
+    }
+  ],
+  "agentRegistry": "0x2F2164507471a1a46506f902aBfdfB9d22e4bE09",
+  "resolver": "0x9D2251b5162701BC2bD97d61bc8aa3e53446285E"
+}

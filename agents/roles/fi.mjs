@@ -30,11 +30,13 @@ export default {
     ctx.logChange('fee-liveness', 'fee-liveness', { feeAlive: ageS !== null && ageS < 60 });
 
     if (STALE && !staleShot) { staleShot = true; await staleRenew(ctx, lease); return; }
-    if (mine) {
-      await renewIfDue(ctx, lease);
+    if (mine && lease.state === 'LIVE') {
+      // Re-centre before renewing: fo withholds the seal from a book the ENS anchor has moved off.
       await shipIfDue(ctx, lease);
+      await renewIfDue(ctx, lease);
       return;
     }
+    // Standby, or back after its own lease lapsed: either way the castle is open to claim.
     await standbyClaim(ctx, lease, { delayS: CLAIM_DELAY_S });
   },
   async onMessage(ctx, msg) {

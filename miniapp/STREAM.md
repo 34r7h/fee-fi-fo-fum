@@ -142,8 +142,8 @@ The mock plays docs/SPEC.md's demo on a loop. The live run should tell the same 
 
 1. `snapshot` with the hoard, then fee's `price`.
 2. fum sets leverage to 2× (`leverage.set` ×2) and the slot caps (`cap.set` ×3).
-3. fi ships `harp` and `hen` from the one balance, each promising the full hoard (`strategy.shipped` ×2): 2× promised.
-4. fi ships `greedy`, and it reverts `OverAllocated` (`allocation.refused`).
+3. fi ships `harp` and `hen` from the one balance, each promising 80% of the hoard (`strategy.shipped` ×2): 1.6× promised, under fum's 2× line.
+4. fi ships `greedy`, asking for another 0.5×, and it reverts `OverAllocated` (`allocation.refused`). The 0.4× of headroom means fum docks nothing after the demo's fills; fum docks only when fills push `committed` past the limit.
 5. agy resolves `quote.feefifofum.eth` (`quote.served`) and fills it (`fill`, `route: "aqua"`, `quoteId` set, then `hoard`).
 6. fo routes a UniswapX-format order to the hen (`intent.routed`), and agy's v4 swap is filled just in time (`fill`, `route: "v4"`, then `hoard`).
 7. On a fork, the same quote 31 s later reverts (`fill`, `status: "reverted"`, `revert: "QuoteExpired(…)"`).

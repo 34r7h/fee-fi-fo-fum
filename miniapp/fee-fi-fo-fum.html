@@ -557,12 +557,8 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   function times(bps) { return fx(Number(bps) / 10000, Number(bps) % 10000 ? 2 : 0) + '×'; }
   // How many times over the hoard is promised, on its most promised token.
   function overX() { var m = 0; TOK.forEach(function (s) { var b = bag(S.hoard, s); if (b > Z) m = Math.max(m, Number(promised(s) * BigInt(10000) / b) / 10000); }); return m; }
-  // A live strategy promising more of a token than the Castle holds: the case fum watches for, after fills.
-  function uncovered() {
-    var out = [];
-    TOK.forEach(function (s) { var b = bag(S.hoard, s); live().forEach(function (st) { if (bag(st.alloc, s) > b) out.push({ st: st, sym: s, bal: b }); }); });
-    return out;
-  }
+  // Tokens whose promises fills have pushed past fum's line: fum docks then, greedy first, then the harp, then the hen.
+  function pastLine() { return TOK.filter(function (s) { var l = limitOf(s); return l > Z && promised(s) > l; }); }
   // The harp and the hen are things; any other strategy is a name: "the harp", but "greedy".
   function the(nm) { return /^(harp|hen)$/.test(nm) ? 'the ' + nm : nm; }
   // A revert, with any unix time in it told as a clock time: QuoteExpired(20:26:25).
@@ -715,7 +711,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   }
   function drawGiant() {
     var near = TOK.some(function (s) { var l = limitOf(s); return l > Z && promised(s) * BigInt(100) >= l * BigInt(95); });
-    var shout = clock() < S.shoutUntil, mood = shout ? 'w' : near || uncovered().length ? 's' : 'o';
+    var shout = clock() < S.shoutUntil, mood = shout ? 'w' : near ? 's' : 'o';
     GI.eyeO.style.opacity = mood === 'o' ? 1 : 0; GI.eyeS.style.opacity = mood === 's' ? 1 : 0; GI.eyeW.style.opacity = mood === 'w' ? 1 : 0;
     GI.mO.style.opacity = mood === 'o' ? 1 : 0; GI.mS.style.opacity = mood === 's' ? 1 : 0; GI.mW.style.opacity = mood === 'w' ? 1 : 0;
     flag(root, 'data-shout', shout);
@@ -741,7 +737,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     var key = JSON.stringify([S.hoard, S.leverage, S.strategies.map(function (s) { return [s.hash, s.docked, s.alloc]; }), over && over.seq, rf && rf.seq, S.mode]);
     if (key === drawnGauges) return;
     drawnGauges = key;
-    var unc = uncovered();
+    var past = pastLine();
     TOK.forEach(function (sym) {
       var g = GA[sym], bal = bag(S.hoard, sym), pr = promised(sym), lim = limitOf(sym), ask = over ? bag(over.asked, sym) : Z;
       var top = [bal, lim, pr + ask].reduce(function (a, b) { return b > a ? b : a; }, Z), sc = Number(top) || 1;
@@ -770,8 +766,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       flag(g.foot, 'data-over', !!over && ask > Z);
       fill(g.foot, over && ask > Z ? [h('span', { text: (over.label || 'It') + ' asked ' + money(ask.toString(), sym) + ' more: ' + amt((pr + ask).toString(), sym) + ' would pass fum’s line of ' + amt(lim.toString(), sym) }), h('span', { text: 'refused' })]
         : [h('span', { text: (bal > Z ? fx(Number(pr * BigInt(10000) / bal) / 10000, 2) : '0') + '× the hoard promised' }), h('span', { text: money(room.toString(), sym) + ' of room under fum’s line' })]);
-      var u = unc.filter(function (x) { return x.sym === sym; });
-      fill(g.watch, u.length ? 'fum watches: ' + u.map(function (x) { return 'the ' + (x.st.label || short(x.st.hash)) + ' promises ' + money(x.st.alloc[sym], sym); }).join(' and ') + ', more than the ' + money(bal.toString(), sym) + ' in the hoard.' : null);
+      fill(g.watch, past.indexOf(sym) >= 0 ? 'Fills pushed the ' + sym + ' promises past fum’s line: fum docks greedy first, then the harp, then the hen, until they fit.' : null);
     });
     var el = R('refused');
     el.hidden = !rf;
@@ -1107,20 +1102,20 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     at(4.5, { type: 'leverage.set', token: 'WETH', bps: 20000, by: 'fum' });
     at(6, { type: 'cap.set', slot: 0, label: 'harp', cap: B(965, 0.4), by: 'fum' });
     at(6.5, { type: 'cap.set', slot: 1, label: 'hen', cap: B(965, 0.4), by: 'fum' });
-    at(7, { type: 'cap.set', slot: 2, label: 'greedy', cap: B(500, 0.2), by: 'fum' });
-    beat(9, 'fi ships the harp and the hen from one hoard');
-    ship(9, 0, sH, 'harp', 'PriceExtruction', 965, 0.4);
-    ship(11, 1, sE, 'hen', 'XYCSwap + flatFee', 965, 0.4);
-    beat(15, 'fi ships greedy, and fum’s line refuses it');
-    at(15, { type: 'allocation.refused', slot: 2, label: 'greedy', hash: hx(64), asked: B(400, 0.1), committed: B(1930, 0.8), balance: B(965, 0.4), limit: B(1930, 0.8),
-      error: 'OverAllocated', errorArgs: { token: 'USDC', committedAfter: U(2330), limit: U(1930) }, by: 'fi', status: 'reverted' });
+    at(7, { type: 'cap.set', slot: 2, label: 'greedy', cap: B(965, 0.4), by: 'fum' });
+    beat(9, 'fi ships the harp and the hen: 1.6× the hoard');
+    ship(9, 0, sH, 'harp', 'PriceExtruction', 772, 0.32);
+    ship(11, 1, sE, 'hen', 'XYCSwap + flatFee', 772, 0.32);
+    beat(15, 'greedy asks 0.5× more, past fum’s line');
+    at(15, { type: 'allocation.refused', slot: 2, label: 'greedy', hash: hx(64), asked: B(482.5, 0.2), committed: B(1544, 0.64), balance: B(965, 0.4), limit: B(1930, 0.8),
+      error: 'OverAllocated', errorArgs: { token: 'USDC', committedAfter: U(2026.5), limit: U(1930) }, by: 'fi', status: 'reverted' });
     beat(21, 'agy asks the castle’s name, and fills the price');
     quote(21, 'q-1', sH, ['USDC', 120.77], ['WETH', 0.05]);
     fillEv(25, { hash: sH, q: 'q-1', pay: ['USDC', 120.77], get: ['WETH', 0.05] });
     quote(29, 'q-2', sH, ['USDC', 50], ['WETH', 0.0207]);
     beat(34, 'fo carries an order to the hen');
     at(34, { type: 'intent.routed', tx: null, id: 'i-1', source: 'UniswapX', swapper: agy, swapperName: 'agy.feefifofum.eth', tokenIn: 'USDC', tokenOut: 'WETH', amountIn: U(10), route: 'v4', strategy: sE, by: 'fo' });
-    fillEv(37, { route: 'v4', hash: sE, i: 'i-1', pay: ['USDC', 10], get: ['WETH', 0.00409], fee: { USDC: U(0.03) } });
+    fillEv(37, { route: 'v4', hash: sE, i: 'i-1', pay: ['USDC', 10], get: ['WETH', 0.00408], fee: { USDC: U(0.03) } });
     beat(60, 'the same song, 31 s old, no longer fills');
     fillEv(60, { hash: sH, q: 'q-2', pay: ['USDC', 50], get: ['WETH', 0.0207], revert: 'QuoteExpired(' + V(59) + ')' });
     T.sort(function (a, b) { return a.at - b.at; });

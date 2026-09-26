@@ -127,3 +127,51 @@ The hook should take the label the bidder claims and read ETHRegistry directly.
 | Expired | `getExpiry` is non-zero and `block.timestamp >= getExpiry`. `getOwner` is also `address(0)` | revert |
 
 `getOwner == bidder` already fails for both unnamed and expired. Use `getExpiry` only when the revert reason must say which of the two it was.
+
+## Live Sepolia
+
+Wallet `0x48EB8a8c5dC69Dc578f861dAf987882206aF5d3E`. Gas price used: 1.2 gwei. Balance after these transactions: 0.00719 ETH. No `castle` label was registered.
+
+### Parent name — live
+
+`feefifofum` was unregistered (`getOwner` `address(0)`, `getExpiry` `0`). `MIN_REGISTER_DURATION` read live is `2419200`. `getRegisterPrice` was `613701` MockUSDC.
+
+| Step | Transaction |
+|---|---|
+| commit (with the live subregistry and resolver) | `0xd2a2f22f42e7597e7d307903d5c206ad711ef40524ef1c7967d1307ebfb9ebc4` |
+| register | `0xc51ab2660dd9a0029a201a4acd5330d7e7c2eac063cbfe58bb31039d30338378` |
+
+After register, read live from ETHRegistry:
+
+- owner `0x48EB8a8c5dC69Dc578f861dAf987882206aF5d3E`
+- expiry `1792818444`
+- token id `45412221461747854181285245383596175825201150978450840387305249746410167861248` (low 32 bits are 0, so `tokenVersionId` is 0)
+- resolver `0x9D2251b5162701BC2bD97d61bc8aa3e53446285E`
+- subregistry `0x2F2164507471a1a46506f902aBfdfB9d22e4bE09`
+
+`UniversalResolverV2.resolve` of `feefifofum.eth` `addr(bytes32)` returned 32 zero bytes. The call did not revert. No address record is set. `setData` on that resolver reverts `EACUnauthorizedAccountRoles` for `ROLE_SET_DATA` (`16777216`) from this EOA.
+
+### (a) renew — live
+
+`cast call` of `renew(labelId, now+30)` from the owner reverted `EACUnauthorizedAccountRoles(tokenId, 65536, 0x48EB…)`. `65536` is `ROLE_RENEW`. The registrar's registration bitmap does not include it, and `MIN_REGISTER_DURATION` makes a sub-minute first registration impossible through `ETHRegistrar`. The successful sub-minute `renew` remains the fork transaction `0x8b83d79cdc181d5d72c688786f593054c4a6d2c92620814840c34e6b025383a7`.
+
+### (b) re-registration — live
+
+Not sent. The name expires at `1792818444`, and a second register before that reverts `LabelAlreadyRegistered`. The live token id's low 32 bits are 0, which is version 0, the same id the fork minted on the first register. The version increment is the fork transaction `0xa14f23fb5f311cd56af04daaf94dabd3c079a7c843e02ba451ee9019d761170f`.
+
+### (c) direct reads — live
+
+The owner, expiry, and token id above were read with `getOwner`, `getExpiry`, and `getTokenId` on ETHRegistry after the register transaction. No UniversalResolver call was involved in those reads.
+
+### (d) setData and linkToNode — live
+
+The name resolver refuses this EOA. The same calls were sent to an EIP-1167 clone of implementation `0x14f09fd05d4585759e54844dc9b00147131cf243`, initialized with `ROLE_SET_DATA | ROLE_LINK` on root.
+
+| Step | Transaction |
+|---|---|
+| clone `0xbEF81885A821E0dF205838BED44d6A5240CF4474` | `0xdd08f8e1c1541fd4d5280b9bea65ef6450121fd0d1b7982da0d1539ca120773f` |
+| initialize | `0x1f6313ede43c1a4fa96c7747b8714af3ee5bb63a0061041ef9af18fc900bb454` |
+| `setData` | `0x4f18a7f7ab7df456bce9f10826e115fb7014c7b371da721a71035f31699b19a1` |
+| `linkToNode` | `0x1f5215fd97990683e183abcd20a9d664348c2439dd2360c872c970f784bb0fa1` |
+
+`getRecordId` is `1` for both `alpha.eth` and `beta.eth`.

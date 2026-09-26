@@ -59,7 +59,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
 | JackHook.sol: any Jack with an ENSv2 name can climb and bid (CCA validation hook) <br>`p4-jackhook` `67f5a962` | mister-anderson | mister-anderson | Sat 21:30 | done | 7b86321; 0x5091…fcAd | bytecode identical; live eth_call vectors (named, wrong owner, unnamed); co-signed, paid on ethereum-sepolia (receipt c34c471f, eip3009-rail) |
-| **BLOCKER** Castle and CCA: shift-change and dissolution auctions, with the clearing price written back to ENS <br>`p4-cca` `d4a7c73a` | mister-anderson | mister-anderson | Sat 23:30 | done | Castle 0x6bF5…E8Ec (CCA entry points inside Castle) | handoff-advisor PASS: CastleFork 11/11 on the live factory fork plus the CCA unit tests; verified by SirKit, co-sign pending |
+| **BLOCKER** Castle and CCA: shift-change and dissolution auctions, with the clearing price written back to ENS <br>`p4-cca` `d4a7c73a` | mister-anderson | mister-anderson | Sat 23:30 | done | Castle 0x6bF5…E8Ec (CCA entry points inside Castle) | handoff-advisor PASS: CastleFork 11/11 on the live factory fork plus the CCA unit tests; co-signed, paid (receipt a98f8421) |
 | **BLOCKER** Live: an outside agent bids via MCP, a shift-change CCA clears on Sepolia, and the next curve moves <br>`p4-cca-e2e` `3becce17` | agy | agy | Sun 01:30 | in_progress |  |  |
 
 ### P1 MINIAPP + LIVE DEMO: fee-fi-fo-fum.html, durable hosting
@@ -107,7 +107,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784387.
+Live balances read at block 11784389.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -294,3 +294,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 15:45 | korg | Added README trust assumptions: R1, the registry admin (the live read still shows UNREGISTER, and the revoke is pending); R2, a self-bid bounded only by an outside Jack; R3, Etherscan pending while Sourcify is exact_match (61a2e6b). |
 | Sat 15:47 | handoff-advisor | Validated p4-cca: PASS (CastleFork 11/11, dust can't move the anchor, permissionless dissolve after the grace). |
 | Sat 15:48 | SirKit | Verified p4-cca. The live auction proof is p4-cca-e2e at 06:40Z. |
+| Sat 15:50 | handoff-advisor | Co-signed p4-cca (paid). Ready to validate the 06:40Z live dissolution auction from Castle's events and the CCA. |

@@ -1,17 +1,17 @@
 <!doctype html>
 <!--
-  fee-fi-fo-fum: the giant's castle, live.
+  fee-fi-fo-fum: one hoard, every market.
 
-  One castle (Castle.sol) holds the hoard and makes the 1inch Aqua book. Its liquidity is live only while a shift
-  holds the ENSv2 lease on castle.feefifofum.eth. When the lease lapses the castle winds down; when a new shift
-  claims it, every quote from the old epoch reverts FeeFiFoFum() with no transaction from the shift that died.
-  When nobody claims it, a Uniswap CCA sells the hoard and the clearing price is written back to ENS.
+  The giant keeps one hoard in the Castle, a 1inch Aqua maker. Its single balance backs many SwapVM strategies at once,
+  and fum guards it so the same gold is never promised twice. Jacks (outside solvers) find a price by asking the name
+  quote.feefifofum.eth: ENS CCIP-Read sends them to the castle's gateway, where fi signs the answer. Uniswap v4 swaps
+  are filled just in time from the hoard by the castle's hook.
 
-  This page draws that from one ordered stream of events (schema: miniapp/STREAM.md). The live castle service,
-  the built-in mock and the chain-only replay all feed the same reducer.
+  This page draws that from one ordered stream of events (schema: miniapp/STREAM.md). The live castle service and the
+  built-in mock both feed the same reducer.
 
-  Constraints: one classic script (the site runs it inside a shadow root with a proxied `document`), no ES
-  modules, no innerHTML, no browser storage, nothing positioned fixed, sized by its own container.
+  Constraints: one classic script (the site runs it inside a shadow root with a proxied `document`), no ES modules,
+  no innerHTML, no browser storage, nothing positioned fixed, sized by its own container.
   Lettering: glyph outlines from Almendra Bold by Ana Sanfelippo, SIL Open Font License 1.1.
 -->
 <html lang="en">
@@ -39,8 +39,8 @@ html,body{margin:0;background:#FFFFFF}
 .num{font-variant-numeric:tabular-nums lining-nums}
 .wrap{max-width:1320px;margin:0 auto;padding:18px 22px 28px}
 .lt{display:block;height:1em;width:auto;fill:currentColor;overflow:visible}
-.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .muted{color:var(--ink3)}
+[hidden]{display:none!important}
 
 /* the embroidered band between registers: two couched rules with a trellis of stitches between */
 .band{height:14px;margin:22px 0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='14'%3E%3Cpath d='M0 7h36' stroke='%23D9C9A6' stroke-width='5'/%3E%3Cpath d='M18 3.2v7.6' stroke='%231F2433' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x left center}
@@ -54,20 +54,15 @@ html,body{margin:0;background:#FFFFFF}
 .src{font-size:12.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--ink2)}
 .src[data-m=live]{color:var(--sage)}
 .src[data-m=mock]{color:var(--madder)}
-.src[data-m=chain]{color:var(--woad)}
 .ens{font-size:13.5px;color:var(--ink2)}
-.tabs{display:inline-flex;border:1.6px solid var(--ink);border-radius:999px;padding:3px;gap:3px;background:var(--ground)}
-.tabs button{border:0;background:none;padding:6px 14px;border-radius:999px;font-weight:700;font-size:14px;color:var(--ink2);transition:background .2s var(--ease),color .2s var(--ease)}
-.tabs button[aria-selected=true]{background:var(--ink);color:var(--ground)}
-.tabs button:hover:not([aria-selected=true]){background:var(--linen);color:var(--ink)}
 
-/* the chant: four syllables, four agents */
+/* the chant: four syllables, four agents; the one acting now is gilded */
 .chant{display:flex;justify-content:space-between;gap:10px 28px;align-items:flex-end;margin-top:6px}
 .syl{min-width:0;flex:0 1 auto;text-align:left;position:relative}
 .syl .word{height:clamp(40px,8.5cqw,96px);color:var(--ink);transition:color .4s var(--ease),transform .5s var(--ease)}
 .syl .word .lt{height:100%}
 .syl .word path{stroke:var(--ink);stroke-width:0;transition:fill .4s var(--ease),stroke-width .4s var(--ease)}
-.syl[data-hold] .word{color:var(--gold)}
+.syl[data-hold] .word{color:var(--gold);transform:translateY(-4px)}
 .syl[data-hold] .word path{stroke-width:5;paint-order:stroke}
 .syl[data-asleep] .word{color:var(--thread)}
 .syl[data-asleep] .word path{stroke:var(--ink3);stroke-width:2.5;paint-order:stroke}
@@ -84,48 +79,14 @@ html,body{margin:0;background:#FFFFFF}
 /* registers */
 h2.reg{margin:0 0 12px;height:26px;color:var(--ink);display:flex;align-items:center;gap:10px}
 h2.reg .lt{height:26px}
-.main{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:26px 30px;align-items:start}
+.main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.55fr);gap:26px 34px;align-items:start}
+.main.two{grid-template-columns:repeat(2,minmax(0,1fr))}
 .panel{min-width:0}
 .note{font-size:13.5px;color:var(--ink2);margin:8px 0 0;max-width:62ch}
+.lead{margin:-4px 0 12px}
+.empty{color:var(--ink3);font-size:14px;margin:6px 0}
 
-/* roundel */
-.roundel{width:100%;max-width:360px;display:block;margin:0 auto}
-.roundel text{font-family:var(--sans)}
-.rd-city{font-size:12.5px;font-weight:800;fill:var(--ink)}
-.rd-time{font-weight:500;fill:var(--ink2)}
-.rd-hour{font-size:10.5px;fill:var(--ink3)}
-.rd-big{font-size:30px;font-weight:800;fill:var(--ink)}
-.rd-small{font-size:12.5px;fill:var(--ink2)}
-.lease-line{font-size:14px;text-align:center;margin-top:8px}
-.lease-line b{font-weight:800}
-
-/* fence and the giant */
-.fence{display:grid;grid-template-columns:minmax(0,118px) minmax(0,1fr);gap:4px 16px;align-items:start}
-.giant{width:118px;height:auto;display:block}
-.giant .eye-o,.giant .eye-s,.giant .eye-w,.giant .m-o,.giant .m-s,.giant .m-w{transition:opacity .3s var(--ease)}
-.states{list-style:none;margin:0;padding:0;display:grid;gap:10px}
-.st{display:grid;grid-template-columns:34px minmax(0,1fr);gap:2px 10px;padding:9px 12px 10px;border-radius:16px;border:1.6px solid transparent;transition:background .35s var(--ease),border-color .35s var(--ease)}
-.st svg.stitch{width:34px;height:34px;grid-row:span 2}
-.st .nm{height:17px;color:var(--ink3)}
-.st .nm .lt{height:17px}
-.st p{margin:0;font-size:13.5px;color:var(--ink2)}
-.st[data-on]{background:var(--linen);border-color:var(--ink)}
-.st[data-on] .nm{color:var(--ink)}
-.st[data-k=live][data-on] .nm{color:var(--sage)}
-.st[data-k=wind][data-on] .nm{color:var(--woad)}
-.st[data-k=fenced][data-on] .nm{color:var(--madder)}
-.strats{display:grid;gap:3px;margin-top:6px}
-.bk{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--ink)}
-.refused{margin:2px 0 16px}
-.bk svg{width:18px;height:18px;flex:none}
-.bk[data-s=FENCED],.bk[data-s=DOCKED]{color:var(--madder)}
-.bk[data-s=WIND-DOWN]{color:var(--woad)}
-.bk[data-s=LIVE] svg{color:var(--sage)}
-.shout{grid-column:1/-1;height:0;overflow:visible;color:var(--madder);opacity:0;transform:scale(.9);transform-origin:left center;transition:opacity .35s var(--ease),transform .5s var(--ease)}
-.shout .lt{height:30px}
-.fff[data-shout] .shout{opacity:1;transform:none;height:34px}
-
-/* hoard */
+/* the hoard */
 .hoard{display:grid;gap:4px}
 .castle-art{width:100%;max-width:280px;height:auto;display:block;margin:-6px 0 6px}
 .row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1.4px solid var(--thread)}
@@ -137,21 +98,88 @@ h2.reg .lt{height:26px}
 .row .k .cn{display:inline-block;width:13px;height:13px;border-radius:50%;background:var(--gold);box-shadow:inset 0 0 0 2px var(--ink);margin-right:8px;vertical-align:-1px}
 .row .sub{display:block;font-size:12.5px;font-weight:500;color:var(--ink3)}
 
-/* beanstalk */
-.stalk{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(240px,1fr);gap:18px 28px;align-items:start}
-.stalk svg.chart{width:100%;height:auto;display:block}
-.chart text{font-family:var(--sans);font-size:11.5px;fill:var(--ink2)}
-.au-head{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;margin-bottom:8px;font-size:14px}
-.au-head b{font-size:19px}
-.bids{list-style:none;margin:0;padding:0}
-.bids li{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1.4px solid var(--thread);line-height:1.15}
-.bids li:last-child{border-bottom:0}
-.bids .who{font-weight:800;font-size:16px}
-.bids .amt{text-align:right;white-space:nowrap}
-.bids li.rej .who{text-decoration:line-through;color:var(--madder)}
-.bids li.rej .amt{color:var(--madder);font-size:13px}
-.empty{color:var(--ink3);font-size:14px;margin:6px 0}
-.dormant{display:flex;align-items:center;gap:18px}
+/* the promises: fum's gauge, one bar per token, one thread per bargain */
+.prom{display:grid;grid-template-columns:minmax(0,112px) minmax(0,1fr);gap:4px 18px;align-items:start}
+.giant{width:112px;height:auto;display:block}
+.giant .eye-o,.giant .eye-s,.giant .eye-w,.giant .m-o,.giant .m-s,.giant .m-w{transition:opacity .3s var(--ease)}
+.gcap{font-size:12.5px;color:var(--ink3);text-align:center;margin:2px 0 0}
+.gauge{margin:0 0 14px}
+.gh{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 10px;font-size:14px;margin-bottom:5px}
+.gh b{font-size:15px;font-weight:800}
+.gh .pv{font-weight:800;font-size:17px;text-align:right}
+.gh .pv small{font-size:13px;font-weight:600;color:var(--ink2)}
+.gw{display:flex;align-items:center}
+.gbar{display:flex;flex:0 0 100%;height:26px;border:1.8px solid var(--ink);border-radius:13px;overflow:hidden;background:var(--linen);transition:flex-basis .8s var(--ease)}
+.seg{flex:0 0 0;height:100%;transition:flex-basis .9s var(--ease);box-shadow:inset -1.8px 0 0 var(--ink)}
+.seg[data-z]{box-shadow:none}
+.ask{flex:0 0 0;height:100%;background:repeating-linear-gradient(135deg,var(--madder) 0 2.5px,transparent 2.5px 7px);transition:flex-basis .6s var(--ease)}
+.gover{flex:0 0 0;height:26px;margin-left:-1.8px;border:1.8px dashed var(--madder);border-left:0;border-radius:0 13px 13px 0;background:repeating-linear-gradient(135deg,var(--madder) 0 2.5px,transparent 2.5px 7px);transition:flex-basis .6s var(--ease)}
+.gover[data-z]{border:0}
+.gf{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 10px;font-size:13px;color:var(--ink2);margin-top:4px}
+.gf[data-over]{color:var(--madder);font-weight:700}
+.refused{display:grid;grid-template-columns:30px minmax(0,1fr);gap:2px 10px;align-items:start;margin:4px 0 0;padding:10px 12px;border:1.6px solid var(--madder);border-radius:16px;background:var(--linen);font-size:13.5px}
+.refused svg{width:30px;height:30px;color:var(--madder)}
+.refused b{color:var(--madder)}
+.refused[data-fresh]{animation:shake .5s var(--ease) 2}
+.shout{grid-column:1/-1;height:0;overflow:visible;color:var(--madder);opacity:0;transform:scale(.9);transform-origin:left center;transition:opacity .35s var(--ease),transform .5s var(--ease)}
+.shout .lt{height:30px}
+.fff[data-shout] .shout{opacity:1;transform:none;height:34px}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* the bargains: each strategy the one hoard backs */
+.bargains{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:0}
+.bg{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:2px 12px;align-items:baseline;padding:9px 0;border-top:1.4px solid var(--thread);animation:unroll .6s var(--ease) both}
+.bg .sw{width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--ink);align-self:center}
+.bg .nm{font-weight:800;font-size:15px}
+.bg .nm span{font-weight:500;font-size:12.5px;color:var(--ink3);margin-left:6px}
+.bg .al{font-size:13.5px;color:var(--ink)}
+.bg .cp{font-size:12.5px;color:var(--ink3)}
+.bg .r{text-align:right;font-size:13px;color:var(--ink2);white-space:nowrap}
+.chip{display:inline-block;font-weight:800;font-size:11.5px;letter-spacing:.06em;padding:1px 8px;border-radius:999px;border:1.4px solid currentColor;margin-top:3px}
+.chip[data-s=live]{color:var(--sage)}
+.chip[data-s=docked]{color:var(--ink3)}
+.chip[data-s=filled]{color:var(--goldink)}
+.chip[data-s=open]{color:var(--woad)}
+.chip[data-s=expired]{color:var(--ink3)}
+.bg[data-docked] .nm,.bg[data-docked] .al{color:var(--ink3)}
+.bg[data-docked] .sw{opacity:.35}
+
+/* the harp and the hen */
+.card{border:1.6px solid var(--ink);border-radius:18px;background:var(--linen);padding:14px 16px;display:grid;gap:8px;animation:unroll .6s var(--ease) both}
+.qname{font-weight:800;font-size:14px;color:var(--woad);display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.qname span{font-weight:600;font-size:12px;color:var(--ink3);letter-spacing:.05em;text-transform:uppercase}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;position:relative;font-size:12px;color:var(--ink2);line-height:1.25}
+.steps::before{content:"";position:absolute;left:11px;right:calc(25% - 11px);top:10px;height:3px;background:var(--gold);border-radius:2px}
+.steps li{position:relative;padding-top:28px}
+.steps li::before{content:"";position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;background:var(--ground);border:1.8px solid var(--ink);box-sizing:border-box}
+.steps li::after{content:"";position:absolute;left:7px;top:4px;width:6px;height:10px;border:solid var(--sage);border-width:0 2.6px 2.6px 0;transform:rotate(45deg);opacity:0;animation:tick .35s var(--ease) forwards}
+.steps li:nth-child(2)::after{animation-delay:.35s}
+.steps li:nth-child(3)::after{animation-delay:.7s}
+.steps li:nth-child(4)::after{animation-delay:1.05s}
+@keyframes tick{to{opacity:1}}
+.deal{font-size:15px}
+.deal b{font-size:20px;font-weight:800}
+.deal .by{display:block;font-size:13px;color:var(--ink2);margin-top:1px}
+.exp{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px;font-weight:700}
+.exp .bar{height:7px;border-radius:4px;background:var(--thread);overflow:hidden}
+.exp .bar i{display:block;height:100%;background:var(--gold);border-radius:4px;transition:width .3s linear}
+.exp[data-s=filled]{color:var(--goldink)}
+.exp[data-s=expired]{color:var(--ink3)}
+.seal{font-size:12.5px;color:var(--ink3)}
+.delta{font-size:13.5px;font-weight:700}
+.delta .p{color:var(--sage)}
+.delta .m{color:var(--madder)}
+.eggs{display:flex;flex-wrap:wrap;gap:4px;align-items:flex-end;min-height:22px}
+.eggs svg{width:16px;height:20px}
+.eggs svg:last-child{animation:pop .6s var(--ease) both}
+@keyframes pop{from{transform:translateY(-10px) scale(.6);opacity:0}to{transform:none;opacity:1}}
+.hen-top{display:flex;flex-wrap:wrap;align-items:flex-end;gap:4px 12px}
+.hen-top .empty{flex:1 1 220px}
+.list{list-style:none;margin:10px 0 0;padding:0}
+.list li{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1.4px solid var(--thread);font-size:13.5px;line-height:1.25}
+.list li:last-child{border-bottom:0}
+.list .who{font-weight:800}
+.list .amt{text-align:right}
 
 /* frieze */
 .frieze{display:flex;flex-direction:row-reverse;flex-wrap:wrap;justify-content:flex-end;align-content:flex-start;height:calc(234px + 3.2px);overflow:hidden;overflow:clip;overflow-anchor:none;border-top:1.6px solid var(--ink);border-bottom:1.6px solid var(--ink)}
@@ -161,50 +189,32 @@ h2.reg .lt{height:26px}
 .unroll:hover{background:var(--linen)}
 .vg{display:block;width:168px;height:90px;margin:4px 0 10px}
 .vg.big{width:180px;height:96px;flex:none}
-.scene .ti{display:flex;flex-wrap:wrap;gap:4px 5px;color:var(--ink);margin-bottom:10px}
+.vg.sm{width:120px;height:64px;margin:0}
+.scene .ti{display:flex;flex-wrap:wrap;gap:4px 5px;color:var(--ink);margin-bottom:10px;max-width:420px}
 .scene .ti .lt{height:17px}
 .scene[data-tone=madder] .ti{color:var(--madder)}
 .scene[data-tone=woad] .ti{color:var(--woad)}
 .scene[data-tone=gold] .ti{color:var(--goldink)}
-.scene .ic{width:34px;height:34px;display:block;margin-bottom:6px;color:var(--ink)}
-.scene[data-tone=gold] .ic{color:var(--goldink)}
-.scene[data-tone=madder] .ic{color:var(--madder)}
-.scene[data-tone=woad] .ic{color:var(--woad)}
 .scene .gl{font-size:12.5px;color:var(--ink2);line-height:1.4}
 .scene .gl b{color:var(--ink);font-weight:800}
 @keyframes unroll{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
 
-/* ledgers */
+/* ledger */
 table.led{width:100%;border-collapse:collapse;font-size:14px}
 .led th{text-align:left;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);padding:6px 8px;border-bottom:1.6px solid var(--ink)}
 .led td{padding:8px;border-bottom:1.4px solid var(--thread);vertical-align:baseline;overflow-wrap:normal}
 .led td.r,.led th.r{text-align:right}
 .led tr:last-child td{border-bottom:0}
-.fate{display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:13px;letter-spacing:.03em;white-space:nowrap}
-.fate svg{width:18px;height:18px}
-.fate[data-f=live]{color:var(--sage)}
-.fate[data-f=wind-down]{color:var(--woad)}
-.fate[data-f=fenced]{color:var(--madder)}
-.fate[data-f=unknown]{color:var(--ink3)}
+.route{display:inline-flex;align-items:center;gap:6px;font-weight:700;white-space:nowrap}
+.route i{width:11px;height:11px;border-radius:50%;box-shadow:inset 0 0 0 1.8px var(--ink);flex:none}
+.route svg{width:13px;height:16px;flex:none}
 .tx{font-size:13px;white-space:nowrap}
 .tx em{font-style:normal;font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.04em;text-transform:uppercase;margin-left:4px}
-.rv{font-size:12px;margin-top:2px}
+.rv{font-size:12px;margin-top:2px;color:var(--madder)}
 .led .u{display:none;font-size:12px;color:var(--ink3);font-weight:600}
 .fff[data-size=compact] .led .u{display:inline}
-.agree{font-weight:800}
-.agree[data-ok=no]{color:var(--madder)}
-.tl{width:100%;height:auto;display:block;margin:4px 0 6px}
-.legend{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-size:13px;color:var(--ink2);margin:0 0 18px}
-.lg{display:inline-block;width:22px;height:10px;border-radius:5px;margin-left:10px}
-.lg:first-child{margin-left:0}
-.lg-held{background:var(--sage)}
-.lg-wind{height:0;border-top:3px dashed var(--woad);border-radius:0}
-.lg-coin{width:11px;height:11px;border-radius:50%;background:var(--gold);box-shadow:inset 0 0 0 1.6px var(--ink)}
-.legend svg.lg-x{width:18px;height:18px;margin-left:10px;color:var(--madder)}
-.tl text{font-family:var(--sans);font-size:11.5px;fill:var(--ink2)}
 
 /* mock controls */
-[hidden]{display:none!important}
 .mockbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:22px;padding:12px 14px;border:1.6px solid var(--thread);border-radius:16px;font-size:13.5px;color:var(--ink2)}
 .mockbar b{color:var(--madder)}
 .mocktxt{flex-basis:100%;margin:0 0 4px}
@@ -221,20 +231,21 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
 .face .f1{display:flex;align-items:center;gap:8px;justify-content:space-between}
 .face .f1 .lt{height:24px}
 .face .src{font-size:10.5px}
-.face .f2{display:flex;align-items:center;gap:10px}
-.face .f2 .hold{height:30px;color:var(--gold)}
-.face .f2 .hold .lt{height:30px}
-.face .f2 .hold path{stroke:var(--ink);stroke-width:5;paint-order:stroke}
-.face .f2 .stt{font-weight:800;font-size:15px}
-.face .bar{height:6px;border-radius:3px;background:var(--thread);overflow:hidden}
-.face .bar i{display:block;height:100%;background:var(--gold);border-radius:3px}
+.face .f2{font-size:15px;font-weight:800}
+.face .bar{height:8px;border-radius:4px;background:var(--thread);overflow:hidden;display:flex}
+.face .bar i{display:block;height:100%}
 .face .f3,.face .f4{font-size:13px;color:var(--ink2)}
 .face .f3 b{color:var(--ink)}
-.fff[data-size=watch] .face .f4,.fff[data-size=watch] .face .ep,.fff[data-size=watch] .face .src:not([data-m=mock]) span{display:none}
+.fff[data-size=watch] .face .f4,.fff[data-size=watch] .face .src:not([data-m=mock]) span{display:none}
 
 .fff[data-size=compact] .chant{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
-.fff[data-size=compact] .stalk{grid-template-columns:1fr}
-.fff[data-size=compact] .led .opt{display:none}
+.fff[data-size=compact] .main,.fff[data-size=compact] .main.two{grid-template-columns:minmax(0,1fr)}
+.fff[data-size=compact] .prom{grid-template-columns:minmax(0,1fr);gap:8px}
+.fff[data-size=compact] .prom>div:first-child{display:flex;align-items:center;gap:12px}
+.fff[data-size=compact] .giant{width:64px}
+.fff[data-size=compact] .gcap{text-align:left}
+.fff[data-size=compact] .steps{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:10px}
+.fff[data-size=compact] .steps::before{display:none}
 .fff[data-size=compact] table.led,.fff[data-size=compact] .led tbody{display:block}
 .fff[data-size=compact] .led thead{display:none}
 .fff[data-size=compact] .led tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 14px;padding:10px 0;border-bottom:1.4px solid var(--thread)}
@@ -243,7 +254,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
 .fff[data-size=compact] .led td:nth-child(even){text-align:right}
 .fff[data-size=compact] .mark .lt{height:34px}
 
-@media (prefers-reduced-motion:reduce){.fff *{animation:none!important;transition:none!important}}
+@media (prefers-reduced-motion:reduce){.fff *{animation:none!important;transition:none!important}.steps li::after{opacity:1}}
 </style>
 </head>
 <body>
@@ -251,85 +262,64 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   <div class="wrap">
     <header class="top">
       <div class="mark" data-r="mark"></div>
-      <span class="tag" data-r="tag">The giant never sleeps.</span>
+      <span class="tag">One hoard, every market.</span>
       <span class="sp"></span>
       <span class="src" data-r="src" data-m="idle"><span data-r="srcTxt">connecting</span></span>
       <span class="ens num" data-r="ens"></span>
-      <nav class="tabs" role="tablist" aria-label="View">
-        <button role="tab" aria-selected="true" data-tab="castle">The castle</button>
-        <button role="tab" aria-selected="false" data-tab="replay">The replay</button>
-        <button role="tab" aria-selected="false" data-tab="v2" hidden>The v2 run</button>
-      </nav>
     </header>
 
     <section class="chant" data-r="chant" aria-label="The four agents"></section>
 
     <div class="band" aria-hidden="true"></div>
 
-    <div data-view="castle">
-      <div class="main">
-        <section class="panel" aria-labelledby="h-shift">
-          <h2 class="reg" id="h-shift" data-lt="THE SHIFTS"></h2>
-          <div data-r="roundel"></div>
-          <p class="lease-line num" data-r="leaseLine"></p>
-        </section>
-        <section class="panel" aria-labelledby="h-fence">
-          <h2 class="reg" id="h-fence" data-lt="THE FENCE"></h2>
-          <div class="fence">
-            <div data-r="giant"></div>
-            <ul class="states" data-r="states"></ul>
-            <div class="shout" data-r="shout" aria-live="assertive"></div>
-          </div>
-        </section>
-        <section class="panel" aria-labelledby="h-hoard">
-          <h2 class="reg" id="h-hoard" data-lt="THE HOARD"></h2>
-          <div data-r="castleArt"></div>
-          <div class="hoard num" data-r="hoard"></div>
-        </section>
-      </div>
-
-      <div class="band" aria-hidden="true"></div>
-
-      <section aria-labelledby="h-stalk">
-        <h2 class="reg" id="h-stalk" data-lt="THE BEANSTALK"></h2>
-        <div class="stalk" data-r="stalk"></div>
+    <div class="main">
+      <section class="panel" aria-labelledby="h-hoard">
+        <h2 class="reg" id="h-hoard" data-lt="THE HOARD"></h2>
+        <div data-r="castleArt"></div>
+        <div class="hoard num" data-r="hoard"></div>
       </section>
-
-      <div class="band" aria-hidden="true"></div>
-
-      <section aria-labelledby="h-tale">
-        <h2 class="reg" id="h-tale" data-lt="THE TAPESTRY"></h2>
-        <p class="note" style="margin:-4px 0 10px">Every event, stitched as a scene, the newest on the right. Unroll the tapestry to read the whole tale.</p>
-        <div class="frieze" data-r="frieze" aria-live="polite"></div>
-        <button class="unroll" data-r="unroll" type="button" hidden></button>
-      </section>
-
-      <div class="band" aria-hidden="true"></div>
-
-      <section aria-labelledby="h-fills">
-        <h2 class="reg" id="h-fills" data-lt="THE FILLS"></h2>
-        <div data-r="fills"></div>
+      <section class="panel" aria-labelledby="h-prom">
+        <h2 class="reg" id="h-prom" data-lt="THE PROMISES"></h2>
+        <p class="note lead">One balance backs every bargain at once, and no gold leaves the castle to do it. fum guards the hoard: a promise the hoard can’t keep is refused.</p>
+        <div class="prom">
+          <div><div data-r="giant"></div><p class="gcap">fum, the guard</p></div>
+          <div><div data-r="gauges"></div><div class="refused" data-r="refused" aria-live="assertive" hidden></div></div>
+          <div class="shout" data-r="shout" aria-hidden="true"></div>
+        </div>
+        <ul class="bargains" data-r="bargains" aria-label="The bargains the hoard backs"></ul>
       </section>
     </div>
 
-    <div data-view="replay" hidden>
-      <section aria-labelledby="h-replay">
-        <h2 class="reg" id="h-replay" data-lt="THE REPLAY"></h2>
-        <p class="note" data-r="replayNote"></p>
-        <div data-r="timeline"></div>
-        <div data-r="replay"></div>
+    <div class="band" aria-hidden="true"></div>
+
+    <div class="main two">
+      <section class="panel" aria-labelledby="h-harp">
+        <h2 class="reg" id="h-harp" data-lt="THE HARP"></h2>
+        <p class="note lead">A Jack finds the price by asking the castle’s name. The resolver sends it to the castle’s gateway, fi signs the answer, and the resolver checks fi’s seal and the expiry. No gas is spent to ask.</p>
+        <div data-r="harp"></div>
+      </section>
+      <section class="panel" aria-labelledby="h-hen">
+        <h2 class="reg" id="h-hen" data-lt="THE HEN"></h2>
+        <p class="note lead">A swap comes to the Uniswap v4 pool, and the castle’s hook fills it from the hoard in the same transaction. No gold waits in the pool: the hen lays just in time.</p>
+        <div data-r="hen"></div>
       </section>
     </div>
 
-    <div data-view="v2" hidden>
-      <section aria-labelledby="h-v2">
-        <h2 class="reg" id="h-v2" data-lt="THE LIVE FAILOVER"></h2>
-        <p class="note" data-r="v2Note"></p>
-        <div data-r="v2Timeline"></div>
-        <div class="refused" data-r="v2Refused"></div>
-        <div data-r="v2Table"></div>
-      </section>
-    </div>
+    <div class="band" aria-hidden="true"></div>
+
+    <section aria-labelledby="h-tale">
+      <h2 class="reg" id="h-tale" data-lt="THE TAPESTRY"></h2>
+      <p class="note lead">Every event, stitched as a scene, the newest on the right. Unroll the tapestry to read the whole tale.</p>
+      <div class="frieze" data-r="frieze" aria-live="polite"></div>
+      <button class="unroll" data-r="unroll" type="button" hidden></button>
+    </section>
+
+    <div class="band" aria-hidden="true"></div>
+
+    <section aria-labelledby="h-fills">
+      <h2 class="reg" id="h-fills" data-lt="THE FILLS"></h2>
+      <div data-r="fills"></div>
+    </section>
 
     <div class="mockbar" data-r="mockbar" hidden></div>
     <footer class="foot" data-r="foot"></footer>
@@ -386,10 +376,13 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   function flag(el, name, on) { if (on) el.setAttribute(name, ''); else el.removeAttribute(name); }
 
   // A string set in the lettering. caps=true crops the box to the cap height (all-caps titles).
+  // A character with no glyph is said once in the console, so a title never loses a letter silently.
+  var NOGLYPH = {};
   function letters(str, caps) {
     var x = 0, kids = [];
     for (var i = 0; i < str.length; i++) {
-      var g = GL.g[str[i]] || GL.g[' '];
+      var g = GL.g[str[i]];
+      if (!g) { if (!NOGLYPH[str[i]]) { NOGLYPH[str[i]] = 1; console.warn('fee-fi-fo-fum: no glyph for "' + str[i] + '" in "' + str + '"'); } g = GL.g[' ']; }
       if (g[1]) kids.push(sv('path', { d: g[1], transform: x ? 'translate(' + x + ')' : null }));
       x += g[0];
     }
@@ -398,9 +391,10 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   }
 
   // ---------------------------------------------------------------- numbers (money is never ambiguous)
-  function big(v) { try { return BigInt(v == null ? 0 : v); } catch (e) { return BigInt(0); } }
+  var TOK = ['USDC', 'WETH'], Z = BigInt(0);
+  function big(v) { try { return BigInt(v == null ? 0 : v); } catch (e) { return Z; } }
   function units(raw, dec, dp) {
-    var v = big(raw), neg = v < BigInt(0);
+    var v = big(raw), neg = v < Z;
     if (neg) v = -v;
     var sc = BigInt(10) ** BigInt(dec - dp), r = (v + sc / BigInt(2)) / sc, s = r.toString();
     while (s.length <= dp) s = '0' + s;
@@ -408,63 +402,63 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     return (neg ? '−' : '') + ip + (dp ? '.' + s.slice(s.length - dp) : '');
   }
   function dec(sym) { var d = S.config.decimals; return d && d[sym] != null ? d[sym] : (sym === 'USDC' ? 6 : 18); }
-  function amt(raw, sym) { return units(raw, dec(sym), sym === 'USDC' ? 2 : 4); }
-  function px(p) {
-    if (p && typeof p === 'object' && p.q96 && p.q96 !== '0') {
-      try {
-        var c = (BigInt(p.q96) * BigInt(10) ** BigInt(14) + BigInt(2) ** BigInt(95)) / BigInt(2) ** BigInt(96), cs = c.toString();
-        while (cs.length < 3) cs = '0' + cs;
-        return cs.slice(0, -2).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + cs.slice(-2);
-      } catch (e) { /* fall through to the decimal string */ }
-    }
-    var n = Number(p && typeof p === 'object' ? p.usdcPerWeth : p);
-    return isFinite(n) ? n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—';
+  // USDC to the cent and WETH to 4 places; a WETH amount under 0.01 (a hook fee) gets 6, so it never rounds away.
+  function amt(raw, sym) {
+    var v = big(raw), dp = sym === 'USDC' ? 2 : 4;
+    if (v < Z) v = -v;
+    if (dp === 4 && v > Z && v < BigInt(10) ** BigInt(dec(sym) - 2)) dp = 6;
+    return units(raw, dec(sym), dp);
   }
+  function money(raw, sym) { return amt(raw, sym) + ' ' + sym; }
+  function num(raw, sym) { return Number(big(raw)) / Math.pow(10, dec(sym)); }
+  function fx(n, dp) { dp = dp == null ? 2 : dp; return isFinite(n) ? n.toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp }) : '—'; }
+  function bag(b, sym) { return big(b && b[sym]); }
+  // A bag of amounts in words: "6,000.00 USDC and 2.0000 WETH". Tokens at zero are left out.
+  function bagStr(b) { return TOK.filter(function (s) { return bag(b, s) > Z; }).map(function (s) { return money(b[s], s); }).join(' and ') || 'nothing'; }
+  // USDC per WETH of any trade or quote, whichever way it went.
+  function rate(x) {
+    var u = x.tokenIn === 'USDC' ? x.amountIn : x.amountOut, w = x.tokenIn === 'WETH' ? x.amountIn : x.amountOut;
+    return num(u, 'USDC') / num(w, 'WETH');
+  }
+  function pct(bps) { return fx(Number(bps) / 100, 2) + '%'; }
   function short(x) { return x ? x.slice(0, 6) + '…' + x.slice(-4) : '—'; }
   function clock() { return Date.now(); }
-  function hhmmss(ms, tz) {
-    try { return new Date(ms).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: tz || undefined }); }
+  function hhmmss(ms) {
+    try { return new Date(ms).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
     catch (e) { return new Date(ms).toLocaleTimeString(); }
-  }
-  function hhmm(ms, tz) {
-    try { return new Date(ms).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: tz }); }
-    catch (e) { return ''; }
   }
   function left(sec) {
     if (sec <= 0) return '0:00';
-    var hr = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = Math.floor(sec % 60);
-    return (hr ? hr + ':' + (m < 10 ? '0' : '') : '') + m + ':' + (s < 10 ? '0' : '') + s;
+    var m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+    return m + ':' + (s < 10 ? '0' : '') + s;
   }
   function up(id) { return String(id || '?').toUpperCase(); }
+  function plural(n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); }
+  function same(a, b) { return !!a && !!b && String(a).toLowerCase() === String(b).toLowerCase(); }
+  function known(addr) {
+    var n = S.config.names || {};
+    for (var k in n) if (same(k, addr)) return n[k];
+    return null;
+  }
+  function who(x) {
+    var a = x.takerName || x.requesterName || x.swapperName, ad = x.taker || x.requester || x.swapper;
+    return a || known(ad) || (ad ? short(ad) : 'a Jack');
+  }
 
-  // ---------------------------------------------------------------- icons: one stroke, one weight
-  // The chant's three state icons; scenes draw vignettes instead.
-  var IC = {
-    glass: 'M6.5 3h11M6.5 21h11M7.5 3c0 5.5 9 4.5 9 9s-9 3.5-9 9M16.5 3c0 5.5-9 4.5-9 9s9 3.5 9 9',
-    key: 'M7.5 12a3.5 3.5 0 107 0 3.5 3.5 0 10-7 0M14.5 12H21M18.5 12v3M21 12v2',
-    zzz: 'M4 7h5l-5 6h5M12 12h4l-4 5h4M18 4h3l-3 4h3'
-  };
-  function icon(name, cls) {
-    return sv('svg', { class: cls || 'ic', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.8', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true' },
-      [sv('path', { d: IC[name] })]);
-  }
-  // The three fence stitches: satin (live), running stitch (wind-down), cross-stitch (fenced).
-  function stitch(kind, cls) {
-    var k = [];
-    if (kind === 'live') for (var i = 0; i < 5; i++) k.push(sv('path', { d: 'M' + (7 + i * 4.5) + ' 26L' + (12 + i * 4.5) + ' 8', stroke: 'currentColor', 'stroke-width': '3.2', 'stroke-linecap': 'round' }));
-    else if (kind === 'wind-down') k.push(sv('path', { d: 'M6 17h22', fill: 'none', stroke: 'currentColor', 'stroke-width': '3.4', 'stroke-linecap': 'round', 'stroke-dasharray': '4 5' }));
-    else if (kind === 'fenced') k.push(sv('path', { d: 'M9 9l16 16M25 9L9 25', stroke: 'currentColor', 'stroke-width': '3.6', 'stroke-linecap': 'round' }));
-    else k.push(sv('circle', { cx: 17, cy: 17, r: 7, fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-dasharray': '2 4' }));
-    return sv('svg', { class: cls || 'stitch', viewBox: '0 0 34 34', 'aria-hidden': 'true' }, k);
-  }
-  // Vignettes: one small pictured scene per kind of event, in the same stroke system as the giant and the castle.
-  var VC = { ink: '#1F2433', skin: '#EDC49B', beard: '#7A4B2A', gold: '#C8961E', woad: '#2F4A7A', madder: '#B0412A', sage: '#4C7743', linen: '#F6EFDF', white: '#FFFFFF' };
+  // ---------------------------------------------------------------- pictures: one stroke, one weight
+  var VC = { ink: '#1F2433', skin: '#EDC49B', beard: '#7A4B2A', gold: '#C8961E', goldhi: '#E9BC45', woad: '#2F4A7A', madder: '#B0412A', sage: '#4C7743', linen: '#F6EFDF', white: '#FFFFFF' };
   function vp(d, f, x) { return sv('path', Object.assign({ d: d, fill: f || 'none', stroke: VC.ink, 'stroke-width': 1.8, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, x || {})); }
   function gat(x, y, kids, r) { return sv('g', { transform: 'translate(' + x + ' ' + y + ')' + (r ? ' rotate(' + r + ')' : '') }, kids); }
-  function vCastle(flagUp, cracked) {
+  function cross(cls) {
+    return sv('svg', { class: cls || '', viewBox: '0 0 34 34', 'aria-hidden': 'true' }, [sv('path', { d: 'M9 9l16 16M25 9L9 25', stroke: 'currentColor', 'stroke-width': '3.6', 'stroke-linecap': 'round' })]);
+  }
+  function egg(fillc) {
+    return sv('svg', { viewBox: '0 0 16 20', 'aria-hidden': 'true' }, [sv('path', { d: 'M8 1.5c3.6 0 6.5 6 6.5 10.2S11.6 18.5 8 18.5 1.5 15.9 1.5 11.7 4.4 1.5 8 1.5z', fill: fillc || VC.gold, stroke: VC.ink, 'stroke-width': 1.6 }),
+      sv('path', { d: 'M5 7.5c.6-1.6 1.4-2.6 2.2-3', fill: 'none', stroke: VC.white, 'stroke-width': 1.4, 'stroke-linecap': 'round' })]);
+  }
+  function vCastle(flagUp) {
     var k = [vp('M12 0V-20h20V0z', VC.linen), vp('M0 0V-30h3v-4h3v4h2v-4h3v4h1V0z', VC.linen), vp('M32 0V-30h3v-4h3v4h2v-4h3v4h1V0z', VC.linen), vp('M18 0v-7a4 4 0 018 0v7z', VC.beard)];
     if (flagUp) k.push(vp('M22 -20v-13'), vp('M22 -33h9l-2.5 3 2.5 3h-9z', VC.gold));
-    if (cracked) k.push(vp('M19 -20l3 6-3 5 3 5', null, { stroke: VC.madder, 'stroke-width': 2 }));
     return k;
   }
   function vJack(coin, run) {
@@ -483,291 +477,157 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     return k;
   }
   function vCoins(n) { var k = []; for (var i = 0; i < n; i++) k.push(sv('ellipse', { cx: 0, cy: -2.5 - i * 3.6, rx: 7, ry: 2.8, fill: VC.gold, stroke: VC.ink, 'stroke-width': 1.5 })); return k; }
-  function vStalk(small) {
-    return small ? [vp('M0 0c0-6 4-9 4-14', null, { stroke: VC.sage, 'stroke-width': 3 }), vp('M3 -9c4-4 9-4 11-1-3 3-8 4-11 1z', VC.sage), vp('M3 -14c-4-4-9-4-11-1 3 3 8 4 11 1z', VC.sage)]
-      : [vp('M0 0c0-10 6-14 6-24S0 -38 0 -50', null, { stroke: VC.sage, 'stroke-width': 3.2 }), vp('M4 -12c4-4 10-4 12-1-3 3-9 4-12 1z', VC.sage), vp('M3 -32c-4-4-10-4-12-1 3 3 9 4 12 1z', VC.sage), vp('M1 -46c3-4 8-4 10-1-3 3-7 3-10 1z', VC.sage)];
-  }
   function vScroll(rolled) {
     return rolled ? [vp('M-12 -6h24v6h-24z', VC.linen), sv('ellipse', { cx: -12, cy: -3, rx: 2.5, ry: 3, fill: VC.linen, stroke: VC.ink, 'stroke-width': 1.6 })]
       : [vp('M-12 -20h24v18h-24z', VC.linen), vp('M-7 -15h14M-7 -11h14M-7 -7h9', null, { 'stroke-width': 1.2 }), sv('ellipse', { cx: -12, cy: -11, rx: 2.5, ry: 9, fill: VC.linen, stroke: VC.ink, 'stroke-width': 1.6 }), sv('ellipse', { cx: 12, cy: -11, rx: 2.5, ry: 9, fill: VC.linen, stroke: VC.ink, 'stroke-width': 1.6 })];
   }
+  // The golden harp that sings a price when a Jack asks the castle's name.
+  function vHarp() {
+    var k = [vp('M-12 1V-37', null, { stroke: VC.ink, 'stroke-width': 5 }), vp('M-12 1V-37', null, { stroke: VC.gold, 'stroke-width': 2.4 })];
+    [-7.5, -3, 1.5, 6].forEach(function (x) { k.push(vp('M' + x + ' ' + (-38.5 + (x + 12) * 0.1).toFixed(1) + 'V' + (-37 + (15 - x) * 1.38).toFixed(1), null, { 'stroke-width': 1 })); });
+    var neck = 'M-13 -36c5-7 13-2 18-4s9-5 12-1', box = 'M17 -41c-1 13-11 31-30 42';
+    k.push(vp(neck, null, { 'stroke-width': 5.4 }), vp(neck, null, { stroke: VC.gold, 'stroke-width': 2.6 }), vp(box, null, { 'stroke-width': 6.2 }), vp(box, null, { stroke: VC.gold, 'stroke-width': 3.2 }),
+      sv('circle', { cx: -12, cy: -37.5, r: 2.6, fill: VC.goldhi, stroke: VC.ink, 'stroke-width': 1.4 }));
+    return k;
+  }
+  function vNotes() {
+    return [sv('ellipse', { cx: 0, cy: 0, rx: 3, ry: 2.2, fill: VC.ink, transform: 'rotate(-20)' }), vp('M2.6 -1v-11l6 2'), sv('ellipse', { cx: 12, cy: -8, rx: 2.6, ry: 1.9, fill: VC.ink, transform: 'rotate(-20 12 -8)' }), vp('M14.3 -9v-9')];
+  }
+  // The hen that lays a golden egg the moment a swap needs one.
+  function vHen(eggs) {
+    var k = [vp('M-3 0v-6M3 0v-6M-5 0h4M1 0h4', null, { stroke: VC.gold, 'stroke-width': 1.8 }),
+      vp('M-15 -16c-5-2-7-9-4-14 3 2 5 5 6 8 0-5 2-9 5-11 1 4 1 8-1 12', VC.beard),
+      vp('M-16 -15c0-7 7-11 15-9 1-5 4-10 9-10 4 0 6 3 6 6l5 2-5 2c0 11-7 19-17 19-8 0-13-4-13-10z', VC.white),
+      vp('M-9 -14c4 4 11 4 14-2', null),
+      vp('M8 -34c-1-4 3-5 4-2 1-3 5-2 4 1 2-1 4 1 2 3', VC.madder),
+      vp('M17 -22c1 3 1 5-1 6', VC.madder, { 'stroke-width': 1.4 }),
+      sv('circle', { cx: 12.5, cy: -26.5, r: 1.4, fill: VC.ink })];
+    for (var i = 0; i < (eggs || 0); i++) k.push(gat(24 + i * 11, 0, [sv('path', { d: 'M0 -12c3 0 5 4.4 5 7.4S3 0 0 0-5-1.6-5-4.6 -3-12 0-12z', fill: VC.gold, stroke: VC.ink, 'stroke-width': 1.5 })]));
+    return k;
+  }
   var VP = {
-    needle: function () { return [vp('M-10 6c-8-10 6-20 14-14s2 16-8 12', null, { stroke: VC.gold, 'stroke-width': 2.6 }), vp('M4 -8l10-10'), vp('M12 -16l3-3')]; },
-    glass: function () { return [vp('M-6 -22h12M-6 0h12M-5 -22c0 7 10 6 10 11s-10 4-10 11M5 -22c0 7-10 6-10 11s10 4 10 11', VC.white)]; },
-    key: function () { return [sv('circle', { cx: -8, cy: 0, r: 5, fill: VC.white, stroke: VC.ink, 'stroke-width': 1.8 }), vp('M-3 0h16M9 0v4M13 0v3')]; },
-    chain: function () { return [vp('M-10 2a5 5 0 010-10h6a5 5 0 010 10', null, { 'stroke-width': 2.2 }), vp('M2 -8a5 5 0 010 10h-6a5 5 0 010-10', null, { 'stroke-width': 2.2 })]; },
-    zzz: function () { return [vp('M0 0h6l-6 7h6M10 -8h5l-5 6h5M18 -15h4l-4 5h4')]; },
-    sun: function () { return [sv('circle', { cx: 0, cy: 0, r: 5.5, fill: VC.white, stroke: VC.ink, 'stroke-width': 1.8 }), vp('M0 -11v3M0 8v3M-11 0h3M8 0h3M-8 -8l2 2M6 6l2 2M-8 8l2-2M6 -6l2-2')]; },
-    x: function () { return [vp('M-6 -6l12 12M6 -6l-12 12', null, { stroke: VC.madder, 'stroke-width': 3 })]; },
-    shield: function () { return [vp('M0 -22l9 3.5v7c0 6-4 10-9 11.5-5-1.5-9-5.5-9-11.5v-7z', VC.white, { stroke: VC.madder, 'stroke-width': 2 }), vp('M-4 -14l8 8M4 -14l-8 8', null, { stroke: VC.madder })]; },
-    broom: function () { return [vp('M-2 -30l9 16'), vp('M1 -14h13l3 14H-2z', VC.beard)]; },
     quill: function () { return [vp('M0 0c6-10 14-17 22-19-2 8-8 16-18 20z', VC.white), vp('M0 0l11-10')]; },
-    bell: function () { return [vp('M-7 0v-7a7 7 0 0114 0v7l2 2.5h-18z', VC.white), vp('M-2.5 5h5')]; }
+    x: function () { return [vp('M-6 -6l12 12M6 -6l-12 12', null, { stroke: VC.madder, 'stroke-width': 3 })]; },
+    shield: function () { return [vp('M0 -22l9 3.5v7c0 6-4 10-9 11.5-5-1.5-9-5.5-9-11.5v-7z', VC.white, { stroke: VC.ink, 'stroke-width': 2 }), vp('M0 -17v12M-5 -11h10', null, { stroke: VC.gold, 'stroke-width': 2.4 })]; },
+    broom: function () { return [vp('M-2 -30l9 16'), vp('M1 -14h13l3 14H-2z', VC.beard)]; },
+    bell: function () { return [vp('M-7 0v-7a7 7 0 0114 0v7l2 2.5h-18z', VC.white), vp('M-2.5 5h5')]; },
+    sun: function () { return [sv('circle', { cx: 0, cy: 0, r: 5.5, fill: VC.white, stroke: VC.ink, 'stroke-width': 1.8 }), vp('M0 -11v3M0 8v3M-11 0h3M8 0h3M-8 -8l2 2M6 6l2 2M-8 8l2-2M6 -6l2-2')]; },
+    zzz: function () { return [vp('M0 0h6l-6 7h6M10 -8h5l-5 6h5M18 -15h4l-4 5h4')]; }
   };
-  function vignette(kind, bigger) {
+  function vignette(kind, cls) {
     var g = [vp('M4 58h112', null, { stroke: '#D9C9A6', 'stroke-width': 2 })];
     function add() { for (var i = 0; i < arguments.length; i++) g.push(arguments[i]); }
     switch (kind) {
-      case 'renew': add(gat(18, 58, vCastle(true)), gat(84, 44, VP.needle())); break;
-      case 'expired': add(gat(18, 58, vCastle(false)), gat(88, 58, VP.glass())); break;
-      case 'claim': add(gat(18, 58, vCastle(true)), gat(88, 40, VP.key())); break;
-      case 'relink': add(gat(18, 58, vCastle(true)), gat(90, 38, VP.chain())); break;
+      case 'price': add(gat(40, 56, vScroll()), gat(66, 38, VP.quill()), gat(96, 58, vCoins(3))); break;
+      case 'ship': add(gat(12, 58, vCastle(true)), gat(72, 56, vScroll()), gat(102, 58, vCoins(3))); break;
+      case 'dock': add(gat(30, 58, vCoins(4)), gat(62, 56, vScroll(true)), gat(92, 58, VP.broom())); break;
+      case 'cap': add(gat(34, 58, vCoins(5)), gat(48, 58, vCoins(3)), gat(84, 50, VP.shield())); break;
+      case 'refused': add(gat(34, 38, vGiant('w')), gat(78, 56, vScroll()), gat(100, 20, VP.x())); break;
+      case 'harp': add(gat(40, 58, vHarp()), gat(62, 22, vNotes()), gat(96, 58, vJack(false))); break;
+      case 'order': add(gat(40, 48, VP.bell()), gat(76, 56, vScroll()), gat(104, 58, vJack(false, true))); break;
+      case 'fill': add(gat(12, 58, vCastle(true)), gat(84, 58, vJack(true))); break;
+      case 'hen': add(gat(34, 58, vHen(1)), gat(98, 58, vJack(true))); break;
+      case 'no': add(gat(36, 38, vGiant('w')), gat(90, 58, vJack(false, true), -14), gat(104, 20, VP.x())); break;
       case 'fall': add(gat(50, 40, vGiant('z')), gat(72, 26, VP.zzz())); break;
       case 'wake': add(gat(50, 40, vGiant('o')), gat(84, 20, VP.sun())); break;
-      case 'fill': add(gat(12, 58, vCastle(true)), gat(84, 58, vJack(true))); break;
-      case 'wide': add(gat(12, 58, vCastle(false)), gat(80, 58, vJack(true)), gat(106, 58, VP.glass())); break;
-      case 'fenced': add(gat(36, 38, vGiant('w')), gat(90, 58, vJack(false, true), -14), gat(104, 20, VP.x())); break;
-      case 'refused': add(gat(12, 58, vCastle(false)), gat(72, 52, VP.shield()), gat(98, 58, vJack(false, true), -10)); break;
-      case 'ship': add(gat(12, 58, vCastle(true)), gat(86, 56, vScroll())); break;
-      case 'dock': add(gat(46, 56, vScroll(true)), gat(80, 58, VP.broom())); break;
-      case 'climb': add(gat(40, 58, vStalk()), gat(48, 34, vJack(false), -10), gat(86, 58, vCoins(3))); break;
-      case 'cleared': add(gat(36, 58, vStalk()), gat(76, 58, vCoins(5)), gat(94, 58, vCoins(3))); break;
-      case 'quill': add(gat(40, 56, vScroll()), gat(66, 38, VP.quill())); break;
-      case 'ruin': add(gat(26, 58, vCastle(false, true), 7), gat(90, 58, vCoins(2)), gat(104, 58, vCoins(1))); break;
-      case 'bell': add(gat(44, 48, VP.bell()), gat(84, 56, vScroll())); break;
-      case 'sprout': add(gat(60, 58, vStalk(true))); break;
       default: add(gat(34, 58, vCastle(true)), gat(90, 58, vCoins(4)), gat(104, 58, vCoins(2)));
     }
-    return sv('svg', { class: 'vg' + (bigger ? ' big' : ''), viewBox: '0 0 120 64', 'aria-hidden': 'true' }, g);
-  }
-  var VK = { castle: 'begin', needle: 'renew', glass: 'expired', key: 'claim', chain: 'relink', zzz: 'fall', sun: 'wake', coin: 'fill', cross: 'fenced', shield: 'refused',
-    scroll: 'ship', broom: 'dock', stalk: 'climb', stack: 'cleared', quill: 'quill', fall: 'ruin', bell: 'bell' };
-
-  // In Castle v2 an epoch is the castle name's ENSv2 token id: its low 32 bits are the token version, which a claim
-  // bumps, printed v0, v1, .... Castle v3 keeps a plain counter in storage, printed #1, #2, ..., so the two never read alike.
-  function ep(e) {
-    if (e == null || e === '') return '?';
-    var v; try { v = BigInt(e); } catch (x) { return String(e); }
-    return v < BigInt(4294967296) ? '#' + v.toString() : 'v' + (v & BigInt(4294967295)).toString();
-  }
-  function same(a, b) { return !!a && !!b && String(a).toLowerCase() === String(b).toLowerCase(); }
-  function known(addr) {
-    var n = S.config.names || {};
-    for (var k in n) if (same(k, addr)) return n[k];
-    return null;
-  }
-  // The caption under the ring, told only from the lease events seen: who holds it, since which claim, how many
-  // renewals and when the last one landed. Nothing here comes from config.
-  function leaseStory(L, st) {
-    var mine = S.leases.filter(function (x) { return x.epoch === L.epoch; });
-    var claim = null, rn = [];
-    mine.forEach(function (x) { if (x.kind === 'claim') claim = x; else if (x.kind === 'renew') rn.push(x); });
-    var now = nowS(), gone = now > L.expiry, v3 = S.v3 && !gone;
-    var out = [h('b', { text: up(L.holderAgent) }), (v3 || st === 'LIVE' ? ' holds the castle' : ' held the castle') + ', epoch ' + ep(L.epoch)];
-    if (claim && claim.t) out.push(', claimed at ' + hhmmss(claim.t));
-    if (rn.length) out.push('. Renewed ' + (rn.length === 1 ? 'once' : rn.length + ' times') + ' with fo’s seal, last at ' + hhmmss(rn[rn.length - 1].t));
-    if (v3) {
-      out.push(st === 'HELD' ? '. Its heartbeat is off-chain, so only the castle service can show it' : st === 'LIVE' ? '. Its heartbeat, co-signed by fo, is good until ' + hhmmss(L.hb * 1000)
-        : L.hb ? '. Its heartbeat went silent at ' + hhmmss(L.hb * 1000) : '. No heartbeat yet');
-      if (L.ch) out.push('. ' + up(L.ch.by) + ' challenged it; ' + (now < L.ch.deadline ? 'the answer is due by ' : 'no answer came by ') + hhmmss(L.ch.deadline * 1000));
-      else if (L.cool > now) out.push('. It answered a challenge, and no new one can come before ' + hhmmss(L.cool * 1000));
-      out.push('. The lease holds until ' + hhmmss(L.expiry * 1000) + (new Date(L.expiry * 1000).getDate() !== new Date().getDate() ? ' tomorrow' : ''));
-    } else if (st !== 'LIVE') out.push((rn.length ? '; the lease ran out at ' : '. The lease ran out at ') + hhmmss(L.expiry * 1000));
-    out.push('.');
-    return out;
-  }
-  function fateEl(f) {
-    var label = f === 'live' ? 'LIVE' : f === 'wind-down' ? 'WIND-DOWN' : f === 'fenced' ? 'FENCED' : f === null ? 'FILLED' : '?';
-    return h('span', { class: 'fate', 'data-f': f }, [stitch(f, ''), label]);
+    return sv('svg', { class: 'vg' + (cls ? ' ' + cls : ''), viewBox: '0 0 120 64', 'aria-hidden': 'true' }, g);
   }
 
   // ---------------------------------------------------------------- state and the one reducer
-  var S;
+  var S, sceneId = 0;
   function reset(mode) {
-    S = { mode: mode, config: {}, shifts: [], agents: {}, order: ['fee', 'fi', 'fo', 'fum'], lease: null, leases: [],
-      strategies: [], inventory: null, price: null, auction: null, fills: [], scenes: [], seq: 0, dissolved: false,
-      shoutUntil: 0, startedAt: clock() };
+    S = { mode: mode, config: {}, agents: {}, order: ['fee', 'fi', 'fo', 'fum'], hoard: null, price: null, strategies: [], quotes: [], fills: [],
+      refusals: [], intents: [], scenes: [], seq: 0, shoutUntil: 0, overUntil: 0, act: {}, startedAt: clock() };
   }
   function agent(id) { return S.agents[id] || (S.agents[id] = { id: id, alive: null }); }
-  function strat(hash) { for (var i = 0; i < S.strategies.length; i++) if (S.strategies[i].hash === hash) return S.strategies[i]; return null; }
-  function leaseEntry(kind, ev) {
-    var o = S.lease && S.lease.epoch === String(ev.epoch) ? S.lease : {};
-    S.lease = { holder: ev.holder, holderAgent: ev.holderAgent, epoch: String(ev.epoch), expiry: Number(ev.expiry), hb: o.hb, ch: o.ch, cool: o.cool };
-    S.leases.push({ kind: kind, epoch: String(ev.epoch), holderAgent: ev.holderAgent, expiry: Number(ev.expiry), t: ev.t, block: ev.block, tx: ev.tx });
-  }
+  function strat(hash) { for (var i = 0; i < S.strategies.length; i++) if (same(S.strategies[i].hash, hash)) return S.strategies[i]; return null; }
+  function live() { return S.strategies.filter(function (s) { return !s.docked; }); }
+  function promised(sym) { return live().reduce(function (a, s) { return a + bag(s.alloc, sym); }, Z); }
+  function freeOf(r) { var o = {}; TOK.forEach(function (s) { var f = bag(r.balance, s) - bag(r.allocated, s); o[s] = (f < Z ? Z : f).toString(); }); return o; }
+  // When an event happened, for motion: now if it just arrived live, its own time if it's history (so a replayed
+  // refusal doesn't roar again), and always its own time in the mock, where the clock is exact.
+  function when(ev) { return S.mode === 'mock' || !ev.t || clock() - ev.t > 60000 ? ev.t || clock() : clock(); }
+  function acted(id, ev) { if (id) S.act[id] = when(ev); }
+  var HUE = ['#C8961E', '#2F4A7A', '#4C7743', '#7A4B2A', '#B0412A', '#474C5A'];
+  function hue(st) { var i = S.strategies.indexOf(st); return HUE[(i < 0 ? 0 : i) % HUE.length]; }
+  function nameOf(hash) { var st = strat(hash); return st ? st.label || short(st.hash) : hash ? short(hash) : 'a bargain'; }
 
-  // v3 wind-down spans: from a heartbeat running out to the next beat or claim, for the replay timeline.
-  function gapEnd(t) { var g = S.gaps && S.gaps[S.gaps.length - 1]; if (g && !g.b) g.b = t; }
   function apply(ev) {
-    if (ev.seq) S.seq = ev.seq;
-    if (ev.t && ev.type !== 'snapshot') hbCheck(ev.t);
-    var a = S.auction, L = S.lease;
-    if (ev.type === 'fill' && !ev.decision && ev.branch) ev.decision = ev.branch;
+    if (ev.seq != null) S.seq = Math.max(S.seq, ev.seq);
+    var st;
     switch (ev.type) {
       case 'snapshot':
-        S.config = Object.assign({}, S.config, ev.config || {});
-        if (ev.shifts) S.shifts = ev.shifts;
+        if (ev.config) S.config = Object.assign({}, S.config, ev.config);
         (ev.agents || []).forEach(function (x) { Object.assign(agent(x.id), x); });
-        if (ev.castle && ev.castle.version === 3) S.v3 = true;
-        if (ev.lease) S.lease = { holder: ev.lease.holder, holderAgent: ev.lease.holderAgent, epoch: String(ev.lease.epoch), expiry: Number(ev.lease.expiry),
-          hb: ev.lease.heartbeat ? Number(ev.lease.heartbeat.validUntil) : null, ch: ev.lease.challengeDeadline ? { deadline: Number(ev.lease.challengeDeadline) } : null, cool: Number(ev.lease.cooldownUntil) || null };
-        S.leases = (ev.leases || []).map(function (x) { return Object.assign({}, x, { epoch: String(x.epoch), expiry: Number(x.expiry) }); });
-        S.strategies = (ev.strategies || []).map(function (x) { return Object.assign({}, x, { epoch: String(x.epoch) }); });
-        if (ev.inventory) S.inventory = ev.inventory;
-        S.price = ev.price || null;
-        S.auction = ev.auction || null;
-        S.fills = (ev.fills || []).slice();
+        if (ev.hoard) S.hoard = ev.hoard;
+        if (ev.price) S.price = ev.price;
+        S.strategies = (ev.strategies || []).map(function (x) { return Object.assign({ fills: 0 }, x); });
+        S.quotes = (ev.quotes || []).slice(); S.fills = (ev.fills || []).slice();
+        S.refusals = (ev.refusals || []).slice(); S.intents = (ev.intents || []).slice();
         break;
-      case 'agent': Object.assign(agent(ev.id), { alive: ev.alive, lastBeat: ev.lastBeat, since: ev.t }); break;
-      case 'lease.renewed': leaseEntry('renew', ev); S.dissolved = false; break;
-      case 'lease.claimed': leaseEntry('claim', ev); S.dissolved = false; gapEnd(ev.t); break;
-      // Castle v3: liveness is a heartbeat co-signed off-chain; only its first beat, or one after a silence, is a scene.
-      case 'heartbeat':
-        S.v3 = true;
-        if (!L || L.epoch !== String(ev.epoch)) return;
-        var quiet = !L.hb || ev.t > L.hb * 1000;
-        L.hb = Number(ev.validUntil);
-        if (!quiet) return;
-        gapEnd(ev.t);
-        break;
-      case 'heartbeat.lapsed': (S.gaps || (S.gaps = [])).push({ a: ev.t, b: 0 }); break;
-      case 'lease.challenged': S.v3 = true; if (L) L.ch = { by: ev.challengerAgent, deadline: Number(ev.deadline) }; break;
-      case 'lease.responded': if (L) { L.ch = null; L.cool = Number(ev.cooldownUntil); } break;
+      case 'hoard': if (ev.hoard) S.hoard = ev.hoard; return;
+      case 'price': S.price = ev; acted(ev.by || 'fee', ev); break;
       case 'strategy.shipped':
-        if (strat(ev.hash)) break;
-        S.strategies.push({ hash: ev.hash, epoch: String(ev.epoch), shippedBy: ev.shippedBy, center: ev.center, weth: ev.weth, usdc: ev.usdc, docked: false, t: ev.t });
-        if (S.strategies.length > 8) S.strategies.shift();
+        st = strat(ev.hash);
+        if (!st) S.strategies.push(st = { hash: ev.hash, fills: 0 });
+        Object.assign(st, { label: ev.label, kind: ev.kind, alloc: ev.alloc || {}, cap: ev.cap || st.cap || null, shippedBy: ev.shippedBy, docked: false, t: ev.t, tx: ev.tx });
+        acted(ev.shippedBy || 'fi', ev);
         break;
-      case 'strategy.docked': var st = strat(ev.hash); if (st) st.docked = true; break;
-      case 'inventory': S.inventory = { weth: ev.weth, usdc: ev.usdc }; break;
+      case 'strategy.docked': st = strat(ev.hash); if (st) { st.docked = true; st.dockedBy = ev.by; } acted(ev.by || 'fi', ev); break;
+      case 'cap.set': st = strat(ev.hash); if (st) st.cap = ev.cap; acted(ev.by || 'fum', ev); break;
+      case 'allocation.refused':
+        S.refusals.push(ev); S.shoutUntil = when(ev) + 3600; S.overUntil = when(ev) + 12000; S.freshRefusal = S.shoutUntil > clock();
+        acted(ev.by || 'fi', ev); acted('fum', ev);
+        break;
+      case 'quote.served': S.quotes.push(ev); if (S.quotes.length > 40) S.quotes.shift(); acted('fi', ev); break;
+      case 'intent.routed': S.intents.push(ev); if (S.intents.length > 40) S.intents.shift(); acted(ev.by || 'fo', ev); break;
       case 'fill':
         if (ev.tx && S.fills.some(function (x) { return x.tx === ev.tx && x.status === ev.status; })) return;
-        S.fills.push(ev);
-        if (S.fills.length > 200) S.fills.shift();
-        if (ev.decision === 'fenced') S.shoutUntil = clock() + 3600;
+        S.fills.push(ev); if (S.fills.length > 200) S.fills.shift();
+        st = strat(ev.strategy);
+        if (st && ev.status !== 'reverted') { st.fills = (st.fills || 0) + 1; if (ev.alloc) st.alloc = ev.alloc; }
         break;
-      case 'auction.opened':
-        S.auction = { auction: ev.auction, kind: ev.kind, amount: ev.amount, floor: ev.floor, startBlock: ev.startBlock, endBlock: ev.endBlock,
-          bids: [], rejected: [], points: [], status: 'open', block: ev.block, clearing: null };
-        break;
-      case 'auction.bid': if (a) a.bids.push(ev); break;
-      case 'auction.rejected': if (a) a.rejected.push(ev); break;
-      case 'auction.checkpoint':
-        if (a) { a.points.push({ block: ev.block, price: ev.clearing }); a.clearing = ev.clearing; a.sold = ev.sold; a.raised = ev.raised; a.block = ev.block; }
-        break;
-      case 'auction.cleared':
-        if (a && a.status === 'cleared' && (!ev.auction || !a.auction || same(ev.auction, a.auction))) {
-          if (ev.sold != null) a.sold = ev.sold;
-          if (ev.raised != null) a.raised = ev.raised;
-          return;
-        }
-        if (a) { a.status = 'cleared'; a.clearing = ev.clearing; a.sold = ev.sold; a.raised = ev.raised; a.points.push({ block: ev.block, price: ev.clearing }); a.block = ev.block; }
-        break;
-      case 'auction.swept': if (a) { a.swept = ev.amount; a.status = 'swept'; } break;
-      case 'price.written': S.price = Object.assign({}, ev.price, { block: ev.block, tx: ev.tx }); break;
-      case 'castle.dissolved': S.dissolved = true; break;
-      case 'castle.relinked': S.relink = ev; break;
+      case 'agent': Object.assign(agent(ev.id), ev); break;
+      default: return;
     }
     var sc = scene(ev);
-    if (!sc) return;
-    // A renewal is the heartbeat, not a new chapter: it folds into this epoch's lease scene (the claim or the first
-    // renewal), so the newest scene is always the latest thing that happened to the castle.
-    if (ev.type === 'lease.renewed') {
-      for (var i = S.scenes.length - 1; i >= 0; i--) {
-        var ls = S.scenes[i], le = ls.ev;
-        if ((le.type === 'lease.renewed' || le.type === 'lease.claimed') && String(le.epoch) === String(ev.epoch) && le.holderAgent === ev.holderAgent) {
-          ls.n = (ls.n || (le.type === 'lease.renewed' ? 1 : 0)) + 1;
-          ls.last = ev;
-          (S.dirty || (S.dirty = [])).push(ls.id);
-          return;
-        }
-        if (le.type === 'lease.renewed' || le.type === 'lease.claimed' || le.type === 'lease.expired') break;
-      }
-    }
-    sc.id = S.sceneSeq = (S.sceneSeq || 0) + 1;
-    S.scenes.push(sc);
-    if (S.scenes.length > 150) S.scenes.shift();
-  }
-
-  // The fence rule, the same order as FeeFiFoFumExtruction: epoch first, then time.
-  function nowS() { return clock() / 1000; }
-  // v3: LIVE needs a heartbeat still in date. A chain replay cannot see heartbeats, so a held v3 lease reads HELD.
-  function castleState() {
-    var L = S.lease;
-    if (!L) return 'UNKNOWN';
-    if (nowS() > L.expiry) return 'WIND-DOWN';
-    if (!S.v3) return 'LIVE';
-    if (S.mode === 'chain') return 'HELD';
-    return L.hb && nowS() <= L.hb ? 'LIVE' : 'WIND-DOWN';
-  }
-  // A heartbeat that runs out is no transaction either: it is told at its validUntil, before the next event.
-  function hbCheck(tMs) {
-    var L = S.lease;
-    if (!S.v3 || !L || !L.hb || tMs <= L.hb * 1000 || S.hbOut === L.epoch + ':' + L.hb) return;
-    S.hbOut = L.epoch + ':' + L.hb;
-    apply({ v: 1, type: 'heartbeat.lapsed', t: L.hb * 1000, block: null, tx: null, src: 'derived', epoch: L.epoch, holderAgent: L.holderAgent, validUntil: L.hb });
-  }
-  function stratState(st) {
-    if (!S.lease) return 'UNKNOWN';
-    if (st.epoch !== S.lease.epoch) return st.docked ? 'DOCKED' : 'FENCED';
-    if (st.docked) return 'DOCKED';
-    return castleState();
-  }
-  function leaseAt(tMs) {
-    var cur = null;
-    for (var i = 0; i < S.leases.length; i++) if (S.leases[i].t <= tMs) cur = S.leases[i];
-    return cur;
-  }
-  function derive(f) {
-    var L = leaseAt(f.t);
-    if (!L) return { d: 'unknown', L: null };
-    if (f.programEpoch == null) return { d: 'unknown', L: L };
-    if (String(f.programEpoch) !== L.epoch) return { d: 'fenced', L: L };
-    if (f.t / 1000 > L.expiry) return { d: 'wind-down', L: L };
-    if (f.heartbeat !== undefined) return { d: f.heartbeat && f.t / 1000 <= f.heartbeat.validUntil ? 'live' : 'wind-down', L: L };
-    if (S.v3 && S.mode === 'chain') return { d: null, L: L };
-    return { d: 'live', L: L };
+    if (sc) { sc.id = ++sceneId; S.scenes.push(sc); if (S.scenes.length > 60) S.scenes.shift(); }
   }
 
   // ---------------------------------------------------------------- the tapestry: one scene per event worth telling
-  function trade(f) {
-    var buy = f.tokenOut === 'WETH';
-    var w = buy ? f.amountOut : f.amountIn, u = buy ? f.amountIn : f.amountOut;
-    return { verb: buy ? 'bought' : 'sold', weth: amt(w, 'WETH'), usdc: amt(u, 'USDC'),
-      price: px(Number(big(u)) / 10 ** dec('USDC') / (Number(big(w)) / 10 ** dec('WETH'))) };
-  }
-  // What a clear sold and raised, only as far as it was reported: a missing figure is never printed as zero.
-  function sale(x) {
-    var s1 = x.sold != null ? amt(x.sold, 'WETH') + ' WETH sold' : '', s2 = x.raised != null ? amt(x.raised, 'USDC') + ' USDC raised' : '';
-    return s1 && s2 ? 'Sold ' + amt(x.sold, 'WETH') + ' WETH for ' + amt(x.raised, 'USDC') + ' USDC' : (s1 || s2 ? (s1 || s2).replace(/^./, function (c) { return c.toUpperCase(); }) : 'Cleared; the amounts were not reported');
-  }
+  // A deal from the taker's side: what it paid, what it got, and the price that makes.
+  function deal(x) { return money(x.amountIn, x.tokenIn) + ' for ' + money(x.amountOut, x.tokenOut); }
   function scene(ev) {
-    var A = up(ev.holderAgent || ev.id || ev.shippedBy || ev.dockedBy);
+    var nm = nameOf(ev.hash || ev.strategy);
     switch (ev.type) {
-      case 'snapshot': return { ev: ev, icon: 'castle', ti: 'HERE THE TALE BEGINS', gl: [S.lease ? up(S.lease.holderAgent) + ' holds the castle, epoch ' + ep(S.lease.epoch) : 'The castle stands empty'] };
-      case 'lease.renewed': return { ev: ev, icon: 'needle', ti: 'HERE ' + A + ' KEEPS THE CASTLE', gl: ['epoch ' + ep(ev.epoch) + ' · lease to ' + hhmmss(ev.expiry * 1000), 'sealed by fo'] };
-      case 'lease.expired': return { ev: ev, icon: 'glass', tone: 'woad', ti: 'HERE THE LEASE RUNS OUT', gl: ['epoch ' + ep(ev.epoch) + ' winds down', 'the castle only sells, and wide'] };
-      case 'lease.claimed': return { ev: ev, icon: 'key', tone: 'gold', ti: 'HERE ' + A + ' CLAIMS THE CASTLE', gl: ev.gapSeconds == null ? ['epoch ' + ep(ev.epoch), 'the first claim on the castle'] : ['epoch ' + ep(ev.prevEpoch) + ' → ' + ep(ev.epoch), ev.early ? 'after an unanswered challenge' : 'after ' + ev.gapSeconds + ' s of wind-down'] };
-      case 'heartbeat': return { ev: ev, icon: 'needle', tone: 'gold', ti: 'HERE ' + A + '’S HEART BEATS', gl: ['epoch ' + ep(ev.epoch) + ' · co-signed by fo', 'off-chain, so no gas'] };
-      case 'heartbeat.lapsed': return { ev: ev, icon: 'glass', tone: 'woad', ti: 'HERE ' + A + '’S HEARTBEAT STOPS', gl: ['epoch ' + ep(ev.epoch) + ' winds down', 'no tx sent: the fence sees it'] };
-      case 'lease.challenged': return { ev: ev, icon: 'bell', tone: 'madder', ti: 'HERE ' + up(ev.challengerAgent) + ' CHALLENGES ' + up(S.lease && S.lease.holderAgent), gl: ['epoch ' + ep(ev.epoch) + ' · answer by ' + hhmmss(ev.deadline * 1000), 'silence hands over the castle'] };
-      case 'lease.responded': return { ev: ev, icon: 'sun', tone: 'gold', ti: 'HERE ' + A + ' ANSWERS', gl: ['still alive, epoch ' + ep(ev.epoch), 'no new challenge until ' + hhmmss(ev.cooldownUntil * 1000)] };
-      case 'lease.rejected': return { ev: ev, icon: 'shield', tone: 'madder', ti: 'HERE THE CASTLE REFUSES ' + A, gl: [ev.call + ' from epoch ' + ep(ev.epoch), ev.reason] };
-      case 'attestation.withheld': return { ev: ev, icon: 'shield', tone: 'madder', ti: 'HERE FO WITHHOLDS THE SEAL', gl: [ev.reason] };
-      case 'incident': return { ev: ev, icon: 'bell', tone: 'woad', ti: 'HERE FO WRITES IT DOWN', gl: [ev.summary] };
-      case 'agent':
-        return ev.alive ? { ev: ev, icon: 'sun', ti: 'HERE ' + A + ' WAKES', gl: [agent(ev.id).role || ''] }
-          : { ev: ev, icon: 'zzz', tone: 'madder', ti: 'HERE ' + A + ' FALLS ASLEEP', gl: ['no heartbeat', agent(ev.id).role || ''] };
-      case 'castle.relinked': return { ev: ev, icon: 'chain', ti: 'HERE THE CASTLE POINTS TO ' + up((ev.holderName || '').split('.')[0]), gl: [ev.holderName || '', 'castle.* resolves here now'] };
-      case 'strategy.shipped': return { ev: ev, icon: 'scroll', ti: 'HERE ' + A + ' SHIPS THE BOOK', gl: ['epoch ' + ep(ev.epoch) + ' · centred at ' + px(ev.center) + ' USDC/WETH', amt(ev.weth, 'WETH') + ' WETH · ' + amt(ev.usdc, 'USDC') + ' USDC'] };
-      case 'strategy.docked': return { ev: ev, icon: 'broom', ti: 'HERE THE OLD BOOK IS DOCKED', gl: ['strategy ' + short(ev.hash), 'epoch ' + ep(ev.epoch)] };
+      case 'snapshot': return { ev: ev, v: 'begin', ti: 'HERE THE TALE BEGINS', gl: [S.hoard ? 'One hoard: ' + bagStr(S.hoard) : 'The hoard is still being counted', live().length ? 'backing ' + plural(live().length, 'bargain') : 'no bargain shipped yet'] };
+      case 'price': return { ev: ev, v: 'price', ti: 'HERE FEE SETS THE PRICE', gl: [fx(Number(ev.mid)) + ' USDC per WETH', 'spread ' + ev.spreadBps + ' bps' + (ev.hookFeeBps != null ? ' · hook fee ' + pct(ev.hookFeeBps) : '')] };
+      case 'strategy.shipped': return { ev: ev, v: 'ship', tone: 'gold', ti: 'HERE ' + up(ev.shippedBy || 'fi') + ' SHIPS A BARGAIN', gl: [nm + ' promises ' + bagStr(ev.alloc), 'from the one hoard: no gold moves'] };
+      case 'strategy.docked': return { ev: ev, v: 'dock', ti: 'HERE ' + up(ev.by || 'fi') + ' DOCKS A BARGAIN', gl: [nm + '’s promise comes home', ev.reason || 'the gold never left'] };
+      case 'cap.set': return { ev: ev, v: 'cap', ti: 'HERE FUM SETS A CAP', gl: [nm + ' may promise up to', bagStr(ev.cap)] };
+      case 'allocation.refused': return { ev: ev, v: 'refused', tone: 'madder', ti: 'HERE THE GIANT WILL NOT PROMISE TWICE', gl: [(ev.label || 'A bargain') + ' asked for ' + bagStr(ev.asked), 'only ' + bagStr(freeOf(ev)) + ' was free · reverted ' + (ev.error || '')] };
+      case 'quote.served': return { ev: ev, v: 'harp', tone: 'gold', ti: 'HERE THE HARP SINGS A PRICE', gl: [who(ev) + ' asked ' + (ev.name || S.config.quoteName || 'the castle’s name'), deal(ev) + ' at ' + fx(rate(ev)) + ', signed by fi'] };
+      case 'intent.routed': return { ev: ev, v: 'order', tone: 'woad', ti: 'HERE FO CARRIES AN ORDER', gl: [who(ev) + ' offers ' + money(ev.amountIn, ev.tokenIn) + ' for ' + ev.tokenOut, (ev.source ? 'a ' + ev.source + ' order, ' : '') + 'sent to ' + (ev.route === 'v4' ? 'the hen, the v4 hook' : nm)] };
       case 'fill':
-        var t = trade(ev), who = ev.takerName || known(ev.taker) || short(ev.taker);
-        if (ev.status === 'reverted' && ev.decision === 'wind-down') return { ev: ev, icon: 'shield', tone: 'woad', ti: 'HERE THE CASTLE ONLY SELLS', gl: [who + ' tried to ' + (t.verb === 'bought' ? 'buy ' : 'sell ') + t.weth + ' WETH', 'reverted ' + (ev.revert || '')] };
-        if (ev.decision === 'fenced') return { ev: ev, icon: 'cross', tone: 'madder', ti: 'HERE THE GIANT SMELLS A STALE SHIFT', gl: [who + ' tried an epoch ' + ep(ev.programEpoch) + ' quote', 'reverted FeeFiFoFum()'] };
-        return { ev: ev, icon: 'coin', tone: ev.decision === 'wind-down' ? 'woad' : 'gold', ti: ev.decision === 'wind-down' ? 'HERE A JACK PAYS THE WIDE SPREAD' : 'HERE A JACK TRADES WITH THE GIANT',
-          gl: [who + ' ' + t.verb + ' ' + t.weth + ' WETH', 'for ' + t.usdc + ' USDC at ' + t.price + ' USDC/WETH'] };
-      case 'auction.opened': return { ev: ev, icon: 'stalk', tone: 'gold', ti: ev.kind === 'dissolution' ? 'HERE THE GIANT’S GOLD GOES UP THE BEANSTALK' : 'HERE THE JACKS CLIMB THE BEANSTALK',
-        gl: [amt(ev.amount, 'WETH') + ' WETH for sale', 'floor ' + px(ev.floor) + ' USDC/WETH' + ', blocks ' + ev.startBlock + '–' + ev.endBlock] };
-      case 'auction.cleared': return { ev: ev, icon: 'stack', tone: 'gold', ti: 'HERE THE AUCTION CLEARS', gl: ['at ' + px(ev.clearing) + ' USDC per WETH', sale(ev)] };
-      case 'price.written': return { ev: ev, icon: 'quill', ti: 'HERE THE PRICE IS WRITTEN IN ENS', gl: ['handoff-price = ' + px(ev.price) + ' USDC/WETH', 'the next book centres here'] };
-      case 'castle.dissolved': return { ev: ev, icon: 'fall', tone: 'madder', ti: 'HERE THE CASTLE FALLS', gl: ['dissolve() called by ' + (ev.callerName || short(ev.caller)), 'anyone may; nobody is live'] };
+        if (ev.status === 'reverted') return { ev: ev, v: 'no', tone: 'madder', ti: 'HERE THE GIANT SAYS NO', gl: [who(ev) + ' offered ' + money(ev.amountIn, ev.tokenIn), 'reverted ' + (ev.revert || '')] };
+        if (ev.route === 'v4') return { ev: ev, v: 'hen', tone: 'gold', ti: 'HERE THE HEN LAYS JUST IN TIME', gl: [who(ev) + ' paid ' + money(ev.amountIn, ev.tokenIn), 'got ' + money(ev.amountOut, ev.tokenOut) + ' at ' + fx(rate(ev)) + ' on Uniswap v4'] };
+        return { ev: ev, v: 'fill', tone: 'gold', ti: ev.quoteId ? 'HERE A JACK TAKES THE HARP’S PRICE' : 'HERE A JACK TRADES WITH THE GIANT', gl: [who(ev) + ' paid ' + money(ev.amountIn, ev.tokenIn), 'got ' + money(ev.amountOut, ev.tokenOut) + ' at ' + fx(rate(ev)) + ' from ' + nm] };
+      case 'agent':
+        return ev.alive ? { ev: ev, v: 'wake', ti: 'HERE ' + up(ev.id) + ' WAKES', gl: [ROLE[ev.id] || ''] }
+          : { ev: ev, v: 'fall', tone: 'madder', ti: 'HERE ' + up(ev.id) + ' FALLS ASLEEP', gl: ['no heartbeat', ROLE[ev.id] || ''] };
     }
     return null;
   }
 
   // ---------------------------------------------------------------- views
-  var ROLE = { fee: 'shift trader', fi: 'hot standby', fo: 'fencer and witness', fum: 'auctioneer' };
+  var ROLE = { fee: 'prices the hoard', fi: 'writes the bargains', fo: 'carries the orders', fum: 'guards the hoard' };
+  function promisedPct() {
+    var m = 0;
+    TOK.forEach(function (s) { var b = bag(S.hoard, s); if (b > Z) m = Math.max(m, Number(promised(s) * BigInt(10000) / b) / 100); });
+    return m;
+  }
 
   function drawChant() {
     var el = R('chant');
@@ -780,120 +640,22 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         ]));
       });
     }
-    var cs = castleState(), hold = S.lease && (cs === 'LIVE' || cs === 'HELD') ? S.lease.holderAgent : null;
-    var claimant = S.lease ? S.lease.holderAgent : null;
+    var now = clock(), q = S.quotes.length, v4 = S.fills.filter(function (f) { return f.route === 'v4' && f.status !== 'reverted'; }).length;
+    var line = {
+      fee: S.price ? fx(Number(S.price.mid)) + ' USDC per WETH' : 'no price yet',
+      fi: plural(live().length, 'bargain') + (q ? ' · ' + plural(q, 'price') + ' signed' : ''),
+      fo: plural(S.intents.length, 'order') + ' carried' + (v4 ? ' · ' + v4 + ' to the hen' : ''),
+      fum: S.hoard ? fx(promisedPct(), 0) + '% promised' + (S.refusals.length ? ' · ' + S.refusals.length + ' refused' : '') : 'counting the gold'
+    };
     S.order.forEach(function (id) {
-      var n = el.querySelector('[data-a="' + id + '"]'), a = agent(id), who = n.querySelector('.who');
-      flag(n, 'data-hold', id === hold);
+      var n = el.querySelector('[data-a="' + id + '"]'), a = agent(id);
+      flag(n, 'data-hold', a.alive !== false && now - (S.act[id] || 0) < 2600);
       flag(n, 'data-asleep', a.alive === false);
-      var txt, ic = null;
-      if (a.alive === false) { txt = 'asleep'; ic = 'zzz'; }
-      else if (id === hold) { txt = cs === 'HELD' ? 'holds the lease' : 'holds the castle'; ic = 'key'; }
-      else if (id === claimant) { txt = S.v3 && nowS() <= S.lease.expiry ? 'heartbeat stopped' : 'lease lapsed'; ic = 'glass'; }
-      else if (a.alive === true) { txt = 'awake'; }
-      else { txt = S.mode === 'chain' ? 'not visible on chain' : '—'; }
-      fill(who, [ic ? icon(ic, '') : null, txt]);
+      n.querySelector('.who').textContent = a.alive === false ? 'asleep' : line[id];
     });
   }
 
-  // the roundel: a 24-hour ring of shifts around the lease thread
-  var RD = null;
-  function arc(cx, cy, r, a0, a1) {
-    var p0 = [cx + r * Math.sin(a0), cy - r * Math.cos(a0)], p1 = [cx + r * Math.sin(a1), cy - r * Math.cos(a1)];
-    return 'M' + p0[0].toFixed(2) + ' ' + p0[1].toFixed(2) + 'A' + r + ' ' + r + ' 0 ' + (a1 - a0 > Math.PI ? 1 : 0) + ' 1 ' + p1[0].toFixed(2) + ' ' + p1[1].toFixed(2);
-  }
-  function utcHours(ms) { var d = new Date(ms); return d.getUTCHours() + d.getUTCMinutes() / 60 + d.getUTCSeconds() / 3600; }
-  function hm2h(s) { var p = String(s || '0:0').split(':'); return Number(p[0]) + Number(p[1] || 0) / 60; }
-  function buildRoundel() {
-    var c = 160, g = sv('g'), shiftG = sv('g'), labels = sv('g');
-    var svg = sv('svg', { class: 'roundel', viewBox: '0 0 320 320', role: 'img', 'aria-label': 'Shift ring and lease' }, [
-      sv('circle', { cx: c, cy: c, r: 150, fill: '#F6EFDF', stroke: '#1F2433', 'stroke-width': 2 }),
-      sv('circle', { cx: c, cy: c, r: 143, fill: 'none', stroke: '#E6DAC0', 'stroke-width': 1.2 }),
-      shiftG, g, labels
-    ]);
-    for (var i = 0; i < 24; i++) {
-      var an = i / 24 * Math.PI * 2, r0 = i % 6 ? 105 : 100;
-      g.appendChild(sv('path', { d: 'M' + (c + r0 * Math.sin(an)).toFixed(1) + ' ' + (c - r0 * Math.cos(an)).toFixed(1) + 'L' + (c + 110 * Math.sin(an)).toFixed(1) + ' ' + (c - 110 * Math.cos(an)).toFixed(1), stroke: '#6A6E79', 'stroke-width': i % 6 ? 1 : 1.8, 'stroke-linecap': 'round' }));
-      if (i % 6 === 0) g.appendChild(sv('text', { x: (c + 91 * Math.sin(an)).toFixed(1), y: (c - 91 * Math.cos(an) + 4).toFixed(1), 'text-anchor': 'middle', class: 'rd-hour' }, i ? i + 'h' : '0h UTC'));
-    }
-    var threadBg = sv('circle', { cx: c, cy: c, r: 74, fill: 'none', stroke: '#E6DAC0', 'stroke-width': 9 });
-    var thread = sv('path', { fill: 'none', stroke: '#C8961E', 'stroke-width': 9, 'stroke-linecap': 'round' });
-    var threadEdge = sv('circle', { cx: c, cy: c, r: 80, fill: 'none', stroke: '#1F2433', 'stroke-width': 1.4 });
-    var hand = sv('path', { stroke: '#1F2433', 'stroke-width': 2.4, 'stroke-linecap': 'round' });
-    var knot = sv('circle', { r: 5, fill: '#1F2433', stroke: '#FFFFFF', 'stroke-width': 2 });
-    var holder = sv('g');
-    var sub = sv('text', { x: c, y: c + 30, 'text-anchor': 'middle', class: 'rd-small' });
-    var sub2 = sv('text', { x: c, y: c + 47, 'text-anchor': 'middle', class: 'rd-small' });
-    put(svg, [threadBg, threadEdge, thread, hand, knot, holder, sub, sub2]);
-    RD = { svg: svg, shiftG: shiftG, labels: labels, thread: thread, threadBg: threadBg, hand: hand, knot: knot, holder: holder, sub: sub, sub2: sub2, key: '', hkey: '' };
-    fill(R('roundel'), svg);
-  }
-  function drawRoundelStatic() {
-    var key = JSON.stringify(S.shifts);
-    if (RD.key === key) return;
-    RD.key = key;
-    var c = 160; RD.shiftG.replaceChildren(); RD.labels.replaceChildren();
-    S.shifts.forEach(function (sh, i) {
-      var a0 = hm2h(sh.startUtc) / 24 * Math.PI * 2, a1 = hm2h(sh.endUtc || '24:00') / 24 * Math.PI * 2;
-      if (a1 <= a0) a1 += Math.PI * 2;
-      var p = sv('path', { d: arc(c, c, 131, a0 + 0.025, a1 - 0.025), fill: 'none', stroke: '#E6DAC0', 'stroke-width': 30, 'stroke-linecap': 'round', 'data-i': i });
-      RD.shiftG.appendChild(p);
-      var mid = (a0 + a1) / 2, lx = c + 131 * Math.sin(mid), ly = c - 131 * Math.cos(mid);
-      var deg = mid * 180 / Math.PI % 360, rot = deg > 90 && deg < 270 ? deg - 180 : deg;
-      RD.labels.appendChild(sv('text', { x: lx.toFixed(1), y: (ly + 4.5).toFixed(1), 'text-anchor': 'middle', class: 'rd-city', transform: 'rotate(' + rot.toFixed(1) + ' ' + lx.toFixed(1) + ' ' + ly.toFixed(1) + ')' },
-        [sh.city + ' ', sv('tspan', { class: 'rd-time num', 'data-tz': sh.tz || '' }, '')]));
-    });
-  }
-  function activeShift(ms) {
-    var u = utcHours(ms);
-    for (var i = 0; i < S.shifts.length; i++) {
-      var a = hm2h(S.shifts[i].startUtc), b = hm2h(S.shifts[i].endUtc || '24:00');
-      if (b <= a ? (u >= a || u < b) : (u >= a && u < b)) return i;
-    }
-    return -1;
-  }
-  function tickRoundel() {
-    if (!RD) return;
-    drawRoundelStatic();
-    var c = 160, ms = clock(), u = utcHours(ms), an = u / 24 * Math.PI * 2, act = activeShift(ms);
-    RD.hand.setAttribute('d', 'M' + (c + 84 * Math.sin(an)).toFixed(2) + ' ' + (c - 86 * Math.cos(an)).toFixed(2) + 'L' + (c + 112 * Math.sin(an)).toFixed(2) + ' ' + (c - 112 * Math.cos(an)).toFixed(2));
-    RD.knot.setAttribute('cx', (c + 112 * Math.sin(an)).toFixed(2)); RD.knot.setAttribute('cy', (c - 112 * Math.cos(an)).toFixed(2));
-    var arcs = RD.shiftG.childNodes;
-    for (var i = 0; i < arcs.length; i++) arcs[i].setAttribute('stroke', i === act ? '#E9BC45' : '#E6DAC0');
-    var times = RD.labels.querySelectorAll('.rd-time');
-    for (var j = 0; j < times.length; j++) { var tz = times[j].getAttribute('data-tz'); times[j].textContent = tz ? hhmm(ms, tz) : ''; }
-    // v2 threads the lease; v3 threads the heartbeat while the day-long lease holds, and the lease once it is gone.
-    var st = castleState(), L = S.lease, exp = L ? L.expiry - ms / 1000 : 0, beat = S.v3 && st !== 'HELD' && exp > 0;
-    var rem = beat ? (L.hb || 0) - ms / 1000 : exp, len = beat ? S.config.heartbeatSeconds || 120 : S.config.leaseSeconds || 120;
-    var frac = Math.max(0, Math.min(1, rem / len));
-    if (frac > 0.002) RD.thread.setAttribute('d', arc(c, c, 74, 0, Math.min(frac, 0.9995) * Math.PI * 2));
-    else RD.thread.removeAttribute('d');
-    RD.threadBg.setAttribute('stroke', st === 'WIND-DOWN' ? '#2F4A7A' : '#E6DAC0');
-    RD.threadBg.setAttribute('stroke-dasharray', st === 'WIND-DOWN' ? '7 7' : 'none');
-    RD.threadBg.setAttribute('stroke-width', st === 'WIND-DOWN' ? 4 : 9);
-    var hk = L ? L.holderAgent + '|' + st : '';
-    if (RD.hkey !== hk) {
-      RD.hkey = hk;
-      RD.holder.replaceChildren();
-      if (L) {
-        var w = letters(up(L.holderAgent), true);
-        w.setAttribute('x', c - 60); w.setAttribute('y', c - 42); w.setAttribute('width', 120); w.setAttribute('height', 50);
-        w.style.fill = st === 'LIVE' ? '#C8961E' : '#6A6E79';
-        w.setAttribute('stroke', '#1F2433'); w.setAttribute('stroke-width', st === 'LIVE' ? 6 : 0); w.setAttribute('paint-order', 'stroke');
-        RD.holder.appendChild(w);
-      }
-    }
-    var ch = L && L.ch, cl = ch ? ch.deadline - ms / 1000 : 0;
-    RD.sub.textContent = !L ? 'no lease yet' : ch ? (cl > 0 ? 'challenged · ' + left(cl) : 'unanswered · claim open')
-      : beat ? (st === 'LIVE' ? 'heartbeat good for ' + left(rem) : L.hb ? 'silent for ' + left(-rem) : 'no heartbeat yet')
-      : exp > 0 ? left(exp) + ' left on the lease' : 'lapsed ' + left(-exp) + ' ago';
-    RD.sub.style.fill = ch ? '#B0412A' : '';
-    RD.sub2.textContent = L ? 'epoch ' + ep(L.epoch) : '';
-    var line = R('leaseLine');
-    fill(line, L ? leaseStory(L, st) : 'Waiting for the castle’s first lease.');
-  }
-
-  // the giant: calm when live, one eye open in wind-down, awake and roaring when a stale shift is fenced
+  // the giant is fum: calm while the hoard has room, one eye open when nearly all is promised, roaring at a refusal
   var GI = null;
   function buildGiant() {
     function P(d, f, extra) { return sv('path', Object.assign({ d: d, fill: f || 'none', stroke: '#1F2433', 'stroke-width': 3, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, extra || {})); }
@@ -904,7 +666,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     var mO = sv('g', { class: 'm-o' }, [P('M58 106c6 5 14 5 20 0')]);
     var mS = sv('g', { class: 'm-s' }, [P('M60 107h16')]);
     var mW = sv('g', { class: 'm-w' }, [P('M54 100c4 16 24 16 28 0z', '#B0412A')]);
-    var svg = sv('svg', { class: 'giant', viewBox: '0 0 136 150', role: 'img', 'aria-label': 'The giant' }, [
+    var svg = sv('svg', { class: 'giant', viewBox: '0 0 136 150', role: 'img', 'aria-label': 'fum, the giant who guards the hoard' }, [
       P('M20 60c0-34 22-50 48-50s48 16 48 50', '#7A4B2A'),
       P('M26 62c0-26 18-40 42-40s42 14 42 40v22c0 30-18 48-42 48S26 114 26 84z', '#EDC49B'),
       P('M26 86c4 30 20 50 42 50s38-20 42-50c-6 10-14 14-22 12-6 8-34 8-40 0-8 2-16-2-22-12z', '#7A4B2A'),
@@ -912,50 +674,89 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       eyeO, eyeS, eyeW, mO, mS, mW,
       P('M14 70c-6 0-8 12 0 14M122 70c6 0 8 12 0 14', '#EDC49B')
     ]);
-    GI = { svg: svg, eyeO: eyeO, eyeS: eyeS, eyeW: eyeW, mO: mO, mS: mS, mW: mW };
+    GI = { eyeO: eyeO, eyeS: eyeS, eyeW: eyeW, mO: mO, mS: mS, mW: mW };
     fill(R('giant'), svg);
-    var ul = R('states');
-    [['live', 'LIVE', 'The holder’s lease holds and its heartbeat is in date, so every quote fills on the curve.'],
-     ['wind', 'WIND-DOWN', 'The heartbeat went silent or the lease lapsed, and nobody has claimed it. The castle only sells down, at a wide spread.'],
-     ['fenced', 'FENCED', 'A quote from a stale shift. The giant smells it, and the fill reverts FeeFiFoFum().']].forEach(function (r) {
-      put(ul, h('li', { class: 'st', 'data-k': r[0] }, [stitch(r[0] === 'wind' ? 'wind-down' : r[0]), h('div', { class: 'nm' }, letters(r[1], true)), h('div', null, [h('p', { text: r[2] }), h('div', { class: 'strats' })])]));
-    });
     fill(R('shout'), letters('FEE-FI-FO-FUM!', true));
   }
-  function drawFence() {
-    var cs = castleState(), shout = clock() < S.shoutUntil;
-    var mood = shout ? 'w' : cs === 'WIND-DOWN' ? 's' : 'o';
+  function drawGiant() {
+    var shout = clock() < S.shoutUntil, mood = shout ? 'w' : promisedPct() >= 90 ? 's' : 'o';
     GI.eyeO.style.opacity = mood === 'o' ? 1 : 0; GI.eyeS.style.opacity = mood === 's' ? 1 : 0; GI.eyeW.style.opacity = mood === 'w' ? 1 : 0;
     GI.mO.style.opacity = mood === 'o' ? 1 : 0; GI.mS.style.opacity = mood === 's' ? 1 : 0; GI.mW.style.opacity = mood === 'w' ? 1 : 0;
     flag(root, 'data-shout', shout);
-    // Books that read the same (same epoch, centre and state) share one line with a count, newest three lines per state.
-    var groups = { live: [], wind: [], fenced: [] }, seen = {};
-    S.strategies.forEach(function (st) {
-      var s = stratState(st);
-      if (s === 'DOCKED' && S.lease && st.epoch === S.lease.epoch) return;
-      var k = s === 'LIVE' || s === 'HELD' ? 'live' : s === 'WIND-DOWN' ? 'wind' : 'fenced';
-      var key = k + '|' + s + '|' + st.epoch + '|' + px(st.center);
-      if (seen[key]) { seen[key].n++; seen[key].hs.push(st.hash); return; }
-      groups[k].push(seen[key] = { s: s, k: k, st: st, n: 1, hs: [st.hash] });
-    });
-    var buckets = {};
-    Object.keys(groups).forEach(function (k) {
-      var gs = groups[k], old = gs.length > 3 ? gs.splice(0, gs.length - 3) : [];
-      buckets[k] = gs.map(function (g) {
-        return h('div', { class: 'bk num', 'data-s': g.s, title: 'strategy ' + g.hs.join('\nstrategy ') }, [stitch(k === 'wind' ? 'wind-down' : k, ''),
-          (g.n > 1 ? g.n + ' epoch ' + ep(g.st.epoch) + ' books' : 'epoch ' + ep(g.st.epoch) + ' book') + ', centred at ' + px(g.st.center) + ' USDC/WETH' + (g.s === 'DOCKED' ? ', docked' : '')]);
+  }
+
+  // fum's gauge: one bar per token, as long as the hoard. Each bargain's promise is a thread of its colour; the
+  // linen left over is free. A refused ship shows what it asked for, hatched, running past the hoard's edge.
+  var GA = null;
+  function buildGauges() {
+    GA = {};
+    fill(R('gauges'), TOK.map(function (sym) {
+      var g = { head: h('div', { class: 'gh num' }), bar: h('div', { class: 'gbar' }), ask: h('i', { class: 'ask' }), over: h('div', { class: 'gover', 'data-z': '' }), foot: h('div', { class: 'gf num' }), segs: {} };
+      g.bar.appendChild(g.ask);
+      GA[sym] = g;
+      return h('div', { class: 'gauge' }, [g.head, h('div', { class: 'gw', role: 'img', 'aria-label': sym + ' promised against the hoard' }, [g.bar, g.over]), g.foot]);
+    }));
+  }
+  var drawnGauges = '';
+  function drawGauges() {
+    var rf = S.refusals[S.refusals.length - 1], over = rf && clock() < S.overUntil ? rf : null;
+    var key = JSON.stringify([S.hoard, S.strategies.map(function (s) { return [s.hash, s.docked, s.alloc]; }), over && over.seq, rf && rf.seq, S.mode]);
+    if (key === drawnGauges) return;
+    drawnGauges = key;
+    TOK.forEach(function (sym) {
+      var g = GA[sym], bal = bag(S.hoard, sym), pr = promised(sym), ask = over ? bag(over.asked, sym) : Z;
+      var free = bal > pr ? bal - pr : Z, past = over && pr + ask > bal ? pr + ask - bal : Z, scale = Number(bal + past) || 1;
+      g.bar.style.flexBasis = (Number(bal) / scale * 100).toFixed(3) + '%';
+      g.over.style.flexBasis = (Number(past) / scale * 100).toFixed(3) + '%';
+      flag(g.over, 'data-z', past === Z);
+      S.strategies.forEach(function (st) {
+        var seg = g.segs[st.hash];
+        if (!seg) { seg = g.segs[st.hash] = h('i', { class: 'seg', style: 'background:' + hue(st) }); g.bar.insertBefore(seg, g.ask); }
+        var a = st.docked ? Z : bag(st.alloc, sym);
+        seg.style.flexBasis = (bal > Z ? Number(a) / Number(bal) * 100 : 0).toFixed(3) + '%';
+        flag(seg, 'data-z', a === Z);
+        seg.title = (st.label || short(st.hash)) + ': ' + money(a.toString(), sym);
       });
-      if (old.length) {
-        var n = old.reduce(function (a, g) { return a + g.n; }, 0);
-        buckets[k].unshift(h('div', { class: 'bk num', 'data-s': old[old.length - 1].s }, [stitch(k === 'wind' ? 'wind-down' : k, ''), n + ' older book' + (n > 1 ? 's' : '')]));
-      }
+      for (var k in g.segs) if (!strat(k)) { g.segs[k].style.flexBasis = '0%'; flag(g.segs[k], 'data-z', true); }
+      var inBar = ask < free ? ask : free;
+      g.ask.style.flexBasis = (bal > Z ? Number(inBar) / Number(bal) * 100 : 0).toFixed(3) + '%';
+      var p = bal > Z ? Number(pr * BigInt(10000) / bal) / 100 : 0;
+      fill(g.head, [h('b', { text: sym }), h('span', { class: 'pv' }, [amt(pr.toString(), sym), h('small', { text: ' of ' + money(bal.toString(), sym) + ' promised' })])]);
+      flag(g.foot, 'data-over', !!over && past > Z);
+      fill(g.foot, over && past > Z ? [h('span', { text: 'asked ' + money(ask.toString(), sym) + ': ' + money(past.toString(), sym) + ' past the hoard' }), h('span', { text: 'refused' })]
+        : [h('span', { text: fx(p, 1) + '% promised' }), h('span', { text: money(free.toString(), sym) + ' free' })]);
     });
-    var lis = R('states').children;
-    for (var i = 0; i < lis.length; i++) {
-      var k = lis[i].getAttribute('data-k');
-      flag(lis[i], 'data-on', k === 'fenced' ? shout : (k === 'live' ? cs === 'LIVE' : cs === 'WIND-DOWN') && !shout);
-      fill(lis[i].querySelector('.strats'), buckets[k]);
+    var el = R('refused');
+    el.hidden = !rf;
+    if (rf) {
+      var ls = strat(rf.hash), later = !!ls && !ls.docked && (ls.t || 0) > (rf.t || 0), k = rf.seq + '|' + rf.t + later;
+      if (el.getAttribute('data-k') !== k) {
+        el.setAttribute('data-k', k);
+        fill(el, [cross(''), h('div', null, [h('b', { text: 'fum refused ' + (rf.label || 'a bargain') + '. ' }),
+          'It asked for ' + bagStr(rf.asked) + ', but only ' + bagStr(freeOf(rf)) + ' of the hoard was free. The castle reverted ' + (rf.error || 'the ship') + ' at ' + hhmmss(rf.t) + '. ',
+          txEl(rf.tx, rf), later ? ' It was shipped later, once there was room.' : ''])]);
+        if (S.freshRefusal) { el.removeAttribute('data-fresh'); void el.offsetWidth; el.setAttribute('data-fresh', ''); S.freshRefusal = false; }
+      }
     }
+  }
+  var drawnBargains = '';
+  function drawBargains() {
+    var key = JSON.stringify(S.strategies.map(function (s) { return [s.hash, s.docked, s.alloc, s.cap, s.fills]; })) + S.mode;
+    if (key === drawnBargains) return;
+    drawnBargains = key;
+    var el = R('bargains');
+    if (!S.strategies.length) { fill(el, h('li', { class: 'empty', text: 'No bargain shipped yet. When fi ships one, its promise threads into the gauge above.' })); return; }
+    fill(el, S.strategies.slice(-6).map(function (st) {
+      return h('li', { class: 'bg num', 'data-docked': st.docked || null }, [
+        h('span', { class: 'sw', style: 'background:' + hue(st) }),
+        h('div', null, [
+          h('div', { class: 'nm' }, [st.label || short(st.hash), h('span', { text: (st.kind ? st.kind + ' · ' : '') + short(st.hash) })]),
+          h('div', { class: 'al', text: st.docked ? 'docked: its promise went back to the hoard' : 'promises ' + bagStr(st.alloc) }),
+          h('div', { class: 'cp', text: st.cap ? 'fum’s cap: ' + bagStr(st.cap) : 'no cap from fum yet' })
+        ]),
+        h('div', { class: 'r' }, [plural(st.fills || 0, 'fill'), h('br'), h('span', { class: 'chip', 'data-s': st.docked ? 'docked' : 'live', text: st.docked ? 'DOCKED' : 'LIVE' })])
+      ]);
+    }));
   }
 
   function buildCastleArt() {
@@ -973,148 +774,128 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       P('M140 20c10-4 18 4 28 0v14c-10 4-18-4-28 0z', '#C8961E', 2)
     ];
     var ys = [114, 108, 102, 96], xs = [[100, 122, 158, 180], [111, 133, 169], [122, 158], [140]];
-    // the hoard spills out of the gate
     kids.push(P('M96 118c10-16 78-16 88 0z', '#E9BC45', 2));
     for (var r = 0; r < xs.length; r++) for (var j = 0; j < xs[r].length; j++) kids.push(coin(xs[r][j], ys[r]));
     fill(R('castleArt'), sv('svg', { class: 'castle-art', viewBox: '0 0 280 124', role: 'img', 'aria-label': 'The castle and its hoard' }, kids));
   }
+  var drawnHoard = '';
   function drawHoard() {
-    var inv = S.inventory, p = S.price, el = R('hoard');
-    if (!inv) { fill(el, h('p', { class: 'empty', text: 'Counting the gold…' })); return; }
-    var wethN = Number(big(inv.weth)) / 10 ** dec('WETH'), usdcN = Number(big(inv.usdc)) / 10 ** dec('USDC');
-    var anchor = p ? Number(p.usdcPerWeth) : NaN, val = isFinite(anchor) ? wethN * anchor + usdcN : NaN;
-    var live = S.strategies.filter(function (s) { return stratState(s) === 'LIVE'; });
+    var hd = S.hoard, p = S.price, el = R('hoard'), key = JSON.stringify([hd, p && p.mid, p && p.spreadBps, p && p.hookFeeBps, live().length]);
+    if (key === drawnHoard) return;
+    drawnHoard = key;
+    if (!hd) { fill(el, h('p', { class: 'empty', text: 'Counting the gold…' })); return; }
+    var mid = p ? Number(p.mid) : NaN, val = num(hd.WETH, 'WETH') * mid + num(hd.USDC, 'USDC');
     fill(el, [
-      h('div', { class: 'row gold' }, [h('span', { class: 'k' }, [h('i', { class: 'cn' }), 'WETH in the castle']), h('span', { class: 'v' }, [amt(inv.weth, 'WETH'), h('small', { text: 'WETH' })])]),
-      h('div', { class: 'row gold' }, [h('span', { class: 'k' }, [h('i', { class: 'cn' }), 'USDC in the castle']), h('span', { class: 'v' }, [amt(inv.usdc, 'USDC'), h('small', { text: 'USDC' })])]),
-      h('div', { class: 'row' }, [h('span', { class: 'k' }, ['Anchor price', h('span', { class: 'sub', text: p ? (p.tx === null && S.mode === 'chain' ? 'Castle anchorPriceQ96()' : 'handoff-price in ENS') + (p.block ? ', block ' + p.block : '') : 'not written yet' })]),
-        h('span', { class: 'v' }, [px(p), h('small', { text: 'USDC / WETH' })])]),
-      h('div', { class: 'row' }, [h('span', { class: 'k' }, ['Hoard value', h('span', { class: 'sub', text: 'WETH at the anchor, plus USDC' })]),
-        h('span', { class: 'v' }, [isFinite(val) ? val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—', h('small', { text: 'USDC' })])]),
-      h('div', { class: 'row' }, [h('span', { class: 'k' }, ['Live books', h('span', { class: 'sub', text: live.length ? 'centred at ' + px(live[live.length - 1].center) + ' USDC/WETH' : 'no book is live' })]),
-        h('span', { class: 'v', text: String(live.length) })])
+      h('div', { class: 'row gold' }, [h('span', { class: 'k' }, [h('i', { class: 'cn' }), 'USDC in the castle']), h('span', { class: 'v' }, [amt(hd.USDC, 'USDC'), h('small', { text: 'USDC' })])]),
+      h('div', { class: 'row gold' }, [h('span', { class: 'k' }, [h('i', { class: 'cn' }), 'WETH in the castle']), h('span', { class: 'v' }, [amt(hd.WETH, 'WETH'), h('small', { text: 'WETH' })])]),
+      h('div', { class: 'row' }, [h('span', { class: 'k' }, ['fee’s price', h('span', { class: 'sub', text: p ? 'spread ' + p.spreadBps + ' bps' + (p.hookFeeBps != null ? ' · v4 hook fee ' + pct(p.hookFeeBps) : '') : 'not set yet' })]),
+        h('span', { class: 'v' }, [fx(mid), h('small', { text: 'USDC / WETH' })])]),
+      h('div', { class: 'row' }, [h('span', { class: 'k' }, ['The hoard’s worth', h('span', { class: 'sub', text: 'WETH at fee’s price, plus USDC' })]),
+        h('span', { class: 'v' }, [fx(val), h('small', { text: 'USDC' })])]),
+      h('div', { class: 'row' }, [h('span', { class: 'k' }, ['It backs', h('span', { class: 'sub', text: 'at once, from this one balance' })]),
+        h('span', { class: 'v', text: plural(live().length, 'bargain') + ' + the hen' })])
     ]);
   }
 
-  // the beanstalk: the CCA clearing price climbs a woven grid, a leaf at every checkpoint
-  function drawStalk() {
-    var el = R('stalk'), a = S.auction;
-    if (!a) {
-      fill(el, [h('div', { class: 'dormant' }, [vignette('sprout', true), h('p', { class: 'empty', text: 'No auction is open. When a shift hands over gold it doesn’t want, or the castle falls with nobody to claim it, the gold goes up the beanstalk: a Uniswap CCA that any Jack with an ENS name may climb.' })]), h('div')]);
+  // the harp: the newest price a Jack found by asking the castle's name, and what became of it
+  function quoteFate(q) {
+    for (var i = S.fills.length - 1; i >= 0; i--) { var f = S.fills[i]; if (f.quoteId && f.quoteId === q.id) return { s: f.status === 'reverted' ? 'expired' : 'filled', f: f }; }
+    return { s: clock() / 1000 < Number(q.expiry) ? 'open' : 'expired' };
+  }
+  var HP = null, drawnHarp = '';
+  function drawHarp() {
+    var q = S.quotes[S.quotes.length - 1], el = R('harp');
+    var key = S.quotes.length + '|' + (q ? q.id + quoteFate(q).s : '') + '|' + S.fills.length + S.mode;
+    if (key !== drawnHarp) {
+      drawnHarp = key; HP = null;
+      if (!q) {
+        fill(el, h('div', { class: 'hen-top' }, [vignette('harp', 'big'), h('p', { class: 'empty', text: 'No Jack has asked yet. Resolve ' + (S.config.quoteName || 'quote.feefifofum.eth') + ' with any ENS client that follows CCIP-Read, and the harp sings a signed price.' })]));
+        return;
+      }
+      var fate = quoteFate(q), bar = h('i'), txt = h('span'), exp = h('div', { class: 'exp num', 'data-s': fate.s }, [h('div', { class: 'bar' }, bar), txt]);
+      HP = { q: q, bar: bar, txt: txt, exp: exp, t0: q.t || clock() };
+      var older = S.quotes.slice(-5, -1).reverse();
+      fill(el, [
+        h('div', { class: 'card' }, [
+          h('div', { class: 'qname num' }, [q.name || S.config.quoteName || 'quote.feefifofum.eth', h('span', { text: 'ENS · CCIP-Read' })]),
+          h('ol', { class: 'steps', 'aria-label': 'How the price was found' }, [
+            h('li', { text: who(q) + ' asks the name' }), h('li', { text: 'the resolver says: ask the gateway' }),
+            h('li', { text: 'fi signs a price' }), h('li', { text: 'fi’s seal and the expiry check out' })]),
+          h('div', { class: 'deal num' }, [who(q) + ' pays ', h('b', { text: money(q.amountIn, q.tokenIn) }), ' and gets ', h('b', { text: money(q.amountOut, q.tokenOut) }),
+            h('span', { class: 'by', text: fx(rate(q)) + ' USDC per WETH, from ' + nameOf(q.strategy) })]),
+          exp,
+          h('div', { class: 'seal num' }, ['signed by fi ' + short(q.signerAddr) + (q.digest ? ' · digest ' + short(q.digest) : '') + ' · served ' + hhmmss(q.t || clock()) + ' · ', txEl(null, q)])
+        ]),
+        older.length ? h('ul', { class: 'list num' }, older.map(function (o) {
+          var fo = quoteFate(o);
+          return h('li', null, [h('span', null, [h('span', { class: 'who', text: who(o) }), h('br'), h('span', { class: 'muted', text: money(o.amountOut, o.tokenOut) + ' for ' + money(o.amountIn, o.tokenIn) })]),
+            h('span', { class: 'amt' }, [fx(rate(o)), h('br'), h('span', { class: 'chip', 'data-s': fo.s, text: fo.s.toUpperCase() })])]);
+        })) : null
+      ]);
+    }
+    tickHarp();
+  }
+  function tickHarp() {
+    if (!HP) return;
+    var q = HP.q, fate = quoteFate(q), rem = Number(q.expiry) - clock() / 1000, span = Math.max(1, Number(q.expiry) - HP.t0 / 1000);
+    HP.exp.setAttribute('data-s', fate.s);
+    HP.bar.style.width = (fate.s === 'open' ? Math.max(0, Math.min(1, rem / span)) * 100 : fate.s === 'filled' ? 100 : 0).toFixed(1) + '%';
+    HP.txt.textContent = fate.s === 'open' ? 'good for ' + left(rem) : fate.s === 'filled' ? 'taken by ' + who(fate.f) + ' at ' + hhmmss(fate.f.t) : 'expired unfilled at ' + hhmmss(Number(q.expiry) * 1000);
+  }
+
+  // the hen: every Uniswap v4 swap the hook filled from the hoard
+  var drawnHen = '';
+  function drawHen() {
+    var eggs = S.fills.filter(function (f) { return f.route === 'v4' && f.status !== 'reverted'; }), el = R('hen');
+    var key = eggs.length + '|' + S.intents.length + S.mode;
+    if (key === drawnHen) return;
+    drawnHen = key;
+    if (!eggs.length) {
+      fill(el, h('div', { class: 'hen-top' }, [vignette('hen', 'big'), h('p', { class: 'empty', text: 'No swap has come to the pool yet. When one does, the hook fills it from the hoard at fee’s price, in the swap’s own transaction.' })]));
       return;
     }
-    // drawn at the size it shows, so the axis type stays at 11.5px on a phone
-    var narrow = root.getAttribute('data-size') !== 'full';
-    var W = narrow ? 340 : 640, H = narrow ? 238 : 258, L = 58, Rr = 16, T = 22, B = 34;
-    var pts = a.points.map(function (p) { return { b: Number(p.block), p: Number(p.price.usdcPerWeth) }; });
-    var bidsP = a.bids.map(function (b) { return Number(b.maxPrice.usdcPerWeth); });
-    var fl = Number(a.floor.usdcPerWeth);
-    var lo = Math.min.apply(null, [fl].concat(pts.map(function (x) { return x.p; }))), hi = Math.max.apply(null, [fl * 1.02].concat(pts.map(function (x) { return x.p; }), bidsP));
-    var pad = (hi - lo) * 0.12 || 10; lo -= pad; hi += pad;
-    var b0 = Number(a.startBlock), b1 = Number(a.endBlock);
-    function X(b) { return L + (W - L - Rr) * Math.max(0, Math.min(1, (b - b0) / Math.max(1, b1 - b0))); }
-    function Y(p) { return T + (H - T - B) * (1 - (p - lo) / (hi - lo)); }
-    var g = [];
-    // the weave: price rows and block columns, exact ticks
-    var step = niceStep((hi - lo) / (narrow ? 4 : 5));
-    for (var v = Math.ceil(lo / step) * step; v <= hi; v += step) {
-      g.push(sv('path', { d: 'M' + L + ' ' + Y(v).toFixed(1) + 'H' + (W - Rr), stroke: '#E6DAC0', 'stroke-width': 1.2 }));
-      g.push(sv('text', { x: L - 8, y: (Y(v) + 4).toFixed(1), 'text-anchor': 'end', class: 'num' }, px(v)));
-    }
-    var bs = niceStep((b1 - b0) / (narrow ? 4 : 6)) || 1;
-    for (var bb = b0; bb <= b1; bb += bs) {
-      g.push(sv('path', { d: 'M' + X(bb).toFixed(1) + ' ' + T + 'V' + (H - B), stroke: '#E6DAC0', 'stroke-width': 1.2 }));
-      g.push(sv('text', { x: X(bb).toFixed(1), y: H - B + 18, 'text-anchor': 'middle', class: 'num' }, '+' + (bb - b0)));
-    }
-    g.push(sv('text', { x: W - Rr, y: H - 4, 'text-anchor': 'end' }, 'blocks since the auction opened'));
-    g.push(sv('text', { x: 2, y: T - 2, 'text-anchor': 'start' }, 'USDC/WETH'));
-    if (a.bids.length) g.push(sv('text', { x: W - Rr - 26, y: T + 4, 'text-anchor': 'end', fill: '#2F4A7A' }, 'flags: each Jack\u2019s top price'));
-    g.push(sv('path', { d: 'M' + L + ' ' + T + 'V' + (H - B) + 'H' + (W - Rr), fill: 'none', stroke: '#1F2433', 'stroke-width': 1.6 }));
-    // the floor
-    g.push(sv('path', { d: 'M' + L + ' ' + Y(fl).toFixed(1) + 'H' + (W - Rr), stroke: '#B0412A', 'stroke-width': 1.6, 'stroke-dasharray': '6 6' }));
-    g.push(sv('text', { x: W - Rr - 4, y: (Y(fl) - 6).toFixed(1), 'text-anchor': 'end', fill: '#B0412A' }, 'floor ' + px(a.floor) + ' USDC/WETH'));
-    // each Jack's max price, a small flag at the right edge, one size for every Jack
-    a.bids.forEach(function (b) {
-      var y = Y(Number(b.maxPrice.usdcPerWeth)), sz = 7;
-      g.push(sv('path', { d: 'M' + (W - Rr) + ' ' + y.toFixed(1) + 'l-' + (sz * 2).toFixed(1) + ' -' + sz.toFixed(1) + 'v' + (sz * 2).toFixed(1) + 'z', fill: '#2F4A7A', opacity: 0.85 }));
-    });
-    // the stalk: a smooth monotone climb through the checkpoints
-    if (pts.length) {
-      var d = 'M' + X(pts[0].b).toFixed(1) + ' ' + Y(pts[0].p).toFixed(1);
-      for (var i = 1; i < pts.length; i++) {
-        var x0 = X(pts[i - 1].b), y0 = Y(pts[i - 1].p), x1 = X(pts[i].b), y1 = Y(pts[i].p), mx = (x0 + x1) / 2;
-        d += 'C' + mx.toFixed(1) + ' ' + y0.toFixed(1) + ' ' + mx.toFixed(1) + ' ' + y1.toFixed(1) + ' ' + x1.toFixed(1) + ' ' + y1.toFixed(1);
-      }
-      g.push(sv('path', { d: d, fill: 'none', stroke: '#4C7743', 'stroke-width': 5, 'stroke-linecap': 'round' }));
-      pts.forEach(function (p, k) {
-        var x = X(p.b), y = Y(p.p), s = k % 2 ? 1 : -1;
-        g.push(sv('path', { d: 'M' + x.toFixed(1) + ' ' + y.toFixed(1) + 'c' + (s * 4) + ' -12 ' + (s * 16) + ' -14 ' + (s * 20) + ' -10c' + (-s * 2) + ' 10 ' + (-s * 12) + ' 14 ' + (-s * 20) + ' 10z', fill: '#4C7743', stroke: '#1F2433', 'stroke-width': 1.2 }));
-      });
-      var last = pts[pts.length - 1];
-      g.push(sv('circle', { cx: X(last.b).toFixed(1), cy: Y(last.p).toFixed(1), r: 6, fill: '#C8961E', stroke: '#1F2433', 'stroke-width': 2 }));
-    }
-    var chart = sv('svg', { class: 'chart', viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': 'Clearing price by block' }, g);
-
-    var cur = a.clearing ? px(a.clearing) : '—';
-    var status = a.status === 'open' ? 'Open, block +' + (Number(a.block || b0) - b0) + ' of ' + (b1 - b0) : a.status === 'cleared' ? 'Cleared' : 'Cleared and swept to the castle';
-    var bids = a.bids.slice().sort(function (x, y) { return Number(y.maxPrice.usdcPerWeth) - Number(x.maxPrice.usdcPerWeth); });
-    var list = h('ul', { class: 'bids num' }, bids.map(function (b) {
-      return h('li', null, [h('span', { class: 'who' }, b.ownerName || known(b.owner) || short(b.owner)),
-        h('span', { class: 'amt' }, [amt(b.amount, 'USDC') + ' USDC', h('br'), h('span', { class: 'muted', text: 'up to ' + px(b.maxPrice) + ' USDC/WETH' })])]);
-    }).concat(a.rejected.map(function (r) {
-      return h('li', { class: 'rej' }, [h('span', { class: 'who', text: r.ownerName || short(r.owner) }), h('span', { class: 'amt', text: 'no ENS name: JackHook said no' })]);
-    })));
+    var f = eggs[eggs.length - 1], it = null;
+    for (var i = S.intents.length - 1; i >= 0 && !it; i--) if (f.intentId && S.intents[i].id === f.intentId) it = S.intents[i];
+    var got = {}, paid = {};
+    TOK.forEach(function (s) { got[s] = Z; paid[s] = Z; });
+    eggs.forEach(function (e) { paid[e.tokenIn] = (paid[e.tokenIn] || Z) + big(e.amountIn); got[e.tokenOut] = (got[e.tokenOut] || Z) + big(e.amountOut); });
+    function str(b) { var o = {}; for (var k in b) o[k] = b[k].toString(); return bagStr(o); }
+    var feeTxt = f.fee ? bagStr(f.fee) : null;
     fill(el, [
-      h('div', null, [
-        h('div', { class: 'au-head num' }, [
-          h('span', null, [h('b', { text: cur }), ' USDC per WETH clearing']),
-          h('span', { text: status }),
-          h('span', { text: (a.kind === 'dissolution' ? 'Dissolution' : 'Shift-change') + ' auction of ' + amt(a.amount, 'WETH') + ' WETH' })
-        ]),
-        chart
+      h('div', { class: 'card' }, [
+        h('div', { class: 'hen-top' }, [vignette('hen', 'sm'), h('div', { class: 'eggs', 'aria-label': plural(eggs.length, 'swap') + ' filled just in time' }, eggs.slice(-14).map(function () { return egg(); }))]),
+        h('div', { class: 'deal num' }, [who(f) + ' paid ', h('b', { text: money(f.amountIn, f.tokenIn) }), h('span', { class: 'by', text: 'and got ' + money(f.amountOut, f.tokenOut) + ' at ' + fx(rate(f)) + ' USDC per WETH' + (feeTxt ? ' · hook fee ' + feeTxt : '') })]),
+        h('div', { class: 'delta num' }, ['The hoard: ', h('span', { class: 'p', text: '+' + money(f.amountIn, f.tokenIn) }), ', ', h('span', { class: 'm', text: '−' + money(f.amountOut, f.tokenOut) })]),
+        h('div', { class: 'seal num' }, [(it ? 'fo carried it from a ' + (it.source || '') + ' order · ' : '') + 'filled ' + hhmmss(f.t) + ' · ', txEl(f.tx, f)])
       ]),
-      h('div', null, [
-        h('div', { class: 'au-head num' }, [h('span', null, [h('b', { text: String(a.bids.length) }), ' Jacks bidding, highest price first'])]),
-        a.bids.length || a.rejected.length ? list : h('p', { class: 'empty', text: 'No bids yet.' }),
-        a.status !== 'open' ? h('p', { class: 'note num', text: sale(a) + '.' + (a.swept ? ' Swept to the castle.' : '') }) : null,
-        h('p', { class: 'note', text: 'The next shift gets no privilege: it bids like any Jack. JackHook admits only bidders who hold an unexpired name in handoff’s ENSv2 agent registry.' })
-      ])
+      h('p', { class: 'note num', text: plural(eggs.length, 'swap') + ' filled just in time. Swappers paid ' + str(paid) + ' and got ' + str(got) + '.' })
     ]);
   }
-  function niceStep(x) { if (!(x > 0)) return 1; var e = Math.pow(10, Math.floor(Math.log10(x))), m = x / e; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * e; }
 
   function txEl(tx, ev) {
-    if (!tx) return h('span', { class: 'muted', text: ev && ev.type === 'agent' ? 'off-chain heartbeat' : ev && ev.type === 'lease.expired' ? 'no tx: time ran out' : ev && ev.type !== 'fill' ? 'off-chain' : '—' });
+    if (!tx) return h('span', { class: 'muted', text: !ev || ev.type === 'fill' ? '—' : ev.type === 'allocation.refused' ? 'refused in simulation, never sent' : 'off-chain, no gas' });
     if (S.mode === 'mock') return h('span', { class: 'tx num', title: 'Mock data: not a real transaction' }, [short(tx), h('em', { text: 'mock' })]);
     if (!S.config.explorer) return h('span', { class: 'tx num', text: short(tx) });
     return h('a', { class: 'tx num', href: S.config.explorer + '/tx/' + tx, target: '_blank', rel: 'noopener' }, short(tx));
   }
 
-  var drawnFor = null, drawnId = 0, sceneNodes = {};
+  var drawnFor = null, drawnId = 0;
   function sceneEl(sc) {
-    // A folded scene keeps its own moment and tx; only the renewal count and the lease end move on.
-    var ev = sc.ev, gl = sc.gl.slice();
-    if (sc.n) gl[1] = (ev.type === 'lease.claimed' ? 'then ' : '') + 'sealed by fo, ' + sc.n + (sc.n === 1 ? ' renewal' : ' renewals') + ', lease to ' + hhmmss(Number((sc.last || ev).expiry) * 1000);
-    var gloss = gl.filter(Boolean).map(function (x, i) { return h('div', null, i === 0 ? h('b', { text: x }) : x); });
+    var ev = sc.ev;
+    var gloss = sc.gl.filter(Boolean).map(function (x, i) { return h('div', null, i === 0 ? h('b', { text: x }) : x); });
     var meta = h('div', { class: 'gl num' }, [hhmmss(ev.t || clock()), ev.block ? ' · block ' + ev.block : '', ' · ', txEl(ev.tx, ev)]);
     return h('div', { class: 'scene', 'data-tone': sc.tone || null }, [
       h('div', { class: 'ti', role: 'img', 'aria-label': sc.ti }, sc.ti.split(' ').map(function (w) { return letters(w, true); })),
-      vignette(VK[sc.icon] === 'fill' && sc.tone === 'woad' ? 'wide' : VK[sc.icon] || 'begin'), h('div', { class: 'gl' }, gloss), meta
+      vignette(sc.v), h('div', { class: 'gl' }, gloss), meta
     ]);
   }
   function drawFrieze() {
     var el = R('frieze');
-    if (drawnFor !== S) { el.replaceChildren(); drawnFor = S; drawnId = 0; sceneNodes = {}; }
-    (S.dirty || []).forEach(function (id) {
-      var node = sceneNodes[id], sc = null;
-      for (var i = S.scenes.length - 1; i >= 0 && !sc; i--) if (S.scenes[i].id === id) sc = S.scenes[i];
-      if (node && sc && node.parentNode) { var nn = sceneEl(sc); nn.style.animation = 'none'; node.replaceWith(nn); sceneNodes[id] = nn; }
-    });
-    S.dirty = [];
+    if (drawnFor !== S) { el.replaceChildren(); drawnFor = S; drawnId = 0; }
     S.scenes.forEach(function (sc) {
       if (sc.id <= drawnId) return;
       drawnId = sc.id;
-      el.insertBefore(sceneNodes[sc.id] = sceneEl(sc), el.firstChild);
+      el.insertBefore(sceneEl(sc), el.firstChild);
     });
     while (el.children.length > 40) el.removeChild(el.lastChild);
     var n = el.children.length, t = R('unroll');
@@ -1122,162 +903,84 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     t.textContent = el.dataset.open ? 'Roll the tapestry back up' : 'Unroll the whole tapestry (' + n + ' scenes)';
   }
 
-  var drawnFills = -1;
+  function routeEl(f) {
+    if (f.route === 'v4') return h('span', { class: 'route' }, [egg(), 'the hen, v4 hook']);
+    var st = strat(f.strategy);
+    return h('span', { class: 'route' }, [h('i', { style: 'background:' + (st ? hue(st) : VC.gold) }), nameOf(f.strategy) + (f.quoteId ? ', harp price' : '')]);
+  }
+  var drawnFills = '';
   function drawFills() {
-    if (drawnFills === S.fills.length) return;
-    drawnFills = S.fills.length;
+    var key = S.fills.length + S.mode + S.strategies.length;
+    if (drawnFills === key) return;
+    drawnFills = key;
     var el = R('fills');
     if (!S.fills.length) { fill(el, h('p', { class: 'empty', text: 'No Jack has traded with the giant yet.' })); return; }
     var rows = S.fills.slice(-25).reverse().map(function (f) {
-      var t = trade(f);
+      var bad = f.status === 'reverted';
       return h('tr', null, [
         h('td', { class: 'num', text: hhmmss(f.t) }),
-        h('td', { text: f.takerName || known(f.taker) || short(f.taker) }),
-        h('td', { class: 'num' }, f.status === 'reverted' ? h('span', { class: 'muted', text: 'tried to ' + (t.verb === 'bought' ? 'buy ' : 'sell ') + t.weth + ' WETH' }) : t.verb + ' ' + t.weth + ' WETH for ' + t.usdc + ' USDC'),
-        h('td', { class: 'r num' }, f.status === 'reverted' ? '—' : [t.price, h('span', { class: 'u', text: ' USDC/WETH' })]),
-        h('td', { class: 'num' }, [h('span', { class: 'u', text: 'epoch ' }), f.leaseEpoch == null || f.programEpoch === f.leaseEpoch ? ep(f.programEpoch) : ep(f.programEpoch) + ' vs ' + ep(f.leaseEpoch)]),
-        h('td', null, [fateEl(f.decision), f.status === 'reverted' ? h('div', { class: 'muted rv', text: 'reverted ' + (f.revert || '') }) : null]),
-        h('td', null, txEl(f.tx))
+        h('td', { text: who(f) }),
+        h('td', null, routeEl(f)),
+        h('td', { class: 'num' }, [h('span', { class: 'u', text: 'paid ' }), money(f.amountIn, f.tokenIn)]),
+        h('td', { class: 'num' }, bad ? [h('span', { class: 'muted', text: 'nothing' }), h('div', { class: 'rv', text: 'reverted ' + (f.revert || '') })] : [h('span', { class: 'u', text: 'got ' }), money(f.amountOut, f.tokenOut)]),
+        h('td', { class: 'r num' }, bad ? '—' : [fx(rate(f)), h('span', { class: 'u', text: ' USDC/WETH' })]),
+        h('td', null, txEl(f.tx, f))
       ]);
     });
     fill(el, h('table', { class: 'led' }, [
-      h('thead', null, h('tr', null, [h('th', { text: 'Time' }), h('th', { text: 'Jack' }), h('th', { text: 'Trade' }), h('th', { class: 'r', text: 'USDC / WETH' }), h('th', { text: 'Epoch' }), h('th', { text: 'Fate' }), h('th', { text: 'Tx' })])),
+      h('thead', null, h('tr', null, [h('th', { text: 'Time' }), h('th', { text: 'Jack' }), h('th', { text: 'Filled by' }), h('th', { text: 'Paid' }), h('th', { text: 'Got' }), h('th', { class: 'r', text: 'USDC / WETH' }), h('th', { text: 'Tx' })])),
       h('tbody', null, rows)
     ]));
   }
 
-  // the replay: every fill judged again from the lease history, then compared with what the chain did
-  var drawnReplay = -1;
-  function drawReplay() {
-    var key = S.fills.length + '|' + S.leases.length + '|' + root.getAttribute('data-size');
-    if (drawnReplay === key) return;
-    drawnReplay = key;
-    fill(R('replayNote'), S.mode === 'chain'
-      ? 'Rebuilt from Sepolia logs alone. Reverted fills leave no logs, so only the castle service can list them.'
-      : 'Each fill is judged again from the lease history alone: the epoch baked into its book against the lease’s epoch at that moment, then the heartbeat it brought and the lease’s expiry. The last column says whether that verdict matches what happened.');
-    drawTimeline(R('timeline'));
-    fill(R('replay'), judged());
-  }
-  // The replay table, judged from whichever castle state is current in S.
-  function judged() {
-    var rows = S.fills.slice().reverse().map(function (f) {
-      var r = derive(f), ok = r.d === f.decision;
-      return h('tr', null, [
-        h('td', { class: 'num', text: hhmmss(f.t) + (f.block ? ' · ' + f.block : '') }),
-        h('td', { text: f.takerName || known(f.taker) || short(f.taker) }),
-        h('td', { class: 'num' }, [h('span', { class: 'u', text: 'book epoch ' }), ep(f.programEpoch)]),
-        h('td', { class: 'num opt', text: r.L ? ep(r.L.epoch) : '?' }),
-        h('td', { class: 'num opt', text: f.heartbeat !== undefined ? (f.heartbeat ? 'beat until ' + hhmmss(f.heartbeat.validUntil * 1000) : 'no heartbeat') : r.L ? (f.t / 1000 > r.L.expiry ? left(f.t / 1000 - r.L.expiry) + ' past' : left(r.L.expiry - f.t / 1000) + ' left') : '?' }),
-        h('td', null, fateEl(r.d)),
-        h('td', { class: 'agree', 'data-ok': ok ? 'yes' : 'no', text: f.status === 'reverted' ? (f.decision ? (ok ? 'agrees' : 'differs') + ': reverted ' + f.revert : 'reverted; error not recovered') : ok ? 'agrees' : 'differs: ' + f.decision }),
-        h('td', null, txEl(f.tx))
-      ]);
-    });
-    return S.fills.length ? h('table', { class: 'led' }, [
-      h('thead', null, h('tr', null, [h('th', { text: 'When' }), h('th', { text: 'Jack' }), h('th', { text: 'Book epoch' }), h('th', { class: 'opt', text: 'Lease epoch' }), h('th', { class: 'opt', text: 'Lease' }), h('th', { text: 'Verdict' }), h('th', { text: 'Chain' }), h('th', { text: 'Tx' })])),
-      h('tbody', null, rows)
-    ]) : h('p', { class: 'empty', text: 'No fills to judge yet.' });
-  }
-  function drawTimeline(el, end) {
-    if (!S.leases.length) { el.replaceChildren(); return; }
-    // Narrow frames get a narrow viewBox and short labels, so the text stays at reading size.
-    var narrow = root.getAttribute('data-size') !== 'full';
-    var W = narrow ? 360 : 1000, H = 126, L = 10, Rr = 10, ends = [-1e9, -1e9];
-    var t0 = S.leases[0].t, t1 = end || Math.max(clock(), S.lease && !S.v3 ? S.lease.expiry * 1000 : 0);
-    S.fills.forEach(function (f) { t1 = Math.max(t1, f.t); });
-    function X(t) { return L + (W - L - Rr) * (t - t0) / Math.max(1, t1 - t0); }
-    var g = [sv('path', { d: 'M' + L + ' 60H' + (W - Rr), stroke: '#E6DAC0', 'stroke-width': 18, 'stroke-linecap': 'round' })];
-    var runs = [];
-    for (var i = 0; i < S.leases.length; i++) {
-      var e = S.leases[i], next = S.leases[i + 1], end = Math.min(e.expiry * 1000, next ? next.t : t1), r = runs[runs.length - 1];
-      if (r && r.epoch === e.epoch && e.t <= r.end + 1) r.end = Math.max(r.end, end);
-      else runs.push({ epoch: e.epoch, start: e.t, end: end, claim: e.kind === 'claim', who: e.holderAgent, expiry: e.expiry * 1000 });
-      runs[runs.length - 1].expiry = e.expiry * 1000;
-    }
-    runs.forEach(function (r, k) {
-      var nx = runs[k + 1], gapEnd = nx ? nx.start : t1;
-      if (r.end > r.start) g.push(sv('path', { d: 'M' + X(r.start).toFixed(1) + ' 60H' + X(r.end).toFixed(1), stroke: '#4C7743', 'stroke-width': 18 }));
-      if (gapEnd > r.expiry) g.push(sv('path', { d: 'M' + X(r.expiry).toFixed(1) + ' 60H' + X(gapEnd).toFixed(1), stroke: '#2F4A7A', 'stroke-width': 4, 'stroke-dasharray': '7 6' }));
-      // Labels of leases close in time would overprint, so a label that would hit the one before it goes up a line.
-      var x = X(r.start), txt = up(r.who) + (narrow ? ' ' : ', epoch ') + ep(r.epoch), w = txt.length * 7, an = x < W * 0.12 ? 'start' : x > W * 0.88 ? 'end' : 'middle';
-      var lx = an === 'start' ? x : an === 'end' ? x - w : x - w / 2, row = lx > ends[0] + 12 ? 0 : lx > ends[1] + 12 ? 1 : ends[0] <= ends[1] ? 0 : 1;
-      ends[row] = lx + w;
-      g.push(sv('path', { d: 'M' + x.toFixed(1) + ' 40V80', stroke: '#1F2433', 'stroke-width': 2.4 }));
-      g.push(sv('text', { x: x.toFixed(1), y: row ? 14 : 32, 'text-anchor': an, class: 'num' }, txt));
-    });
-    (S.gaps || []).forEach(function (gp) { g.push(sv('path', { d: 'M' + X(gp.a).toFixed(1) + ' 60H' + X(gp.b || t1).toFixed(1), stroke: '#F6EFDF', 'stroke-width': 14 }), sv('path', { d: 'M' + X(gp.a).toFixed(1) + ' 60H' + X(gp.b || t1).toFixed(1), stroke: '#2F4A7A', 'stroke-width': 4, 'stroke-dasharray': '7 6' })); });
-    S.fills.forEach(function (f) {
-      var x = X(f.t).toFixed(1), c = f.decision === 'fenced' ? '#B0412A' : f.decision === 'wind-down' ? '#2F4A7A' : '#C8961E';
-      g.push(f.decision === 'fenced' ? sv('path', { d: 'M' + (x - 6) + ' 94l12 12M' + (+x + 6) + ' 94l-12 12', stroke: c, 'stroke-width': 3, 'stroke-linecap': 'round' })
-        : sv('circle', { cx: x, cy: 100, r: 6, fill: c, stroke: '#1F2433', 'stroke-width': 1.6 }));
-    });
-    g.push(sv('text', { x: L, y: H - 3, class: 'num' }, hhmmss(t0)));
-    g.push(sv('text', { x: W - Rr, y: H - 3, 'text-anchor': 'end', class: 'num' }, hhmmss(t1)));
-    fill(el, [sv('svg', { class: 'tl', viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': 'Lease timeline: green is a held lease, dashed blue is wind-down, marks below are fills' }, g),
-      h('p', { class: 'legend' }, [h('span', { class: 'lg lg-held' }), 'lease held', h('span', { class: 'lg lg-wind' }), 'wind-down, nobody live', h('span', { class: 'lg lg-coin' }), 'a fill', stitch('fenced', 'lg-x'), 'a fenced fill'])]);
-  }
-
   function drawFace() {
-    var el = R('face'), L = S.lease, st = castleState(), exp = L ? L.expiry - nowS() : 0, beat = S.v3 && st !== 'HELD' && exp > 0, last = S.fills[S.fills.length - 1];
-    var rem = beat ? (L.hb || 0) - nowS() : exp, frac = L ? Math.max(0, Math.min(1, rem / (beat ? S.config.heartbeatSeconds || 120 : S.config.leaseSeconds || 120))) : 0;
-    var t = last ? trade(last) : null;
+    var el = R('face'), last = S.fills[S.fills.length - 1], hd = S.hoard, sym = 'USDC', bal = bag(hd, sym);
     fill(el, [
       h('div', { class: 'f1' }, [letters('fee·fi·fo·fum'), R('src').cloneNode(true)]),
-      h('div', { class: 'f2' }, [L ? h('span', { class: 'hold' }, letters(up(L.holderAgent), true)) : null,
-        h('span', { class: 'stt', style: 'color:' + (st === 'LIVE' ? 'var(--sage)' : 'var(--woad)') }, st === 'LIVE' ? 'LIVE · ' + left(rem) : st === 'WIND-DOWN' ? 'WIND-DOWN' : st === 'HELD' ? 'HELD' : '—'),
-        L ? h('span', { class: 'muted num ep', text: 'epoch ' + ep(L.epoch) }) : null]),
-      h('div', { class: 'bar' }, h('i', { style: 'width:' + (frac * 100).toFixed(1) + '%' })),
-      S.inventory ? h('div', { class: 'f3 num' }, ['Hoard ', h('b', { text: amt(S.inventory.weth, 'WETH') }), ' WETH · ', h('b', { text: amt(S.inventory.usdc, 'USDC') }), ' USDC']) : null,
-      last ? h('div', { class: 'f4 num', text: 'Last: ' + (last.takerName || known(last.taker) || short(last.taker)) + (last.decision === 'fenced' ? ' was fenced, FeeFiFoFum()' : ' ' + t.verb + ' ' + t.weth + ' WETH at ' + t.price + ' USDC/WETH') }) : null
+      hd ? h('div', { class: 'f2 num', text: money(hd.USDC, 'USDC') + ' · ' + money(hd.WETH, 'WETH') }) : null,
+      h('div', { class: 'bar' }, live().map(function (st) { return h('i', { style: 'background:' + hue(st) + ';width:' + (bal > Z ? Number(bag(st.alloc, sym)) / Number(bal) * 100 : 0).toFixed(1) + '%' }); })),
+      h('div', { class: 'f3 num' }, [h('b', { text: fx(promisedPct(), 0) + '%' }), ' promised to ' + plural(live().length, 'bargain') + (S.refusals.length ? ' · ' + S.refusals.length + ' refused' : '')]),
+      last ? h('div', { class: 'f4 num', text: 'Last: ' + who(last) + (last.status === 'reverted' ? ' was refused' : ' paid ' + money(last.amountIn, last.tokenIn) + (last.route === 'v4' ? ' on v4' : '')) }) : null
     ]);
   }
 
   function drawHeader() {
     var m = S.mode, src = R('src');
     src.setAttribute('data-m', m);
-    R('srcTxt').textContent = m === 'live' ? 'Live from the castle' : m === 'chain' ? 'Chain replay' : m === 'mock' ? 'Mock stream · synthetic' : 'Connecting';
+    R('srcTxt').textContent = m === 'live' ? 'Live from the castle' : m === 'mock' ? 'Mock stream · synthetic' : 'Connecting';
     R('ens').textContent = S.config.name || 'castle.feefifofum.eth';
   }
 
   var dirty = true;
   function render() {
-    hbCheck(clock());
-    drawHeader(); drawChant(); tickRoundel(); drawFence(); drawHoard(); drawStalk(); drawFrieze(); drawFills();
-    if (!R('replay').closest('[hidden]')) drawReplay();
-    if (!R('v2Table').closest('[hidden]')) drawHistory();
-    drawFace();
+    drawHeader(); drawChant(); drawGiant(); drawGauges(); drawBargains(); drawHoard(); drawHarp(); drawHen(); drawFrieze(); drawFills(); drawFace();
     dirty = false;
   }
 
   // ---------------------------------------------------------------- sources
-  var TYPES = ['snapshot', 'agent', 'attestation.withheld', 'incident', 'lease.renewed', 'lease.expired', 'lease.claimed', 'lease.rejected', 'heartbeat', 'lease.challenged', 'lease.responded',
-    'castle.relinked', 'strategy.shipped', 'strategy.docked', 'shift.changed', 'castle.dissolved', 'inventory', 'fill', 'auction.opened',
-    'auction.bid', 'auction.rejected', 'auction.checkpoint', 'auction.cleared', 'auction.swept', 'price.written'];
+  var TYPES = ['snapshot', 'hoard', 'price', 'strategy.shipped', 'strategy.docked', 'cap.set', 'allocation.refused', 'quote.served', 'intent.routed', 'fill', 'agent'];
   function feed(ev) { if (!ev || !ev.type) return; apply(ev); dirty = true; }
 
-  var es = null, liveOk = 0;
+  var es = null, liveOk = 0, MOCK = null;
   function base() { return String(CONFIG.stream).replace(/\/$/, '').replace(/\/stream$/, ''); }
-  function hasChain() { return !!(CONFIG && CONFIG.rpcs && CONFIG.rpcs.length && CONFIG.contracts && CONFIG.contracts.castle); }
-  // The service went quiet: read the chain directly if this build knows how, else play the labelled mock.
+  // The service went quiet: play the labelled mock, and keep asking the service to come back.
   function fallBack(why) {
     if (es) { es.close(); es = null; }
-    if (hasChain()) startChain(why); else startMock(why + ' The mock is playing.');
+    startMock(why + ' The mock is playing until it answers.');
   }
   function startLive() {
-    stopChain(); MOCK = null; R('mockbar').hidden = true;
+    MOCK = null; R('mockbar').hidden = true;
     reset('live');
     S.config = Object.assign({}, CONFIG);
     var got = false, mine = null, run = S;
     liveOk = clock();
-    // The snapshot gives config, the crew and the hoard; the stream from seq 0 then retells the whole tale in order,
-    // so the tapestry and the replay tab have the history, not just the present.
+    // The snapshot gives config, the crew and the hoard; the stream from seq 0 then retells the whole tale in order.
     state().then(function (snap) {
       if (S !== run) return;
-      feed({ v: 1, type: 'snapshot', t: snap.t, block: snap.block, tx: null, src: 'service', castle: snap.castle, config: snap.config, shifts: snap.shifts, agents: snap.agents,
-        lease: snap.lease, leases: [], strategies: snap.strategies, inventory: snap.inventory, price: snap.price, auction: null, fills: [] });
+      feed(Object.assign({}, snap, { type: 'snapshot', quotes: [], fills: [], refusals: [], intents: [], strategies: [] }));
       S.scenes = [];
       try { mine = es = new EventSource(base() + '/stream?since=0'); } catch (e) { fallBack('The castle service could not be reached.'); return; }
-      function on(e) { got = true; liveOk = clock(); try { feed(JSON.parse(e.data)); } catch (x) { /* a malformed frame is skipped, not fatal */ } }
+      function on(e) { got = true; liveOk = clock(); try { var ev = JSON.parse(e.data); if (ev.type !== 'snapshot') feed(ev); } catch (x) { /* a malformed frame is skipped, not fatal */ } }
       TYPES.forEach(function (t) { es.addEventListener(t, on); });
       es.onmessage = on;
       es.onopen = function () { got = true; liveOk = clock(); };
@@ -1285,394 +988,106 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     setTimeout(function () { if (S === run && !got && (!es || es === mine)) fallBack('The castle service did not answer.'); }, 15000);
   }
   function state() { return fetch(base() + '/state').then(function (r) { if (!r.ok) throw new Error('state ' + r.status); return r.json(); }); }
-  // The stream carries no balance events, so the hoard and the anchor are refreshed from the snapshot.
+  // Balances and fee's price are refreshed from the snapshot too, in case a hoard event was missed.
   function liveHoard() {
     if (!es || S.mode !== 'live') return;
     var run = S;
     state().then(function (snap) {
       if (S !== run) return;
-      if (snap.inventory) S.inventory = snap.inventory;
-      if (snap.price && (!S.price || !S.price.tx || S.price.q96 !== snap.price.q96)) S.price = snap.price;
+      if (snap.hoard) S.hoard = snap.hoard;
+      if (snap.price) S.price = snap.price;
       dirty = true;
     }, function () { /* the watchdog decides */ });
   }
   // The service closes each SSE response every few seconds and the browser reconnects; only a long silence counts.
   function liveWatch() {
+    if (CONFIG && CONFIG.stream && S.mode === 'mock' && MOCK && MOCK.why && ++retries % 6 === 0) fetch(base() + '/health').then(function (r) { if (r.ok && S.mode === 'mock') startLive(); }, function () {});
     if (!es || S.mode !== 'live') return;
     if (es.readyState === 1) liveOk = clock();
     else if (clock() - liveOk > 25000) fallBack('The castle service went quiet.');
   }
+  var retries = 0;
 
-  // ---------------------------------------------------------------- chain-only: the same events, rebuilt from Sepolia
-  // Castle and Aqua topics (keccak of each signature), so the page needs no hashing library. v3 keeps every v2 event.
-  var TOPIC = {
-    '0x633ba8e3a58f6338e5b7ea25911e616943cc40de46b4d4f19001957916c717f9': 'Renewed',        // (uint256 indexed epoch, address indexed holder, uint64 expiry, bytes32 digest)
-    '0x8cc4acbf339fd6f6cecce20719baa57cc65bcae0992bf95cc10d5eabe1d40254': 'Claimed',        // (uint256 indexed epoch, address indexed holder, uint64 expiry, uint256 prevEpoch)
-    '0xd0345595101c65a880f9e2baf838e65f40f2cdcc2c54818a1e3f375e3b4644ac': 'Relinked',       // (bytes32 indexed node, bytes32 indexed holderNode, string holderLabel)
-    '0xd4e007608519af298aeeb4b87d29802df00cdc38689e80955ffd9dd2aae966dc': 'Shipped',        // (bytes32 indexed hash, uint256 indexed epoch, uint256 anchorQ96, uint256 weth, uint256 usdc)
-    '0x6378441698fc41f5a605f385318db96d08a8882dd76834050ece4d99cd3b2713': 'Docked',         // (bytes32 indexed hash, uint256 indexed epoch, address indexed dockedBy)
-    '0x02ef88863434acac3cf49270aa53c1e38ea0c744b05d8866f144ba11cb38e43a': 'PriceWritten',   // (uint256 priceQ96)
-    '0x3f17e5534b3847f6e04d337edb6fd99d3392922eadaa52973d85bc948e4b879b': 'AuctionOpened',  // (address indexed auction, uint256 indexed epoch, uint256 amount, uint256 floorQ96, uint64 endBlock, bool dissolution)
-    '0x3d2a5914bd7c6aa7ab5ab0649905230f8fe78f72cca11bc29d24c49a60800e02': 'AuctionSettled', // (address indexed auction, uint256 clearingQ96, uint256 raised, bool priceWritten)
-    '0xb0b5529c15667824a2fcfcee58a625d399fb6706d3a784d22a9a66e47982dd8a': 'Dissolved',      // (uint256 indexed epoch, uint256 docked, uint256 weth)
-    '0x072a3d1d33e8c00aedd7320e9e60d1107ead1c14dcd23a04eeb89cb5fe01fbf9': 'Challenged',     // v3 (uint256 indexed epoch, address indexed challenger, uint64 deadline)
-    '0x99c11c9d1a0c1f97332a46b4a395b61a06fdf20a5b988deb61c0f79afe8f665f': 'Responded',      // v3 (uint256 indexed epoch, address indexed holder, uint64 cooldownUntil)
-    '0x3ad61047071575417c75e3311e5d46ff042e292b5dd8769ff18b4b254098ca7a': 'Pulled',         // Aqua (maker, app, strategyHash, token, amount)
-    '0x3f18354abbd5306dd1665c2c90f614a4559e39dd620d04fbe5458e613b6588f3': 'Pushed',         // Aqua (maker, app, strategyHash, token, amount)
-    '0x650baad5cd8ca09b8f580be220fa04ce2ba905a041f764b6a3fe2c848eb70540': 'BidSubmitted',   // CCA (uint256 indexed id, address indexed owner, uint256 priceQ96, uint128 amount)
-    '0xf1e4b6d7d0d7c5deb6393a39862d66a2f2ecb034f3283a8a597f9bf0c36f76fa': 'Checkpoint',     // CCA CheckpointUpdated(uint256 block, uint256 clearingQ96, uint24 mps)
-    '0x30adbe996d7a69a21fdebcc1f8a46270bf6c22d505a7d872c1ab4767aa707609': 'Checkpoint'      // CCA ClearingPriceUpdated(uint256 block, uint256 clearingQ96)
-  };
-  var CH = null;
-  function stopChain() { if (CH) { clearTimeout(CH.timer); CH.dead = true; CH = null; } }
-  function rpc(method, params, cc) {
-    var urls = CONFIG.rpcs, c = cc || CH, tries = 0;
-    function go() {
-      var i = c.rpc % urls.length;
-      return fetch(urls[i], { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: method, params: params }) })
-        .then(function (r) { return r.json(); })
-        .then(function (j) { if (j.error) throw new Error(j.error.message || 'rpc error'); return j.result; })
-        .catch(function (e) { if (++tries >= urls.length) throw e; c.rpc++; return go(); });
-    }
-    return go();
-  }
-  function hexN(x) { return Number(BigInt(x)); }
-  function wordsOf(data) { var d = (data || '0x').slice(2), w = []; for (var i = 0; i + 64 <= d.length; i += 64) w.push('0x' + d.slice(i, i + 64)); return w; }
-  function wAddr(w) { return '0x' + w.slice(26); }
-  function wStr(data, at) {
-    var d = data.slice(2), off = Number(BigInt('0x' + d.slice(at * 64, at * 64 + 64))) * 2, len = Number(BigInt('0x' + d.slice(off, off + 64))) * 2;
-    var b = d.slice(off + 64, off + 64 + len), out = '';
-    for (var i = 0; i < b.length; i += 2) out += String.fromCharCode(parseInt(b.slice(i, i + 2), 16));
-    return out;
-  }
-  function q96View(w) {
-    var v = BigInt(w), c = (v * BigInt(10) ** BigInt(14) / (BigInt(2) ** BigInt(96))).toString();
-    while (c.length < 3) c = '0' + c;
-    return { q96: v.toString(), usdcPerWeth: c.slice(0, -2) + '.' + c.slice(-2) };
-  }
-  function whoIs(addr) {
-    var ag = CONFIG.agents || [];
-    for (var i = 0; i < ag.length; i++) if (same(ag[i].addr, addr)) return ag[i].id;
-    return null;
-  }
-  function parentName() { return String(CONFIG.name || 'castle.feefifofum.eth').split('.').slice(1).join('.'); }
-  function ensOf(addr) { return whoIs(addr) ? whoIs(addr) + '.' + parentName() : null; }
-  // One reader of a Castle's logs and of the Aqua fills against it. Chain mode runs one on the live Castle, and the
-  // v2 tab runs one on Castle v2. Every event goes to emit(), in block order.
-  function reader(castle, emit, v3) {
-    var c = { rpc: 0, cursor: 0, castleTx: {}, auctions: [], shipEpoch: {}, leases: [], fillTx: {}, expiredFor: '', times: {}, ch: 0 }, aqua = CONFIG.external.aqua;
-    function q(m, p) { return rpc(m, p, c); }
-    c.time = function (log) { return log && log.blockTimestamp ? hexN(log.blockTimestamp) * 1000 : log && c.times[log.blockNumber] ? c.times[log.blockNumber] : clock(); };
-    function ev(type, body, log) { return Object.assign({ v: 1, type: type, t: c.time(log), block: log ? hexN(log.blockNumber) : null, tx: log ? log.transactionHash : null, src: 'chain' }, body); }
-    c.leaseAtBlock = function (b) { var cur = null; c.leases.forEach(function (l) { if (l.block <= b) cur = l; }); return cur; };
-    function one(log) {
-      var n = TOPIC[log.topics[0]], w = wordsOf(log.data), tp = log.topics;
-      if (!n) return;
-      if (same(log.address, aqua)) {
-        if ((n !== 'Pulled' && n !== 'Pushed') || !same(wAddr(w[0]), castle)) return;
-        var f = c.fillTx[log.transactionHash] || (c.fillTx[log.transactionHash] = { log: log, legs: {}, n: 0 });
-        f.legs[n] = { hash: w[2], token: wAddr(w[3]), amount: BigInt(w[4]).toString() }; f.n++;
-        return;
-      }
-      if (!same(log.address, castle)) {
-        lapse(c.time(log) / 1000);
-        if (n === 'BidSubmitted') emit(ev('auction.bid', { auction: log.address, bidId: String(hexN(tp[1])), owner: wAddr(tp[2]), ownerName: ensOf(wAddr(tp[2])), maxPrice: q96View(w[0]), amount: BigInt(w[1]).toString() }, log));
-        else if (n === 'Checkpoint') emit(ev('auction.checkpoint', { auction: log.address, clearing: q96View(w[1]), sold: null, raised: null }, log));
-        return;
-      }
-      var b = hexN(log.blockNumber), t = c.time(log);
-      c.castleTx[log.transactionHash] = true;
-      lapse(t / 1000);
-      if (n === 'Renewed' || n === 'Claimed') {
-        var epoch = BigInt(tp[1]).toString(), holder = wAddr(tp[2]), exp = hexN(w[0]), prev = c.leases[c.leases.length - 1];
-        c.leases.push({ block: b, epoch: epoch, expiry: exp, holder: holder, agent: whoIs(holder) });
-        if (n === 'Renewed') emit(ev('lease.renewed', { epoch: epoch, holder: holder, holderAgent: whoIs(holder), expiry: exp, attestor: 'fo', digest: w[1] }, log));
-        else emit(ev('lease.claimed', { epoch: epoch, prevEpoch: BigInt(w[1]).toString(), holder: holder, holderAgent: whoIs(holder), expiry: exp, gapSeconds: prev ? Math.max(0, Math.round(t / 1000 - prev.expiry)) : null,
-          early: !!(c.ch && prev && t / 1000 < prev.expiry) }, log));
-        if (n === 'Claimed') c.ch = 0;
-      } else if (n === 'Challenged' || n === 'Responded') {
-        var who = wAddr(tp[2]);
-        c.ch = n === 'Challenged' ? hexN(w[0]) : 0;
-        emit(n === 'Challenged' ? ev('lease.challenged', { epoch: BigInt(tp[1]).toString(), challenger: who, challengerAgent: whoIs(who), deadline: hexN(w[0]) }, log)
-          : ev('lease.responded', { epoch: BigInt(tp[1]).toString(), holder: who, holderAgent: whoIs(who), cooldownUntil: hexN(w[0]) }, log));
-      } else if (n === 'Relinked') {
-        var label = wStr(log.data, 0);
-        emit(ev('castle.relinked', { node: tp[1], holderNode: tp[2], holderName: label ? label + '.' + parentName() : null }, log));
-      } else if (n === 'Shipped') {
-        var se = BigInt(tp[2]).toString(), by = c.leaseAtBlock(b);
-        c.shipEpoch[tp[1]] = se;
-        emit(ev('strategy.shipped', { hash: tp[1], epoch: se, shippedBy: by ? by.agent : null, center: BigInt(w[0]) > BigInt(0) ? q96View(w[0]) : null, weth: BigInt(w[1]).toString(), usdc: BigInt(w[2]).toString() }, log));
-      } else if (n === 'Docked') {
-        emit(ev('strategy.docked', { hash: tp[1], epoch: BigInt(tp[2]).toString(), dockedBy: whoIs(wAddr(tp[3])) }, log));
-      } else if (n === 'PriceWritten') {
-        emit(ev('price.written', { key: 'handoff-price', price: q96View(w[0]) }, log));
-      } else if (n === 'AuctionOpened') {
-        var au = wAddr(tp[1]);
-        if (c.auctions.indexOf(au) < 0) c.auctions.push(au);
-        emit(ev('auction.opened', { auction: au, kind: BigInt(w[3]) ? 'dissolution' : 'shift-change', amount: BigInt(w[0]).toString(), floor: q96View(w[1]), startBlock: b, endBlock: hexN(w[2]), hook: (CONFIG.contracts.jackHook || {}).address || null }, log));
-      } else if (n === 'AuctionSettled') {
-        emit(ev('auction.cleared', { auction: wAddr(tp[1]), clearing: q96View(w[0]), sold: null, raised: BigInt(w[1]).toString() }, log));
-      } else if (n === 'Dissolved') {
-        emit(ev('castle.dissolved', { caller: null, auction: null }, log));
-      }
-    }
-    // One router.swap is one fill: Aqua pulls one token from the castle and pushes the other in. The taker is the tx sender.
-    function fills(txs) {
-      return txs.reduce(function (p, h0) {
-        return p.then(function () {
-          var f = c.fillTx[h0]; delete c.fillTx[h0];
-          if (f.n !== 2 || !f.legs.Pulled || !f.legs.Pushed || same(f.legs.Pulled.token, f.legs.Pushed.token) || c.castleTx[h0]) return null;
-          return q('eth_getTransactionByHash', [h0]).then(function (tx) {
-            var out = f.legs.Pulled, inn = f.legs.Pushed, hash = (out || inn).hash, b = hexN(f.log.blockNumber), L = c.leaseAtBlock(b), pe = c.shipEpoch[hash] || null;
-            var tIn = inn && same(inn.token, CONFIG.external.usdc) ? 'USDC' : 'WETH', tOut = tIn === 'USDC' ? 'WETH' : 'USDC';
-            lapse(c.time(f.log) / 1000);
-            // v3's branch turns on the taker's heartbeat, which logs do not carry: such a fill is told as FILLED.
-            var d = pe != null && L && pe !== L.epoch ? 'fenced' : L && c.time(f.log) / 1000 > L.expiry ? 'wind-down' : v3 ? null : 'live';
-            emit(ev('fill', { id: h0 + ':0', taker: tx && tx.from, takerName: tx ? ensOf(tx.from) : null, tokenIn: tIn, tokenOut: tOut,
-              amountIn: inn ? inn.amount : '0', amountOut: out ? out.amount : '0', strategy: hash, programEpoch: pe, leaseEpoch: L ? L.epoch : null, expiry: L ? L.expiry : null,
-              decision: d, status: 'success', revert: null }, f.log));
-          });
-        });
-      }, Promise.resolve());
-    }
-    function logs(addr, from, to) { return q('eth_getLogs', [{ address: addr, fromBlock: '0x' + from.toString(16), toBlock: '0x' + to.toString(16) }]); }
-    function sorted(a) { return a.sort(function (x, y) { return hexN(x.blockNumber) - hexN(y.blockNumber) || hexN(x.logIndex) - hexN(y.logIndex); }); }
-    c.scan = function scan(from, to) {
-      var hi = Math.min(to, from + 1999);
-      return logs([castle, aqua], from, hi).then(function (ls) {
-        var known = c.auctions.slice();
-        sorted(ls).forEach(function (l) { if (!same(l.address, castle) || TOPIC[l.topics[0]] !== 'AuctionOpened') return; var a = wAddr(l.topics[1]); if (known.indexOf(a) < 0) known.push(a); });
-        return (known.length ? logs(known, from, hi) : Promise.resolve([])).then(function (more) {
-          // In block order: a swap's fill is told once its tx is over, before the next event, so scenes stay chronological.
-          return sorted(ls.concat(more)).reduce(function (p, l) {
-            return p.then(function () {
-              var done = Object.keys(c.fillTx).filter(function (h0) { return h0 !== l.transactionHash; });
-              return (done.length ? fills(done) : null);
-            }).then(function () { one(l); });
-          }, Promise.resolve()).then(function () { return fills(Object.keys(c.fillTx)); });
-        });
-      }).then(function () { c.cursor = hi; if (hi < to) return scan(hi + 1, to); });
-    };
-    // The lease lapsing is no transaction: it is derived from block time, as the extruction derives it.
-    function lapse(at) {
-      var L = c.leases[c.leases.length - 1];
-      if (!L || (at == null ? nowS() : at) <= L.expiry || c.expiredFor === L.epoch + ':' + L.expiry) return;
-      c.expiredFor = L.epoch + ':' + L.expiry;
-      emit({ v: 1, type: 'lease.expired', t: L.expiry * 1000, block: null, tx: null, src: 'chain', epoch: L.epoch, holder: L.holder, holderAgent: L.agent, expiry: L.expiry });
-    }
-    c.lapse = lapse;
-    return c;
-  }
-  function startChain(why) {
-    stopChain(); MOCK = null;
-    if (es) { es.close(); es = null; }
-    reset('chain');
-    S.config = Object.assign({}, CONFIG);
-    var castle = CONFIG.contracts.castle.address, deploy = Number(CONFIG.contracts.castle.block);
-    S.v3 = CONFIG.contracts.castle.version === 3;
-    var c = CH = reader(castle, feed, S.v3);
-    c.why = why || ''; c.bal = ''; c.polls = 0;
-    drawChainNote();
-    function call(to, data) { return rpc('eth_call', [{ to: to, data: data }, 'latest'], c); }
-    function views() {
-      var pad = castle.slice(2).toLowerCase(); while (pad.length < 64) pad = '0' + pad;
-      return Promise.all([call(CONFIG.external.weth, '0x70a08231' + pad), call(CONFIG.external.usdc, '0x70a08231' + pad), call(castle, '0x2942b8e6')]).then(function (r) {
-        if (BigInt(r[2]) > BigInt(0) && (!S.price || !S.price.tx)) S.price = Object.assign(q96View(r[2]), { block: c.cursor, tx: null });
-        var k = r.slice(0, 2).join();
-        if (k !== c.bal) { c.bal = k; feed({ v: 1, type: 'inventory', t: clock(), block: c.cursor, tx: null, src: 'chain', weth: BigInt(r[0]).toString(), usdc: BigInt(r[1]).toString() }); }
-      });
-    }
-    function poll() {
-      if (c.dead) return;
-      Promise.all([rpc('eth_blockNumber', [], c), c.cursor ? null : rpc('eth_getBlockByNumber', ['0x' + deploy.toString(16), false], c)]).then(function (r) {
-        var head = hexN(r[0]);
-        if (!c.cursor) {
-          feed({ v: 1, type: 'snapshot', t: r[1] ? hexN(r[1].timestamp) * 1000 : clock(), block: deploy, tx: CONFIG.contracts.castle.tx || null, src: 'chain', config: CONFIG, shifts: CONFIG.shifts || [],
-            agents: (CONFIG.agents || []).map(function (a) { return { id: a.id, role: a.role, addr: a.addr, ens: a.ens, alive: null }; }), lease: null, leases: [], strategies: [], fills: [] });
-          c.cursor = deploy - 1;
-        }
-        return (head > c.cursor ? c.scan(c.cursor + 1, head) : Promise.resolve()).then(views);
-      }).then(function () {
-        if (c.dead) return;
-        c.lapse(); dirty = true;
-        c.timer = setTimeout(poll, 12000);
-      }, function () {
-        if (c.dead) return;
-        if (!c.cursor || c.cursor < deploy) { stopChain(); startMock('Neither the castle service nor any Sepolia RPC answered. The mock is playing.'); return; }
-        c.timer = setTimeout(poll, 20000);
-      });
-      // while the chain is read directly, look for the service coming back
-      if (CONFIG.stream && ++c.polls % 5 === 0) fetch(base() + '/health').then(function (r) { if (r.ok && !c.dead) startLive(); }, function () { /* still away */ });
-    }
-    poll();
-  }
-  function drawChainNote() {
-    var el = R('mockbar');
-    el.hidden = false;
-    fill(el, h('p', { class: 'mocktxt' }, [h('b', { text: 'Chain replay.' }), ' ' + (CH && CH.why ? CH.why + ' ' : '') + 'This page reads Castle and Aqua on Sepolia directly, so every scene is a real transaction. Heartbeats and reverted fills need the castle service, so they are not shown.']));
-  }
-
-  // ---------------------------------------------------------------- the v2 run: Castle v2's whole life, read from Sepolia
-  // Its leases and fills come from logs. A reverted tx leaves no logs, so the two headline reverts are read by hash:
-  // status 0 from the receipt, and the error from replaying the call on an archive node at the block before.
-  var HIST = null, drawnHist = '';
-  function startHistory() {
-    var hc = CONFIG && CONFIG.history;
-    if (!hc || HIST) return;
-    var keep = S; reset('history'); var st = S; S = keep;
-    st.config = Object.assign({}, CONFIG);
-    var H = HIST = { S: st, refused: [], state: 'reading' };
-    function emit(ev) { var k = S; S = st; try { apply(ev); } finally { S = k; } dirty = true; }
-    var c = reader(hc.castle, emit);
-    function q(m, p) { return rpc(m, p, c); }
-    function replay(tx, b) {
-      if (!CONFIG.archive) return Promise.resolve(null);
-      return fetch(CONFIG.archive, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_call',
-        params: [{ from: tx.from, to: tx.to, data: tx.input, value: tx.value, gas: tx.gas }, '0x' + (b - 1).toString(16)] }) })
-        .then(function (r) { return r.json(); })
-        .then(function (j) { var d = j.error && j.error.data; d = d && d.data || d; return typeof d === 'string' && /^0x[0-9a-f]{8}/i.test(d) ? d.toLowerCase() : null; }, function () { return null; });
-    }
-    // The book's epoch is baked into the order's program, so the swap calldata carries it as a 32-byte value.
-    function epochIn(input) {
-      var hx = String(input).toLowerCase();
-      for (var i = st.leases.length - 1; i >= 0; i--) {
-        var e = BigInt(st.leases[i].epoch).toString(16);
-        while (e.length < 64) e = '0' + e;
-        if (hx.indexOf(e) > 9) return st.leases[i].epoch;
-      }
-      return null;
-    }
-    function reverted(h0) {
-      return Promise.all([q('eth_getTransactionByHash', [h0]), q('eth_getTransactionReceipt', [h0])]).then(function (r) {
-        var tx = r[0], rc = r[1];
-        if (!tx || !rc || hexN(rc.status) !== 0) return null;
-        var b = hexN(rc.blockNumber);
-        return Promise.all([q('eth_getBlockByNumber', [rc.blockNumber, false]), replay(tx, b)]).then(function (x) {
-          var t = hexN(x[0].timestamp) * 1000, d = x[1] || '', sel = d.slice(0, 10), w = wordsOf('0x' + d.slice(10));
-          if (same(tx.to, hc.castle)) {
-            H.refused.push({ t: t, block: b, tx: h0, who: whoIs(tx.from) || short(tx.from), call: { '0xb7c8cfb9': 'renew()', '0xac9650d8': 'multicall()' }[tx.input.slice(0, 10)] || 'Castle',
-              why: sel === '0xbf5cd21d' ? 'NotHolder, because ' + up(whoIs(wAddr(w[1])) || short(wAddr(w[1]))) + ' holds the castle' : 'reverted; the error was not recovered' });
-            dirty = true;
-            return;
-          }
-          var fenced = sel === '0x0f7adc36';
-          emit({ v: 1, type: 'fill', t: t, block: b, tx: h0, src: 'chain', id: h0 + ':0', taker: tx.from, takerName: ensOf(tx.from), strategy: null, programEpoch: epochIn(tx.input),
-            decision: fenced ? 'fenced' : null, status: 'reverted', revert: fenced ? 'FeeFiFoFum()' : null });
-        });
-      });
-    }
-    q('eth_blockNumber', []).then(function (hd) { return c.scan(hc.from, hc.to || hexN(hd)); })
-      .then(function () { c.lapse(); return (hc.reverts || []).reduce(function (p, h0) { return p.then(function () { return reverted(h0); }); }, Promise.resolve()); })
-      .then(function () { st.fills.sort(function (a, b) { return a.t - b.t; }); H.state = 'done'; dirty = true; }, function () { H.state = 'failed'; dirty = true; });
-  }
-  function drawHistory() {
-    var H = HIST, key = H ? [H.state, H.S.fills.length, H.S.leases.length, H.refused.length, root.getAttribute('data-size')].join('|') : '';
-    if (!H || drawnHist === key) return;
-    drawnHist = key;
-    var st = H.S, end = 0, fenced = st.fills.filter(function (f) { return f.status === 'reverted'; }).length;
-    st.leases.forEach(function (l) { end = Math.max(end, l.expiry * 1000); });
-    st.fills.forEach(function (f) { end = Math.max(end, f.t); });
-    fill(R('v2Note'), H.state === 'reading' ? 'Reading Castle v2 from Sepolia…' : H.state === 'failed' ? 'Sepolia did not answer. Reopen the tab to try again.'
-      : 'Castle v2 ran the live failover on 26 September 2026. Every lease and fill below is read from its Sepolia logs: ' + st.fills.length + ' fills, ' + fenced + ' of them reverted, and '
-        + H.refused.length + ' refused call' + (H.refused.length === 1 ? '' : 's') + '. A reverted tx leaves no logs, so those are read by hash, and the error is recovered by replaying the call.');
-    var keep = S; S = st;
-    try { drawTimeline(R('v2Timeline'), end); fill(R('v2Table'), st.fills.length ? judged() : null); } finally { S = keep; }
-    fill(R('v2Refused'), H.refused.map(function (r) {
-      return h('div', { class: 'bk num', 'data-s': 'FENCED' }, [stitch('fenced', ''), h('span', null, [hhmmss(r.t) + ' · block ' + r.block + ' · ', h('b', { text: up(r.who) }), ' called ' + r.call + ' and the castle refused it: ' + r.why + '. ', txEl(r.tx)])]);
-    }));
-  }
-
-  // ---------------------------------------------------------------- the mock: the five beats of the demo, on a loop
-  var MOCK = null;
+  // ---------------------------------------------------------------- the mock: the demo on a loop, with time squeezed
+  // Every fill moves the hoard and its bargain's promise by exactly what the Jack paid and got, so the gauge,
+  // the hoard and the ledger always agree.
   function startMock(why) {
-    stopChain();
     if (es) { es.close(); es = null; }
     reset('mock');
-    S.v3 = true;
-    var T = [], beats = [], seed = 7, t0 = clock(), B0 = 9312000, HB = 12, DAY = 86400;
+    var T = [], beats = [], seed = 7, t0 = clock(), B0 = 9412000;
     function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
     function hx(n) { var s = '0x'; for (var i = 0; i < n; i++) s += '0123456789abcdef'[Math.floor(rnd() * 16)]; return s; }
     function W(x) { return (BigInt(Math.round(x * 1e6)) * BigInt(1e12)).toString(); }
     function U(x) { return String(Math.round(x * 1e6)); }
-    function P(x) { return { q96: '0', usdcPerWeth: x.toFixed(2) }; }
+    function B(u, w) { return { USDC: U(u), WETH: W(w) }; }
+    function A(sym, x) { return sym === 'USDC' ? U(x) : W(x); }
     function V(s) { return Math.round(t0 / 1000 + s); }
-    function at(s, ev) { ev.tx = ev.tx === null ? null : (ev.tx || hx(64)); T.push({ at: s, ev: ev }); }
+    function at(s, ev) { ev.tx = ev.tx === null ? null : (ev.tx || hx(64)); T.push({ at: s, ev: ev }); return ev; }
     function beat(s, label) { beats.push({ at: s, label: label }); }
-    function beats4(who, e, from, to) { for (var s = from; s <= to; s += 4) at(s, { type: 'heartbeat', holderAgent: who, epoch: e, validUntil: V(s + HB), tx: null }); }
-    var bal = { w: 4.2, u: 10150 }, J = ['Jack Horner', 'Jack Frost', 'Jack Tar', 'Jack Spriggs'];
-    function fillEv(s, j, buy, w, price, pe, d, revert) {
-      var u = Math.round(w * price * 100) / 100, bad = d === 'fenced' || revert;
-      at(s, { type: 'fill', taker: hx(40), takerName: J[j], tokenIn: buy ? 'USDC' : 'WETH', tokenOut: buy ? 'WETH' : 'USDC', amountIn: buy ? U(u) : W(w), amountOut: buy ? W(w) : U(u),
-        strategy: hx(64), programEpoch: pe, leaseEpoch: s < 53 ? '7' : '8', heartbeat: d === 'live' ? { validUntil: V(s + HB) } : null, decision: d, status: bad ? 'reverted' : 'success', revert: d === 'fenced' ? 'FeeFiFoFum()' : revert || null });
-      if (!bad) { bal.w += buy ? -w : w; bal.u += buy ? u : -u; at(s, { type: 'inventory', weth: W(bal.w), usdc: U(bal.u) }); }
+    var hoard = { u: 10000, w: 4 }, al = {}, sA = hx(64), sB = hx(64), sC = hx(64), pool = hx(64), fiAddr = hx(40), resolver = hx(40);
+    function ship(s, hash, label, kind, u, w) { al[hash] = { u: u, w: w }; at(s, { type: 'strategy.shipped', hash: hash, label: label, kind: kind, alloc: B(u, w), cap: null, shippedBy: 'fi' }); }
+    function cap(s, hash, u, w) { at(s, { type: 'cap.set', hash: hash, cap: B(u, w), by: 'fum' }); }
+    function quote(s, id, name, hash, pay, get, ttl) {
+      at(s, { type: 'quote.served', tx: null, id: id, name: 'quote.feefifofum.eth', sender: resolver, requester: hx(40), requesterName: name, strategy: hash,
+        tokenIn: pay[0], tokenOut: get[0], amountIn: A(pay[0], pay[1]), amountOut: A(get[0], get[1]), expiry: V(s + ttl), signer: 'fi', signerAddr: fiAddr, digest: hx(64) });
     }
-    var s7 = hx(64), s8 = hx(64), s8b = hx(64);
-    at(0, { type: 'snapshot', tx: null, castle: { version: 3 },
-      config: { chainId: 11155111, name: 'castle.feefifofum.eth', leaseSeconds: DAY, heartbeatSeconds: HB, explorer: '' },
-      shifts: CONFIG && CONFIG.shifts || [{ city: 'Tokyo', tz: 'Asia/Tokyo', startUtc: '00:00', endUtc: '08:00', agent: 'fee' }, { city: 'London', tz: 'Europe/London', startUtc: '08:00', endUtc: '16:00', agent: 'fi' },
-        { city: 'New York', tz: 'America/New_York', startUtc: '16:00', endUtc: '24:00', agent: 'fee' }],
-      agents: ['fee', 'fi', 'fo', 'fum'].map(function (id) { return { id: id, role: ROLE[id], alive: true }; }),
-      lease: { holder: hx(40), holderAgent: 'fee', epoch: '7', expiry: V(DAY), heartbeat: { validUntil: V(HB) } },
-      leases: [{ kind: 'claim', epoch: '7', holderAgent: 'fee', expiry: V(DAY), t: t0 - 1, block: B0, tx: hx(64) }],
-      strategies: [{ hash: s7, epoch: '7', shippedBy: 'fee', center: P(2412.5), weth: W(4), usdc: U(10000) }],
-      inventory: { weth: W(bal.w), usdc: U(bal.u) }, price: P(2412.5), auction: null, fills: [] });
-    beats4('fee', '7', 0, 20);
-    fillEv(2, 0, true, 0.25, 2416.4, '7', 'live');
-    fillEv(9, 1, false, 0.4, 2408, '7', 'live');
-    fillEv(17, 2, true, 0.1, 2414, '7', 'live');
-    beat(22, 'fee falls silent');
-    at(22, { type: 'agent', id: 'fee', alive: false, tx: null });
-    beat(32, 'its heartbeat runs out: no gas');
-    fillEv(35, 3, true, 0.3, 2527, '7', 'wind-down');
-    fillEv(38, 1, false, 0.5, 2300, '7', 'wind-down', 'WindDownReduceOnly(WETH)');
-    beat(40, 'fi challenges; nobody answers');
-    at(40, { type: 'lease.challenged', challengerAgent: 'fi', epoch: '7', deadline: V(52) });
-    at(53, { type: 'lease.claimed', holder: hx(40), holderAgent: 'fi', epoch: '8', prevEpoch: '7', expiry: V(53 + DAY), gapSeconds: 21, early: true });
-    beats4('fi', '8', 54, 110);
-    at(54, { type: 'castle.relinked', node: hx(64), holderNode: hx(64), holderName: 'fi.feefifofum.eth' });
-    fillEv(56, 0, true, 0.5, 2416.4, '7', 'fenced');
-    at(58, { type: 'strategy.docked', hash: s7, epoch: '7', dockedBy: 'fi' });
-    at(59, { type: 'strategy.shipped', hash: s8, epoch: '8', shippedBy: 'fi', center: P(2412.5), weth: W(3.5), usdc: U(10000) });
-    fillEv(62, 0, true, 0.2, 2416.5, '8', 'live');
-    beat(66, 'fee returns stale and is refused');
-    at(66, { type: 'agent', id: 'fee', alive: true, tx: null });
-    at(67, { type: 'lease.rejected', epoch: '7', holderAgent: 'fee', call: 'ship', reason: 'NotHolder: the castle is fi’s now, epoch #8' });
-    beat(72, 'fee challenges; fi answers');
-    at(72, { type: 'lease.challenged', challengerAgent: 'fee', epoch: '8', deadline: V(84) });
-    at(75, { type: 'lease.responded', holderAgent: 'fi', epoch: '8', cooldownUntil: V(675) });
-    beat(80, 'the Jacks climb the beanstalk');
-    at(80, { type: 'auction.opened', auction: hx(40), kind: 'shift-change', amount: W(1.5), floor: P(2350), startBlock: B0 + 80, endBlock: B0 + 100, hook: 'JackHook' });
-    [[83, 0, 0.5, 2440], [85, 1, 0.6, 2425], [87, 2, 0.3, 2460], [89, 3, 0.8, 2415]].forEach(function (b) {
-      at(b[0], { type: 'auction.bid', auction: '', bidId: hx(8), owner: hx(40), ownerName: J[b[1]], maxPrice: P(b[3]), amount: U(b[2] * b[3]) });
-    });
-    at(86, { type: 'auction.rejected', auction: '', owner: hx(40), ownerName: null, reason: 'JackHook' });
-    [[84, 2350], [88, 2395], [92, 2410], [96, 2418], [99, 2421]].forEach(function (c) { at(c[0], { type: 'auction.checkpoint', clearing: P(c[1]), sold: W(1.5 * (c[0] - 80) / 20), raised: U(1.5 * (c[0] - 80) / 20 * c[1]) }); });
-    at(100, { type: 'auction.cleared', clearing: P(2421), sold: W(1.5), raised: U(3631.5) });
-    bal.w -= 1.5; bal.u += 3631.5;
-    at(101, { type: 'inventory', weth: W(bal.w), usdc: U(bal.u) });
-    at(102, { type: 'price.written', key: 'handoff-price', price: P(2421) });
-    at(103, { type: 'strategy.docked', hash: s8, epoch: '8', dockedBy: 'fi' });
-    at(104, { type: 'strategy.shipped', hash: s8b, epoch: '8', shippedBy: 'fi', center: P(2421), weth: W(2), usdc: U(14000) });
-    fillEv(106, 1, true, 0.15, 2424, '8', 'live');
+    function order(s, id, name, pay, want, hash) { at(s, { type: 'intent.routed', tx: null, id: id, source: 'UniswapX', swapper: hx(40), swapperName: name, tokenIn: pay[0], tokenOut: want, amountIn: A(pay[0], pay[1]), route: 'v4', strategy: hash, by: 'fo' }); }
+    function fillEv(s, x) {
+      var ok = !x.revert, inU = x.pay[0] === 'USDC';
+      var ev = at(s, { type: 'fill', route: x.route || 'aqua', strategy: x.hash, quoteId: x.q || null, intentId: x.i || null, taker: hx(40), takerName: x.name,
+        tokenIn: x.pay[0], tokenOut: x.get[0], amountIn: A(x.pay[0], x.pay[1]), amountOut: A(x.get[0], x.get[1]), fee: x.fee || null, pool: x.route === 'v4' ? pool : null,
+        status: ok ? 'success' : 'reverted', revert: x.revert || null });
+      if (!ok) return;
+      var du = inU ? x.pay[1] : -x.get[1], dw = inU ? -x.get[1] : x.pay[1], a = al[x.hash];
+      hoard.u += du; hoard.w += dw;
+      if (a) { a.u += du; a.w += dw; ev.alloc = B(a.u, a.w); }
+      at(s, { type: 'hoard', tx: ev.tx, hoard: B(hoard.u, hoard.w), reason: 'fill' });
+    }
+    at(0, { type: 'snapshot', tx: null, config: { chainId: 11155111, name: 'castle.feefifofum.eth', quoteName: 'quote.feefifofum.eth', explorer: '', decimals: { USDC: 6, WETH: 18 } },
+      agents: S.order.map(function (id) { return { id: id, role: ROLE[id], alive: true }; }), hoard: B(10000, 4), price: null, strategies: [], quotes: [], fills: [], refusals: [], intents: [] });
+    at(2, { type: 'price', mid: '2412.50', spreadBps: 12, hookFeeBps: 30, by: 'fee' });
+    beat(5, 'fi ships two bargains from one hoard');
+    ship(5, sA, 'Tight curve', 'curve', 6000, 2);
+    ship(8, sB, 'Wide ladder', 'limit', 3000, 1.5);
+    cap(11, sA, 9000, 2.5);
+    cap(12, sB, 4000, 2);
+    beat(15, 'fum refuses a promise too many');
+    at(15, { type: 'allocation.refused', label: 'Deep pool', hash: sC, asked: B(2500, 1), allocated: B(9000, 3.5), balance: B(10000, 4), cap: null, error: 'OverAllocated()', by: 'fi', status: 'reverted' });
+    beat(22, 'a Jack asks the castle’s name');
+    quote(22, 'q-1', 'agy.feefifofum.eth', sA, ['USDC', 1207.7], ['WETH', 0.5], 30);
+    fillEv(27, { hash: sA, q: 'q-1', name: 'agy.feefifofum.eth', pay: ['USDC', 1207.7], get: ['WETH', 0.5] });
+    quote(32, 'q-2', 'horner.eth', sB, ['WETH', 0.4], ['USDC', 963.84], 14);
+    beat(40, 'fo carries swaps to the hen');
+    order(40, 'i-1', 'frost.eth', ['WETH', 0.3], 'USDC', sA);
+    fillEv(43, { route: 'v4', hash: sA, i: 'i-1', name: 'frost.eth', pay: ['WETH', 0.3], get: ['USDC', 722.88], fee: { WETH: W(0.0009) } });
+    order(47, 'i-2', 'tar.eth', ['USDC', 1000], 'WETH', sA);
+    fillEv(50, { route: 'v4', hash: sA, i: 'i-2', name: 'tar.eth', pay: ['USDC', 1000], get: ['WETH', 0.414], fee: { USDC: U(3) } });
+    at(55, { type: 'price', tx: null, mid: '2420.00', spreadBps: 12, hookFeeBps: 30, by: 'fee' });
+    quote(58, 'q-3', 'agy.feefifofum.eth', sA, ['USDC', 605.73], ['WETH', 0.25], 30);
+    fillEv(61, { hash: sA, q: 'q-3', name: 'agy.feefifofum.eth', pay: ['USDC', 605.73], get: ['WETH', 0.25] });
+    fillEv(64, { hash: sB, q: 'q-2', name: 'spriggs.eth', pay: ['WETH', 0.4], get: ['USDC', 963.84], revert: 'QuoteExpired()' });
+    beat(68, 'fum docks a bargain, and the refused one fits');
+    at(68, { type: 'strategy.docked', hash: sB, by: 'fum', reason: 'no fills; fum wants the room' });
+    ship(72, sC, 'Deep pool', 'curve', 2500, 1);
+    cap(74, sC, 3000, 1.5);
+    fillEv(78, { hash: sC, name: 'horner.eth', pay: ['WETH', 0.2], get: ['USDC', 483.42] });
     T.sort(function (a, b) { return a.at - b.at; });
-    T.forEach(function (x, i) { x.ev.seq = i + 1; x.ev.t = t0 + x.at * 1000; x.ev.block = x.ev.tx ? B0 + Math.floor(x.at) : null; x.ev.src = 'mock'; });
-    MOCK = { T: T, beats: beats, i: 0, t0: t0, end: 114, why: why };
+    T.forEach(function (x, i) { x.ev.seq = i + 1; x.ev.v = 2; x.ev.t = t0 + x.at * 1000; x.ev.block = x.ev.tx ? B0 + Math.floor(x.at / 12) : null; x.ev.src = 'mock'; });
+    MOCK = { T: T, beats: beats, i: 0, t0: t0, end: 88, why: why };
     drawMockbar();
   }
   function mockTick() {
     if (!MOCK) return;
     var el = (clock() - MOCK.t0) / 1000;
     while (MOCK.i < MOCK.T.length && MOCK.T[MOCK.i].at <= el) { feed(MOCK.T[MOCK.i].ev); MOCK.i++; }
-    if (el > MOCK.end) { var why = MOCK.why; drawnFills = -1; drawnReplay = -1; startMock(why); }
+    if (el > MOCK.end) startMock(MOCK.why);
     markBeat(el);
   }
   // Jump the loop to a beat: rebuild from zero with the clock moved back, so every countdown stays honest.
   function jump(at) {
-    var why = MOCK.why; drawnFills = -1; drawnReplay = -1;
-    startMock(why);
+    startMock(MOCK.why);
     var shift = at * 1000;
-    function back(o) { ['expiry', 'validUntil', 'deadline', 'cooldownUntil'].forEach(function (k) { if (o && o[k]) o[k] -= at; }); if (o && o.heartbeat) back(o.heartbeat); }
-    MOCK.T.forEach(function (x) { x.ev.t -= shift; back(x.ev); if (x.ev.type === 'snapshot') { back(x.ev.lease); x.ev.leases.forEach(function (l) { l.expiry -= at; l.t -= shift; }); } });
+    MOCK.T.forEach(function (x) { x.ev.t -= shift; if (x.ev.expiry) x.ev.expiry -= at; });
     MOCK.t0 -= shift;
     mockTick();
     dirty = true;
@@ -1680,7 +1095,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   function drawMockbar() {
     var el = R('mockbar');
     el.hidden = false;
-    fill(el, [h('p', { class: 'mocktxt' }, [h('b', { text: 'Mock stream.' }), ' Synthetic data on a loop, with time squeezed: a heartbeat and a challenge last 12 s here. Nothing here is a real transaction.' + (MOCK.why ? ' ' + MOCK.why : '')])]
+    fill(el, [h('p', { class: 'mocktxt' }, [h('b', { text: 'Mock stream.' }), ' Synthetic data playing the demo on a loop, with time squeezed. Nothing here is a real transaction.' + (MOCK.why ? ' ' + MOCK.why : '')])]
       .concat(MOCK.beats.map(function (b, i) { return h('button', { 'data-at': b.at, onclick: function () { jump(b.at); } }, (i + 1) + '. ' + b.label); }))
       .concat([h('button', { onclick: function () { jump(0); } }, 'Start over')]));
   }
@@ -1694,29 +1109,19 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     for (var i = 0; i < bs.length; i++) flag(bs[i], 'data-now', i === k);
   }
 
-  // ---------------------------------------------------------------- sizing, tabs, loop
+  // ---------------------------------------------------------------- sizing and the loop
   // Width picks the layout; the card face is only for a SHORT box (a market card or a collapsed soc). A phone
   // opening the bundle is narrow but tall, and gets the whole app in one column.
   function size() {
     var w = root.getBoundingClientRect().width, rn = root.getRootNode ? root.getRootNode() : null, host = rn && rn.host;
     var boxH = host ? (host.clientHeight || (host.parentElement ? host.parentElement.clientHeight : 0)) : window.innerHeight;
     var short = boxH > 0 && boxH < 420;
-    var sz = short && w < 268 ? 'watch' : short && w < 420 ? 'mini' : w < 620 ? 'compact' : 'full';
+    var sz = short && w < 268 ? 'watch' : short && w < 420 ? 'mini' : w < 720 ? 'compact' : 'full';
     if (root.getAttribute('data-size') !== sz) { root.setAttribute('data-size', sz); dirty = true; }
   }
   if (typeof ResizeObserver === 'function') new ResizeObserver(size).observe(root);
   size();
 
-  root.querySelector('[data-tab=v2]').hidden = !(CONFIG && CONFIG.history);
-  root.querySelectorAll('[data-tab]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      var tab = b.getAttribute('data-tab');
-      root.querySelectorAll('[data-tab]').forEach(function (x) { x.setAttribute('aria-selected', String(x === b)); });
-      root.querySelectorAll('[data-view]').forEach(function (v) { v.hidden = v.getAttribute('data-view') !== tab; });
-      if (tab === 'v2') { if (HIST && HIST.state === 'failed') HIST = null; startHistory(); }
-      drawnReplay = -1; drawnHist = ''; dirty = true;
-    });
-  });
   R('unroll').addEventListener('click', function () {
     var f = R('frieze');
     if (f.dataset.open) delete f.dataset.open; else f.dataset.open = '1';
@@ -1725,28 +1130,23 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   });
   root.querySelectorAll('[data-lt]').forEach(function (n) { put(n, letters(n.getAttribute('data-lt'), true)); });
   put(R('mark'), letters('fee·fi·fo·fum'));
-  fill(R('foot'), ['Castle.sol on Ethereum Sepolia · 1inch Aqua + SwapVM · Uniswap CCA · ENSv2', 'Event schema: miniapp/STREAM.md', 'Lettering: Almendra, SIL OFL'].map(function (t) { return h('span', { text: t }); }));
-  buildRoundel(); buildGiant(); buildCastleArt();
+  fill(R('foot'), ['The Castle on Ethereum Sepolia · 1inch Aqua + SwapVM · ENS CCIP-Read · Uniswap v4 hook', 'Event schema: miniapp/STREAM.md', 'Lettering: Almendra, SIL OFL'].map(function (t) { return h('span', { text: t }); }));
+  reset('idle');
+  buildGiant(); buildCastleArt(); buildGauges();
 
   var visible = true;
   if (typeof IntersectionObserver === 'function') new IntersectionObserver(function (en) { visible = en[0].isIntersecting; }).observe(root);
   var last = 0, timer = null;
   function frame(ts) {
     if (!root.isConnected) { if (es) es.close(); clearInterval(timer); return; }
-    if (visible) {
-      if (ts - last > 200 || dirty) { last = ts; render(); }
-      else tickRoundel();
-    }
+    if (visible && (ts - last > 200 || dirty)) { last = ts; render(); }
     requestAnimationFrame(frame);
   }
   timer = setInterval(function () { if (MOCK) mockTick(); }, 250);
 
   var qs = '';
   try { qs = window.location.search || ''; } catch (e) { qs = ''; }
-  var wantMock = /[?&]mock=1/.test(qs);
-  var wantChain = /[?&]chain=1/.test(qs);
-  if (!wantMock && !wantChain && CONFIG && CONFIG.stream) startLive();
-  else if (!wantMock && hasChain()) startChain('');
+  if (!/[?&]mock=1/.test(qs) && CONFIG && CONFIG.stream) startLive();
   else startMock(CONFIG ? '' : 'The castle service is not wired into this build yet.');
   setInterval(liveWatch, 5000);
   setInterval(liveHoard, 30000);

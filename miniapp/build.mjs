@@ -3,7 +3,7 @@
 // scan the handoff.lol validator runs, so a build that would lose points fails here first.
 //
 //   node miniapp/build.mjs            -> miniapp/dist/fee-fi-fo-fum.html (the mock plays: no config)
-//   node miniapp/build.mjs --live     -> config from contracts/deployments/sepolia.json + miniapp/config.json
+//   node miniapp/build.mjs --live     -> config from miniapp/config.json (+ addresses from contracts/deployments/sepolia.json)
 //
 // esbuild comes from ESBUILD (a module path) or normal resolution; `npm i -g esbuild` is enough.
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
@@ -21,29 +21,34 @@ const { transformSync } = esbuild.default || esbuild;
 let html = readFileSync(join(HERE, 'fee-fi-fo-fum.html'), 'utf8');
 
 if (LIVE) {
-  const dep = join(REPO, 'contracts', 'deployments', 'sepolia.json');
-  const cfg = join(HERE, 'config.json');
-  if (!existsSync(dep) || !existsSync(cfg)) { console.error(`--live needs ${dep} and ${cfg}`); process.exit(1); }
-  // Only what the page reads: addresses, the Castle deploy block and tx. Constructor args and build notes stay out.
-  const d = JSON.parse(readFileSync(dep, 'utf8'));
-  // contracts.castle is the live Castle ("version": "v3" once v3 is deployed); d.v2.castle is the retired v2, which the
-  // page shows as its history tab.
-  const { castle, jackHook } = d.contracts || {}, { aqua, weth, usdc } = d.external || {};
-  const version = castle && castle.version ? Number(String(castle.version).replace(/\D/g, '')) : 2;
-  const contracts = { castle: castle && { address: castle.address, block: castle.block, tx: castle.tx, version }, jackHook: jackHook && { address: jackHook.address } };
-  const config = Object.assign({ chainId: d.chainId, external: { aqua, weth, usdc }, contracts }, JSON.parse(readFileSync(cfg, 'utf8')));
-  config.agents = (config.agents || []).map(({ id, role, addr, ens }) => ({ id, role, addr, ens }));
-  if (version >= 3) {
-    config.leaseSeconds = (castle.config && castle.config.leasePeriod) || 86400;
-    config.heartbeatSeconds = 120;
-    delete config.renewEverySeconds;
+  // miniapp/config.json holds what the page reads (the service URL, names, the explorer). The addresses come from the
+  // deployments file when it has them; the live service repeats them in snapshot.config, and the service wins.
+  const cfg = join(HERE, 'config.json'), dep = join(REPO, 'contracts', 'deployments', 'sepolia.json');
+  if (!existsSync(cfg)) { console.error(`--live needs ${cfg}`); process.exit(1); }
+  const config = JSON.parse(readFileSync(cfg, 'utf8'));
+  if (existsSync(dep)) {
+    const d = JSON.parse(readFileSync(dep, 'utf8')), c = d.contracts || {}, x = d.external || {};
+    const addr = (k) => (c[k] && (c[k].address || c[k])) || undefined;
+    Object.assign(config, { chainId: d.chainId, castle: addr('castle'), hook: addr('hook') || addr('jitHook'), resolver: addr('quoteResolver') || addr('offchainResolver'),
+      aqua: x.aqua, usdc: x.usdc, weth: x.weth });
   }
-  // Test builds only: FORK_RPC points chain mode at a local anvil fork, with no stream, so the page reads the fork.
-  if (process.env.FORK_RPC) { config.rpcs = [process.env.FORK_RPC]; config.stream = null; }
-  const v2 = d.v2 && d.v2.castle;
-  if (config.history && v2) Object.assign(config.history, { castle: v2.address, from: v2.block });
+  config.agents = (config.agents || []).map(({ id, role, addr, ens }) => ({ id, role, addr, ens }));
+  // Test builds only: STREAM points the page at a local castle service (a fork-backed one, or a fake that replays events).
+  if (process.env.STREAM) config.stream = process.env.STREAM;
   if (!html.includes('/*@CONFIG*/null')) { console.error('config slot missing from the page'); process.exit(1); }
   html = html.replace('/*@CONFIG*/null', JSON.stringify(config));
+}
+
+// Every lettered title must be set from glyphs the page carries (Almendra outlines: no Q, X, Z or digits). Checked on
+// the static titles (data-lt) and on every all-caps literal in scene(), before minifying.
+{
+  const gl = JSON.parse(html.match(/var GL = (\{.*\});/)[1]).g;
+  const sc = html.slice(html.indexOf('function scene('), html.indexOf('// ---', html.indexOf('function scene(')));
+  const titles = [...html.matchAll(/data-lt="([^"]*)"/g)].map((m) => m[1])
+    .concat([...sc.matchAll(/'([^'a-z]{2,})'/g)].map((m) => m[1]).filter((t) => /[A-Z]/.test(t)));
+  const bad = titles.filter((t) => [...t].some((ch) => !gl[ch]));
+  if (bad.length) { console.error('no glyph for: ' + bad.map((t) => JSON.stringify(t)).join(', ')); process.exit(1); }
+  console.error(`lettering: ${titles.length} titles, every glyph present`);
 }
 
 html = html.replace(/<!--[\s\S]*?-->\n?/, '');

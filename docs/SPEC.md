@@ -242,7 +242,7 @@ The rule: everything is fork-tested first (v-e2e, two clean passes), then there 
 | Jack: approve and swap on the v4 pool (PoolSwapTest) | 2 | 0.43 M |
 | **Total** | **21** | **≈ 8.5 M gas: 0.0085 ETH at 1 gwei, 0.02 ETH at 2.35 gwei** |
 
-Measured per tx on a Sepolia fork (execution plus 21k and calldata): c-vault 98b48b8, c-hook c348dda. mister-anderson replaces the three estimates before c-deploy. The approval asked of the operator is a **0.02 ETH gas ceiling** for c-deploy plus a-live. The hoard is small: about 10 USDC and 0.004 WETH.
+Measured per tx on a Sepolia fork (execution plus 21k and calldata): c-vault 98b48b8, c-hook c348dda. mister-anderson replaces the three estimates before c-deploy. **The operator approved a 0.02 ETH gas ceiling** (Sat 26 Sep) for c-deploy plus a-live together, and asked that the total budget be watched. It is split as c-deploy up to 0.012 ETH and a-live up to 0.008 ETH. Any step that would go past its share stops and comes back to SirKit. The approval does not waive the order: v-e2e passes on a fork first, then each live step goes out on SirKit's go. The hoard is small: about 10 USDC and 0.004 WETH.
 
 ## Research gates
 

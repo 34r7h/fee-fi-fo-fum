@@ -86,7 +86,18 @@ node --input-type=module -e "import{createPublicClient,http}from'viem';import{se
 
 It prints one JSON line with these fields: `v`, `id`, `chainId`, `router`, `order`, `strategyHash`, `tokenIn`, `tokenOut`, `amountIn`, `amountOut`, `priceQ96`, `maxAmountIn`, `validUntil`, `signer`, `quoteSig` and `takerTraitsAndData`.
 
-A live quote record from the run is TODO-LIVE:quote-record. The fill of that quote through AquaSwapVMRouter is TODO-TX:harp-fill.
+In the live run, agy resolved `quote:USDC:WETH:500000` and got this record (trimmed: `order`, `router` and `takerTraitsAndData` are left out):
+
+```json
+{"v":1,"id":"q-1790427574-6","chainId":11155111,
+ "strategyHash":"0xc65b96a3f41cad0428e156112a2b2c6204098bc9a2b550c94ddcb7188a3bb025",
+ "tokenIn":"0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238","tokenOut":"0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
+ "amountIn":"500000","amountOut":"185924989671030","priceQ96":"29460990594238591966531460527769576110","maxAmountIn":"500000",
+ "validUntil":1790427574,"signer":"0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2",
+ "quoteSig":"0xa69f2d53ee8ea40517b004f1f6e07efe0c89528aaebbb65143dfaf661cd0c3bc69730878ad6d039c12995ca4aed795c9e91280aad522c7aa442c91f66fc3e99c1b"}
+```
+
+agy filled it through AquaSwapVMRouter in [`0x763d6de1…9fe8`](https://sepolia.etherscan.io/tx/0x763d6de1cb3312803742fa80b1eed47060a1785e038a63b1f98f5cd375ea9fe8), at block 11786370 (timestamp 1790427552), 22 s before `validUntil`: 0.5 USDC for 0.000185925 WETH, the quote's `amountOut` to the wei.
 
 ## What is retired
 

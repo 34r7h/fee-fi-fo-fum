@@ -82,7 +82,7 @@ The gateway issues quotes that are valid for 30 s. The [fork rehearsal](../agent
 | fi ships `harp`, 80% of the hoard | [`0x15711ddf…095a`](https://sepolia.etherscan.io/tx/0x15711ddff90cc60b42144f8e62facb6cc4cd69bb6e3263956fe674bcc396095a) | 238,098 gas |
 | fi ships `hen`, 80% of the hoard in fee's mid ratio | [`0x5d7bee55…d6ce`](https://sepolia.etherscan.io/tx/0x5d7bee55fe98474b4fcdcef0940e5d03d0767da89d3f20290b19bb00fa1cd6ce) | 223,064 gas |
 | fi ships `greedy`, 0.5× more: reverts `OverAllocated` | [`0x647aba61…d0ba`](https://sepolia.etherscan.io/tx/0x647aba61fbb7442ccd986346c6acb8de2dae42eab5e5160ed950277dc7a9d0ba), failed; replayed at the block before, it reverts `OverAllocated(WETH, 3903882690184150, 3717983514461096)` | the same `OverAllocated(WETH, 3903882690184150, 3717983514461096)` |
-| a solver fills harp with a quote from `quote.feefifofum.eth` | TODO-TX:harp-fill | 0.5 USDC for 0.000185713 WETH, 157,005 gas |
+| a solver fills harp with a quote from `quote.feefifofum.eth` | [`0x763d6de1…9fe8`](https://sepolia.etherscan.io/tx/0x763d6de1cb3312803742fa80b1eed47060a1785e038a63b1f98f5cd375ea9fe8): 0.5 USDC for 0.000185925 WETH, 170,685 gas | 0.5 USDC for 0.000185713 WETH, 157,005 gas |
 
 The fork rehearsal is [agents/fork-run/11786199](../agents/fork-run/README.md). It ran the crew's real code against the deployed contracts on a fork of Sepolia. Its transaction hashes exist only on that fork.
 

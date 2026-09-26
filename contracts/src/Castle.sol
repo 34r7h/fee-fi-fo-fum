@@ -30,8 +30,7 @@ interface IAquaApp {
 ///      - the holder is the name's owner, registered with no roles, so it cannot renew or transfer by itself;
 ///      - renew() needs the holder's call AND fo's EIP-712 attestation;
 ///      - claim() after expiry re-registers the name to a crew member, which regenerates its token id: the
-///        fencing epoch FeeFiFoFumExtruction checks at fill time. With `registryEpoch == false` (fallback for a
-///        deployment that does not regenerate ids) the epoch is Castle's own counter.
+///        fencing epoch FeeFiFoFumExtruction checks at fill time (the tag regenerates ids; Castle requires it);
 ///      The holder's key alone must not be able to drain the hoard, so the holder chooses nothing that moves value:
 ///      - claim() is crew-only: an owner-approved crew label that the caller owns, unexpired, in REGISTRY;
 ///      - the app is pinned to ROUTER and the tokens to [WETH, USDC]; Castle builds every program itself, fenced
@@ -71,6 +70,10 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     /// @notice Bounds for the owner-tunable dissolution grace.
     uint64 public constant MIN_DISSOLVE_GRACE = 120;
     uint64 public constant MAX_DISSOLVE_GRACE = 1 days;
+    /// @notice How long a challenged holder has to respond() on-chain before claim() opens early.
+    uint64 public constant RESPONSE_WINDOW = 60;
+    /// @notice After a response, how long before the next challenge, so crew cannot tax a live holder's gas.
+    uint64 public constant CHALLENGE_COOLDOWN = 600;
 
     /// @dev AquaOpcodes indices of swap-vm 1.0.2; the program test checks them against the router's table.
     uint8 internal constant OP_JUMP = 10;
@@ -101,9 +104,10 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     bytes32 public immutable NODE;
     /// @notice namehash of <parent>, under which the crew names live.
     bytes32 public immutable PARENT_NODE;
-    uint64 public immutable LEASE_PERIOD;
-    /// @notice True: the epoch is the registry token id. False: the fallback counter below.
-    bool public immutable registryEpoch;
+    uint64 internal immutable LEASE_PERIOD;
+    /// @notice The epoch is always the registry token id. v2's fallback counter is gone: the tag regenerates ids on
+    ///         every re-registration (probed live and covered by the fork suite), and Config.registryEpoch must be true.
+    bool public constant registryEpoch = true;
     /// @notice The flat fee on the wind-down branch (the wide spread of an expired shift).
     uint32 public immutable WIND_DOWN_FEE_BPS;
     /// @notice DecayXD period on the live branch, in seconds (Mooniswap-style offsets against back-running).
@@ -119,8 +123,6 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     address public fo;
     /// @notice Crew label (e.g. "fee" for fee.<parent>) per account; empty = not crew.
     mapping(address account => string) public crewLabelOf;
-    /// @notice Fallback epoch counter, used only when registryEpoch is false.
-    uint256 internal _epochCounter;
     /// @notice Programs shipped so far; salts every program so no two strategies share a hash.
     uint64 public shipNonce;
     /// @notice The epoch each strategy was shipped under; 0 if never shipped here.
@@ -134,6 +136,14 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     uint64 public auctionNonce;
     /// @notice Seconds after an unclaimed expiry before anyone may dissolve the book (owner-tunable within bounds).
     uint64 public dissolveGrace;
+    /// @notice The open or unanswered challenge's response deadline; 0 = none. Cleared by respond() and claim().
+    uint64 public challengeDeadline;
+    /// @notice No challenge before this: set by respond() to now + CHALLENGE_COOLDOWN.
+    uint64 public challengeCooldownUntil;
+    /// @notice The epoch the challenge was opened in.
+    uint256 public challengedEpoch;
+    /// @notice The last epoch that was dissolved: at most one dissolution per epoch.
+    uint256 public dissolvedEpoch;
 
     /// @notice What the holder chooses when shipping; everything else is fixed by Castle.
     /// @param maxWeth  most WETH to commit (clamped to what no active strategy claims)
@@ -181,6 +191,8 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     error AuctionNotOver(uint64 endBlock);
     error NotDissolvable(uint256 at);
     error BadAuctionAmount();
+    error CannotChallengeSelf();
+    error AlreadyDissolved(uint256 epoch);
 
     struct Config {
         address aqua;
@@ -211,7 +223,7 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
         if (
             IAquaApp(c.router).AQUA() != c.aqua || c.fence.code.length == 0 || c.weth == c.usdc
                 || c.windDownFeeBps < MIN_FEE_BPS || c.windDownFeeBps > MAX_WIND_DOWN_FEE_BPS || c.decayPeriod == 0
-                || c.leasePeriod == 0 || c.dnsName.length < 2 || c.ccaFactory.code.length == 0
+                || c.leasePeriod == 0 || !c.registryEpoch || c.dnsName.length < 2 || c.ccaFactory.code.length == 0
                 || c.jackHook.code.length == 0
         ) revert BadConfig();
         AQUA = IAqua(c.aqua);
@@ -226,7 +238,6 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
         PARENT_NODE = _namehash(c.dnsName, 1 + uint8(c.dnsName[0]));
         if (NODE != keccak256(abi.encodePacked(PARENT_NODE, bytes32(LABEL_ID)))) revert BadConfig();
         LEASE_PERIOD = c.leasePeriod;
-        registryEpoch = c.registryEpoch;
         WIND_DOWN_FEE_BPS = c.windDownFeeBps;
         DECAY_PERIOD = c.decayPeriod;
         CCA_FACTORY = ICCAFactory(c.ccaFactory);
@@ -250,7 +261,7 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     }
 
     function epoch() public view returns (uint256) {
-        return registryEpoch ? REGISTRY.getTokenId(LABEL_ID) : _epochCounter;
+        return REGISTRY.getTokenId(LABEL_ID);
     }
 
     function expiry() public view returns (uint64) {
@@ -269,6 +280,16 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
         return _digest(att.epoch, att.expiry, att.deadline);
     }
 
+    /// @inheritdoc ICastleLease
+    function fenceState() external view returns (uint256, address, address) {
+        return (epoch(), REGISTRY.getOwner(LABEL_ID), fo);
+    }
+
+    /// @inheritdoc ICastleLease
+    function heartbeatDigest(uint256 ep, uint64 validUntil) external view returns (bytes32) {
+        return _hashTypedDataV4(keccak256(abi.encode(CastleLeaseTypes.HEARTBEAT_TYPEHASH, ep, validUntil)));
+    }
+
     /// @notice True if `account` has a crew label AND owns that name, unexpired, in REGISTRY right now.
     function isCrew(address account) public view returns (bool) {
         bytes memory l = bytes(crewLabelOf[account]);
@@ -281,10 +302,8 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
 
     /// @inheritdoc ICastleLease
     function renew(uint64 newExpiry, uint64 deadline, bytes calldata foSig) external {
-        address h = holder();
-        if (msg.sender != h) revert NotHolder(msg.sender, h);
+        _checkLiveHolder();
         uint64 current = expiry();
-        if (block.timestamp >= current) revert LeaseExpired(current);
         if (block.timestamp > deadline) revert AttestationExpired(deadline);
         uint64 max = uint64(block.timestamp) + LEASE_PERIOD;
         // newExpiry must move forward, so an attestation that was already used can never be used again.
@@ -294,26 +313,62 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
         (address signer, ECDSA.RecoverError err,) = ECDSA.tryRecover(digest, foSig);
         if (err != ECDSA.RecoverError.NoError || signer != fo) revert BadAttestation(signer);
         REGISTRY.renew(LABEL_ID, newExpiry);
-        emit Renewed(ep, h, newExpiry, digest);
+        emit Renewed(ep, msg.sender, newExpiry, digest);
     }
 
     /// @inheritdoc ICastleLease
-    /// @dev Crew only: otherwise any taker who waits out a lease becomes holder.
+    /// @dev Crew only: otherwise any taker who waits out a lease becomes holder. While the ENS lease is live, only an
+    ///      unanswered challenge opens it, and Castle ends the lease (unregister) before re-registering it.
     function claim() external returns (uint256 newEpoch) {
         if (!isCrew(msg.sender)) revert NotCrew(msg.sender);
         uint64 current = expiry();
-        if (block.timestamp < current) revert LeaseStillLive(current);
         uint256 prevEpoch = epoch();
-        uint64 newExpiry = uint64(block.timestamp) + LEASE_PERIOD;
-        if (!registryEpoch) {
-            ++_epochCounter; // before the external call: the mint's ERC-1155 receiver hook sees the new epoch
+        if (block.timestamp < current) {
+            if (!_unanswered()) revert LeaseStillLive(current);
+            REGISTRY.unregister(LABEL_ID);
         }
+        (challengeDeadline, challengeCooldownUntil) = (0, 0);
+        uint64 newExpiry = uint64(block.timestamp) + LEASE_PERIOD;
         // No roles for the holder: it cannot renew, transfer or re-point the name except through Castle.
         REGISTRY.register(label, msg.sender, address(0), address(RESOLVER), 0, newExpiry);
         newEpoch = epoch();
         // The very first registration (expiry 0) mints the name; every later claim must fence the old shift.
         if (current != 0 && newEpoch == prevEpoch) revert EpochNotRegenerated(newEpoch);
         emit Claimed(newEpoch, msg.sender, newExpiry, prevEpoch);
+    }
+
+    /// @inheritdoc ICastleLease
+    function challenge() external returns (uint64 deadline) {
+        if (!isCrew(msg.sender)) revert NotCrew(msg.sender);
+        if (msg.sender == holder()) revert CannotChallengeSelf();
+        uint64 current = expiry();
+        if (block.timestamp >= current) revert LeaseExpired(current); // nothing to challenge: claim() is open
+        uint256 ep = epoch();
+        if (challengeDeadline != 0 && challengedEpoch == ep) revert ChallengePending(challengeDeadline);
+        if (block.timestamp < challengeCooldownUntil) revert ChallengeCooldown(challengeCooldownUntil);
+        deadline = uint64(block.timestamp) + RESPONSE_WINDOW;
+        (challengedEpoch, challengeDeadline) = (ep, deadline);
+        emit Challenged(ep, msg.sender, deadline);
+    }
+
+    /// @inheritdoc ICastleLease
+    /// @dev msg.sender must be the holder: a heartbeat signed before the challenge would still be valid, so only an
+    ///      on-chain call proves the holder is alive now. At the deadline itself the window is closed and claim() wins.
+    function respond() external {
+        address h = holder();
+        if (msg.sender != h) revert NotHolder(msg.sender, h);
+        uint64 d = challengeDeadline;
+        if (d == 0 || challengedEpoch != epoch()) revert NoChallenge();
+        if (block.timestamp >= d) revert HolderUnresponsive(d);
+        uint64 until = uint64(block.timestamp) + CHALLENGE_COOLDOWN;
+        (challengeDeadline, challengeCooldownUntil) = (0, until);
+        emit Responded(challengedEpoch, h, until);
+    }
+
+    /// @dev A challenge in the current epoch whose response window has closed.
+    function _unanswered() internal view returns (bool) {
+        uint64 d = challengeDeadline;
+        return d != 0 && block.timestamp >= d && challengedEpoch == epoch();
     }
 
     // ------------------------------------------------------------------------------------------------
@@ -330,6 +385,7 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
         if (msg.sender != h) revert NotHolder(msg.sender, h);
         uint64 current = expiry();
         if (block.timestamp >= current) revert LeaseExpired(current);
+        if (_unanswered()) revert HolderUnresponsive(challengeDeadline);
     }
 
     /// @notice Ship a fenced strategy centred on the ENS anchor, with Castle as the Aqua maker and ROUTER as the app.
@@ -341,7 +397,8 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
         returns (bytes32 strategyHash, ISwapVM.Order memory order)
     {
         if (
-            p.feeBps < MIN_FEE_BPS || p.feeBps > MAX_FEE_BPS || p.rangeBps < MIN_RANGE_BPS || p.rangeBps > MAX_RANGE_BPS
+            p.feeBps < MIN_FEE_BPS || p.feeBps > MAX_FEE_BPS || p.feeBps > WIND_DOWN_FEE_BPS
+                || p.rangeBps < MIN_RANGE_BPS || p.rangeBps > MAX_RANGE_BPS
         ) {
             revert BadShipParams();
         }
@@ -447,10 +504,19 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
 
     /// @notice Dissolution: if nobody has claimed the castle dissolveGrace after the lease lapsed, ANYONE may dock the
     ///         whole book and auction all the WETH. fum is only the default caller.
+    /// @dev At most once per epoch and never while an auction runs: otherwise, after settleAuction returned the unsold
+    ///      WETH, anyone could dissolve again and each graduated round would write an anchor 20% lower.
+    ///      A challenge the holder left unanswered counts as the lease ending at its deadline.
     function dissolve() external returns (address a) {
+        if (auction != address(0)) revert AuctionRunning(auction);
+        uint256 ep = epoch();
+        if (dissolvedEpoch == ep) revert AlreadyDissolved(ep);
         uint64 exp = expiry();
         uint256 at = uint256(exp) + dissolveGrace;
+        uint64 d = challengeDeadline;
+        if (d != 0 && challengedEpoch == ep && uint256(d) + dissolveGrace < at) at = uint256(d) + dissolveGrace;
         if (exp == 0 || block.timestamp < at) revert NotDissolvable(at);
+        dissolvedEpoch = ep;
         uint256 n = _active.length;
         while (_active.length != 0) {
             bytes32 h = _active[_active.length - 1];
@@ -458,7 +524,7 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
             _dock(h);
         }
         uint256 amount = WETH.balanceOf(address(this));
-        emit Dissolved(epoch(), n, amount);
+        emit Dissolved(ep, n, amount);
         if (amount != 0) a = _openAuction(SafeCast.toUint128(amount), true);
     }
 
@@ -598,11 +664,14 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     ///      146  FlatFeeAmountInXD(feeBps)
     ///      152  XYCSwapXD
     ///      154  Jump(END)
-    ///   W=158  XYCConcentrateGrowLiquidity2D(band)  wind-down: same curve, wide fee, reduce-only
-    ///      224  FlatFeeAmountInXD(WIND_DOWN_FEE_BPS)
-    ///      230  XYCSwapXD
-    ///      232  Salt(shipNonce)
-    ///  END=242
+    ///   W=158  DecayXD(DECAY_PERIOD)                wind-down: same Decay and curve, wide fee, reduce-only
+    ///      162  XYCConcentrateGrowLiquidity2D(band)
+    ///      228  FlatFeeAmountInXD(WIND_DOWN_FEE_BPS)
+    ///      234  XYCSwapXD
+    ///      236  Salt(shipNonce)
+    ///  END=246
+    ///      The taker picks wind-down by leaving out the heartbeat, so wind-down must never price better than live:
+    ///      it shares the live branch's Decay state (same order) and its fee is never below the live fee.
     function _program(uint256 ep, uint32 feeBps, uint256 sqrtMin, uint256 sqrtMax, uint64 nonce)
         internal
         view
@@ -610,14 +679,10 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     {
         bytes memory concentrate = abi.encodePacked(OP_CONCENTRATE, uint8(64), sqrtMin, sqrtMax);
         bytes memory swap = abi.encodePacked(OP_XYC_SWAP, uint8(0));
-        bytes memory live = bytes.concat(
-            abi.encodePacked(OP_DECAY, uint8(2), DECAY_PERIOD),
-            concentrate,
-            abi.encodePacked(OP_FLAT_FEE_IN, uint8(4), feeBps),
-            swap
-        );
+        bytes memory decay = abi.encodePacked(OP_DECAY, uint8(2), DECAY_PERIOD);
+        bytes memory live = bytes.concat(decay, concentrate, abi.encodePacked(OP_FLAT_FEE_IN, uint8(4), feeBps), swap);
         bytes memory windDown =
-            bytes.concat(concentrate, abi.encodePacked(OP_FLAT_FEE_IN, uint8(4), WIND_DOWN_FEE_BPS), swap);
+            bytes.concat(decay, concentrate, abi.encodePacked(OP_FLAT_FEE_IN, uint8(4), WIND_DOWN_FEE_BPS), swap);
         bytes memory salt = abi.encodePacked(OP_SALT, uint8(8), nonce);
         uint256 w = FENCE_INSTRUCTION_LENGTH + live.length + JUMP_INSTRUCTION_LENGTH;
         uint256 end = w + windDown.length + salt.length;

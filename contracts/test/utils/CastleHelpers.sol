@@ -40,14 +40,12 @@ contract ProgramMirror is AquaOpcodes {
             XYCConcentrate._xycConcentrateGrowLiquidity2D, XYCConcentrateArgsBuilder.build2D(s.sqrtMin, s.sqrtMax)
         );
         bytes memory swap = p.build(XYCSwap._xycSwapXD);
-        bytes memory live = bytes.concat(
-            p.build(Decay._decayXD, DecayArgsBuilder.build(s.decayPeriod)),
-            conc,
-            p.build(Fee._flatFeeAmountInXD, FeeArgsBuilder.buildFlatFee(s.feeBps)),
-            swap
+        bytes memory decay = p.build(Decay._decayXD, DecayArgsBuilder.build(s.decayPeriod));
+        bytes memory live =
+            bytes.concat(decay, conc, p.build(Fee._flatFeeAmountInXD, FeeArgsBuilder.buildFlatFee(s.feeBps)), swap);
+        bytes memory windDown = bytes.concat(
+            decay, conc, p.build(Fee._flatFeeAmountInXD, FeeArgsBuilder.buildFlatFee(s.windDownFeeBps)), swap
         );
-        bytes memory windDown =
-            bytes.concat(conc, p.build(Fee._flatFeeAmountInXD, FeeArgsBuilder.buildFlatFee(s.windDownFeeBps)), swap);
         bytes memory salt = p.build(Controls._salt, ControlsArgsBuilder.buildSalt(s.nonce));
         uint256 fenceLen = p.build(Extruction._extruction, abi.encodePacked(s.fence, s.epoch, uint16(0), s.usdc)).length;
         uint256 jumpLen = p.build(Controls._jump, ControlsArgsBuilder.buildJump(0)).length;
@@ -73,6 +71,15 @@ abstract contract CastleHelpers is Test {
     }
 
     function _takerData(address taker, bool exactIn) internal pure returns (bytes memory) {
+        return _takerData(taker, exactIn, "");
+    }
+
+    /// @param instructionsArgs what the program's instructions may consume: the fence takes a heartbeat first
+    function _takerData(address taker, bool exactIn, bytes memory instructionsArgs)
+        internal
+        pure
+        returns (bytes memory)
+    {
         return TakerTraitsLib.build(
             TakerTraitsLib.Args({
                 taker: taker,
@@ -92,7 +99,7 @@ abstract contract CastleHelpers is Test {
                 postTransferOutHookData: "",
                 preTransferInCallbackData: "",
                 preTransferOutCallbackData: "",
-                instructionsArgs: "",
+                instructionsArgs: instructionsArgs,
                 signature: ""
             })
         );
@@ -104,6 +111,21 @@ abstract contract CastleHelpers is Test {
         returns (bytes memory)
     {
         bytes32 digest = castle.attestationDigest(ICastleLease.Attestation(ep, exp, deadline));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(key, digest);
+        return abi.encodePacked(r, s, v);
+    }
+
+    /// @dev A v3 heartbeat as the castle service publishes it: validUntil | holder signature | fo signature.
+    function _heartbeat(ICastleLease castle, uint256 holderKey, uint256 foKey_, uint256 ep, uint64 validUntil)
+        internal
+        view
+        returns (bytes memory)
+    {
+        bytes32 digest = castle.heartbeatDigest(ep, validUntil);
+        return abi.encodePacked(validUntil, _sig(holderKey, digest), _sig(foKey_, digest));
+    }
+
+    function _sig(uint256 key, bytes32 digest) internal pure returns (bytes memory) {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(key, digest);
         return abi.encodePacked(r, s, v);
     }

@@ -13,6 +13,11 @@ via_ir = true
 dynamic_test_linking = false
 fs_permissions = [{ access = "read", path = "./deployments" }, { access = "read-write", path = "./out-abi" }]
 
+# Castle v3 is within ~2% of EIP-170 at 700 runs, so Castle alone compiles at 200 runs (every other contract,
+# including the router, keeps upstream's 700).
+additional_compiler_profiles = [{ name = "castle-size", optimizer_runs = 200 }]
+compilation_restrictions = [{ paths = "src/Castle.sol", optimizer_runs = 200 }]
+
 [profile.default.optimizer_details]
 yul = true
 yulDetails = { stackAllocation = true, optimizerSteps = "dhfoDgvulfnTUtnIf[xa[r]EscLMcCTUtTOntnfDIulLculVcul Tpeul]jmul[jul] VcTOcul jmul : fDnTOcmu" }

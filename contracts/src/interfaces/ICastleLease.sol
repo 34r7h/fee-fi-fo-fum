@@ -11,6 +11,11 @@ pragma solidity ^0.8.24;
 ///      - `expiry`  unix seconds; after it the shift is only EXPIRED (fills wind down) until someone claims.
 ///      If the ENSv2 probes show the token id is not regenerated on re-registration, `epoch` is Castle's own
 ///      counter, bumped on every claim, and `expiry` is still read from the registry.
+///      v3 liveness costs no gas while the holder is alive. The holder and fo co-sign an EIP-712 Heartbeat
+///      off-chain about every 30s. Takers pass the latest one in the swap's instruction args, and the fence treats
+///      the book as LIVE only while that heartbeat is valid. The ENS lease is long (one renew a day) and is only a
+///      backstop. A crew standby that suspects a death calls challenge(); if the holder does not respond() on-chain
+///      within RESPONSE_WINDOW, claim() opens early and bumps the epoch.
 interface ICastleLease {
     /// @notice What fo signs (EIP-712) to let the holder extend the lease to `expiry`.
     /// @dev Domain: name "fee-fi-fo-fum Castle", version "1", chainId, verifyingContract = Castle.
@@ -28,6 +33,10 @@ interface ICastleLease {
     event Renewed(uint256 indexed epoch, address indexed holder, uint64 expiry, bytes32 attestationDigest);
     /// @notice The lease changed hands after expiry; `epoch` is the new fencing epoch.
     event Claimed(uint256 indexed epoch, address indexed holder, uint64 expiry, uint256 prevEpoch);
+    /// @notice A crew standby suspects the holder is dead: unless the holder responds by `deadline`, claim() opens.
+    event Challenged(uint256 indexed epoch, address indexed challenger, uint64 deadline);
+    /// @notice The holder proved it is alive on-chain; no new challenge until `cooldownUntil`.
+    event Responded(uint256 indexed epoch, address indexed holder, uint64 cooldownUntil);
 
     /// @notice Caller is not the lease holder.
     error NotHolder(address caller, address holder);
@@ -44,6 +53,14 @@ interface ICastleLease {
     /// @notice The requested expiry does not extend the lease (this is what a replayed attestation hits),
     ///         or reaches past now + leasePeriod().
     error BadExpiry(uint64 requested, uint64 current, uint64 max);
+    /// @notice A challenge for this epoch is already open (or was left unanswered).
+    error ChallengePending(uint64 deadline);
+    /// @notice The holder answered the last challenge recently; challenge again after `until`.
+    error ChallengeCooldown(uint64 until);
+    /// @notice There is no open challenge to respond to.
+    error NoChallenge();
+    /// @notice The response window closed at `deadline`: the holder is presumed dead and claim() is open.
+    error HolderUnresponsive(uint64 deadline);
 
     /// @notice The current lease holder.
     function holder() external view returns (address);
@@ -70,13 +87,30 @@ interface ICastleLease {
     ///         Attestation(epoch(), newExpiry, deadline).
     function renew(uint64 newExpiry, uint64 deadline, bytes calldata foSig) external;
 
-    /// @notice After expiry, take the castle: re-register the name to the caller, which starts a new epoch.
+    /// @notice After expiry, or after a challenge the holder left unanswered, take the castle: re-register the name
+    ///         to the caller, which starts a new epoch.
     function claim() external returns (uint256 newEpoch);
+
+    /// @notice What the fence reads at fill time, in one call: the epoch, the holder while the ENS lease is live
+    ///         (address(0) once it has expired), and fo.
+    function fenceState() external view returns (uint256 epoch, address liveHolder, address fo);
+
+    /// @notice The EIP-712 digest the holder and fo both sign for Heartbeat(epoch, validUntil).
+    function heartbeatDigest(uint256 epoch, uint64 validUntil) external view returns (bytes32);
+
+    /// @notice Crew only, never the holder: open a challenge the holder must answer within the response window.
+    function challenge() external returns (uint64 deadline);
+
+    /// @notice Holder only: answer the open challenge before its deadline.
+    function respond() external;
 }
 
 /// @notice The EIP-712 constants fo and Castle must agree on.
 library CastleLeaseTypes {
     string internal constant NAME = "fee-fi-fo-fum Castle";
     string internal constant VERSION = "1";
-    bytes32 internal constant ATTESTATION_TYPEHASH = keccak256("Attestation(uint256 epoch,uint64 expiry,uint64 deadline)");
+    bytes32 internal constant ATTESTATION_TYPEHASH =
+        keccak256("Attestation(uint256 epoch,uint64 expiry,uint64 deadline)");
+    /// @dev The holder and fo sign the same heartbeat; the fence accepts it while now <= validUntil <= now + max TTL.
+    bytes32 internal constant HEARTBEAT_TYPEHASH = keccak256("Heartbeat(uint256 epoch,uint64 validUntil)");
 }

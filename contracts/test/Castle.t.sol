@@ -22,7 +22,7 @@ import { CastleHelpers, ProgramMirror } from "./utils/CastleHelpers.sol";
 /// @dev Unit tests: real Aqua, real AquaSwapVMRouter 1.0.2, real fence; ENSv2 as a tag-accurate mock (including the
 ///      record sharing linkToNode causes). Runs once per token address ordering (see the two concrete contracts).
 abstract contract CastleUnitBase is CastleHelpers {
-    uint64 internal constant LEASE = 120;
+    uint64 internal constant LEASE = 1 days; // v3: one renew a day; heartbeats carry liveness
     uint32 internal constant FEE = 3e6; // 0.3%
     uint32 internal constant RANGE = 1e8; // band [P/1.1, P*1.1]
     uint32 internal constant WIND_DOWN_FEE = 5e7; // 5%
@@ -47,6 +47,8 @@ abstract contract CastleUnitBase is CastleHelpers {
     address internal fo;
     address internal fee = makeAddr("fee");
     address internal fi = makeAddr("fi");
+    uint256 internal feeKey = uint256(keccak256(abi.encodePacked("fee"))); // makeAddr's key derivation
+    uint256 internal fiKey = uint256(keccak256(abi.encodePacked("fi")));
     address internal jack = makeAddr("jack");
     address internal operator = makeAddr("operator");
 
@@ -76,11 +78,21 @@ abstract contract CastleUnitBase is CastleHelpers {
         _name("jack", jack); // named, but never made crew
 
         castle = new Castle(_config(true));
-        registry.grantRootRoles(ENSv2Roles.REGISTRY_REGISTRAR | ENSv2Roles.REGISTRY_RENEW, address(castle));
+        registry.grantRootRoles(
+            ENSv2Roles.REGISTRY_REGISTRAR | ENSv2Roles.REGISTRY_RENEW | ENSv2Roles.REGISTRY_UNREGISTER, address(castle)
+        );
         resolver.grantRootRoles(ENSv2Roles.RESOLVER_LINK | ENSv2Roles.RESOLVER_SET_DATA, address(castle));
         _crew(castle);
         vm.prank(operator);
         castle.setAnchorPrice(ANCHOR_Q96);
+    }
+
+    /// @dev The current holder's heartbeat, as the castle service would publish it, or none for a keyless holder.
+    function _hb() internal view returns (bytes memory) {
+        address h = castle.holder();
+        uint256 key = h == fee ? feeKey : h == fi ? fiKey : 0;
+        if (key == 0) return "";
+        return _heartbeat(castle, key, foKey, castle.epoch(), uint64(block.timestamp + 60));
     }
 
     function _name(string memory l, address owner) internal {
@@ -149,13 +161,14 @@ abstract contract CastleUnitBase is CastleHelpers {
         IERC20 tokenOut = address(tokenIn) == address(usdc) ? IERC20(address(weth)) : IERC20(address(usdc));
         vm.startPrank(jack);
         tokenIn.approve(address(router), amount);
-        (amountIn, amountOut,) = router.swap(order, address(tokenIn), address(tokenOut), amount, _takerData(jack, true));
+        (amountIn, amountOut,) =
+            router.swap(order, address(tokenIn), address(tokenOut), amount, _takerData(jack, true, _hb()));
         vm.stopPrank();
     }
 
     function _quote(ISwapVM.Order memory order, IERC20 tokenIn, uint256 amount) internal returns (uint256 amountOut) {
         IERC20 tokenOut = address(tokenIn) == address(usdc) ? IERC20(address(weth)) : IERC20(address(usdc));
-        (, amountOut,) = router.quote(order, address(tokenIn), address(tokenOut), amount, _takerData(jack, true));
+        (, amountOut,) = router.quote(order, address(tokenIn), address(tokenOut), amount, _takerData(jack, true, _hb()));
     }
 
     // ------------------------------------------------------------------ lease
@@ -385,16 +398,10 @@ abstract contract CastleUnitBase is CastleHelpers {
         castle.renew(next, deadline, staleSig);
     }
 
-    function test_fallbackEpochCounter() public {
-        registry.setRegenerate(false);
-        Castle c = new Castle(_config(false));
-        registry.grantRootRoles(ENSv2Roles.REGISTRY_REGISTRAR | ENSv2Roles.REGISTRY_RENEW, address(c));
-        _crew(c);
-        vm.prank(fee);
-        assertEq(c.claim(), 1);
-        vm.warp(c.expiry());
-        vm.prank(fi);
-        assertEq(c.claim(), 2);
+    function test_revert_configWithoutRegistryEpoch() public {
+        // v2's fallback counter is gone: the epoch is always the registry's regenerated token id
+        vm.expectRevert(Castle.BadConfig.selector);
+        new Castle(_config(false));
     }
 
     function test_revert_registryDidNotRegenerate() public {
@@ -488,7 +495,7 @@ abstract contract CastleUnitBase is CastleHelpers {
         );
         assertEq(order.maker, address(castle));
         assertEq(order.data, expected, "Castle's program == ProgramBuilder over AquaOpcodes");
-        assertEq(expected.length, 242);
+        assertEq(expected.length, 246);
     }
 
     function test_shipRegistersUnderTheRouterOnly() public {
@@ -935,6 +942,277 @@ abstract contract CastleUnitBase is CastleHelpers {
         vm.prank(fee);
         vm.expectRevert(Castle.NoAnchor.selector);
         castle.openAuction(1 ether);
+    }
+
+    // ------------------------------------------------------------------ v3 liveness: heartbeats, challenge, respond
+
+    function _quoteWith(ISwapVM.Order memory order, IERC20 tokenIn, uint256 amount, bytes memory hb)
+        internal
+        returns (uint256 amountOut)
+    {
+        IERC20 tokenOut = address(tokenIn) == address(usdc) ? IERC20(address(weth)) : IERC20(address(usdc));
+        (, amountOut,) = router.quote(order, address(tokenIn), address(tokenOut), amount, _takerData(jack, true, hb));
+    }
+
+    function _challenge(address who) internal returns (uint64 deadline) {
+        vm.prank(who);
+        deadline = castle.challenge();
+    }
+
+    function test_heartbeatDigestMatchesTheFence() public {
+        vm.prank(fee);
+        uint256 ep = castle.claim();
+        assertEq(castle.heartbeatDigest(ep, 123), fence.heartbeatDigest(address(castle), ep, 123));
+        (uint256 e, address h, address f) = castle.fenceState();
+        assertEq(e, ep);
+        assertEq(h, fee);
+        assertEq(f, fo);
+        vm.warp(castle.expiry());
+        (, h,) = castle.fenceState();
+        assertEq(h, address(0), "no live holder once the ENS lease has expired");
+    }
+
+    function test_liveOnlyWithTheHoldersAndFosHeartbeat() public {
+        _fund();
+        (, ISwapVM.Order memory order) = _claimAndShip(fee);
+        uint64 until = uint64(block.timestamp + 60);
+        uint256 ep = castle.epoch();
+        uint256 live = _quoteWith(order, IERC20(address(usdc)), 300e6, _heartbeat(castle, feeKey, foKey, ep, until));
+        uint256 bare = _quoteWith(order, IERC20(address(usdc)), 300e6, "");
+        uint256 forged = _quoteWith(order, IERC20(address(usdc)), 300e6, _heartbeat(castle, fiKey, foKey, ep, until));
+        uint256 noFo = _quoteWith(order, IERC20(address(usdc)), 300e6, _heartbeat(castle, feeKey, feeKey, ep, until));
+        assertApproxEqRel(
+            bare, live * uint256(1e9 - WIND_DOWN_FEE) / uint256(1e9 - FEE), 1e15, "no heartbeat: wind-down"
+        );
+        assertEq(forged, bare, "fi cannot keep fee's book live");
+        assertEq(noFo, bare, "fo must co-sign");
+        vm.expectRevert(abi.encodeWithSelector(FeeFiFoFumExtruction.WindDownReduceOnly.selector, address(weth)));
+        _quoteWith(order, IERC20(address(weth)), 0.1 ether, "");
+    }
+
+    /// @dev The DoD's "idle cost is zero": 23 hours with no transaction at all, and the book is still live.
+    function test_idleLivenessCostsNoTransactions() public {
+        _fund();
+        (, ISwapVM.Order memory order) = _claimAndShip(fee);
+        vm.warp(block.timestamp + 23 hours);
+        (uint256 amountIn, uint256 out) = _swap(order, IERC20(address(weth)), 0.1 ether);
+        assertEq(amountIn, 0.1 ether);
+        assertGt(out, 0, "live fill (WETH in) 23h after the last Castle tx");
+    }
+
+    function test_unansweredChallengeOpensAnEarlyClaim() public {
+        _fund();
+        (, ISwapVM.Order memory order) = _claimAndShip(fee);
+        uint256 feeEpoch = castle.epoch();
+        uint64 deadline = _challenge(fi);
+        assertEq(deadline, block.timestamp + castle.RESPONSE_WINDOW());
+        uint64 exp = castle.expiry();
+        vm.prank(fi);
+        vm.expectRevert(abi.encodeWithSelector(ICastleLease.LeaseStillLive.selector, exp));
+        castle.claim();
+
+        vm.warp(deadline); // fee never answered
+        vm.prank(fi);
+        uint256 fiEpoch = castle.claim();
+        assertTrue(fiEpoch != feeEpoch, "the early claim bumps the epoch");
+        assertEq(castle.holder(), fi);
+        assertEq(castle.expiry(), block.timestamp + LEASE);
+        assertEq(castle.challengeDeadline(), 0, "the claim clears the challenge");
+        bytes memory staleHb = _heartbeat(castle, feeKey, foKey, feeEpoch, deadline + 30);
+        vm.expectRevert(FeeFiFoFumExtruction.FeeFiFoFum.selector);
+        _quoteWith(order, IERC20(address(usdc)), 300e6, staleHb);
+    }
+
+    function test_respondKeepsTheCastleAndStartsACooldown() public {
+        vm.prank(fee);
+        castle.claim();
+        uint64 deadline = _challenge(fi);
+        vm.warp(deadline - 1);
+        vm.prank(fee);
+        castle.respond();
+        assertEq(castle.challengeDeadline(), 0);
+        uint64 until = uint64(block.timestamp) + castle.CHALLENGE_COOLDOWN();
+        assertEq(castle.challengeCooldownUntil(), until);
+        vm.warp(deadline + 1);
+        uint64 exp = castle.expiry();
+        vm.prank(fi);
+        vm.expectRevert(abi.encodeWithSelector(ICastleLease.LeaseStillLive.selector, exp));
+        castle.claim();
+        vm.prank(fi);
+        vm.expectRevert(abi.encodeWithSelector(ICastleLease.ChallengeCooldown.selector, until));
+        castle.challenge();
+        vm.warp(until);
+        _challenge(fi);
+    }
+
+    /// @dev The race at the deadline: respond needs now < deadline, claim needs now >= deadline, so exactly one wins.
+    function test_raceAtTheDeadlineGoesToTheClaim() public {
+        vm.prank(fee);
+        castle.claim();
+        uint64 deadline = _challenge(fi);
+        vm.warp(deadline);
+        vm.prank(fee);
+        vm.expectRevert(abi.encodeWithSelector(ICastleLease.HolderUnresponsive.selector, deadline));
+        castle.respond();
+        vm.prank(fi);
+        castle.claim();
+        assertEq(castle.holder(), fi);
+    }
+
+    function test_revert_challengeRules() public {
+        vm.prank(jack);
+        vm.expectRevert(abi.encodeWithSelector(Castle.NotCrew.selector, jack));
+        castle.challenge();
+        vm.prank(fee);
+        castle.claim();
+        vm.prank(fee);
+        vm.expectRevert(Castle.CannotChallengeSelf.selector);
+        castle.challenge();
+        uint64 deadline = _challenge(fi);
+        vm.prank(fi);
+        vm.expectRevert(abi.encodeWithSelector(ICastleLease.ChallengePending.selector, deadline));
+        castle.challenge();
+        uint64 exp = castle.expiry();
+        vm.warp(exp);
+        vm.prank(fi);
+        vm.expectRevert(abi.encodeWithSelector(ICastleLease.LeaseExpired.selector, exp));
+        castle.challenge();
+    }
+
+    function test_revert_respondRules() public {
+        vm.prank(fee);
+        castle.claim();
+        vm.prank(fee);
+        vm.expectRevert(ICastleLease.NoChallenge.selector);
+        castle.respond();
+        _challenge(fi);
+        vm.prank(fi);
+        vm.expectRevert(abi.encodeWithSelector(ICastleLease.NotHolder.selector, fi, fee));
+        castle.respond();
+    }
+
+    function test_revert_unresponsiveHolderCannotShipOrRenew() public {
+        _fund();
+        vm.prank(fee);
+        castle.claim();
+        uint64 deadline = _challenge(fi);
+        vm.warp(deadline);
+        Castle.ShipParams memory p = _params();
+        vm.prank(fee);
+        vm.expectRevert(abi.encodeWithSelector(ICastleLease.HolderUnresponsive.selector, deadline));
+        castle.ship(p);
+        uint64 next = uint64(block.timestamp + LEASE);
+        bytes memory sig = _sign(castle, foKey, castle.epoch(), next, uint64(block.timestamp + 30));
+        vm.prank(fee);
+        vm.expectRevert(abi.encodeWithSelector(ICastleLease.HolderUnresponsive.selector, deadline));
+        castle.renew(next, uint64(block.timestamp + 30), sig);
+    }
+
+    function test_revert_earlyClaimNeedsTheUnregisterRole() public {
+        Castle c = new Castle(_config(true));
+        registry.grantRootRoles(ENSv2Roles.REGISTRY_REGISTRAR | ENSv2Roles.REGISTRY_RENEW, address(c));
+        _crew(c);
+        vm.prank(fee);
+        c.claim();
+        vm.prank(fi);
+        uint64 deadline = c.challenge();
+        vm.warp(deadline);
+        vm.prank(fi);
+        vm.expectRevert(
+            abi.encodeWithSelector(MockENSv2Registry.Unauthorized.selector, ENSv2Roles.REGISTRY_UNREGISTER, address(c))
+        );
+        c.claim();
+    }
+
+    function test_revert_liveFeeAboveTheWindDownFee() public {
+        Castle.Config memory cfg = _config(true);
+        cfg.windDownFeeBps = FEE; // wind-down as cheap as live: a live fee above it must be refused
+        Castle c = new Castle(cfg);
+        registry.grantRootRoles(ENSv2Roles.REGISTRY_REGISTRAR | ENSv2Roles.REGISTRY_RENEW, address(c));
+        resolver.grantRootRoles(ENSv2Roles.RESOLVER_SET_DATA, address(c));
+        _crew(c);
+        vm.prank(operator);
+        c.setAnchorPrice(ANCHOR_Q96);
+        weth.mint(address(c), 1 ether);
+        usdc.mint(address(c), 3_000e6);
+        Castle.ShipParams memory p = _params();
+        p.feeBps = FEE + 1;
+        vm.startPrank(fee);
+        c.claim();
+        vm.expectRevert(Castle.BadShipParams.selector);
+        c.ship(p);
+        p.feeBps = FEE;
+        c.ship(p);
+        vm.stopPrank();
+    }
+
+    /// @dev Leaving out the heartbeat picks the wind-down branch; it must never price better than live, even right after
+    ///      a WETH-in swap (when the live branch's Decay charges the USDC-in back-run).
+    function testFuzz_windDownNeverBeatsLive(uint256 wethIn, uint256 usdcIn, uint256 dt) public {
+        _fund();
+        (, ISwapVM.Order memory order) = _claimAndShip(fee);
+        wethIn = bound(wethIn, 0, 2 ether);
+        if (wethIn < 1e12) wethIn = 0; // dust would round to zero out and revert
+        usdcIn = bound(usdcIn, 1e6, 5_000e6);
+        dt = bound(dt, 0, 2 * DECAY);
+        if (wethIn != 0) _swap(order, IERC20(address(weth)), wethIn);
+        vm.warp(block.timestamp + dt);
+        uint256 liveOut = _quoteWith(order, IERC20(address(usdc)), usdcIn, _hb());
+        uint256 windOut = _quoteWith(order, IERC20(address(usdc)), usdcIn, "");
+        assertLe(windOut, liveOut);
+    }
+
+    function test_dissolveOncePerEpoch() public {
+        _fund();
+        _claimAndShip(fee);
+        uint64 exp = castle.expiry();
+        vm.warp(exp + GRACE);
+        vm.prank(jack);
+        address a = castle.dissolve();
+        MockCCA(a).fill(0, 0, 0); // nobody bid: every WETH comes home at settlement
+        vm.roll(MockCCA(a).endBlock());
+        castle.settleAuction();
+        assertEq(weth.balanceOf(address(castle)), 10 ether);
+        uint256 ep = castle.epoch();
+        vm.prank(jack);
+        vm.expectRevert(abi.encodeWithSelector(Castle.AlreadyDissolved.selector, ep));
+        castle.dissolve();
+        // a new shift is a new epoch: it can be dissolved again once it too lapses
+        vm.prank(fi);
+        castle.claim();
+        vm.warp(castle.expiry() + GRACE);
+        vm.prank(jack);
+        castle.dissolve();
+    }
+
+    function test_revert_dissolveWhileAnAuctionRuns() public {
+        _fund();
+        address fum = makeAddr("fum");
+        vm.prank(operator);
+        castle.setAuctioneer(fum);
+        vm.prank(fee);
+        castle.claim();
+        vm.warp(castle.expiry() + GRACE);
+        vm.prank(fum);
+        address a = castle.openAuction(1 ether);
+        vm.prank(jack);
+        vm.expectRevert(abi.encodeWithSelector(Castle.AuctionRunning.selector, a));
+        castle.dissolve();
+    }
+
+    function test_unansweredChallengeCountsAsTheLeaseEnding() public {
+        _fund();
+        _claimAndShip(fee);
+        uint64 deadline = _challenge(fi);
+        assertLt(deadline + GRACE, castle.expiry(), "the ENS lease itself is still a day long");
+        vm.warp(deadline + GRACE - 1);
+        vm.prank(jack);
+        vm.expectRevert(abi.encodeWithSelector(Castle.NotDissolvable.selector, uint256(deadline) + GRACE));
+        castle.dissolve();
+        vm.warp(deadline + GRACE);
+        vm.prank(jack);
+        address a = castle.dissolve();
+        assertEq(weth.balanceOf(a), 10 ether);
     }
 
     // ------------------------------------------------------------------ JackHook (korg's vectors)

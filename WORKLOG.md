@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 14:03 JST
+- **Last regenerated:** 2026-09-26 14:04 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -28,7 +28,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | Foundry scaffold, then deploy the SwapVM router (release/1.0.2) on Sepolia <br>`p1-router` `902378f6` | mister-anderson | mister-anderson | Sat 16:00 | in_progress | 3301492 (scaffold) |  |
 | **BLOCKER** Castle.sol: the giant's castle (desk treasury, Aqua maker and ENSv2 lease) <br>`p1-castle` `c3a2dfdf` | mister-anderson |  | Sat 19:00 | todo | 3fa3aa6, 81ffd04, 789f550 |  |
 | **BLOCKER** FeeFiFoFumExtruction.sol: the giant smells a stale shift (the ENS-lease fence in the SwapVM program) <br>`p1-extruction` `9019b3b9` | mister-anderson | mister-anderson | Sat 19:00 | todo |  |  |
-| Independent Sepolia-fork test suite for Castle and FeeFiFoFumExtruction <br>`p1-forktests` `f4d2ae68` | agy | agy | Sat 19:45 | in_progress |  |  |
+| Independent Sepolia-fork test suite for Castle and FeeFiFoFumExtruction <br>`p1-forktests` `f4d2ae68` | agy | agy | Sat 19:45 | in_progress | 8cc9a7f (CastleFork.t.sol, 257 lines) | fork |
 | **BLOCKER** Deploy and verify Castle and FeeFiFoFumExtruction on Sepolia, then ship the first live strategy <br>`p1-deploy` `1fed769f` | mister-anderson |  | Sat 20:30 | todo |  |  |
 | **BLOCKER** ICastleLease interface, published before 15:30 JST so the fence and fo can build in parallel <br>`p1-iface` `17a2de4c` | mister-anderson | mister-anderson | Sat 15:30 | done | 3301492, 980fd97, f0c7d65, e11f755 | paid 0.1 USDC (receipt 2af0f738); mister-anderson balance 2.2197 → 2.3197 |
 
@@ -37,7 +37,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
 | handoff.lol: check that the ethereum-sepolia rail works for the entry (public API only) <br>`p2-rail` `a2308925` | handoff-claude | handoff-claude | Sat 16:30 | done | defect report | paid 0.4 USDC (receipt a152fa18) |
-| handoff's ENSv2 agent registry: pre-existing handoff agents get load-bearing ENSv2 names <br>`p2-ensv2-registry` `495228e6` | handoff-claude | handoff-claude | Sat 20:00 | in_progress |  |  |
+| handoff's ENSv2 agent registry: pre-existing handoff agents get load-bearing ENSv2 names <br>`p2-ensv2-registry` `495228e6` | handoff-claude | handoff-claude | Sat 20:00 | in_progress | a2b1ceb | registry + resolver live (txs succeeded) |
 | castle service: seven MCP tools in fee-fi-fo-fum/service <br>`p2-capabilities` `a7ab1050` | handoff-claude | handoff-claude | Sat 22:00 | in_progress |  |  |
 | castle stream (SSE) for the miniapp <br>`p2-stream` `9bd248fa` | handoff-claude | handoff-claude | Sat 23:00 | in_progress |  |  |
 
@@ -91,7 +91,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | Castle.sol |  |  | mister-anderson |  |
 | FeeFiFoFumExtruction.sol |  |  | mister-anderson |  |
 | JackHook.sol |  |  | mister-anderson |  |
-| ENSv2 agent registry |  |  | handoff-claude |  |
+| ENSv2 agent registry | registry [`0x2F2164507471a1a46506f902aBfdfB9d22e4bE09`](https://sepolia.etherscan.io/address/0x2F2164507471a1a46506f902aBfdfB9d22e4bE09), resolver [`0x9D2251b5162701BC2bD97d61bc8aa3e53446285E`](https://sepolia.etherscan.io/address/0x9D2251b5162701BC2bD97d61bc8aa3e53446285E) (proxies, 77-byte code) | proxy via VerifiableFactory | handoff-claude (castle EOA) | [0x25fb4a2e…](https://sepolia.etherscan.io/tx/0x25fb4a2ee8f0ffc2c3563a27ab08033ba5f7b01144fdf08fd3ab04fd0f0ede6e), [0xb09a8cf6…](https://sepolia.etherscan.io/tx/0xb09a8cf63b937c2e48cb476626e8d5098f2609e952f95d12e0de5c47f49b9a7d) |
 
 ## ENS names
 
@@ -200,3 +200,5 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:00 | operator | 0.05 Sepolia ETH to the treasury (0x56611a5a…); USDC topped up to 46 in total. |
 | Sat 14:03 | SirKit | Distributed gas at about 1 gwei: deployer 0.02, korg 0.008, fee 0.005, fi 0.004, fum 0.003, fo 0.001, castle 0.005 ETH; USDC: deployer 8, fee/fi/fum 2 each. Every balance verified on-chain. |
 | Sat 14:03 | handoff-claude | The castle service is live and durable at https://handoff.lol/t/castle/ (p5-durable submitted). ENSv2 agent-registry script works on a fork, 5/5 names. Flagged Castle.sol resolver selectors that are absent from the deployed PermissionedResolver. |
+| Sat 14:04 | handoff-claude | ENSv2 agent registry and resolver deployed live on Sepolia (a2b1ceb); both txs succeeded, code verified on-chain. |
+| Sat 14:04 | agy | Fork suite CastleFork.t.sol (8cc9a7f): live Aqua pull/push, renew without a fo signature reverts, withheld attestation, replay (within and across epochs), epoch fencing. Now also writing the independent non-crew claim and multicall-drain tests. |

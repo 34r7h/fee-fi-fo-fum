@@ -10,7 +10,7 @@ import { PriceExtruction } from "../../src/PriceExtruction.sol";
 import { CastleHelpers } from "../utils/CastleHelpers.sol";
 import { VaultPrograms } from "../utils/VaultPrograms.sol";
 
-/// @title CastleVaultForkTest
+/// @title CastleForkBase
 /// @notice CastleVault and PriceExtruction against the LIVE Sepolia Aqua, AquaSwapVMRouter 1.0.2, WETH9 and Circle
 ///         USDC at a pinned block, with SPEC.md's owner and fum keys impersonated. Beat 1 of the demo, end to end:
 ///         fum sets 2x leverage, fi ships harp and hen each promising the whole hoard, greedy reverts OverAllocated,
@@ -18,7 +18,7 @@ import { VaultPrograms } from "../utils/VaultPrograms.sol";
 /// @dev forge test --match-path test/fork/CastleVaultFork.t.sol
 ///      FORK_BLOCK=<n> pins another block; SEPOLIA_ARCHIVE_RPC_URL overrides the RPC (Tenderly's public gateway
 ///      serves history by default).
-contract CastleVaultForkTest is CastleHelpers {
+abstract contract CastleForkBase is CastleHelpers {
     uint256 internal constant DEFAULT_FORK_BLOCK = 11_785_880;
 
     address internal constant AQUA = 0x1111113CCf1426A8E30e2bfF5E005d929bF6a90a;
@@ -45,7 +45,7 @@ contract CastleVaultForkTest is CastleHelpers {
     CastleVault internal vault;
     VaultPrograms internal programs;
 
-    function setUp() public {
+    function setUp() public virtual {
         string memory rpc = vm.envOr("SEPOLIA_ARCHIVE_RPC_URL", string("https://sepolia.gateway.tenderly.co"));
         vm.createSelectFork(rpc, vm.envOr("FORK_BLOCK", DEFAULT_FORK_BLOCK));
         fi = vm.addr(fiKey);
@@ -86,7 +86,9 @@ contract CastleVaultForkTest is CastleHelpers {
         vault.ship(GREEDY, pHen, 1, 0);
         vm.stopPrank();
     }
+}
 
+contract CastleVaultForkTest is CastleForkBase {
     function test_fork_beat1_oneBalanceTwoStrategies_greedyRefused() public {
         (bytes32 hHarp,, bytes32 hHen,) = _beat1();
         assertEq(vault.committed(WETH), 2 * HOARD_WETH, "promises total 2x the WETH");

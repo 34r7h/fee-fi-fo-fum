@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 14:13 JST
+- **Last regenerated:** 2026-09-26 14:15 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -99,13 +99,13 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 | Name | Owner | Expiry / epoch | Tx |
 |---|---|---|---|
-| feefifofum.eth | korg EOA 0x48EB…5d3E; subregistry 0x2F21…E09, resolver 0x9D22…285E | expiry 1792818444 | [0xc51ab266…](https://sepolia.etherscan.io/tx/0xc51ab2660dd9a0029a201a4acd5330d7e7c2eac063cbfe58bb31039d30338378) |
+| feefifofum.eth | korg EOA 0x48EB…5d3E; subregistry 0x2F21…E09, resolver 0x9D22…285E; addr → 0x48EB…5d3E via UniversalResolverV2 (set in tx 0x74042211…) | expiry 1792818444 | [0xc51ab266…](https://sepolia.etherscan.io/tx/0xc51ab2660dd9a0029a201a4acd5330d7e7c2eac063cbfe58bb31039d30338378) |
 | castle.feefifofum.eth |  |  |  |
 | fee / fi / fo / fum .feefifofum.eth | each agent's EOA (addr records) | see contracts/deployments/ens-agents.sepolia.json | 133b33e |
 
 ## Agents
 
-Live balances read at block 11784076.
+Live balances read at block 11784086.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -116,7 +116,7 @@ Live balances read at block 11784076.
 | fi | fi (registered on handoff, online, heartbeat every 20s) | [`0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2`](https://sepolia.etherscan.io/address/0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2) | fi.feefifofum.eth (live; resolves via UniversalResolverV2 to this EOA) | 0.004 ETH [0x742d1ba8…](https://sepolia.etherscan.io/tx/0x742d1ba88af97c175cd2ee407a9e128876189576f4d4cacb3b3ba555b4daca1b) / 2 USDC [0xc5df2983…](https://sepolia.etherscan.io/tx/0xc5df298310764455ab7f7292214dac2df1bf04a922d9880aa359b3a48e1899bd) | 0.00295 / 2.00 / 0.00100 |
 | fo | fo (registered on handoff, online, heartbeat every 20s) | [`0x8689a407A2488A5b2f2De05d2C6978a798f93D56`](https://sepolia.etherscan.io/address/0x8689a407A2488A5b2f2De05d2C6978a798f93D56) | fo.feefifofum.eth (live; resolves via UniversalResolverV2 to this EOA) | 0.001 ETH [0x0033036a…](https://sepolia.etherscan.io/tx/0x0033036adf3a82bc53bfb4e08c90592c30679981365985ccf242123fa883744b) | 0.00075 / 0.00 / 0.00020 |
 | fum | fum (registered on handoff, online, heartbeat every 20s) | [`0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2`](https://sepolia.etherscan.io/address/0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2) | fum.feefifofum.eth (live; resolves via UniversalResolverV2 to this EOA) | 0.003 ETH [0xd63f3304…](https://sepolia.etherscan.io/tx/0xd63f33041b7a3ac024ecaba8fb6c73eb0dd95e0b8c372c1ff8d2cc7582a709c6) / 2 USDC [0xad17fe88…](https://sepolia.etherscan.io/tx/0xad17fe88e2310c40cf758e8bd611e382a3226e48d414f5093713bda1a2578115) | 0.00195 / 2.00 / 0.00100 |
-| castle (service) | castle (handoff-claude) | [`0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99`](https://sepolia.etherscan.io/address/0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99) |  | 0.005 ETH [0xaeba391d…](https://sepolia.etherscan.io/tx/0xaeba391d38c81761afbf1dd52db8365162e66e05d28f63d07a58811181746ceb) + [0x76c425e7…](https://sepolia.etherscan.io/tx/0x76c425e74d6123e6115529e22daea9c88d3ecd79af59b6104f2d112acd03c20d) | 0.00306 / 0.00 / 0.00000 |
+| castle (service) | castle (handoff-claude) | [`0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99`](https://sepolia.etherscan.io/address/0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99) |  | 0.005 ETH [0xaeba391d…](https://sepolia.etherscan.io/tx/0xaeba391d38c81761afbf1dd52db8365162e66e05d28f63d07a58811181746ceb) + [0x76c425e7…](https://sepolia.etherscan.io/tx/0x76c425e74d6123e6115529e22daea9c88d3ecd79af59b6104f2d112acd03c20d) | 0.00296 / 0.00 / 0.00000 |
 
 ## Miniapp and live demo
 
@@ -225,3 +225,5 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:23 | handoff-advisor | p0-wallets PASS against the amended DoD. p0-ens-probes: all four probes proven (live setData 0x4f18a7f7, live linkToNode 0x1f5215fd, token-id bump on re-register), but it is held because addr(feefifofum.eth) returns 0x0. |
 | Sat 14:24 | SirKit | Verified p0-wallets; co-sign requested. Routed the parent addr record to agent-smith (castle EOA holds the resolver role). Sent mister-anderson the Castle constraint: castle.feefifofum.eth lives in subregistry 0x2F21…E09, and Castle takes ROLE_REGISTRAR and ROLE_RENEW at registration. |
 | Sat 14:25 | handoff-advisor | Co-signed p0-wallets (paid, receipt 8b3e00be). |
+| Sat 14:27 | agent-smith | Set addr(feefifofum.eth) from the castle EOA (tx 0x74042211…b570). |
+| Sat 14:27 | SirKit | Confirmed with an eth_call that feefifofum.eth resolves via UniversalResolverV2 to 0x48EB…5d3E; asked handoff-advisor to re-check p0-ens-probes. |

@@ -99,6 +99,20 @@ function agentByAddr(a) {
 }
 const ensFor = (id) => agents.get(id)?.ens || state.crew.find((c) => c.agent_id === id)?.ens || null;
 
+// DNS wire format -> dotted name (Castle's Relinked carries the holder's DNS-encoded name).
+function dnsDecode(hex) {
+  if (!hex || hex === '0x') return null;
+  const b = Buffer.from(hex.slice(2), 'hex');
+  const out = [];
+  for (let i = 0; i < b.length && b[i] !== 0; i += b[i] + 1) out.push(b.subarray(i + 1, i + 1 + b[i]).toString('utf8'));
+  return out.join('.') || null;
+}
+async function mcpOf(name) {
+  const ur = addr('universalResolver');
+  if (!ur) return null;
+  try { return await client.getEnsText({ name, key: 'agent-endpoint[mcp]', universalResolverAddress: ur }); } catch { return null; }
+}
+
 function leaseAt(block) {
   let cur = null;
   for (const l of leaseTimeline) { if (l.block <= block) cur = l; else break; }
@@ -149,12 +163,15 @@ async function scan(from, to) {
         const shift = (cfg.shifts || []).find((s) => s.agent === agentByAddr(holder));
         emit('shift.changed', { from: prev ? agentByAddr(state.lease?.holder) : null, to: agentByAddr(holder), city: shift?.city ?? null, auction: null }, { ...meta, src: 'service' });
       } else if (/Relinked$/.test(n)) {
-        emit('castle.relinked', { node: arg(d, 'node'), holderNode: arg(d, 'holderNode'), holderName: null, mcpEndpoint: null }, meta);
+        const holderName = dnsDecode(arg(d, 'holderName'));
+        emit('castle.relinked', { node: arg(d, 'node'), holderNode: arg(d, 'holderNode'), holderName, mcpEndpoint: holderName ? await mcpOf(holderName) : null }, meta);
+      } else if (n === 'Docked') {
+        emit('strategy.docked', { hash: arg(d, 'strategyHash'), epoch: str(arg(d, 'epoch')), dockedBy: agentByAddr(arg(d, 'dockedBy')) }, meta);
       } else if (n === 'Shipped') {
         const hash = arg(d, 'strategyHash');
         emit('strategy.shipped', {
           hash, epoch: str(arg(d, 'epoch')), shippedBy: agentByAddr((await client.getTransaction({ hash: log.transactionHash })).from),
-          center: arg(d, 'centerQ96') != null ? priceView(arg(d, 'centerQ96')) : null, weth: str(arg(d, 'weth')), usdc: str(arg(d, 'usdc')),
+          center: (arg(d, 'anchorQ96', 'centerQ96') ?? 0n) > 0n ? priceView(arg(d, 'anchorQ96', 'centerQ96')) : null, weth: str(arg(d, 'weth')), usdc: str(arg(d, 'usdc')),
         }, meta);
       } else if (/AuctionOpened$/.test(n)) {
         const auction = getAddress(arg(d, 'auction'));
@@ -184,6 +201,7 @@ async function scan(from, to) {
           emit('strategy.shipped', { hash, epoch: leaseAt(block)?.epoch ?? null, shippedBy: agentByAddr((await client.getTransaction({ hash: log.transactionHash })).from), center: null, weth: null, usdc: null }, meta);
         }
       } else if (n === 'Docked') {
+        if (castleLogs.some((l) => l.transactionHash === log.transactionHash && evName(tryDecode('Castle', l)) === 'Docked')) continue;
         emit('strategy.docked', { hash: arg(d, 'strategyHash'), epoch: strategies.get(arg(d, 'strategyHash'))?.epoch ?? null, dockedBy: agentByAddr((await client.getTransaction({ hash: log.transactionHash })).from) }, meta);
       } else if (n === 'Pulled' || n === 'Pushed') {
         const f = fillTx.get(log.transactionHash) || { meta, legs: [] };

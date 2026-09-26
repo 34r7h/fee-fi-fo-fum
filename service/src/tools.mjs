@@ -20,7 +20,7 @@ const token = (t) => {
 const need = (v, what) => { if (!v) throw new Error(`${what} is not deployed yet (contracts/deployments/sepolia.json has no address for it)`); return v; };
 
 // SwapVM 1.0.2 TakerTraitsLib.build, in JS: uint160 slice indexes + uint16 flags, then the slices.
-export function takerData({ taker, isExactIn = true, threshold, to, deadline = 0, useTransferFromAndAquaPush = true, isFirstTransferFromTaker = true, instructionsArgs = '0x' }) {
+export function takerData({ taker, isExactIn = true, threshold, to, deadline = 0, useTransferFromAndAquaPush = true, isFirstTransferFromTaker = false, instructionsArgs = '0x' }) {
   const th = threshold != null ? pad(toHex(BigInt(threshold)), { size: 32 }) : '0x';
   const toSlice = to && taker && !sameAddr(to, taker) ? getAddress(to) : '0x';
   const dl = deadline ? pad(toHex(BigInt(deadline)), { size: 5 }) : '0x';
@@ -142,7 +142,10 @@ export const tools = {
     run: async ({ agent_id }) => {
       const castle = need(addr('castle'), 'Castle');
       const member = crew().find((c) => c.agent_id === agent_id);
-      if (!member) throw new Error(`${agent_id} is not on the castle crew; call castle_join first`);
+      if (!member) throw new Error(`${agent_id} has not applied; call castle_join first`);
+      // The crew that may claim is Castle's on-chain crew (set by the operator); castle_join is the application.
+      const onChain = await client.readContract({ address: castle, abi: abi('Castle'), functionName: 'crew', args: [member.addr] }).catch(() => null);
+      if (onChain === false) return { ok: false, reason: 'NotCrew', from: member.addr, note: 'applied through castle_join, but Castle.crew(addr) is false until the operator calls setCrew' };
       const h = await head();
       const lease = await readLease();
       if (lease?.expiry != null && h.timestamp <= lease.expiry) {

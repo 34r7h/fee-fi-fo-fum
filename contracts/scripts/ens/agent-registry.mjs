@@ -225,12 +225,12 @@ const CASTLE = opt('castle', process.env.CASTLE_ADDRESS || ext.castle || null);
 if (CASTLE) {
   const castle = getAddress(CASTLE);
   const regRoles = R.REGISTRAR | R.RENEW;
-  const resRoles = RS.LINK | RS.SET_DATA | RS.SET_TEXT | RS.SET_ADDRESS;
+  const resRoles = RS.LINK | RS.SET_DATA;   // only Castle writes handoff-price (resource(key) spans every name here)
   if (!(await pub.readContract({ address: state.agentRegistry, abi: REG, functionName: 'hasRootRoles', args: [regRoles, castle] }))) {
     await send(wallet, { address: state.agentRegistry, abi: REG, functionName: 'grantRootRoles', args: [regRoles, castle] }, `grant Castle ${castle} REGISTRAR|RENEW on the agent registry`);
   }
   if (!(await pub.readContract({ address: state.resolver, abi: RES, functionName: 'hasRootRoles', args: [resRoles, castle] }))) {
-    await send(wallet, { address: state.resolver, abi: RES, functionName: 'grantRootRoles', args: [resRoles, castle] }, `grant Castle ${castle} LINK|SET_DATA|SET_TEXT|SET_ADDRESS on the agent resolver`);
+    await send(wallet, { address: state.resolver, abi: RES, functionName: 'grantRootRoles', args: [resRoles, castle] }, `grant Castle ${castle} LINK|SET_DATA on the agent resolver`);
   }
   state.castle = castle;
   saveState();

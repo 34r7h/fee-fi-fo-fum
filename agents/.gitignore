@@ -1,0 +1,6 @@
+# Secrets and local state never enter git: keys live in ~/.handoff (0600), real env values in agents/.env.
+.env
+.env.*
+!.env.example
+*.key
+node_modules/

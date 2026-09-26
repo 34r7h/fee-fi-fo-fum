@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 16:58 JST
+- **Last regenerated:** 2026-09-26 17:01 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -75,8 +75,8 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
-| README before/after, the three sponsor integration write-ups, and the contract address table <br>`p6-writeups` `3fb7f7a3` | korg | korg | Sun 07:00 | in_progress |  |  |
-| FEEDBACK.md for Uniswap and the developers.uniswap.org/hackathon-feedback form <br>`p6-feedback` `d0587b18` | korg | korg | Sun 07:00 | in_progress |  |  |
+| README before/after, the three sponsor integration write-ups, and the contract address table <br>`p6-writeups` `3fb7f7a3` | korg | korg | Sun 07:00 | review |  |  |
+| FEEDBACK.md for Uniswap and the developers.uniswap.org/hackathon-feedback form <br>`p6-feedback` `d0587b18` | korg | korg | Sun 07:00 | review |  |  |
 | Pitch deck, plus the script and shot list for a 2-4 min demo video <br>`p6-deck` `005db56f` | impecc | impecc | Sun 07:00 | done | deck artifact 8emvtymY…; docs/video-script.md 99b43c7 | 11 slides with real Sepolia txs (all status 1, captions match); script with 7 tx links; co-signed |
 | **BLOCKER** Two full rehearsals of the five-beat demo on Sepolia from a clean browser <br>`p6-rehearsal` `3eb4aa41` | agy | agy | Sun 05:00 | in_progress |  |  |
 | AI_USAGE.md and the final WORKLOG.md pass <br>`p6-ai-usage` `8abb390e` | SirKit | SirKit | Sun 08:00 | done | AI_USAGE.md bf999b9, de24ce3, 2701078; README 2701078 | every path attributed, including agy's fo commit 6376485 and the third-party submodules; the 95 SirKit and 49 task-sync commits disclosed; the 5 private handoff commits after 079f8f0 listed; verified by handoff-advisor |
@@ -108,7 +108,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784900.
+Live balances read at block 11784913.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -366,3 +366,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 16:55 | SirKit | Board at 23/35 verified: finished work hadn't been submitted. Verified p3-failover-e2e and p3-feefi; reconciled AI_USAGE.md against git log and submitted p6-ai-usage to handoff-advisor. Updated the p3-fo, p3-fum and p2-capabilities DoDs to the cost rule (existing live txs plus fork runs). Found another cost leak: fi re-centred on a 240s timer (7 extra ships), now re-centres only when the anchor moves. |
 | Sat 16:57 | SirKit | Fixed handoff-advisor's four AI_USAGE findings and re-submitted; handoff-advisor verified p6-ai-usage. README R4 now matches the chain: dissolveGrace is 1 day (tx 0xf8be3efb). mister-anderson found that v3's early claim needs an ENS unregister role nobody holds any more; approved the variant where Castle owns castle.feefifofum.eth and keeps holder and epoch in storage, so no new ENS role is granted. |
 | Sat 17:02 | SirKit | handoff-advisor co-signed p3-failover-e2e and p3-feefi: all 11 failover txs check out, and every Shipped anchor equals the last ENS price. In the live run the roles were swapped (fi held the castle and fee took over), so the demo-evidence row titles now name the role, not the agent. |
+| Sat 17:10 | SirKit | impecc shipped miniapp v1.0.4 (f9bbdd7): the ring caption is now derived from the Claimed and Renewed events (holder, epoch, renewal count), not the fixed 'renewed every 40 s' line that handoff-advisor flagged. Live page checked: v1.0.4, old line gone. |

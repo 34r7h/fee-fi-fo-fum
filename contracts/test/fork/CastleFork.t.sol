@@ -3,6 +3,7 @@ pragma solidity 0.8.30;
 
 import { Test } from "forge-std/Test.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { IAqua } from "@1inch/aqua/src/interfaces/IAqua.sol";
 import { AquaSwapVMRouter } from "@1inch/swap-vm/src/routers/AquaSwapVMRouter.sol";
 import { AquaOpcodes } from "@1inch/swap-vm/src/opcodes/AquaOpcodes.sol";
@@ -114,7 +115,23 @@ contract CastleForkTest is Test {
         castle.renew(next, deadline, badSig);
     }
 
-    /// @notice (5) a replayed fo attestation reverts
+    /// @notice (7) a withheld fo attestation makes renew revert
+    function test_fork_withheldFoAttestationReverts() public {
+        vm.prank(fee);
+        castle.claim();
+
+        // 40s into the lease: fo withholds attestation (staged hang, stale quotes, or off-market)
+        // Trader tries to renew with empty signature
+        vm.warp(block.timestamp + 40);
+        uint64 next = uint64(block.timestamp + LEASE);
+        uint64 deadline = uint64(block.timestamp + LEASE + 60);
+
+        vm.prank(fee);
+        vm.expectRevert(abi.encodeWithSelector(ICastleLease.BadAttestation.selector, address(0)));
+        castle.renew(next, deadline, "");
+    }
+
+    /// @notice (5) a replayed fo attestation reverts (within same epoch)
     function test_fork_replayedFoAttestationReverts() public {
         vm.prank(fee);
         castle.claim();
@@ -141,6 +158,36 @@ contract CastleForkTest is Test {
             )
         );
         castle.renew(next, deadline, sig);
+    }
+
+    /// @notice (8) a replayed fo attestation reverts across epochs
+    function test_fork_replayedFoAttestationCrossEpochReverts() public {
+        vm.prank(fee);
+        uint256 ep1 = castle.claim();
+
+        // Fee obtains attestation for epoch 1
+        uint64 next = uint64(block.timestamp + LEASE);
+        uint64 deadline = uint64(block.timestamp + LEASE + 60);
+        bytes memory ep1Sig = _sign(ep1, next, deadline);
+
+        // Advance past expiry and fi claims the castle for epoch 2
+        vm.warp(castle.expiry());
+        vm.prank(fi);
+        uint256 ep2 = castle.claim();
+        assertGt(ep2, ep1);
+
+        // 40s into fi's lease: deadline is still valid, but epoch 1 attestation is replayed
+        vm.warp(block.timestamp + 40);
+        uint64 next2 = uint64(block.timestamp + LEASE);
+
+        // Attestation digest in ep2 evaluates differently from ep1, so fo recovery fails
+        bytes32 ep2Digest = castle.attestationDigest(
+            ICastleLease.Attestation({ epoch: ep2, expiry: next2, deadline: deadline })
+        );
+        (address recoveredSigner,,) = ECDSA.tryRecover(ep2Digest, ep1Sig);
+        vm.prank(fi);
+        vm.expectRevert(abi.encodeWithSelector(ICastleLease.BadAttestation.selector, recoveredSigner));
+        castle.renew(next2, deadline, ep1Sig);
     }
 
     /// @notice (1) a live fill passes, with a real Aqua pull/push on live Sepolia Aqua

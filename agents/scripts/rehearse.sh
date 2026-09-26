@@ -5,6 +5,9 @@
 #   ./scripts/rehearse.sh failover   genesis claim, fee ships a book centred on the ENS anchor, renewals with fo's
 #                                    seal, kill -9 fee, fi claims a new epoch within one lease period (docking fee's
 #                                    book) and ships its own, then fee restarts stale and its renew reverts on-chain
+#   ./scripts/rehearse.sh e2e        p3-failover-e2e with a taker (Jack = fum's EOA): a live fill, kill -9 fee, a
+#                                    wind-down fill in the gap (fi waits FI_CLAIM_DELAY_S), fi claims, the old epoch's
+#                                    strategy reverts FeeFiFoFum(), fi's new book fills, stale fee reverts NotHolder
 #   ./scripts/rehearse.sh withhold   fee hangs (heartbeat on, no ships), so fo withholds (trader-hang) and posts an
 #                                    incident; fee forges its own seal and Castle rejects it (BadAttestation); fi
 #                                    takes over
@@ -34,6 +37,7 @@ for id in fee fi fo fum; do [ -f "logs/$id.log" ] && mv "logs/$id.log" "logs/reh
 ./scripts/local-castle.sh --stop >/dev/null
 ./scripts/local-castle.sh
 if [ "$MODE" = withhold ]; then export FEE_STAGE_HANG=1 FEE_FORCE_RENEW=1 FO_STALE_QUOTES_S=${FO_STALE_QUOTES_S:-60}; fi
+if [ "$MODE" = e2e ]; then export FI_CLAIM_DELAY_S=${FI_CLAIM_DELAY_S:-30}; fi
 eval "$(./scripts/local-castle.sh --env)"
 ./scripts/up.sh >/dev/null
 
@@ -58,6 +62,34 @@ if [ "$MODE" = failover ]; then
   wait_for logs/fee.log '"event":"stale-renew"' 90
   wait_for logs/fee.log '"event":"tx-reverted","fn":"renew"' 5
   ./scripts/down.sh fee >/dev/null; ./scripts/up.sh fee >/dev/null   # back to an honest standby
+  echo "== an honest shift is never reported: no trader-hang incident from fo in this run"
+  if grep -q '"event":"incident-posted","kind":"trader-hang"' logs/fo.log; then
+    grep -m1 '"event":"incident-posted","kind":"trader-hang"' logs/fo.log | cut -c1-300
+    echo "FAIL: fo reported a hang in an honest run" >&2; exit 1
+  fi
+elif [ "$MODE" = e2e ]; then
+  jack() { node scripts/jack.mjs --as fum "$@"; }
+  lease_state() { node -e 'import("./lib/lease.mjs").then(async (l) => { const c = await import("./lib/chain.mjs"); console.log((await l.readLease(c.publicClient())).state); })'; }
+  echo "== fee ships; a taker fills the live book"
+  wait_for logs/fee.log '"event":"shipped".*"centreVsEnsBps":0,"fenceEpochOk":true' 60
+  jack --strategy latest --in USDC --amount 500000
+  echo "== kill -9 fee; wait for expiry"
+  kill -9 "$(cat logs/fee.pid)"; rm -f logs/fee.pid
+  for _ in $(seq 1 $((LEASE + 30))); do [ "$(lease_state)" = EXPIRED ] && break; sleep 1; done
+  echo "== (a) wind-down in the gap: the live strategy takes USDC in only"
+  jack --strategy latest --in USDC --amount 500000
+  echo "== fi claims after the gap (within one lease period), docking fee's book"
+  wait_for logs/fi.log '"event":"claimed"' $((LEASE + 60))
+  echo "== (b) the old epoch's strategy is fenced: FeeFiFoFum(), mined"
+  wait_for logs/fi.log '"event":"shipped"' 60
+  set +e; jack --strategy previous --in USDC --amount 500000 --force; rc=$?; set -e
+  [ "$rc" = 3 ] || { echo "FAIL: the old-epoch fill did not revert (exit $rc)" >&2; exit 1; }
+  echo "== (c) the new epoch's book fills"
+  jack --strategy latest --in USDC --amount 500000
+  echo "== (d) fee restarts stale; its renew reverts on-chain"
+  FEE_STALE=1 ./scripts/up.sh fee >/dev/null
+  wait_for logs/fee.log '"event":"stale-renew"' 90
+  ./scripts/down.sh fee >/dev/null
 else
   echo "== fo withholds: no ships in the live epoch, heartbeat fresh (trader-hang)"
   wait_for logs/fo.log '"event":"withheld".*trader-hang' $((LEASE + 90))

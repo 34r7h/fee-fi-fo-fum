@@ -1,51 +1,54 @@
 # fee-fi-fo-fum
 
-A DeFi swarm on [handoff.lol](https://handoff.lol): four agents (**fee**, **fi**, **fo** and **fum**) and one miniapp for humans, built on **1inch Aqua/SwapVM**, **Uniswap CCA** and **ENSv2**. Everything on-chain runs on **Ethereum Sepolia**.
+**The giant never sleeps.**
 
-Entry for ETHGlobal Tokyo 2026 (Continuity track). The existing project is **handoff**, with baseline commit `079f8f0`. This repo holds the new work from the hackathon weekend.
+A dead agent can't send the transaction that cancels its quotes. To every Jack watching the market, a crashed market-making agent is a sleeping giant with its gold left out. **fee-fi-fo-fum** is the giant that wakes up. Its liquidity is live only while its operator holds an ENS lease. The moment the lease lapses, the giant smells the intruder, and stale fills die on-chain with no transaction from the agent that fell. When no one takes the castle, the hoard isn't looted: it goes to a fair Uniswap auction, and any Jack with a name can climb up and bid.
 
-## BATON: fenced liquidity handoffs for a follow-the-sun agent desk
+It is a DeFi swarm on [handoff.lol](https://handoff.lol): four agents (**fee**, **fi**, **fo** and **fum**) and one miniapp for humans. It is built on **1inch Aqua/SwapVM**, **Uniswap CCA** and **ENSv2**, and everything on-chain runs on **Ethereum Sepolia**.
 
-Agents crash, and a dead agent can't send the transaction that cancels its quotes. BATON keeps an agent desk's liquidity **live only while its operator holds an ENS lease**. The book passes from agent to agent (Tokyo → London → New York) with no gap and no zombie fills. If nobody picks the book up, a **Uniswap CCA** auctions it off fairly instead of dumping it.
+It is an ETHGlobal Tokyo 2026 entry in the Continuity track. The existing project is **handoff** (baseline `079f8f0`); this repo is the new work.
+
+## The loop
 
 ```
-(1) ENSv2 lease on desk.feefifofum.eth
-      The holder renews it with fo's attestation. After expiry anyone may claim it.
-      The regenerated token id is the fencing epoch.
-      linkToNode points desk.* at the current shift.
+(1) ENSv2 lease: castle.feefifofum.eth
+      The holder renews it with fo's attestation. After expiry anyone may claim it,
+      and the regenerated token id becomes the fencing epoch.
+      linkToNode points castle.* at the current shift.
         │  read at fill time, directly from the registry
         ▼
-(2) 1inch Aqua + SwapVM 1.0.2. The maker is Baton.sol, which is also the desk treasury.
-      Program = FenceExtruction → XYCConcentrateGrowLiquidity2D → FlatFeeIn
+(2) 1inch Aqua + SwapVM 1.0.2. The maker is Castle.sol (the giant's castle and its hoard).
+      Program = FeeFiFoFumExtruction → XYCConcentrateGrowLiquidity2D → FlatFeeIn
         live and same epoch → fill
         expired             → wind down (reduce-only, wide spread)
-        epoch changed       → revert FENCED
-        │  on a shift change, or when nobody claims the book
+        epoch changed       → revert FeeFiFoFum()   (the giant smells a stale shift)
+        │  shift change, or nobody claims the castle
         ▼
 (3) Uniswap CCA is the exit, not the entrance
-      CrewHook gates bidders to handoff's ENSv2 agent registry.
-      The clearingPrice is written back to ENS with setData,
-      and the next shift's curve is centred on it.
+      JackHook: any agent with a name in handoff's ENSv2 registry may bid,
+      and the incoming giant gets no privilege.
+      clearingPrice goes back to ENS (setData), and the next shift centres its curve on it.
         └────────► back to (1)
 ```
 
-## The swarm
+## The four syllables
 
 | Agent | Role |
 |---|---|
-| **fee** | Shift trader. Holds the baton, renews the lease, and ships and re-ships strategies through Baton. |
-| **fi** | Hot standby and next shift. Watches fee's heartbeats. On expiry it claims, docks stale strategies, relinks `desk` and re-ships. |
-| **fo** | Fencer and witness. Signs the quote-sanity attestation that every renewal needs, replays fills against the lease timeline, and publishes incident reports. |
+| **fee** | Shift trader. Holds the castle, renews the lease, ships and re-ships the book. |
+| **fi** | Hot standby. Wakes when fee falls, claims the castle, relinks it, and re-ships at a new epoch. |
+| **fo** | Fencer and witness. Signs or withholds the attestation every renewal needs, replays fills, and reports incidents. |
 | **fum** | Auctioneer. Runs the shift-change and dissolution CCAs, and writes the clearing price back to ENS. |
 
 ## Layout
 
 | Path | Contents |
 |---|---|
-| `contracts/` | Foundry: Baton.sol, FenceExtruction.sol, CrewHook.sol, and tests on a Sepolia fork |
-| `agents/` | fee, fi, fo and fum: handoff agents with viem clients on Ethereum Sepolia |
-| `miniapp/` | `baton.html`: a world-clock ring of shifts, the lease countdown, the fence state and a live CCA chart |
-| `docs/` | The plan, the sponsor write-ups, FEEDBACK.md and AI_USAGE.md |
+| `contracts/` | Foundry: Castle.sol, FeeFiFoFumExtruction.sol, JackHook.sol, and Sepolia-fork tests |
+| `agents/` | fee, fi, fo and fum: handoff agents with viem on Ethereum Sepolia |
+| `service/` | The castle service: MCP tools and the live stream |
+| `miniapp/` | `fee-fi-fo-fum.html`: a world-clock ring of shifts, the lease countdown, the fence state, and a live CCA chart |
+| `docs/` | The plan, naming, sponsor write-ups, FEEDBACK.md and AI_USAGE.md |
 | `WORKLOG.md` | A running record of what was built, by whom, and where it lives on-chain |
 
 ## Status

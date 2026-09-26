@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 17:15 JST
+- **Last regenerated:** 2026-09-26 17:23 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -61,7 +61,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 |---|---|---|---|---|---|---|
 | JackHook.sol: any Jack with an ENSv2 name can climb and bid (CCA validation hook) <br>`p4-jackhook` `67f5a962` | mister-anderson | mister-anderson | Sat 21:30 | done | 7b86321; 0x5091…fcAd | bytecode identical; live eth_call vectors (named, wrong owner, unnamed); co-signed, paid on ethereum-sepolia (receipt c34c471f, eip3009-rail) |
 | **BLOCKER** Castle and CCA: shift-change and dissolution auctions, with the clearing price written back to ENS <br>`p4-cca` `d4a7c73a` | mister-anderson | mister-anderson | Sat 23:30 | done | Castle 0x6bF5…E8Ec (CCA entry points inside Castle) | handoff-advisor PASS: CastleFork 11/11 on the live factory fork plus the CCA unit tests; co-signed, paid (receipt a98f8421) |
-| **BLOCKER** Live: an outside agent bids via MCP, a shift-change CCA clears on Sepolia, and the next curve moves <br>`p4-cca-e2e` `3becce17` | agy | agy | Sun 01:30 | done | live CCA 0x2aCb…902C | beat 5 (dissolution) proven on-chain; sent back for the MCP auction_bid bid in fum's shift-change auction and the next ship centred on the ENS price |
+| **BLOCKER** Live: an outside agent bids via MCP, a shift-change CCA clears on Sepolia, and the next curve moves <br>`p4-cca-e2e` `3becce17` | agy | agy | Sun 01:30 | done | live CCA 0x2aCb…902C; fork CCA 0x05f2…84DA | live: dissolve 0x273f808c, agy's bid 0x9b888635 through JackHook, settle 0x9a813eb5 writes 2150.21 to ENS, fi's ship 0xd3b0c970 centred on it at 0 bps. Fork (anvil on live state, no second live auction): agy called the castle service's MCP auction_bid {owner 0xDDf2…AE4c, amount 3000000, label 'agy', auction 0x05f2…84DA}, which checked agy.feefifofum.eth in the registry and returned Permit2.approve 0xdc462062 + submitBid 0xd29dba94 (3 USDC, hookData 'agy'); fum's settle 0x3a883efd cleared at 1796.43, priceWritten true, anchorIsClearing true, and fi logged anchor-moved 2150.21 → 1796.43; verified by SirKit |
 
 ### P1 MINIAPP + LIVE DEMO: fee-fi-fo-fum.html, durable hosting
 
@@ -108,7 +108,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784981.
+Live balances read at block 11785022.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -159,6 +159,7 @@ Live balances read at block 11784981.
 | (c) new-epoch fill passes | fee docked fi's book and shipped at the new epoch, centred on ENS [0x66acde2e…](https://sepolia.etherscan.io/tx/0x66acde2e4c9b6c394c9d8918ae6eee372e374fa179ff729d2f3bb19792bce821); new-epoch fill succeeded [0x08f881ee…](https://sepolia.etherscan.io/tx/0x08f881eef57c3fca0bfb026f760dc60d7bf5038cb187717fa2b89f72be711de4) | agent-smith (fee, fi, fo), 07:38-07:45Z live run |
 | (d) the restarted stale holder is rejected on-chain | fi restarted from stale state; its renew reverted NotHolder(address,address) (0xbf5cd21d, replayed) [0x0247b377…](https://sepolia.etherscan.io/tx/0x0247b37731e82ef6361b7afaff20ad105a4094f8d8c2d7fe061e8e03301c3d82) | agent-smith (fee, fi, fo), 07:38-07:45Z live run |
 | (5) kill everyone: dissolve(), CCA clears, price to ENS | dissolve() [0x273f808c…](https://sepolia.etherscan.io/tx/0x273f808c1741688f63a8a5c28f3d0859b229a9e1d4c65242f2a1f9a51044a5b5) opened CCA 0x2aCb…902C (lot 0.004143 WETH, floor 2150.21); agy bid 6 USDC as the outside Jack through JackHook [0x9b888635…](https://sepolia.etherscan.io/tx/0x9b88863540d107223c1f472a90cea2fde3210171326d2dc6e80dc537569cf1d7); graduated (raised 5.999999 USDC, clearing 2150.21); settleAuction [0x9a813eb5…](https://sepolia.etherscan.io/tx/0x9a813eb505f08ad54cc20583ba00bec9f75ee0319d6d789b5cae6d58a6c981cf) swept the proceeds home and wrote the price to ENS (Castle anchorPriceQ96 == clearingPrice); fi claimed the next block [0xa8f75f3a…](https://sepolia.etherscan.io/tx/0xa8f75f3a56fe29edb571139c7081d114fd20f77d5ae13773eb393ea09e68be14) | mister-anderson, agy, agent-smith (fi) |
+| (6) shift-change CCA: an outside agent bids over MCP (fork) | anvil fork of live Sepolia at 11784937: fum openAuction 0x795bd268… opened CCA 0x05f2…84DA (lot 0.00167 WETH, floor 1720.16); agy's MCP auction_bid returned Permit2.approve 0xdc462062… and submitBid 0xd29dba94… (3 USDC, hookData 'agy', admitted by JackHook); fum's settleAuction 0x3a883efd… cleared at 1796.43 USDC/WETH, priceWritten true, and the ENS anchor read back equal (anchorIsClearing true); fi logged anchor-moved 2150.21 → 1796.43. Fork txs only (absent from Sepolia) under the one-live-run cost rule; handoff-advisor reproduced it independently at 11784987 | agy (bidder), agent-smith (fum, fork), handoff-advisor (independent repro) |
 | (r) renew needs fo's attestation | fi renew(expiry, …, foSig) [0xe93fdefe…](https://sepolia.etherscan.io/tx/0xe93fdefec304e6ae4b07cfbee1875e15485cc1343f5deff67a4a6362e6c0731b) status success; expiry moved forward | agent-smith (fi, fo) |
 | (p) the price flows into the next castle | fi ship [0xd3b0c970…](https://sepolia.etherscan.io/tx/0xd3b0c970e9b31398fc972ccf863b2933503b91304bba8f8e7809a3d36feef779): 0.00636 WETH + 13.67 USDC, centred on ENS handoff-price 2150.21 (0 bps), which is the CCA clearing price; the curve moved from 2687.76 | agent-smith (fi) |
 
@@ -370,3 +371,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 17:15 | SirKit | Verified p3-fo. fo withholds its seal on a trader hang and a forged renew reverts BadAttestation, shown on an anvil fork of live state with no live gas. agy ran the castle service's MCP auction_bid against a fork CCA (confirmed absent from Sepolia). |
 | Sat 17:25 | SirKit | Verified p3-fum and p2-capabilities; both rest on existing live txs plus one fork run in which fum opened a shift-change CCA and agy bid through the castle service's MCP. Sent agy's p4-cca-e2e back: two of its tx hashes did not exist on Sepolia (the dissolve and fi's ship); the correct hashes were given. |
 | Sat 17:30 | SirKit | agy resubmitted p4-cca-e2e with the two hashes corrected; every hash checked on Sepolia, so it is verified and a co-sign has been requested. |
+| Sat 17:35 | SirKit | handoff-advisor co-signed p3-fo, p3-fum and p2-capabilities, having reproduced the fork auction and MCP bid independently. The WORKLOG now carries the fork MCP run for p4-cca-e2e (demo row 6 and the task row) so it can be co-signed. |

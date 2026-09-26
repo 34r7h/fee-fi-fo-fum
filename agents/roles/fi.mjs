@@ -1,18 +1,42 @@
-// fi, the hot standby. Scaffold (p3-scaffold): watches fee's handoff heartbeat and the castle lease. The claim,
-// dock, relink and re-ship on expiry land in p3-feefi. The lease is the authority: a missing heartbeat alone
-// never triggers a claim, because Castle.claim() only succeeds after expiry anyway.
+// fi, the hot standby (p3-feefi).
+//
+// fi acts on the lease, never on a missed heartbeat alone: Castle.claim() reverts while the lease is live, so
+// fee's silence only shows in the logs. The moment block time passes expiry, fi takes the castle in one
+// multicall: claim() (a new epoch, which fences the old shift's book), dock every strategy still on Aqua, and
+// relink() castle.feefifofum.eth to fi's own crew name. From then on fi is the holder and runs the same loop as
+// fee: renew with fo's seal, ship and re-centre the book on the ENS anchor.
 import { readLease } from '../lib/lease.mjs';
+import { renewIfDue, claimCastle, shipIfDue, openStrategies } from '../lib/shift.mjs';
+import { abi } from '../lib/chain.mjs';
 
 export default {
-  intervalMs: 5_000,
+  intervalMs: 3_000,
   async tick(ctx) {
-    const fee = await ctx.h.getAgent('fee').then((j) => j.agent || j);
-    const lastSeen = fee.last_seen ? Date.parse(fee.last_seen) : NaN;
-    const ageS = Number.isFinite(lastSeen) ? Math.round((Date.now() - lastSeen) / 1000) : null;
-    ctx.logChange('fee-liveness', 'fee-liveness', { feeAlive: ageS !== null && ageS < 60 });
     const lease = await readLease(ctx.pc);
     if (!lease.deployed) return ctx.logChange('lease', 'lease', { deployed: false });
-    ctx.logChange('lease', 'lease', { state: lease.state, holder: lease.holder, epoch: lease.epoch });
+    const mine = lease.holder.toLowerCase() === ctx.account.address.toLowerCase();
+    ctx.logChange('lease', 'lease', { state: lease.state, epoch: lease.epoch, mine, holder: lease.holder });
+
+    const fee = await ctx.h.getAgent('fee').then((j) => j.agent || j).catch(() => null);
+    const ageS = fee?.last_seen ? Math.round((Date.now() - Date.parse(fee.last_seen)) / 1000) : null;
+    ctx.logChange('fee-liveness', 'fee-liveness', { feeAlive: ageS !== null && ageS < 60 });
+
+    if (mine) {
+      await renewIfDue(ctx, lease);
+      await shipIfDue(ctx, lease);
+      return;
+    }
+    if (lease.state !== 'EXPIRED' || lease.expiry === 0) return;   // expiry 0: never claimed, genesis is fee's
+    // Castle v2 crew: an operator-set crew label AND that name owned, unexpired, in the agent registry.
+    const isCrew = await ctx.pc.readContract({ address: lease.castle, abi: abi('Castle'), functionName: 'isCrew', args: [ctx.account.address] });
+    if (!isCrew) return ctx.logChange('crew', 'not-crew', { note: 'Castle.isCrew(fi) is false: the operator must setCrew(fi, "fi") and fi must own fi.feefifofum.eth' });
+    const stale = await openStrategies(ctx, lease);
+    ctx.log('claiming', { expiredForS: lease.now - lease.expiry, docking: stale.length });
+    const r = await claimCastle(ctx, { dock: stale });
+    if (r.ok) {
+      const after = await readLease(ctx.pc);
+      ctx.log('claimed', { tx: r.hash, newEpoch: after.epoch, previousEpoch: lease.epoch, expiry: after.expiry, gapS: after.now - lease.expiry, docked: stale.length });
+    }
   },
   async onMessage(ctx, msg) {
     ctx.log('noted', { from: msg.from, kind: msg.kind });

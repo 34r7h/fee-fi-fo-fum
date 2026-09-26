@@ -41,11 +41,17 @@ export function deployments() {
   return JSON.parse(fs.readFileSync(p, 'utf8'));
 }
 
+// Keys the contracts lane uses for the same contract.
+const ALIASES = { router: ['router', 'aquaSwapVMRouter'] };
+
 // The deployed address of a contract by its deployments.json key (e.g. "castle"), or undefined before deploy.
 export function contractAddress(name) {
   const d = deployments();
-  const v = d.contracts?.[name] ?? d.external?.[name];
-  return typeof v === 'string' ? v : v?.address;
+  for (const k of ALIASES[name] || [name]) {
+    const v = d.contracts?.[k] ?? d.external?.[k];
+    if (v) return typeof v === 'string' ? v : v.address;
+  }
+  return undefined;
 }
 
 export function abi(name) {

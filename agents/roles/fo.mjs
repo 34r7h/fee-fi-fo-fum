@@ -16,12 +16,15 @@ import { readLease, crewIdOf } from '../lib/lease.mjs';
 import { decide, DEFAULT_LIMITS } from '../lib/fo-policy.mjs';
 import { signAttestation, attestationDigest } from '../lib/attest.mjs';
 import { ensureChannel, postIncident } from '../lib/incidents.mjs';
-import { lastShipAge, replayFills, LEASE_EVENTS } from '../lib/replay.mjs';
+import { lastShipAge, replayFills, CASTLE_EVENTS } from '../lib/replay.mjs';
 import { contractAddress, abi, txLink } from '../lib/chain.mjs';
+import { deviationBps } from '../lib/book.mjs';
 import { env } from '../lib/env.mjs';
 
 const PORT = Number(env('FO_PORT', 8711));
 const LOOKBACK_BLOCKS = BigInt(env('FO_LOOKBACK_BLOCKS', 900));   // about 3h of Sepolia blocks
+// Before the first strategy exists (p1-deploy), FO_REQUIRE_SHIPS=0 lets renewals run on liveness alone.
+const REQUIRE_SHIPS = env('FO_REQUIRE_SHIPS', '1') !== '0';
 const LIMITS = {
   ...DEFAULT_LIMITS,
   ...(env('FO_STALE_QUOTES_S') ? { staleQuotesS: Number(env('FO_STALE_QUOTES_S')) } : {}),
@@ -31,12 +34,12 @@ const big = (_, v) => (typeof v === 'bigint' ? v.toString() : v);
 
 const S = { epochStart: new Map(), replayFrom: null };
 
-// The block where the live epoch began (its LeaseClaimed), or the lookback floor if the epoch predates it.
+// The block where the live epoch began (its Claimed event), or the lookback floor if the epoch predates it.
 async function epochStartBlock(ctx, lease) {
   const k = String(lease.epoch);
   if (S.epochStart.has(k)) return S.epochStart.get(k);
   const floor = lease.block > LOOKBACK_BLOCKS ? lease.block - LOOKBACK_BLOCKS : 0n;
-  const claims = await ctx.pc.getLogs({ address: lease.castle, event: LEASE_EVENTS.LeaseClaimed, args: { epoch: lease.epoch }, fromBlock: floor, toBlock: lease.block }).catch(() => []);
+  const claims = await ctx.pc.getLogs({ address: lease.castle, event: CASTLE_EVENTS.Claimed, args: { epoch: lease.epoch }, fromBlock: floor, toBlock: lease.block }).catch(() => []);
   const b = claims.length ? claims.at(-1).blockNumber : floor;
   S.epochStart.set(k, b);
   return b;
@@ -52,14 +55,21 @@ async function observe(ctx) {
     if (a?.last_seen) heartbeatAgeS = Math.round((Date.now() - Date.parse(a.last_seen)) / 1000);
   }
   const since = await epochStartBlock(ctx, lease);
-  const ship = await lastShipAge(ctx.pc, { aqua: contractAddress('aqua'), castle: lease.castle, sinceBlock: since, now: lease.now });
+  const ship = await lastShipAge(ctx.pc, { castle: lease.castle, epoch: lease.epoch, sinceBlock: since, now: lease.now });
   let quotesAgeS = ship?.ageS ?? null;
-  if (quotesAgeS === null) {
+  if (quotesAgeS === null && REQUIRE_SHIPS) {
     // Nothing shipped yet in this epoch, so the clock runs from the epoch's first block: a shift that never ships is also hung.
     const b = await ctx.pc.getBlock({ blockNumber: since });
     quotesAgeS = lease.now - Number(b.timestamp);
   }
-  return { lease, trader: { id: traderId, heartbeatAgeS }, quotes: { ageS: quotesAgeS, lastShipTx: ship?.tx ?? null }, market: {} };
+  // Off-market: the live book was centred on an anchor the ENS value has since moved away from (a CCA wrote a new
+  // price and the holder never re-centred).
+  let market = {};
+  if (ship?.anchorQ96) {
+    const now = await ctx.pc.readContract({ address: lease.castle, abi: abi('Castle'), functionName: 'anchorPriceQ96' }).catch(() => null);
+    if (now) market = { centre: String(ship.anchorQ96), reference: String(now), deviationBps: deviationBps(ship.anchorQ96, now) };
+  }
+  return { lease, trader: { id: traderId, heartbeatAgeS }, quotes: { ageS: quotesAgeS, lastShipTx: ship?.tx ?? null }, market };
 }
 
 async function attest(ctx, request) {
@@ -130,7 +140,8 @@ export default {
     const from = S.replayFrom ?? (lease.block > LOOKBACK_BLOCKS ? lease.block - LOOKBACK_BLOCKS : 0n);
     if (lease.block >= from) {
       const initial = await readLease(ctx.pc, { blockNumber: from }).catch(() => lease);
-      const r = await replayFills(ctx.pc, { aqua: contractAddress('aqua'), castle: lease.castle, fromBlock: from, toBlock: lease.block, initial });
+      const shippedEpochOf = (h) => ctx.pc.readContract({ address: lease.castle, abi: abi('Castle'), functionName: 'shippedEpoch', args: [h] }).catch(() => undefined);
+      const r = await replayFills(ctx.pc, { aqua: contractAddress('aqua'), castle: lease.castle, fromBlock: from, toBlock: lease.block, initial, shippedEpochOf });
       for (const f of r.fills) {
         ctx.log('fill', { verdict: f.verdict, tx: f.tx, link: txLink(f.tx), shippedEpoch: f.shippedEpoch, epochAtFill: f.epochAtFill });
         if (f.verdict === 'FENCE-BREACH') await postIncident(ctx.h, { kind: 'fence-breach', epoch: String(f.epochAtFill), tx: f.tx, link: txLink(f.tx), shippedEpoch: String(f.shippedEpoch) }, ctx.log).catch(() => {});

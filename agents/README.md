@@ -20,9 +20,28 @@ kill -9 "$(cat logs/fee.pid)"    # the failover demo: exactly one giant falls
 ./scripts/down.sh                # SIGTERM everyone (each also stops its listener)
 ```
 
-Rehearse on an anvil fork without spending Sepolia ETH:
-`anvil --fork-url https://ethereum-sepolia-rpc.publicnode.com` in one shell, then `SEPOLIA_RPC_URL=http://127.0.0.1:8545 ./scripts/up.sh`.
-A local primary RPC disables the fallbacks, so a rehearsal can't leak a transaction onto Sepolia.
+### Rehearse on a fork first
+
+The renew loop spends real Sepolia ETH (a renew costs about 73k gas, a ship about 218k, a claim about 280k), so
+every demo runs on an anvil fork first. `scripts/local-castle.sh` deploys Castle v2 and the fence on its own
+timed anvil (port 8745) and wires them to the LIVE router, Aqua, WETH, USDC and ENSv2 agent registry and
+resolver. It grants roles as the registry admin (impersonated), sets fee and fi as crew, seeds the anchor and
+funds the book. `scripts/rehearse.sh` then drives a whole demo and fails loudly at the first missing beat:
+
+```sh
+./scripts/rehearse.sh failover   # genesis claim, ship centred on the ENS anchor, renewals, kill -9 fee,
+                                 # fi claims within one lease period and re-ships, stale fee reverts NotHolder
+./scripts/rehearse.sh withhold   # fee hangs, fo withholds (trader-hang) and posts an incident,
+                                 # fee's self-signed renew reverts BadAttestation, fi takes over
+./scripts/down.sh && ./scripts/local-castle.sh --stop
+```
+
+A local primary RPC disables the fallbacks, so a rehearsal can't leak a transaction onto Sepolia, and fo's
+incidents go to `fee-fi-fo-fum-rehearsal`, not the live channel.
+
+Demo switches for fee: `FEE_STAGE_HANG=1` (heartbeat on, no ships), `FEE_STALE=1` (one unsimulated renew
+from stale state), `FEE_FORCE_RENEW=1` (forge its own seal after fo withholds). Pacing: `RENEW_EVERY_S` (40),
+`RESHIP_EVERY_S` (240), and fo's `FO_STALE_QUOTES_S` (300), which must stay above the reship period.
 
 ## Layout
 
@@ -33,10 +52,14 @@ A local primary RPC disables the fallbacks, so a rehearsal can't leak a transact
 | `lib/handoff.mjs` | Signed handoff client (Ed25519 over `handoff-signed-req`; no bearer key on the wire) |
 | `lib/chain.mjs` | viem on Sepolia: fallback RPCs from env, the key-file account, deployments and ABIs |
 | `lib/lease.mjs` | The castle lease (holder, epoch, expiry) and its fence state |
+| `lib/shift.mjs` | The holder's moves on Castle v2: renew with fo's seal, claim + dock + relink, ship and re-centre |
+| `lib/book.mjs` | Reads a shipped program back: its fence epoch, and its band's centre against ENS `handoff-price` |
+| `lib/attest.mjs`, `lib/fo-policy.mjs` | fo's EIP-712 seal and its sign-or-withhold rules |
+| `lib/replay.mjs`, `lib/incidents.mjs` | fo's fill replay against the lease timeline, and its incident channel |
 | `lib/listener.mjs` | One `handoff-realtime` listener per agent, reaping only this agent's orphan after a `kill -9` |
 | `crew.json` | Public crew data: roles, addresses, capabilities, personas |
-| `abi/` | Interface ABI stubs until `contracts/out-abi/` exists |
-| `scripts/` | `new-wallets.mjs`, `register-crew.mjs`, `up.sh`, `down.sh` |
+| `abi/` | The ICastleLease ABI (Castle's full ABI comes from `contracts/out-abi/`) |
+| `scripts/` | `new-wallets.mjs`, `register-crew.mjs`, `balances.mjs`, `wrap-weth.mjs`, `up.sh`, `down.sh`, `local-castle.sh`, `rehearse.sh` |
 
 ## Rules the runtime keeps
 

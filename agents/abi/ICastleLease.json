@@ -151,14 +151,8 @@
   },
   {
     "type": "event",
-    "name": "LeaseClaimed",
+    "name": "Claimed",
     "inputs": [
-      {
-        "name": "holder",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
       {
         "name": "epoch",
         "type": "uint256",
@@ -166,30 +160,30 @@
         "internalType": "uint256"
       },
       {
-        "name": "previousEpoch",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
+        "name": "holder",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
       },
       {
         "name": "expiry",
         "type": "uint64",
         "indexed": false,
         "internalType": "uint64"
+      },
+      {
+        "name": "prevEpoch",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       }
     ],
     "anonymous": false
   },
   {
     "type": "event",
-    "name": "LeaseRenewed",
+    "name": "Renewed",
     "inputs": [
-      {
-        "name": "holder",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
       {
         "name": "epoch",
         "type": "uint256",
@@ -197,10 +191,22 @@
         "internalType": "uint256"
       },
       {
+        "name": "holder",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
         "name": "expiry",
         "type": "uint64",
         "indexed": false,
         "internalType": "uint64"
+      },
+      {
+        "name": "attestationDigest",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
       }
     ],
     "anonymous": false

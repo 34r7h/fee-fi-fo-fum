@@ -1,0 +1,1242 @@
+<!doctype html>
+<!--
+  fee-fi-fo-fum: one hoard, every market.
+
+  The giant keeps one hoard in the Castle, a 1inch Aqua maker. Its single balance backs many SwapVM strategies at once,
+  and fum guards it so the same gold is never promised twice. Jacks (outside solvers) find a price by asking the name
+  quote.feefifofum.eth: ENS CCIP-Read sends them to the castle's gateway, where fi signs the answer. Uniswap v4 swaps
+  are filled just in time from the hoard by the castle's hook.
+
+  This page draws that from one ordered stream of events (schema: miniapp/STREAM.md). The live castle service and the
+  built-in mock both feed the same reducer.
+
+  Constraints: one classic script (the site runs it inside a shadow root with a proxied `document`), no ES modules,
+  no innerHTML, no browser storage, nothing positioned fixed, sized by its own container.
+  Lettering: glyph outlines from Almendra Bold by Ana Sanfelippo, SIL Open Font License 1.1.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fee-fi-fo-fum</title>
+<style>
+:root,:host{
+  --ground:#FFFFFF;--linen:#F6EFDF;--thread:#E6DAC0;--ink:#1F2433;--ink2:#474C5A;--ink3:#6A6E79;
+  --gold:#C8961E;--goldhi:#E9BC45;--goldink:#83600F;--madder:#B0412A;--woad:#2F4A7A;--sage:#4C7743;
+  --skin:#EDC49B;--beard:#7A4B2A;
+  --sans:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+html,body{margin:0;background:#FFFFFF}
+.fff{contain:layout paint;container-type:inline-size;position:relative;background:var(--ground);color:var(--ink);font:15px/1.45 var(--sans);
+  -webkit-font-smoothing:antialiased;min-height:100%;box-sizing:border-box;overflow-wrap:anywhere}
+.fff *,.fff *::before,.fff *::after{box-sizing:border-box}
+.fff ::selection{background:var(--goldhi);color:var(--ink)}
+.fff a{color:var(--woad);text-underline-offset:3px;text-decoration-thickness:1.5px}
+.fff a:hover{color:var(--ink)}
+.fff button{font:inherit;color:inherit;cursor:pointer}
+.fff :focus-visible{outline:2.5px solid var(--woad);outline-offset:3px;border-radius:8px}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.wrap{max-width:1320px;margin:0 auto;padding:18px 22px 28px}
+.lt{display:block;height:1em;width:auto;fill:currentColor;overflow:visible}
+.muted{color:var(--ink3)}
+[hidden]{display:none!important}
+
+/* the embroidered band between registers: two couched rules with a trellis of stitches between */
+.band{height:14px;margin:22px 0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='14'%3E%3Cpath d='M0 7h36' stroke='%23D9C9A6' stroke-width='5'/%3E%3Cpath d='M18 3.2v7.6' stroke='%231F2433' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x left center}
+
+/* header */
+.top{padding:10px 0 8px;display:flex;align-items:center;gap:14px 18px;flex-wrap:wrap}
+.mark{height:44px;color:var(--ink);margin-right:2px}
+.mark .lt{height:44px}
+.tag{font-size:15px;color:var(--ink2);font-style:italic}
+.sp{flex:1}
+.src{font-size:12.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--ink2)}
+.src[data-m=live]{color:var(--sage)}
+.src[data-m=mock]{color:var(--madder)}
+.ens{font-size:13.5px;color:var(--ink2)}
+.fff a.dapp{font-size:13px;font-weight:800;color:var(--woad);text-decoration:none;border:1.5px solid var(--woad);border-radius:999px;padding:4px 12px}
+.fff a.dapp:hover{background:var(--woad);color:#fff}
+
+/* the chant: four syllables, four agents; the one acting now is gilded */
+.chant{display:flex;justify-content:space-between;gap:10px 28px;align-items:flex-end;margin-top:6px}
+.syl{min-width:0;flex:0 1 auto;text-align:left;position:relative}
+.syl .word{height:clamp(40px,8.5cqw,96px);color:var(--ink);transition:color .4s var(--ease),transform .5s var(--ease)}
+.syl .word .lt{height:100%}
+.syl .word path{stroke:var(--ink);stroke-width:0;transition:fill .4s var(--ease),stroke-width .4s var(--ease)}
+.syl[data-hold] .word{color:var(--gold);transform:translateY(-4px)}
+.syl[data-hold] .word path{stroke-width:5;paint-order:stroke}
+.syl[data-asleep] .word{color:var(--thread)}
+.syl[data-asleep] .word path{stroke:var(--ink3);stroke-width:2.5;paint-order:stroke}
+.syl .role{font-size:13.5px;color:var(--ink2);margin-top:6px}
+.syl .who{font-size:13.5px;font-weight:700;margin-top:2px;display:flex;align-items:center;gap:6px;min-height:20px}
+.syl .who svg{width:18px;height:18px;flex:none}
+.syl[data-hold] .who{color:var(--goldink)}
+.syl[data-asleep] .who{color:var(--madder)}
+.fff[data-shout] .syl .word{transform:translateY(-6px) scale(1.06)}
+.fff[data-shout] .syl:nth-child(2) .word{transition-delay:.08s}
+.fff[data-shout] .syl:nth-child(3) .word{transition-delay:.16s}
+.fff[data-shout] .syl:nth-child(4) .word{transition-delay:.24s}
+
+/* registers */
+h2.reg{margin:0 0 12px;height:26px;color:var(--ink);display:flex;align-items:center;gap:10px}
+h2.reg .lt{height:26px}
+.main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.55fr);gap:26px 34px;align-items:start}
+.main.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.panel{min-width:0}
+.note{font-size:13.5px;color:var(--ink2);margin:8px 0 0;max-width:62ch}
+.lead{margin:-4px 0 12px}
+.empty{color:var(--ink3);font-size:14px;margin:6px 0}
+
+/* the hoard */
+.hoard{display:grid;gap:4px}
+.castle-art{width:100%;max-width:280px;height:auto;display:block;margin:-6px 0 6px}
+.row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1.4px solid var(--thread)}
+.row:last-child{border-bottom:0}
+.row .k{color:var(--ink2);font-size:14px}
+.row .v{font-weight:800;font-size:20px;text-align:right;white-space:nowrap}
+.row.gold .v{border-bottom:3.5px solid var(--gold);padding-bottom:1px}
+.row .v small{font-size:13px;font-weight:700;color:var(--ink2);margin-left:5px}
+.row .k .cn{display:inline-block;width:13px;height:13px;border-radius:50%;background:var(--gold);box-shadow:inset 0 0 0 2px var(--ink);margin-right:8px;vertical-align:-1px}
+.row .sub{display:block;font-size:12.5px;font-weight:500;color:var(--ink3)}
+
+/* the promises: fum's gauge, one per token, one thread per strategy, fum's line at the end */
+.prom{display:grid;grid-template-columns:minmax(0,112px) minmax(0,1fr);gap:4px 18px;align-items:start}
+.giant{width:112px;height:auto;display:block}
+.giant .eye-o,.giant .eye-s,.giant .eye-w,.giant .m-o,.giant .m-s,.giant .m-w{transition:opacity .3s var(--ease)}
+.gcap{font-size:12.5px;color:var(--ink3);text-align:center;margin:2px 0 0}
+.gauge{margin:0 0 14px}
+.gh{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 10px;font-size:14px;margin-bottom:5px}
+.gh b{font-size:15px;font-weight:800}
+.gh .pv{font-weight:800;font-size:17px;text-align:right}
+.gh .pv small{font-size:13px;font-weight:600;color:var(--ink2)}
+.gw{position:relative;height:30px;margin:0 0 20px}
+.trk{position:absolute;left:0;top:0;height:30px;border:1.8px solid var(--ink);border-radius:15px;background:var(--linen);overflow:hidden;transition:width .8s var(--ease)}
+.twice{position:absolute;right:0;top:0;bottom:0;background:repeating-linear-gradient(90deg,transparent 0 7px,var(--thread) 7px 9.5px);transition:width .8s var(--ease)}
+.seg{position:absolute;top:5px;height:20px;border-radius:10px;box-shadow:inset 0 0 0 1.8px var(--ink);transition:left .9s var(--ease),width .9s var(--ease)}
+.seg[data-z]{box-shadow:none}
+.ovr{position:absolute;top:1px;height:28px;border:1.8px dashed var(--madder);border-radius:14px;background:repeating-linear-gradient(135deg,var(--madder) 0 2.5px,transparent 2.5px 7px);transition:left .6s var(--ease),width .6s var(--ease)}
+.ovr[data-z]{border:0}
+.mk{position:absolute;top:-5px;height:40px;width:0;border-left:2.4px solid var(--ink);transition:left .8s var(--ease)}
+.mk span{position:absolute;top:40px;left:0;font-size:11.5px;font-weight:700;white-space:nowrap;color:var(--ink2);transform:translateX(-50%)}
+.mk.lim{border-left-color:var(--madder)}
+.mk.lim span{left:auto;right:0;transform:none;color:var(--madder)}
+.gwatch{font-size:12.5px;color:var(--ink3);font-style:italic;margin-top:2px}
+.gwatch:empty{display:none}
+.gf{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 10px;font-size:13px;color:var(--ink2);margin-top:4px}
+.gf[data-over]{color:var(--madder);font-weight:700}
+.refused{display:grid;grid-template-columns:30px minmax(0,1fr);gap:2px 10px;align-items:start;margin:4px 0 0;padding:10px 12px;border:1.6px solid var(--madder);border-radius:16px;background:var(--linen);font-size:13.5px}
+.refused svg{width:30px;height:30px;color:var(--madder)}
+.refused b{color:var(--madder)}
+.refused[data-fresh]{animation:shake .5s var(--ease) 2}
+.shout{grid-column:1/-1;height:0;overflow:visible;color:var(--madder);opacity:0;transform:scale(.9);transform-origin:left center;transition:opacity .35s var(--ease),transform .5s var(--ease)}
+.shout .lt{height:30px}
+.fff[data-shout] .shout{opacity:1;transform:none;height:34px}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* the strategies the one hoard backs */
+.bargains{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:0}
+.bg{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:2px 12px;align-items:baseline;padding:9px 0;border-top:1.4px solid var(--thread);animation:unroll .6s var(--ease) both}
+.bg .sw{width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--ink);align-self:center}
+.bg .nm{font-weight:800;font-size:15px}
+.bg .nm span{font-weight:500;font-size:12.5px;color:var(--ink3);margin-left:6px}
+.bg .al{font-size:13.5px;color:var(--ink)}
+.bg .cp{font-size:12.5px;color:var(--ink3)}
+.bg .r{text-align:right;font-size:13px;color:var(--ink2);white-space:nowrap}
+.chip{display:inline-block;font-weight:800;font-size:11.5px;letter-spacing:.06em;padding:1px 8px;border-radius:999px;border:1.4px solid currentColor;margin-top:3px}
+.chip[data-s=live]{color:var(--sage)}
+.chip[data-s=docked]{color:var(--ink3)}
+.chip[data-s=filled]{color:var(--goldink)}
+.chip[data-s=open]{color:var(--woad)}
+.chip[data-s=expired]{color:var(--ink3)}
+.bg[data-docked] .nm,.bg[data-docked] .al{color:var(--ink3)}
+.bg[data-docked] .sw{opacity:.35}
+
+/* the harp and the hen */
+.card{border:1.6px solid var(--ink);border-radius:18px;background:var(--linen);padding:14px 16px;display:grid;gap:8px;animation:unroll .6s var(--ease) both}
+.qname{font-weight:800;font-size:14px;color:var(--woad);display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.qname span{font-weight:600;font-size:12px;color:var(--ink3);letter-spacing:.05em;text-transform:uppercase}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;position:relative;font-size:12px;color:var(--ink2);line-height:1.25}
+.steps::before{content:"";position:absolute;left:11px;right:calc(25% - 11px);top:10px;height:3px;background:var(--gold);border-radius:2px}
+.steps li{position:relative;padding-top:28px;overflow-wrap:anywhere}
+.steps li::before{content:"";position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;background:var(--ground);border:1.8px solid var(--ink);box-sizing:border-box}
+.steps li::after{content:"";position:absolute;left:7px;top:4px;width:6px;height:10px;border:solid var(--sage);border-width:0 2.6px 2.6px 0;transform:rotate(45deg);opacity:0;animation:tick .35s var(--ease) forwards}
+.steps li:nth-child(2)::after{animation-delay:.35s}
+.steps li:nth-child(3)::after{animation-delay:.7s}
+.steps li:nth-child(4)::after{animation-delay:1.05s}
+@keyframes tick{to{opacity:1}}
+.deal{font-size:15px}
+.deal b{font-size:20px;font-weight:800}
+.deal .by{display:block;font-size:13px;color:var(--ink2);margin-top:1px}
+.exp{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px;font-weight:700}
+.exp .bar{height:7px;border-radius:4px;background:var(--thread);overflow:hidden}
+.exp .bar i{display:block;height:100%;background:var(--gold);border-radius:4px;transition:width .3s linear}
+.exp[data-s=filled]{color:var(--goldink)}
+.exp[data-s=expired]{color:var(--ink3)}
+.seal{font-size:12.5px;color:var(--ink3)}
+.delta{font-size:13.5px;font-weight:700}
+.delta .p{color:var(--sage)}
+.delta .m{color:var(--madder)}
+.eggs{display:flex;flex-wrap:wrap;gap:4px;align-items:flex-end;min-height:22px}
+.eggs svg{width:16px;height:20px}
+.eggs svg:last-child{animation:pop .6s var(--ease) both}
+@keyframes pop{from{transform:translateY(-10px) scale(.6);opacity:0}to{transform:none;opacity:1}}
+.hen-top{display:flex;flex-wrap:wrap;align-items:flex-end;gap:4px 12px}
+.hen-top .empty{flex:1 1 220px}
+.list{list-style:none;margin:10px 0 0;padding:0}
+.list li{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1.4px solid var(--thread);font-size:13.5px;line-height:1.25}
+.list li:last-child{border-bottom:0}
+.list .who{font-weight:800}
+.list .amt{text-align:right}
+
+/* frieze */
+.frieze{display:flex;flex-direction:row-reverse;flex-wrap:wrap;justify-content:flex-end;align-content:flex-start;height:calc(234px + 3.2px);overflow:hidden;overflow:clip;overflow-anchor:none;border-top:1.6px solid var(--ink);border-bottom:1.6px solid var(--ink)}
+.scene{flex:1 0 auto;width:max-content;min-width:200px;max-width:100%;height:234px;padding:12px 18px 10px;border-left:1.4px solid var(--thread);animation:unroll .6s var(--ease) both}
+.frieze[data-open]{height:auto}
+.unroll{margin-top:10px;border:1.4px solid var(--ink);background:var(--ground);border-radius:999px;padding:5px 13px;font-size:13px;font-weight:700;transition:background .2s var(--ease)}
+.unroll:hover{background:var(--linen)}
+.vg{display:block;width:168px;height:90px;margin:4px 0 10px}
+.vg.big{width:180px;height:96px;flex:none}
+.vg.sm{width:120px;height:64px;margin:0}
+.scene .ti{display:flex;flex-wrap:wrap;gap:4px 5px;color:var(--ink);margin-bottom:10px;max-width:420px}
+.scene .ti .lt{height:17px}
+.scene[data-tone=madder] .ti{color:var(--madder)}
+.scene[data-tone=woad] .ti{color:var(--woad)}
+.scene[data-tone=gold] .ti{color:var(--goldink)}
+.scene .gl{font-size:12.5px;color:var(--ink2);line-height:1.4}
+.scene .gl b{color:var(--ink);font-weight:800}
+@keyframes unroll{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+
+/* ledger */
+table.led{width:100%;border-collapse:collapse;font-size:14px}
+.led th{text-align:left;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);padding:6px 8px;border-bottom:1.6px solid var(--ink)}
+.led td{padding:8px;border-bottom:1.4px solid var(--thread);vertical-align:baseline;overflow-wrap:normal}
+.led td.r,.led th.r{text-align:right}
+.led tr:last-child td{border-bottom:0}
+.route{display:inline-flex;align-items:center;gap:6px;font-weight:700;white-space:nowrap}
+.route i{width:11px;height:11px;border-radius:50%;box-shadow:inset 0 0 0 1.8px var(--ink);flex:none}
+.route svg{width:13px;height:16px;flex:none}
+.tx{font-size:13px;white-space:nowrap}
+.tx em{font-style:normal;font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.04em;text-transform:uppercase;margin-left:4px}
+.rv{font-size:12px;margin-top:2px;color:var(--madder)}
+.led .u{display:none;font-size:12px;color:var(--ink3);font-weight:600}
+.fff[data-size=compact] .led .u{display:inline}
+
+/* mock controls */
+.mockbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:22px;padding:12px 14px;border:1.6px solid var(--thread);border-radius:16px;font-size:13.5px;color:var(--ink2)}
+.mockbar b{color:var(--madder)}
+.mocktxt{flex-basis:100%;margin:0 0 4px}
+.mockbar button{border:1.4px solid var(--ink);background:var(--ground);border-radius:999px;padding:4px 11px;font-size:13px;font-weight:700;transition:background .2s var(--ease)}
+.mockbar button:hover{background:var(--linen)}
+.mockbar button[data-now]{background:var(--ink);color:var(--ground)}
+.foot{margin-top:18px;font-size:12.5px;color:var(--ink3);display:flex;flex-wrap:wrap;gap:6px 16px}
+
+/* the card face: what a 280x200 market card or a feed soc can hold */
+.face{display:none}
+.fff[data-size=watch] .wrap>*:not(.face),.fff[data-size=mini] .wrap>*:not(.face){display:none}
+.fff[data-size=watch] .face,.fff[data-size=mini] .face{display:grid;gap:5px}
+.fff[data-size=watch] .wrap,.fff[data-size=mini] .wrap{padding:10px 12px}
+.face .f1{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.face .f1 .lt{height:24px}
+.face .src{font-size:10.5px}
+.face .f2{font-size:15px;font-weight:800}
+.face .bar{height:8px;border-radius:4px;background:var(--thread);overflow:hidden;display:flex}
+.face .bar i{display:block;height:100%}
+.face .f3,.face .f4{font-size:13px;color:var(--ink2)}
+.face .f3 b{color:var(--ink)}
+.fff[data-size=watch] .face .f4,.fff[data-size=watch] .face .src:not([data-m=mock]) span{display:none}
+
+.fff[data-size=compact] .chant{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.fff[data-size=compact] .main,.fff[data-size=compact] .main.two{grid-template-columns:minmax(0,1fr)}
+.fff[data-size=compact] .prom{grid-template-columns:minmax(0,1fr);gap:8px}
+.fff[data-size=compact] .prom>div:first-child{display:flex;align-items:center;gap:12px}
+.fff[data-size=compact] .giant{width:64px}
+.fff[data-size=compact] .gcap{text-align:left}
+.fff[data-size=compact] .steps{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:10px}
+.fff[data-size=compact] .steps::before{display:none}
+.fff[data-size=compact] table.led,.fff[data-size=compact] .led tbody{display:block}
+.fff[data-size=compact] .led thead{display:none}
+.fff[data-size=compact] .led tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 14px;padding:10px 0;border-bottom:1.4px solid var(--thread)}
+.fff[data-size=compact] .led tr:last-child{border-bottom:0}
+.fff[data-size=compact] .led td{padding:0;border:0;text-align:left}
+.fff[data-size=compact] .led td:nth-child(even){text-align:right}
+.fff[data-size=compact] .mark .lt{height:34px}
+
+@media (prefers-reduced-motion:reduce){.fff *{animation:none!important;transition:none!important}.steps li::after{opacity:1}}
+</style>
+</head>
+<body>
+<div class="fff" id="fff" data-size="full">
+  <div class="wrap">
+    <header class="top">
+      <div class="mark" data-r="mark"></div>
+      <span class="tag">One hoard, every market.</span>
+      <span class="sp"></span>
+      <span class="src" data-r="src" data-m="idle"><span data-r="srcTxt">connecting</span></span>
+      <span class="ens num" data-r="ens"></span>
+      <a class="dapp" href="https://handoff.lol/app/impecc/fee-fi-fo-fum">Trade with the castle</a>
+    </header>
+
+    <section class="chant" data-r="chant" aria-label="The four agents"></section>
+
+    <div class="band" aria-hidden="true"></div>
+
+    <div class="main">
+      <section class="panel" aria-labelledby="h-hoard">
+        <h2 class="reg" id="h-hoard" data-lt="THE HOARD"></h2>
+        <div data-r="castleArt"></div>
+        <div class="hoard num" data-r="hoard"></div>
+      </section>
+      <section class="panel" aria-labelledby="h-prom">
+        <h2 class="reg" id="h-prom" data-lt="THE PROMISES"></h2>
+        <p class="note lead">One balance backs every strategy at once, and no gold leaves the castle to do it. The promises may add up to more than the hoard, because each coin can be taken only once. fum sets how far they may stretch, and the castle refuses a promise past fum’s line.</p>
+        <div class="prom">
+          <div><div data-r="giant"></div><p class="gcap">fum, the guard</p></div>
+          <div><div data-r="gauges"></div><div class="refused" data-r="refused" aria-live="assertive" hidden></div></div>
+          <div class="shout" data-r="shout" aria-hidden="true"></div>
+        </div>
+        <ul class="bargains" data-r="bargains" aria-label="The strategies the hoard backs"></ul>
+      </section>
+    </div>
+
+    <div class="band" aria-hidden="true"></div>
+
+    <div class="main two">
+      <section class="panel" aria-labelledby="h-harp">
+        <h2 class="reg" id="h-harp" data-lt="THE HARP"></h2>
+        <p class="note lead">A Jack finds a firm price by asking the castle’s name. The resolver sends it to the castle’s gateway, fi signs the answer, and the resolver checks fi’s seal. Asking costs no gas, and a song more than 30 seconds old no longer fills.</p>
+        <div data-r="harp"></div>
+      </section>
+      <section class="panel" aria-labelledby="h-hen">
+        <h2 class="reg" id="h-hen" data-lt="THE HEN"></h2>
+        <p class="note lead">A swap comes to the Uniswap v4 pool, which holds no liquidity of its own. The castle’s hook fills it from the hen strategy in the same transaction: no gold waits in the pool, and the hen lays just in time.</p>
+        <div data-r="hen"></div>
+      </section>
+    </div>
+
+    <div class="band" aria-hidden="true"></div>
+
+    <section aria-labelledby="h-tale">
+      <h2 class="reg" id="h-tale" data-lt="THE TAPESTRY"></h2>
+      <p class="note lead">Every event, stitched as a scene, the newest on the right. Unroll the tapestry to read the whole tale.</p>
+      <div class="frieze" data-r="frieze" aria-live="polite"></div>
+      <button class="unroll" data-r="unroll" type="button" hidden></button>
+    </section>
+
+    <div class="band" aria-hidden="true"></div>
+
+    <section aria-labelledby="h-fills">
+      <h2 class="reg" id="h-fills" data-lt="THE FILLS"></h2>
+      <div data-r="fills"></div>
+    </section>
+
+    <div class="mockbar" data-r="mockbar" hidden></div>
+    <footer class="foot" data-r="foot"></footer>
+
+    <div class="face" data-r="face" aria-live="polite"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // Publish-time config (contracts/deployments/sepolia.json + miniapp/config.json). null = the mock plays.
+  var CONFIG = /*@CONFIG*/null;
+
+  var root = document.getElementById('fff');
+  if (!root || root.getAttribute('data-booted')) return;
+  root.setAttribute('data-booted', '1');
+  var SVGNS = 'http://www.w3.org/2000/svg';
+
+  // ---------------------------------------------------------------- lettering (Almendra Bold outlines)
+  var GL = {"em":200,"asc":190,"desc":-69,"cap":133,"g":{"A":[129,"M26 -132Q43 -130 70 -130Q98 -130 119 -132L119 -127Q115 -125 109 -124Q107 -107 107 -66Q107 -26 110 -7Q117 -5 122 -3L121 2Q107 0 90 0Q73 0 61 2L60 -4Q64 -6 71 -7Q73 -20 74 -46Q68 -47 59 -47Q49 -47 43 -46Q40 -26 40 -19Q40 -12 41 -8Q43 -4 48 -2L47 1Q37 0 22 0Q7 0 -4 2L-5 -4Q-1 -6 6 -7L37 -123Q31 -124 25 -127ZM74 -65Q74 -100 72 -119Q69 -120 64 -120Q58 -120 55 -119L45 -60Q52 -59 60 -59Q68 -59 74 -60Z"],"B":[124,"M4 -130 66 -132Q91 -132 99 -128Q109 -124 112 -118Q113 -113 113 -108Q113 -97 106 -88Q99 -79 88 -75V-73Q102 -73 110 -67Q118 -60 118 -47Q118 -31 99 -16Q79 0 60 3Q44 3 23 -5Q20 -2 18 5L13 3Q18 -22 18 -63Q18 -104 16 -121Q11 -124 4 -124ZM63 -77Q70 -77 74 -79Q78 -88 78 -102Q78 -122 61 -122Q56 -122 53 -121Q51 -103 51 -72Q51 -42 53 -18Q59 -14 68 -14Q76 -14 80 -16Q83 -26 83 -40Q83 -54 78 -61Q73 -68 59 -68L60 -77Z"],"C":[103,"M99 -29 102 -26Q85 -5 62 3Q35 3 20 -11Q6 -26 6 -54Q6 -81 23 -102Q40 -124 68 -133Q89 -133 110 -129L109 -125Q104 -125 100 -123Q94 -107 94 -91H88Q86 -99 86 -108Q77 -116 63 -116Q53 -116 49 -113Q46 -105 44 -92Q42 -78 42 -69Q42 -60 42 -55Q42 -50 43 -43Q44 -36 45 -32Q47 -28 50 -24Q53 -20 57 -18Q62 -17 69 -17Q77 -17 84 -20Q90 -23 99 -29Z"],"D":[132,"M4 -130 68 -132Q97 -132 112 -118Q126 -105 126 -76Q126 -47 108 -25Q90 -2 61 3Q46 3 23 -5Q20 -2 18 5L13 3Q18 -23 18 -63Q18 -104 16 -121Q11 -124 4 -124ZM60 -122Q56 -122 53 -121Q51 -101 51 -72Q51 -43 53 -19Q60 -14 69 -14Q78 -14 83 -17Q90 -35 90 -64Q90 -122 60 -122Z"],"E":[105,"M68 -17Q77 -17 84 -20Q90 -23 99 -29L102 -26Q85 -5 62 3Q35 3 20 -11Q6 -26 6 -54Q6 -81 23 -102Q40 -124 68 -133Q89 -133 110 -129L109 -125Q104 -125 100 -123Q94 -107 94 -91H88Q86 -99 86 -108Q77 -116 63 -116Q53 -116 49 -113Q44 -101 42 -77Q50 -75 63 -75Q76 -75 82 -82L87 -81Q84 -73 84 -65Q84 -57 86 -47L81 -46Q78 -54 77 -61Q71 -62 60 -62Q50 -62 42 -61Q42 -42 46 -30Q51 -17 68 -17Z"],"F":[100,"M9 -132Q24 -130 54 -130Q83 -130 102 -133L103 -129Q95 -118 95 -96H89Q87 -105 87 -113Q81 -117 71 -117Q60 -117 57 -115Q55 -95 55 -72Q59 -72 63 -72Q79 -72 85 -79L90 -78Q87 -70 87 -62Q87 -53 89 -44L84 -43Q81 -50 80 -58Q74 -59 66 -59Q58 -59 55 -58Q55 -22 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -64Q22 -101 19 -123Q13 -124 8 -127Z"],"G":[111,"M70 -17 69 -39Q69 -48 68 -52Q63 -55 55 -56L56 -60Q60 -60 67 -60Q74 -60 85 -62Q96 -65 103 -70L106 -67Q102 -63 100 -59Q97 -30 95 1H91Q89 -8 86 -15Q72 -2 56 3Q29 3 15 -11Q0 -26 0 -54Q0 -81 17 -102Q34 -124 62 -133Q84 -133 107 -128L106 -124Q101 -124 97 -122Q91 -106 91 -90H85Q83 -98 83 -107Q78 -111 71 -114Q64 -116 56 -116Q48 -116 43 -113Q40 -105 38 -92Q36 -78 36 -69Q36 -60 36 -55Q36 -50 37 -43Q38 -36 40 -32Q41 -28 44 -24Q47 -20 52 -18Q56 -17 62 -17Q67 -17 70 -17Z"],"H":[149,"M83 -132Q95 -130 113 -130Q130 -130 143 -132L144 -127Q139 -125 130 -123Q127 -106 127 -65Q127 -24 130 -7Q139 -5 144 -3L143 2Q130 0 113 0Q95 0 83 2L82 -4Q86 -6 92 -7Q94 -28 94 -63Q85 -64 74 -64Q64 -64 55 -63Q55 -23 58 -7Q65 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -64Q22 -101 19 -123Q12 -124 8 -127L9 -132Q21 -130 37 -130Q54 -130 69 -132L69 -127Q65 -125 57 -123Q55 -111 55 -79Q63 -77 75 -77Q87 -77 94 -79Q94 -103 92 -123Q86 -124 82 -127Z"],"I":[77,"M57 -123Q55 -108 55 -67Q55 -26 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -64Q22 -101 19 -123Q12 -124 8 -127L9 -132Q21 -130 38 -130Q54 -130 69 -132L69 -127Q65 -125 57 -123Z"],"J":[75,"M22 -33V-71Q22 -108 20 -123Q12 -125 8 -127L8 -132Q23 -130 40 -130Q56 -130 68 -132L69 -127Q65 -124 58 -123Q55 -101 55 -64Q55 -27 58 -7Q37 18 -2 36L-6 32Q10 20 16 5Q22 -10 22 -33Z"],"K":[134,"M139 2Q129 0 112 0Q95 0 83 1L83 -3Q86 -6 86 -14Q86 -22 83 -32Q80 -42 69 -67L55 -52Q56 -23 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -64Q22 -101 19 -123Q12 -124 8 -127L9 -132Q21 -130 37 -130Q53 -130 66 -132L67 -127Q65 -126 57 -123Q55 -108 55 -66Q68 -83 75 -95Q82 -106 83 -110Q84 -115 84 -120Q84 -125 80 -128L80 -132Q91 -130 108 -130Q126 -130 134 -132L135 -127Q131 -124 124 -123L87 -85L128 -7Q136 -6 140 -4Z"],"L":[96,"M100 3Q81 0 53 0Q24 0 9 2L8 -3Q13 -6 19 -7Q22 -30 22 -65Q22 -101 19 -123Q12 -124 8 -127L9 -132Q21 -130 38 -130Q54 -130 69 -132L69 -127Q65 -125 57 -123Q55 -108 55 -69Q55 -30 57 -14Q60 -13 69 -13Q78 -13 84 -15Q86 -22 87 -33H93Q93 -11 101 -2Z"],"M":[169,"M60 -14Q60 -29 54 -53Q47 -77 39 -96L38 -95L35 -69Q33 -47 33 -22Q33 -7 42 -2L41 1Q32 0 21 0Q11 0 0 2L-1 -4Q3 -6 10 -7L29 -123Q23 -124 18 -127L19 -132Q31 -130 48 -130Q64 -130 76 -132L77 -128Q70 -126 70 -121Q70 -118 75 -95Q80 -73 84 -57L85 -51L87 -52Q87 -63 104 -121Q104 -126 99 -128L99 -131Q110 -130 127 -130Q144 -130 155 -132L156 -127Q152 -125 146 -123Q145 -118 145 -105Q145 -92 149 -58Q152 -23 155 -7Q164 -5 169 -3L169 2Q156 0 139 0Q122 0 110 2L109 -4Q113 -6 118 -7Q118 -54 112 -95L110 -96Q99 -59 96 -45Q93 -31 93 -21Q75 -15 63 -6L60 -7Q60 -10 60 -14Z"],"N":[141,"M9 -132Q20 -130 38 -130Q57 -130 67 -132L68 -128Q66 -127 64 -126Q63 -124 63 -121Q63 -118 64 -114Q65 -110 74 -93Q84 -76 102 -45L103 -46V-65Q103 -99 100 -112Q96 -125 84 -128L85 -132Q97 -130 110 -130Q123 -130 135 -132L136 -127Q131 -125 122 -123Q121 -118 120 -100Q119 -83 119 -53Q119 -24 122 -7Q130 -6 136 -3L135 2Q123 0 110 0Q97 0 87 1Q87 -7 78 -24Q70 -41 39 -92L38 -92V-76Q38 -45 40 -29Q43 -13 50 -7Q58 -5 62 -3L61 2Q45 0 33 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -53Q22 -99 19 -123Q12 -124 8 -127Z"],"O":[130,"M68 -133Q95 -133 109 -119Q124 -105 124 -77Q124 -49 108 -28Q92 -7 65 3Q37 3 22 -12Q6 -28 6 -55Q6 -81 23 -102Q39 -124 68 -133ZM71 -114Q67 -116 60 -116Q54 -116 49 -113Q42 -96 42 -68Q42 -48 47 -32Q50 -24 55 -19Q61 -14 68 -14Q75 -14 80 -17Q88 -34 88 -62Q88 -88 84 -99Q79 -111 71 -114Z"],"P":[117,"M8 -130 70 -132Q70 -132 71 -132Q93 -132 106 -125Q118 -118 118 -99Q118 -80 103 -68Q88 -56 68 -56Q64 -56 63 -56L63 -66H66Q82 -66 82 -96Q82 -108 78 -115Q74 -122 64 -122Q61 -122 57 -121Q55 -103 55 -64Q55 -26 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -62Q22 -97 19 -121Q14 -124 8 -124Z"],"R":[131,"M8 -130 70 -132Q92 -132 104 -126Q118 -119 118 -99Q118 -88 112 -80Q106 -71 96 -66L125 -7Q132 -6 136 -4L135 2Q125 0 109 0Q93 0 82 1L81 -3Q85 -6 85 -15Q85 -29 73 -61Q68 -62 63 -62L63 -70H66Q74 -70 78 -77Q82 -85 82 -96Q82 -122 64 -122Q61 -122 57 -121Q55 -103 55 -64Q55 -26 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -62Q22 -97 19 -121Q14 -124 8 -124Z"],"S":[93,"M46 -15Q63 -15 63 -30Q63 -34 54 -41Q46 -48 36 -54Q26 -60 18 -67Q10 -75 10 -80Q10 -97 24 -112Q38 -127 57 -133Q76 -133 91 -129V-125Q86 -120 83 -111Q80 -101 80 -92H74Q74 -102 73 -108Q64 -116 52 -116Q45 -116 40 -113Q35 -110 35 -104Q35 -99 44 -92Q52 -86 62 -80Q73 -74 81 -67Q90 -59 90 -54Q90 -39 74 -21Q59 -3 43 3Q27 3 11 -2Q8 0 3 6L-1 2Q11 -11 13 -40H19L20 -26Q32 -15 46 -15Z"],"T":[111,"M-3 -133Q20 -130 57 -130Q94 -130 114 -133L115 -129Q108 -118 107 -97H102Q100 -106 100 -114Q93 -118 86 -118Q79 -118 75 -117Q73 -95 73 -60Q73 -26 76 -7Q84 -5 88 -3L87 2Q73 0 56 0Q39 0 27 2L26 -4Q31 -6 37 -7Q40 -27 40 -59Q40 -91 38 -116Q34 -118 26 -118Q18 -118 13 -115Q11 -107 10 -97H4Q4 -118 -5 -129Z"],"U":[142,"M122 -123Q120 -108 120 -67Q120 -26 122 -7Q130 -5 134 -3L134 2Q119 0 108 0Q96 0 84 2L83 -2Q85 -5 85 -13Q75 -3 59 3Q35 3 25 -9Q16 -21 16 -48Q16 -60 17 -84Q19 -109 19 -114Q19 -119 17 -123Q10 -125 7 -127L8 -132Q22 -130 37 -130Q51 -130 60 -132L61 -128Q56 -126 54 -122Q53 -118 51 -100Q50 -83 50 -66Q50 -48 50 -45Q50 -42 50 -36Q51 -31 52 -28Q53 -25 55 -22Q59 -17 68 -17Q77 -17 86 -23Q87 -32 87 -66Q87 -101 84 -123Q77 -124 72 -127L73 -132Q85 -130 102 -130Q119 -130 133 -132L134 -127Q130 -125 122 -123Z"],"V":[121,"M89 2Q77 0 59 0Q40 0 29 1L28 -2Q35 -4 35 -8Q35 -22 13 -106Q10 -117 7 -123Q0 -125 -4 -127L-3 -132Q9 -130 27 -130Q44 -130 59 -132L59 -127Q54 -125 47 -123Q51 -81 69 -16Q84 -76 84 -104Q84 -122 73 -128L73 -132Q87 -130 100 -130Q112 -130 124 -132L125 -127Q121 -125 114 -123Q117 -116 117 -103Q117 -90 109 -69Q100 -48 77 -6Q86 -4 90 -3Z"],"W":[184,"M154 2Q142 0 124 0Q107 0 94 2L94 -2Q96 -2 98 -4Q100 -6 100 -8Q100 -20 93 -53Q90 -44 77 -6Q80 -4 86 -3L85 2Q73 0 57 0Q40 0 29 1L28 -2Q35 -4 35 -8Q35 -22 13 -106Q10 -117 7 -123Q0 -125 -4 -127L-3 -132Q14 -130 58 -130Q101 -130 123 -132L124 -127Q118 -125 112 -123Q115 -81 133 -16Q147 -77 147 -104Q147 -122 136 -128L136 -132Q150 -130 162 -130Q175 -130 187 -132L188 -127Q184 -125 177 -123Q180 -116 180 -103Q180 -91 172 -70Q164 -49 141 -6Q150 -4 154 -3ZM48 -121Q51 -81 69 -16Q83 -77 83 -104Q83 -115 80 -119Q77 -124 68 -124Q58 -124 48 -121Z"],"Y":[113,"M73 -128 74 -132Q87 -130 98 -130Q109 -130 119 -132L120 -127Q115 -124 108 -123L73 -66Q73 -26 76 -7Q84 -5 88 -3L87 2Q74 0 57 0Q39 0 27 2L26 -4Q30 -6 38 -7Q40 -25 40 -55V-60Q22 -99 16 -109Q10 -119 5 -123Q-1 -125 -4 -127L-4 -132Q9 -130 26 -130Q42 -130 57 -132L57 -127Q54 -125 45 -123Q58 -86 65 -73Q73 -98 76 -106Q78 -115 78 -121Q78 -126 73 -128Z"],"f":[73,"M48 -54Q48 -22 52 12Q39 11 26 10Q20 21 17 40L12 40Q12 35 15 0Q18 -35 18 -54L18 -88H5L4 -88Q4 -92 5 -94Q7 -95 19 -98Q24 -112 37 -124Q49 -136 64 -142Q80 -142 93 -138V-135Q83 -126 80 -114L78 -114Q71 -120 65 -122Q60 -125 52 -126Q49 -112 48 -98L74 -99L75 -98Q72 -91 72 -86Q59 -87 48 -87Z"],"e":[96,"M59 -18Q66 -18 74 -22Q81 -27 87 -33L89 -31Q77 -9 51 3Q30 3 17 -9Q5 -20 5 -40Q5 -59 19 -76Q33 -93 52 -101Q88 -101 88 -76Q88 -69 87 -62Q92 -60 97 -59L96 -55Q95 -55 94 -55Q68 -55 37 -48Q37 -33 42 -26Q46 -18 59 -18ZM47 -86Q43 -86 40 -85Q37 -70 37 -54Q47 -58 57 -60Q57 -76 55 -81Q53 -86 47 -86Z"],"i":[66,"M53 -128Q51 -124 45 -118Q39 -111 34 -108Q29 -111 23 -118Q17 -124 15 -128Q18 -132 23 -137Q29 -142 34 -144Q39 -142 44 -137Q50 -132 53 -128ZM19 -64Q19 -77 17 -90Q12 -92 6 -93V-97Q30 -97 52 -101L53 -100Q49 -82 49 -49Q49 -16 51 -7Q58 -5 64 -2L64 2Q50 0 32 0Q14 0 4 1L3 -3Q7 -4 16 -8Q19 -22 19 -64Z"],"o":[102,"M53 -101Q75 -101 86 -90Q98 -79 98 -59Q98 -39 84 -22Q71 -5 51 3Q30 3 17 -8Q5 -20 5 -40Q5 -59 19 -76Q33 -93 53 -101ZM49 -86Q45 -86 41 -85Q38 -70 38 -51Q38 -32 41 -22Q44 -12 53 -12Q59 -12 61 -13Q65 -28 65 -47Q65 -66 62 -76Q58 -86 49 -86Z"],"m":[174,"M18 -64Q18 -77 16 -90Q11 -92 5 -93V-97Q26 -97 49 -101L50 -100Q47 -83 47 -66L49 -66Q58 -91 74 -101Q90 -101 97 -92Q103 -84 103 -66L105 -66Q115 -91 130 -101Q147 -101 154 -91Q161 -80 161 -62Q161 -61 161 -59L159 -8Q166 -5 171 -2L170 1Q159 0 146 0Q132 0 125 1V-4Q129 -22 129 -44Q129 -66 127 -72Q126 -78 123 -78Q118 -78 114 -72Q109 -65 105 -54L103 -8Q110 -5 115 -2L115 1Q103 0 90 0Q76 0 69 1V-4Q73 -22 73 -44Q73 -66 72 -72Q71 -78 67 -78Q63 -78 57 -71Q52 -64 48 -53Q48 -16 50 -7Q57 -5 63 -2L63 2Q49 0 31 0Q13 0 3 1L2 -3Q6 -4 15 -8Q18 -22 18 -64Z"],"u":[120,"M46 -46Q46 -32 47 -26Q48 -20 52 -20Q56 -20 62 -27Q67 -34 71 -45Q71 -82 69 -91Q62 -93 56 -96L57 -100Q70 -98 88 -98Q106 -98 116 -99L117 -95Q114 -94 105 -90Q102 -76 102 -34Q102 -18 103 -8Q108 -6 115 -5V-1Q93 -1 70 3L69 2Q73 -15 73 -32L71 -32Q67 -22 60 -12Q53 -2 45 3Q27 3 20 -7Q14 -17 14 -37Q14 -38 14 -39L15 -64Q15 -67 15 -74Q15 -80 14 -90Q9 -92 2 -93V-97Q26 -97 49 -101L50 -100Q46 -82 46 -46Z"],"·":[51,"M45 -57Q42 -53 36 -46Q30 -40 26 -37Q21 -40 15 -46Q9 -53 7 -57Q9 -61 15 -66Q20 -71 26 -73Q31 -71 36 -66Q42 -61 45 -57Z"],"-":[60,"M15 -60Q37 -60 54 -62L55 -61L54 -48L7 -45L5 -46L6 -60Z"],"!":[52,"M45 -17Q42 -13 36 -6Q30 0 26 3Q21 0 15 -6Q9 -13 7 -17Q9 -21 15 -26Q20 -31 26 -33Q31 -31 36 -26Q42 -21 45 -17ZM37 -142Q38 -142 39 -142Q47 -138 51 -130Q37 -93 30 -49L20 -48L13 -136Q24 -142 37 -142Z"],"’":[51,"M45 -120Q45 -107 33 -92Q22 -77 9 -69L6 -73Q19 -86 21 -104Q17 -107 13 -112Q9 -117 7 -120Q9 -124 15 -129Q20 -134 26 -136Q31 -134 36 -129Q42 -124 45 -120Z"]," ":[36,""]}};
+
+  // ---------------------------------------------------------------- tiny DOM
+  function put(el, kids) {
+    if (kids == null) return el;
+    if (!Array.isArray(kids)) kids = [kids];
+    for (var i = 0; i < kids.length; i++) {
+      var c = kids[i];
+      if (c == null || c === false) continue;
+      el.appendChild(typeof c === 'object' ? c : document.createTextNode(String(c)));
+    }
+    return el;
+  }
+  function h(tag, p, kids) {
+    var el = document.createElement(tag);
+    if (p) for (var k in p) {
+      var v = p[k];
+      if (v == null || v === false) continue;
+      if (k === 'class') el.className = v;
+      else if (k === 'text') el.textContent = v;
+      else if (k.slice(0, 2) === 'on') el.addEventListener(k.slice(2), v);
+      else el.setAttribute(k, v === true ? '' : v);
+    }
+    return put(el, kids);
+  }
+  function sv(tag, p, kids) {
+    var el = document.createElementNS(SVGNS, tag);
+    if (p) for (var k in p) { if (p[k] != null && p[k] !== false) el.setAttribute(k, p[k]); }
+    return put(el, kids);
+  }
+  function R(name) { return root.querySelector('[data-r="' + name + '"]'); }
+  function fill(el, kids) { el.replaceChildren(); return put(el, kids); }
+  function flag(el, name, on) { if (on) el.setAttribute(name, ''); else el.removeAttribute(name); }
+
+  // A string set in the lettering. caps=true crops the box to the cap height (all-caps titles).
+  // A character with no glyph is said once in the console, so a title never loses a letter silently.
+  var NOGLYPH = {};
+  function letters(str, caps) {
+    var x = 0, kids = [];
+    for (var i = 0; i < str.length; i++) {
+      var g = GL.g[str[i]];
+      if (!g) { if (!NOGLYPH[str[i]]) { NOGLYPH[str[i]] = 1; console.warn('fee-fi-fo-fum: no glyph for "' + str[i] + '" in "' + str + '"'); } g = GL.g[' ']; }
+      if (g[1]) kids.push(sv('path', { d: g[1], transform: x ? 'translate(' + x + ')' : null }));
+      x += g[0];
+    }
+    var top = caps ? GL.cap + 12 : GL.asc, bot = caps ? 12 : -GL.desc;
+    return sv('svg', { class: 'lt', viewBox: '0 ' + (-top) + ' ' + x + ' ' + (top + bot), role: 'img', 'aria-label': str }, kids);
+  }
+
+  // ---------------------------------------------------------------- numbers (money is never ambiguous)
+  var TOK = ['USDC', 'WETH'], Z = BigInt(0);
+  function big(v) { try { return BigInt(v == null ? 0 : v); } catch (e) { return Z; } }
+  function units(raw, dec, dp) {
+    var v = big(raw), neg = v < Z;
+    if (neg) v = -v;
+    var sc = BigInt(10) ** BigInt(dec - dp), r = (v + sc / BigInt(2)) / sc, s = r.toString();
+    while (s.length <= dp) s = '0' + s;
+    var ip = s.slice(0, s.length - dp).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return (neg ? '−' : '') + ip + (dp ? '.' + s.slice(s.length - dp) : '');
+  }
+  function dec(sym) { var d = S.config.decimals; return d && d[sym] != null ? d[sym] : (sym === 'USDC' ? 6 : 18); }
+  // USDC to the cent and WETH to 4 places; a WETH amount under 0.01 (a hook fee) gets 6, so it never rounds away.
+  function amt(raw, sym) {
+    var v = big(raw), dp = sym === 'USDC' ? 2 : 4;
+    if (v < Z) v = -v;
+    if (dp === 4 && v > Z && v < BigInt(10) ** BigInt(dec(sym) - 2)) dp = 6;
+    if (dp === 2 && v > Z && v < BigInt(10) ** BigInt(dec(sym) - 2)) dp = 4;
+    return units(raw, dec(sym), dp);
+  }
+  // 'chainlink ETH/USD round 18446744073709587966' reads as 'Chainlink ETH/USD'.
+  function src(x) { x = String(x).replace(/\s+round\s+\d+$/i, ''); return x.charAt(0).toUpperCase() + x.slice(1); }
+  function money(raw, sym) { return amt(raw, sym) + ' ' + sym; }
+  function num(raw, sym) { return Number(big(raw)) / Math.pow(10, dec(sym)); }
+  function fx(n, dp) { dp = dp == null ? 2 : dp; return isFinite(n) ? n.toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp }) : '—'; }
+  function bag(b, sym) { return big(b && b[sym]); }
+  // A bag of amounts in words: "6,000.00 USDC and 2.0000 WETH". Tokens at zero are left out.
+  function bagStr(b) { return TOK.filter(function (s) { return bag(b, s) > Z; }).map(function (s) { return money(b[s], s); }).join(' and ') || 'nothing'; }
+  // USDC per WETH of any trade or quote, whichever way it went.
+  function rate(x) {
+    var u = x.tokenIn === 'USDC' ? x.amountIn : x.amountOut, w = x.tokenIn === 'WETH' ? x.amountIn : x.amountOut;
+    return num(u, 'USDC') / num(w, 'WETH');
+  }
+  function pct(bps) { return fx(Number(bps) / 100, 2) + '%'; }
+  function short(x) { return x ? x.slice(0, 6) + '…' + x.slice(-4) : '—'; }
+  function clock() { return Date.now(); }
+  function hhmmss(ms) {
+    try { return new Date(ms).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
+    catch (e) { return new Date(ms).toLocaleTimeString(); }
+  }
+  function left(sec) {
+    if (sec <= 0) return '0:00';
+    var m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+    return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+  function up(id) { return String(id || '?').toUpperCase(); }
+  function plural(n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); }
+  function same(a, b) { return !!a && !!b && String(a).toLowerCase() === String(b).toLowerCase(); }
+  function known(addr) {
+    var n = S.config.names || {};
+    for (var k in n) if (same(k, addr)) return n[k];
+    return null;
+  }
+  function who(x) {
+    var a = x.takerName || x.requesterName || x.swapperName, ad = x.taker || x.requester || x.swapper;
+    return a || known(ad) || (ad ? short(ad) : 'a Jack');
+  }
+
+  // ---------------------------------------------------------------- pictures: one stroke, one weight
+  var VC = { ink: '#1F2433', skin: '#EDC49B', beard: '#7A4B2A', gold: '#C8961E', goldhi: '#E9BC45', woad: '#2F4A7A', madder: '#B0412A', sage: '#4C7743', linen: '#F6EFDF', white: '#FFFFFF' };
+  function vp(d, f, x) { return sv('path', Object.assign({ d: d, fill: f || 'none', stroke: VC.ink, 'stroke-width': 1.8, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, x || {})); }
+  function gat(x, y, kids, r) { return sv('g', { transform: 'translate(' + x + ' ' + y + ')' + (r ? ' rotate(' + r + ')' : '') }, kids); }
+  function cross(cls) {
+    return sv('svg', { class: cls || '', viewBox: '0 0 34 34', 'aria-hidden': 'true' }, [sv('path', { d: 'M9 9l16 16M25 9L9 25', stroke: 'currentColor', 'stroke-width': '3.6', 'stroke-linecap': 'round' })]);
+  }
+  function egg(fillc) {
+    return sv('svg', { viewBox: '0 0 16 20', 'aria-hidden': 'true' }, [sv('path', { d: 'M8 1.5c3.6 0 6.5 6 6.5 10.2S11.6 18.5 8 18.5 1.5 15.9 1.5 11.7 4.4 1.5 8 1.5z', fill: fillc || VC.gold, stroke: VC.ink, 'stroke-width': 1.6 }),
+      sv('path', { d: 'M5 7.5c.6-1.6 1.4-2.6 2.2-3', fill: 'none', stroke: VC.white, 'stroke-width': 1.4, 'stroke-linecap': 'round' })]);
+  }
+  function vCastle(flagUp) {
+    var k = [vp('M12 0V-20h20V0z', VC.linen), vp('M0 0V-30h3v-4h3v4h2v-4h3v4h1V0z', VC.linen), vp('M32 0V-30h3v-4h3v4h2v-4h3v4h1V0z', VC.linen), vp('M18 0v-7a4 4 0 018 0v7z', VC.beard)];
+    if (flagUp) k.push(vp('M22 -20v-13'), vp('M22 -33h9l-2.5 3 2.5 3h-9z', VC.gold));
+    return k;
+  }
+  function vJack(coin, run) {
+    var k = [vp(run ? 'M-4 0l3-8M5 -2l-4-6' : 'M-3 0l1.5-8M3 0l-1.5-8'), vp('M-5 -8h10l-2-10h-6z', VC.woad),
+      sv('circle', { cx: 0, cy: -22, r: 4.5, fill: VC.skin, stroke: VC.ink, 'stroke-width': 1.8 }), vp('M-5.5 -24.5L0 -34.5l5.5 10z', VC.madder)];
+    if (coin) k.push(vp('M3 -15l6 -3'), sv('circle', { cx: 11.5, cy: -19, r: 4, fill: VC.gold, stroke: VC.ink, 'stroke-width': 1.6 }));
+    return k;
+  }
+  function vGiant(mood) {
+    var k = [vp('M-13 2c0-11 6-17 13-17s13 6 13 17', VC.beard), sv('circle', { cx: 0, cy: 1, r: 11.5, fill: VC.skin, stroke: VC.ink, 'stroke-width': 1.8 }),
+      vp('M-11 4c0 9 5 13 11 13s11-4 11-13c-5 4-17 4-22 0z', VC.beard), vp('M-1.8 2.5c0 2.6 3.6 2.6 3.6 0')];
+    if (mood === 'z') k.push(vp('M-7 -2c1.5 1.6 3.5 1.6 5 0M2 -2c1.5 1.6 3.5 1.6 5 0'));
+    else if (mood === 'w') k.push(sv('circle', { cx: -4.5, cy: -2, r: 3.2, fill: VC.white, stroke: VC.ink, 'stroke-width': 1.6 }), sv('circle', { cx: 4.5, cy: -2, r: 3.2, fill: VC.white, stroke: VC.ink, 'stroke-width': 1.6 }),
+      sv('circle', { cx: -4.5, cy: -1.6, r: 1.3, fill: VC.ink }), sv('circle', { cx: 4.5, cy: -1.6, r: 1.3, fill: VC.ink }), vp('M-9 -8l5 2M9 -8l-5 2'), vp('M-3.5 7c1 5 6 5 7 0z', VC.madder));
+    else k.push(sv('circle', { cx: -4.5, cy: -2, r: 1.6, fill: VC.ink }), sv('circle', { cx: 4.5, cy: -2, r: 1.6, fill: VC.ink }));
+    return k;
+  }
+  function vCoins(n) { var k = []; for (var i = 0; i < n; i++) k.push(sv('ellipse', { cx: 0, cy: -2.5 - i * 3.6, rx: 7, ry: 2.8, fill: VC.gold, stroke: VC.ink, 'stroke-width': 1.5 })); return k; }
+  function vScroll(rolled) {
+    return rolled ? [vp('M-12 -6h24v6h-24z', VC.linen), sv('ellipse', { cx: -12, cy: -3, rx: 2.5, ry: 3, fill: VC.linen, stroke: VC.ink, 'stroke-width': 1.6 })]
+      : [vp('M-12 -20h24v18h-24z', VC.linen), vp('M-7 -15h14M-7 -11h14M-7 -7h9', null, { 'stroke-width': 1.2 }), sv('ellipse', { cx: -12, cy: -11, rx: 2.5, ry: 9, fill: VC.linen, stroke: VC.ink, 'stroke-width': 1.6 }), sv('ellipse', { cx: 12, cy: -11, rx: 2.5, ry: 9, fill: VC.linen, stroke: VC.ink, 'stroke-width': 1.6 })];
+  }
+  // The golden harp that sings a price when a Jack asks the castle's name.
+  function vHarp() {
+    var k = [vp('M-12 1V-37', null, { stroke: VC.ink, 'stroke-width': 5 }), vp('M-12 1V-37', null, { stroke: VC.gold, 'stroke-width': 2.4 })];
+    [-7.5, -3, 1.5, 6].forEach(function (x) { k.push(vp('M' + x + ' ' + (-38.5 + (x + 12) * 0.1).toFixed(1) + 'V' + (-37 + (15 - x) * 1.38).toFixed(1), null, { 'stroke-width': 1 })); });
+    var neck = 'M-13 -36c5-7 13-2 18-4s9-5 12-1', box = 'M17 -41c-1 13-11 31-30 42';
+    k.push(vp(neck, null, { 'stroke-width': 5.4 }), vp(neck, null, { stroke: VC.gold, 'stroke-width': 2.6 }), vp(box, null, { 'stroke-width': 6.2 }), vp(box, null, { stroke: VC.gold, 'stroke-width': 3.2 }),
+      sv('circle', { cx: -12, cy: -37.5, r: 2.6, fill: VC.goldhi, stroke: VC.ink, 'stroke-width': 1.4 }));
+    return k;
+  }
+  function vNotes() {
+    return [sv('ellipse', { cx: 0, cy: 0, rx: 3, ry: 2.2, fill: VC.ink, transform: 'rotate(-20)' }), vp('M2.6 -1v-11l6 2'), sv('ellipse', { cx: 12, cy: -8, rx: 2.6, ry: 1.9, fill: VC.ink, transform: 'rotate(-20 12 -8)' }), vp('M14.3 -9v-9')];
+  }
+  // The hen that lays a golden egg the moment a swap needs one.
+  function vHen(eggs) {
+    var k = [vp('M-3 0v-6M3 0v-6M-5 0h4M1 0h4', null, { stroke: VC.gold, 'stroke-width': 1.8 }),
+      vp('M-15 -16c-5-2-7-9-4-14 3 2 5 5 6 8 0-5 2-9 5-11 1 4 1 8-1 12', VC.beard),
+      vp('M-16 -15c0-7 7-11 15-9 1-5 4-10 9-10 4 0 6 3 6 6l5 2-5 2c0 11-7 19-17 19-8 0-13-4-13-10z', VC.white),
+      vp('M-9 -14c4 4 11 4 14-2', null),
+      vp('M8 -34c-1-4 3-5 4-2 1-3 5-2 4 1 2-1 4 1 2 3', VC.madder),
+      vp('M17 -22c1 3 1 5-1 6', VC.madder, { 'stroke-width': 1.4 }),
+      sv('circle', { cx: 12.5, cy: -26.5, r: 1.4, fill: VC.ink })];
+    for (var i = 0; i < (eggs || 0); i++) k.push(gat(24 + i * 11, 0, [sv('path', { d: 'M0 -12c3 0 5 4.4 5 7.4S3 0 0 0-5-1.6-5-4.6 -3-12 0-12z', fill: VC.gold, stroke: VC.ink, 'stroke-width': 1.5 })]));
+    return k;
+  }
+  var VP = {
+    quill: function () { return [vp('M0 0c6-10 14-17 22-19-2 8-8 16-18 20z', VC.white), vp('M0 0l11-10')]; },
+    x: function () { return [vp('M-6 -6l12 12M6 -6l-12 12', null, { stroke: VC.madder, 'stroke-width': 3 })]; },
+    shield: function () { return [vp('M0 -22l9 3.5v7c0 6-4 10-9 11.5-5-1.5-9-5.5-9-11.5v-7z', VC.white, { stroke: VC.ink, 'stroke-width': 2 }), vp('M0 -17v12M-5 -11h10', null, { stroke: VC.gold, 'stroke-width': 2.4 })]; },
+    broom: function () { return [vp('M-2 -30l9 16'), vp('M1 -14h13l3 14H-2z', VC.beard)]; },
+    bell: function () { return [vp('M-7 0v-7a7 7 0 0114 0v7l2 2.5h-18z', VC.white), vp('M-2.5 5h5')]; },
+    sun: function () { return [sv('circle', { cx: 0, cy: 0, r: 5.5, fill: VC.white, stroke: VC.ink, 'stroke-width': 1.8 }), vp('M0 -11v3M0 8v3M-11 0h3M8 0h3M-8 -8l2 2M6 6l2 2M-8 8l2-2M6 -6l2-2')]; },
+    zzz: function () { return [vp('M0 0h6l-6 7h6M10 -8h5l-5 6h5M18 -15h4l-4 5h4')]; }
+  };
+  function vignette(kind, cls) {
+    var g = [vp('M4 58h112', null, { stroke: '#D9C9A6', 'stroke-width': 2 })];
+    function add() { for (var i = 0; i < arguments.length; i++) g.push(arguments[i]); }
+    switch (kind) {
+      case 'price': add(gat(40, 56, vScroll()), gat(66, 38, VP.quill()), gat(96, 58, vCoins(3))); break;
+      case 'ship': add(gat(12, 58, vCastle(true)), gat(72, 56, vScroll()), gat(102, 58, vCoins(3))); break;
+      case 'dock': add(gat(30, 58, vCoins(4)), gat(62, 56, vScroll(true)), gat(92, 58, VP.broom())); break;
+      case 'cap': add(gat(34, 58, vCoins(5)), gat(48, 58, vCoins(3)), gat(84, 50, VP.shield())); break;
+      case 'refused': add(gat(34, 38, vGiant('w')), gat(78, 56, vScroll()), gat(100, 20, VP.x())); break;
+      case 'harp': add(gat(40, 58, vHarp()), gat(62, 22, vNotes()), gat(96, 58, vJack(false))); break;
+      case 'order': add(gat(40, 48, VP.bell()), gat(76, 56, vScroll()), gat(104, 58, vJack(false, true))); break;
+      case 'fill': add(gat(12, 58, vCastle(true)), gat(84, 58, vJack(true))); break;
+      case 'hen': add(gat(34, 58, vHen(1)), gat(98, 58, vJack(true))); break;
+      case 'no': add(gat(36, 38, vGiant('w')), gat(90, 58, vJack(false, true), -14), gat(104, 20, VP.x())); break;
+      case 'fall': add(gat(50, 40, vGiant('z')), gat(72, 26, VP.zzz())); break;
+      case 'wake': add(gat(50, 40, vGiant('o')), gat(84, 20, VP.sun())); break;
+      case 'built': add(gat(36, 58, vCastle(true)), gat(98, 20, VP.sun())); break;
+      default: add(gat(34, 58, vCastle(true)), gat(90, 58, vCoins(4)), gat(104, 58, vCoins(2)));
+    }
+    return sv('svg', { class: 'vg' + (cls ? ' ' + cls : ''), viewBox: '0 0 120 64', 'aria-hidden': 'true' }, g);
+  }
+
+  // ---------------------------------------------------------------- state and the one reducer
+  var S, sceneId = 0;
+  function reset(mode) {
+    S = { mode: mode, config: {}, agents: {}, order: ['fee', 'fi', 'fo', 'fum'], hoard: null, price: null, leverage: {}, caps: {}, strategies: [], quotes: [],
+      fills: [], refusals: [], intents: [], scenes: [], seq: 0, shoutUntil: 0, overUntil: 0, act: {}, startedAt: clock() };
+  }
+  function agent(id) { return S.agents[id] || (S.agents[id] = { id: id, alive: null }); }
+  function strat(hash) { for (var i = 0; i < S.strategies.length; i++) if (same(S.strategies[i].hash, hash)) return S.strategies[i]; return null; }
+  function live() { return S.strategies.filter(function (s) { return !s.docked; }); }
+  function promised(sym) { return live().reduce(function (a, s) { return a + bag(s.alloc, sym); }, Z); }
+  // fum's leverage: the promises on one token may total its balance × bps / 10,000. Before fum sets it, it reads 1×.
+  function lev(sym) { var l = S.leverage && S.leverage[sym]; return l ? Number(l) : 10000; }
+  function limitOf(sym) { return bag(S.hoard, sym) * BigInt(lev(sym)) / BigInt(10000); }
+  function times(bps) { return fx(Number(bps) / 10000, Number(bps) % 10000 ? 2 : 0) + '×'; }
+  // How many times over the hoard is promised, on its most promised token.
+  function overX() { var m = 0; TOK.forEach(function (s) { var b = bag(S.hoard, s); if (b > Z) m = Math.max(m, Number(promised(s) * BigInt(10000) / b) / 10000); }); return m; }
+  // Tokens whose promises fills have pushed past fum's line: fum docks then, greedy first, then the harp, then the hen.
+  function pastLine() { return TOK.filter(function (s) { var l = limitOf(s); return l > Z && promised(s) > l; }); }
+  // The harp and the hen are things; any other strategy is a name: "the harp", but "greedy".
+  function the(nm) { return /^(harp|hen)$/.test(nm) ? 'the ' + nm : nm; }
+  // A revert, with any unix time in it told as a clock time: QuoteExpired(20:26:25).
+  function revText(r) { return String(r || '').replace(/\((\d{10})\)/, function (m, u) { return '(' + hhmmss(Number(u) * 1000) + ')'; }); }
+  function strategies(n) { return n + (n === 1 ? ' strategy' : ' strategies'); }
+  // When an event happened, for motion: now if it just arrived live, its own time if it's history (so a replayed
+  // refusal doesn't roar again), and always its own time in the mock, where the clock is exact.
+  function when(ev) { return S.mode === 'mock' || !ev.t || clock() - ev.t > 60000 ? ev.t || clock() : clock(); }
+  function acted(id, ev) { if (id) S.act[id] = when(ev); }
+  // Colours follow the vault's slots, so the harp is always gold and the hen always woad, even after a re-ship.
+  var HUE = ['#C8961E', '#2F4A7A', '#4C7743', '#7A4B2A', '#B0412A', '#474C5A', '#83600F', '#6A6E79'];
+  function hue(st) { var i = st && st.slot != null ? Number(st.slot) : S.strategies.indexOf(st); return HUE[(i < 0 ? 0 : i) % HUE.length]; }
+  function nameOf(hash) { var st = strat(hash); return st ? st.label || short(st.hash) : hash ? short(hash) : 'a strategy'; }
+  // The Castle's revert, with its amounts in token units: OverAllocated(USDC, 2,330.00, 1,930.00).
+  function errText(r) {
+    var a = r.errorArgs;
+    if (!a || !a.token) return r.error || '';
+    return (r.error || 'OverAllocated') + '(' + a.token + ', ' + amt(a.committedAfter, a.token) + ', ' + amt(a.limit, a.token) + ')';
+  }
+
+  function apply(ev) {
+    if (ev.seq != null) S.seq = Math.max(S.seq, ev.seq);
+    var st;
+    switch (ev.type) {
+      case 'snapshot':
+        if (ev.config) S.config = Object.assign({}, S.config, ev.config);
+        (ev.agents || []).forEach(function (x) { Object.assign(agent(x.id), x); });
+        if (ev.hoard) S.hoard = ev.hoard;
+        if (ev.price) S.price = ev.price;
+        S.leverage = Object.assign({}, ev.leverage || {}); S.caps = Object.assign({}, ev.caps || {});
+        S.strategies = (ev.strategies || []).map(function (x) { return Object.assign({ fills: 0 }, x); });
+        S.quotes = (ev.quotes || []).slice(); S.fills = (ev.fills || []).slice();
+        S.refusals = (ev.refusals || []).slice(); S.intents = (ev.intents || []).slice();
+        break;
+      case 'hoard': if (ev.hoard) S.hoard = ev.hoard; return;
+      case 'price':
+        var was = S.price; S.price = ev;
+        if (was && String(was.mid) === String(ev.mid) && String(was.spreadBps) === String(ev.spreadBps) && !ev.recentre) return;
+        acted(ev.by || 'fee', ev); break;
+      case 'leverage.set': S.leverage[ev.token] = ev.bps; if (!built(ev)) acted(ev.by || 'fum', ev); break;
+      case 'cap.set':
+        S.caps[ev.slot] = ev.cap;
+        live().forEach(function (x) { if (String(x.slot) === String(ev.slot)) x.cap = ev.cap; });
+        acted(ev.by || 'fum', ev);
+        break;
+      case 'strategy.shipped':
+        st = strat(ev.hash);
+        if (!st) S.strategies.push(st = { hash: ev.hash, fills: 0 });
+        Object.assign(st, { slot: ev.slot, label: ev.label, kind: ev.kind, alloc: ev.alloc || {}, cap: ev.cap || S.caps[ev.slot] || null, shippedBy: ev.shippedBy, docked: false, t: ev.t, tx: ev.tx });
+        acted(ev.shippedBy || 'fi', ev);
+        break;
+      case 'strategy.docked': st = strat(ev.hash); if (st) { st.docked = true; st.dockedBy = ev.by; } acted(ev.by || 'fi', ev); break;
+      case 'allocation.refused':
+        S.refusals.push(ev); S.shoutUntil = when(ev) + 3600; S.overUntil = when(ev) + 12000; S.freshRefusal = S.shoutUntil > clock();
+        acted(ev.by || 'fi', ev); acted('fum', ev);
+        break;
+      case 'quote.served': S.quotes.push(ev); if (S.quotes.length > 40) S.quotes.shift(); acted('fi', ev); break;
+      case 'intent.routed': S.intents.push(ev); if (S.intents.length > 40) S.intents.shift(); acted(ev.by || 'fo', ev); break;
+      case 'fill':
+        if (ev.tx && S.fills.some(function (x) { return x.tx === ev.tx && x.status === ev.status; })) return;
+        S.fills.push(ev); if (S.fills.length > 200) S.fills.shift();
+        st = strat(ev.strategy);
+        if (st && ev.status !== 'reverted') { st.fills = (st.fills || 0) + 1; if (ev.alloc) st.alloc = ev.alloc; }
+        break;
+      case 'agent': Object.assign(agent(ev.id), ev); break;
+      default: return;
+    }
+    var sc = scene(ev), last = S.scenes[S.scenes.length - 1];
+    if (!sc) return;
+    // A run of the same small deed (fum setting three caps) is one scene, retold with the newest line.
+    if (sc.fold && last && last.fold === sc.fold && (ev.t || 0) - (last.ev.t || 0) < 15000) { sc.id = last.id; S.scenes[S.scenes.length - 1] = sc; S.redraw = sc.id; return; }
+    sc.id = ++sceneId; S.scenes.push(sc); if (S.scenes.length > 60) S.scenes.shift();
+  }
+
+  // ---------------------------------------------------------------- the tapestry: one scene per event worth telling
+  // A deal from the taker's side: what it paid, what it got, and the price that makes.
+  function deal(x) { return money(x.amountIn, x.tokenIn) + ' for ' + money(x.amountOut, x.tokenOut); }
+  // The CastleVault's constructor emits LeverageSet 1× as a default: that is the castle being built, not fum acting.
+  function built(ev) {
+    var tx = String(ev.tx || '').toLowerCase(), dep = String(S.config.castleTx || '').toLowerCase();
+    return ev.by === 'castle' || ev.by === 'deploy' || (!!tx && tx === dep);
+  }
+  function scene(ev) {
+    var nm = nameOf(ev.hash || ev.strategy);
+    switch (ev.type) {
+      case 'snapshot': return { ev: ev, v: 'begin', ti: 'HERE THE TALE BEGINS', gl: [S.hoard ? 'One hoard: ' + bagStr(S.hoard) : 'The hoard is still being counted', live().length ? 'backing ' + strategies(live().length) : 'no strategy shipped yet'] };
+      case 'price': return ev.recentre ? { ev: ev, v: 'price', tone: 'woad', ti: 'HERE FEE SEES THE HEN DRIFT', gl: ['the ' + ev.recentre + '’s curve sat at ' + fx(Number(ev.henMid)) + (ev.driftBps != null ? ', ' + fx(Number(ev.driftBps) / 100) + '% off' : ' against') + ' fee’s ' + fx(Number(ev.mid)), 'so fi re-centres it at fee’s price'] }
+        : { ev: ev, v: 'price', ti: 'HERE FEE SETS THE PRICE', gl: [fx(Number(ev.mid)) + ' USDC per WETH', (ev.source ? 'from ' + src(ev.source) + ' · ' : '') + 'spread ' + ev.spreadBps + ' bps'] };
+      case 'leverage.set': return built(ev) ? { ev: ev, v: 'built', fold: 'built', ti: 'HERE THE CASTLE IS BUILT', gl: ['leverage ' + times(ev.bps) + ' by default, until fum sets it', TOK.filter(function (s) { return S.leverage[s]; }).map(function (s) { return s + ' ' + times(S.leverage[s]); }).join(' · ')] }
+        : { ev: ev, v: 'cap', fold: 'lev', ti: Number(ev.bps) === 20000 ? 'HERE FUM LETS EACH COIN BE PROMISED TWICE' : 'HERE FUM SETS HOW FAR THE HOARD STRETCHES',
+        gl: ['promises may total ' + times(ev.bps) + ' the hoard', TOK.filter(function (s) { return S.leverage[s]; }).map(function (s) { return s + ' ' + times(S.leverage[s]); }).join(' · ')] };
+      case 'cap.set': return { ev: ev, v: 'cap', fold: 'cap', ti: 'HERE FUM SETS THE CAPS', gl: ['slot ' + ev.slot + (ev.label ? ', ' + ev.label : '') + ': up to', bagStr(ev.cap)] };
+      case 'strategy.shipped': return { ev: ev, v: 'ship', tone: 'gold', ti: 'HERE ' + up(ev.shippedBy || 'fi') + ' SHIPS ' + up(the(ev.label || 'a strategy')), gl: [nm + ' promises ' + bagStr(ev.alloc), 'from the one hoard: no gold moves'] };
+      case 'strategy.docked': return { ev: ev, v: 'dock', ti: 'HERE ' + up(ev.by || 'fi') + ' DOCKS ' + up(the((strat(ev.hash) || {}).label || 'a strategy')), gl: [nm + '’s promise comes home', ev.reason === 're-centre' ? 'to be re-shipped at fee’s price' : ev.reason || 'the gold never left'] };
+      case 'allocation.refused': return { ev: ev, v: 'refused', tone: 'madder', ti: 'HERE FUM REFUSES A PROMISE TOO MANY', gl: [(ev.label || 'A strategy') + ' asked for ' + bagStr(ev.asked), 'past fum’s line · reverted ' + errText(ev)] };
+      case 'quote.served': return { ev: ev, v: 'harp', tone: 'gold', ti: 'HERE THE HARP SINGS A PRICE', gl: [who(ev) + ' asked ' + (ev.via === 'mcp' ? 'the castle’s castle_quote tool' : ev.name || S.config.quoteName || 'the castle’s name'), deal(ev) + ' at ' + fx(rate(ev)) + ', signed by fi'] };
+      case 'intent.routed': return { ev: ev, v: 'order', tone: 'woad', ti: 'HERE FO CARRIES AN ORDER', gl: [who(ev) + ' offers ' + money(ev.amountIn, ev.tokenIn) + ' for ' + ev.tokenOut, (ev.source ? 'a ' + ev.source + '-style order, ' : '') + 'sent to ' + (ev.route === 'v4' ? 'the hen on Uniswap v4' : 'the harp')] };
+      case 'fill':
+        if (ev.status === 'reverted') return { ev: ev, v: 'no', tone: 'madder', ti: 'HERE THE GIANT SAYS NO', gl: [who(ev) + ' offered ' + money(ev.amountIn, ev.tokenIn), 'reverted ' + revText(ev.revert)] };
+        if (ev.route === 'v4') return { ev: ev, v: 'hen', tone: 'gold', ti: 'HERE THE HEN LAYS JUST IN TIME', gl: [who(ev) + ' paid ' + money(ev.amountIn, ev.tokenIn), 'got ' + money(ev.amountOut, ev.tokenOut) + ' at ' + fx(rate(ev)) + ' on Uniswap v4'] };
+        return { ev: ev, v: 'fill', tone: 'gold', ti: ev.quoteId ? 'HERE A JACK TAKES THE HARP’S PRICE' : 'HERE A JACK TRADES WITH THE GIANT', gl: [who(ev) + ' paid ' + money(ev.amountIn, ev.tokenIn), 'got ' + money(ev.amountOut, ev.tokenOut) + ' at ' + fx(rate(ev)) + ' from ' + the(nm)] };
+      case 'agent':
+        return ev.alive ? { ev: ev, v: 'wake', ti: 'HERE ' + up(ev.id) + ' WAKES', gl: [ROLE[ev.id] || ''] }
+          : { ev: ev, v: 'fall', tone: 'madder', ti: 'HERE ' + up(ev.id) + ' FALLS ASLEEP', gl: ['no heartbeat', ROLE[ev.id] || ''] };
+    }
+    return null;
+  }
+
+  // ---------------------------------------------------------------- views
+  var ROLE = { fee: 'prices the hoard', fi: 'writes the strategies', fo: 'carries the orders', fum: 'guards the hoard' };
+
+  function drawChant() {
+    var el = R('chant');
+    if (!el.firstChild) {
+      S.order.forEach(function (id) {
+        put(el, h('div', { class: 'syl', 'data-a': id }, [
+          h('div', { class: 'word' }, letters(up(id), true)),
+          h('div', { class: 'role', text: ROLE[id] }),
+          h('div', { class: 'who' })
+        ]));
+      });
+    }
+    var now = clock(), q = S.quotes.length, v4 = S.fills.filter(function (f) { return f.route === 'v4' && f.status !== 'reverted'; }).length;
+    var line = {
+      fee: S.price ? fx(Number(S.price.mid)) + ' USDC per WETH' : 'no price yet',
+      fi: strategies(live().length) + (q ? ' · ' + plural(q, 'price') + ' signed' : ''),
+      fo: plural(S.intents.length, 'order') + ' carried' + (v4 ? ' · ' + v4 + ' to the hen' : ''),
+      fum: S.hoard ? fx(overX(), 2) + '× promised' + (S.refusals.length ? ' · ' + S.refusals.length + ' refused' : '') : 'counting the gold'
+    };
+    S.order.forEach(function (id) {
+      var n = el.querySelector('[data-a="' + id + '"]'), a = agent(id);
+      flag(n, 'data-hold', a.alive !== false && now - (S.act[id] || 0) < 2600);
+      flag(n, 'data-asleep', a.alive === false);
+      n.querySelector('.who').textContent = a.alive === false ? 'asleep' : line[id];
+    });
+  }
+
+  // the giant is fum: calm while there's room under his line, one eye open near it, roaring at a refusal
+  var GI = null;
+  function buildGiant() {
+    function P(d, f, extra) { return sv('path', Object.assign({ d: d, fill: f || 'none', stroke: '#1F2433', 'stroke-width': 3, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, extra || {})); }
+    var eyeO = sv('g', { class: 'eye-o' }, [sv('circle', { cx: 51, cy: 71, r: 4.2, fill: '#1F2433' }), sv('circle', { cx: 85, cy: 71, r: 4.2, fill: '#1F2433' }), P('M43 60c4-3 11-3 15 0M78 60c4-3 11-3 15 0')]);
+    var eyeS = sv('g', { class: 'eye-s' }, [P('M44 72c4 2 10 2 14 0', 'none'), sv('circle', { cx: 85, cy: 71, r: 6.5, fill: '#FFFFFF', stroke: '#1F2433', 'stroke-width': 3 }), sv('circle', { cx: 86, cy: 72, r: 2.8, fill: '#1F2433' })]);
+    var eyeW = sv('g', { class: 'eye-w' }, [sv('circle', { cx: 51, cy: 70, r: 8, fill: '#FFFFFF', stroke: '#1F2433', 'stroke-width': 3 }), sv('circle', { cx: 85, cy: 70, r: 8, fill: '#FFFFFF', stroke: '#1F2433', 'stroke-width': 3 }),
+      sv('circle', { cx: 52, cy: 71, r: 3.4, fill: '#1F2433' }), sv('circle', { cx: 84, cy: 71, r: 3.4, fill: '#1F2433' }), P('M40 56l18 6M96 56l-18 6')]);
+    var mO = sv('g', { class: 'm-o' }, [P('M58 106c6 5 14 5 20 0')]);
+    var mS = sv('g', { class: 'm-s' }, [P('M60 107h16')]);
+    var mW = sv('g', { class: 'm-w' }, [P('M54 100c4 16 24 16 28 0z', '#B0412A')]);
+    var svg = sv('svg', { class: 'giant', viewBox: '0 0 136 150', role: 'img', 'aria-label': 'fum, the giant who guards the hoard' }, [
+      P('M20 60c0-34 22-50 48-50s48 16 48 50', '#7A4B2A'),
+      P('M26 62c0-26 18-40 42-40s42 14 42 40v22c0 30-18 48-42 48S26 114 26 84z', '#EDC49B'),
+      P('M26 86c4 30 20 50 42 50s38-20 42-50c-6 10-14 14-22 12-6 8-34 8-40 0-8 2-16-2-22-12z', '#7A4B2A'),
+      P('M68 76c-8 0-11 8-9 14 2 5 16 5 18 0 2-6-1-14-9-14z', '#E3A67E'),
+      eyeO, eyeS, eyeW, mO, mS, mW,
+      P('M14 70c-6 0-8 12 0 14M122 70c6 0 8 12 0 14', '#EDC49B')
+    ]);
+    GI = { eyeO: eyeO, eyeS: eyeS, eyeW: eyeW, mO: mO, mS: mS, mW: mW };
+    fill(R('giant'), svg);
+    fill(R('shout'), letters('FEE-FI-FO-FUM!', true));
+  }
+  function drawGiant() {
+    var near = TOK.some(function (s) { var l = limitOf(s); return l > Z && promised(s) * BigInt(100) >= l * BigInt(95); });
+    var shout = clock() < S.shoutUntil, mood = shout ? 'w' : near ? 's' : 'o';
+    GI.eyeO.style.opacity = mood === 'o' ? 1 : 0; GI.eyeS.style.opacity = mood === 's' ? 1 : 0; GI.eyeW.style.opacity = mood === 'w' ? 1 : 0;
+    GI.mO.style.opacity = mood === 'o' ? 1 : 0; GI.mS.style.opacity = mood === 's' ? 1 : 0; GI.mW.style.opacity = mood === 'w' ? 1 : 0;
+    flag(root, 'data-shout', shout);
+  }
+
+  // fum's gauge, one per token. The track runs to fum's line (the hoard × leverage); a mark shows where the hoard
+  // itself ends, so promises past it are the shared liquidity. Each strategy's promise is a thread of its colour.
+  // A refused ship shows what it asked for, hatched, running past fum's line.
+  var GA = null;
+  function buildGauges() {
+    GA = {};
+    fill(R('gauges'), TOK.map(function (sym) {
+      var g = { head: h('div', { class: 'gh num' }), trk: h('div', { class: 'trk' }), twice: h('div', { class: 'twice' }), ovr: h('div', { class: 'ovr' }),
+        hd: h('div', { class: 'mk hd' }, h('span')), lim: h('div', { class: 'mk lim' }, h('span')), foot: h('div', { class: 'gf num' }), watch: h('div', { class: 'gwatch num' }), segs: {} };
+      GA[sym] = g;
+      g.trk.appendChild(g.twice);
+      return h('div', { class: 'gauge' }, [g.head, h('div', { class: 'gw', role: 'img', 'aria-label': sym + ' promised against the hoard and fum’s line' }, [g.trk, g.ovr, g.hd, g.lim]), g.foot, g.watch]);
+    }));
+  }
+  var drawnGauges = '';
+  function drawGauges() {
+    var rf = S.refusals[S.refusals.length - 1], over = rf && clock() < S.overUntil ? rf : null;
+    var key = JSON.stringify([S.hoard, S.leverage, S.strategies.map(function (s) { return [s.hash, s.docked, s.alloc]; }), over && over.seq, rf && rf.seq, S.mode]);
+    if (key === drawnGauges) return;
+    drawnGauges = key;
+    var past = pastLine();
+    TOK.forEach(function (sym) {
+      var g = GA[sym], bal = bag(S.hoard, sym), pr = promised(sym), lim = limitOf(sym), ask = over ? bag(over.asked, sym) : Z;
+      var top = [bal, lim, pr + ask].reduce(function (a, b) { return b > a ? b : a; }, Z), sc = Number(top) || 1;
+      function P(v) { return (Number(v) / sc * 100).toFixed(3) + '%'; }
+      g.trk.style.width = P(lim);
+      g.twice.style.width = lim > bal ? (Number(lim - bal) / Number(lim) * 100).toFixed(3) + '%' : '0%';
+      g.hd.style.left = P(bal); g.lim.style.left = P(lim);
+      // An empty castle has no line to draw yet: the markers would pile up at zero.
+      var none = top === Z;
+      g.trk.parentNode.style.display = none ? 'none' : '';
+      g.hd.hidden = lim === bal;
+      g.hd.firstChild.textContent = 'the hoard';
+      g.lim.firstChild.textContent = 'fum’s line, ' + times(lev(sym));
+      var cum = Z;
+      S.strategies.forEach(function (st) {
+        var seg = g.segs[st.hash];
+        if (!seg) { seg = g.segs[st.hash] = h('i', { class: 'seg', style: 'background:' + hue(st) + ';left:' + P(cum) }); g.trk.parentNode.insertBefore(seg, g.ovr); }
+        var a = st.docked ? Z : bag(st.alloc, sym);
+        seg.style.left = P(cum); seg.style.width = P(a);
+        flag(seg, 'data-z', a === Z);
+        seg.title = (st.label || short(st.hash)) + ': ' + money(a.toString(), sym);
+        cum += a;
+      });
+      for (var k in g.segs) if (!strat(k)) { g.segs[k].style.width = '0%'; flag(g.segs[k], 'data-z', true); }
+      g.ovr.style.left = P(pr); g.ovr.style.width = P(ask);
+      flag(g.ovr, 'data-z', ask === Z);
+      var room = lim > pr ? lim - pr : Z;
+      fill(g.head, [h('b', { text: sym }), h('span', { class: 'pv' }, [amt(pr.toString(), sym), h('small', { text: ' promised · the hoard holds ' + money(bal.toString(), sym) })])]);
+      flag(g.foot, 'data-over', !!over && ask > Z);
+      fill(g.foot, none ? [h('span', { text: 'The castle holds no ' + sym + ' yet, so nothing can be promised.' })] : over && ask > Z ? [h('span', { text: (over.label || 'It') + ' asked ' + money(ask.toString(), sym) + ' more: ' + amt((pr + ask).toString(), sym) + ' would pass fum’s line of ' + amt(lim.toString(), sym) }), h('span', { text: 'refused' })]
+        : [h('span', { text: (bal > Z ? fx(Number(pr * BigInt(10000) / bal) / 10000, 2) : '0') + '× the hoard promised' }), h('span', { text: money(room.toString(), sym) + ' of room under fum’s line' })]);
+      fill(g.watch, past.indexOf(sym) >= 0 ? 'Fills pushed the ' + sym + ' promises past fum’s line: fum docks greedy first, then the harp, then the hen, until they fit.' : null);
+    });
+    var el = R('refused');
+    el.hidden = !rf;
+    if (rf) {
+      var ls = strat(rf.hash), later = !!ls && !ls.docked && (ls.t || 0) > (rf.t || 0), k = rf.seq + '|' + rf.t + later;
+      if (el.getAttribute('data-k') !== k) {
+        el.setAttribute('data-k', k);
+        fill(el, [cross(''), h('div', null, [h('b', { text: 'fum refused ' + the(rf.label || 'a strategy') + '. ' }),
+          'It asked for ' + bagStr(rf.asked) + ' more, but the promises already stood at ' + bagStr(rf.committed || rf.allocated) + (rf.limit ? ', and fum’s line is ' + bagStr(rf.limit) : '') + '. The castle reverted ' + errText(rf) + ' at ' + hhmmss(rf.t) + '. ',
+          txEl(rf.tx, rf), later ? ' It was shipped later, once there was room.' : ''])]);
+        if (S.freshRefusal) { el.removeAttribute('data-fresh'); void el.offsetWidth; el.setAttribute('data-fresh', ''); S.freshRefusal = false; }
+      }
+    }
+  }
+  var drawnBargains = '';
+  function drawBargains() {
+    var key = JSON.stringify(S.strategies.map(function (s) { return [s.hash, s.docked, s.alloc, s.cap, s.fills]; })) + S.mode;
+    if (key === drawnBargains) return;
+    drawnBargains = key;
+    var el = R('bargains');
+    if (!S.strategies.length) { fill(el, h('li', { class: 'empty', text: 'No strategy shipped yet. When fi ships one, its promise threads into the gauge above.' })); return; }
+    fill(el, S.strategies.slice(-6).map(function (st) {
+      return h('li', { class: 'bg num', 'data-docked': st.docked || null }, [
+        h('span', { class: 'sw', style: 'background:' + hue(st) }),
+        h('div', null, [
+          h('div', { class: 'nm' }, [st.label || short(st.hash), h('span', { text: (st.slot != null ? 'slot ' + st.slot + ' · ' : '') + (st.kind ? st.kind + ' · ' : '') + short(st.hash) })]),
+          h('div', { class: 'al', text: st.docked ? 'docked: its promise went back to the hoard' : 'promises ' + bagStr(st.alloc) }),
+          h('div', { class: 'cp', text: st.cap ? 'fum’s cap for the slot: ' + bagStr(st.cap) : 'no cap from fum yet' })
+        ]),
+        h('div', { class: 'r' }, [plural(st.fills || 0, 'fill'), h('br'), h('span', { class: 'chip', 'data-s': st.docked ? 'docked' : 'live', text: st.docked ? 'DOCKED' : 'LIVE' })])
+      ]);
+    }));
+  }
+
+  function buildCastleArt() {
+    function P(d, f, w) { return sv('path', { d: d, fill: f || 'none', stroke: '#1F2433', 'stroke-width': w || 2.4, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }); }
+    function coin(x, y) { return sv('ellipse', { cx: x, cy: y, rx: 11, ry: 5, fill: '#C8961E', stroke: '#1F2433', 'stroke-width': 2 }); }
+    var kids = [
+      P('M8 118h264', null, 2),
+      P('M40 118V52l-8-4V34h10v8h8v-8h10v8h8v-8h10v14l-8 4v66z', '#F6EFDF'),
+      P('M200 118V52l-8-4V34h10v8h8v-8h10v8h8v-8h10v14l-8 4v66z', '#F6EFDF'),
+      P('M78 118V66h124v52z', '#F6EFDF'),
+      P('M78 66V56h12v6h12v-6h12v6h12v-6h12v6h12v-6h12v6h12v-6h12v10', '#F6EFDF'),
+      P('M122 118V96a18 18 0 0136 0v22z', '#7A4B2A'),
+      P('M54 70v14M66 70v14M214 70v14M226 70v14', null, 3),
+      P('M140 56V20', null, 2),
+      P('M140 20c10-4 18 4 28 0v14c-10 4-18-4-28 0z', '#C8961E', 2)
+    ];
+    var ys = [114, 108, 102, 96], xs = [[100, 122, 158, 180], [111, 133, 169], [122, 158], [140]];
+    kids.push(P('M96 118c10-16 78-16 88 0z', '#E9BC45', 2));
+    for (var r = 0; r < xs.length; r++) for (var j = 0; j < xs[r].length; j++) kids.push(coin(xs[r][j], ys[r]));
+    fill(R('castleArt'), sv('svg', { class: 'castle-art', viewBox: '0 0 280 124', role: 'img', 'aria-label': 'The castle and its hoard' }, kids));
+  }
+  var drawnHoard = '';
+  function drawHoard() {
+    var hd = S.hoard, p = S.price, el = R('hoard'), key = JSON.stringify([hd, p && p.mid, p && p.spreadBps, S.leverage, live().length]);
+    if (key === drawnHoard) return;
+    drawnHoard = key;
+    if (!hd) { fill(el, h('p', { class: 'empty', text: 'Counting the gold…' })); return; }
+    var mid = p ? Number(p.mid) : NaN, val = num(hd.WETH, 'WETH') * mid + num(hd.USDC, 'USDC');
+    var levs = TOK.filter(function (s) { return S.leverage[s]; });
+    fill(el, [
+      h('div', { class: 'row gold' }, [h('span', { class: 'k' }, [h('i', { class: 'cn' }), 'USDC in the castle']), h('span', { class: 'v' }, [amt(hd.USDC, 'USDC'), h('small', { text: 'USDC' })])]),
+      h('div', { class: 'row gold' }, [h('span', { class: 'k' }, [h('i', { class: 'cn' }), 'WETH in the castle']), h('span', { class: 'v' }, [amt(hd.WETH, 'WETH'), h('small', { text: 'WETH' })])]),
+      h('div', { class: 'row' }, [h('span', { class: 'k' }, ['fee’s price', h('span', { class: 'sub', text: p ? (p.source ? src(p.source) + ' · ' : '') + 'spread ' + p.spreadBps + ' bps' : 'not set yet' })]),
+        h('span', { class: 'v' }, [fx(mid), h('small', { text: 'USDC / WETH' })])]),
+      h('div', { class: 'row' }, [h('span', { class: 'k' }, ['The hoard’s worth', h('span', { class: 'sub', text: 'WETH at fee’s price, plus USDC' })]),
+        h('span', { class: 'v' }, [fx(val), h('small', { text: 'USDC' })])]),
+      h('div', { class: 'row' }, [h('span', { class: 'k' }, ['fum’s leverage', h('span', { class: 'sub', text: 'how far the promises may stretch' })]),
+        h('span', { class: 'v', text: levs.length ? levs.map(function (s) { return times(S.leverage[s]) + ' ' + s; }).join(' · ') : 'not set' })]),
+      h('div', { class: 'row' }, [h('span', { class: 'k' }, ['It backs', h('span', { class: 'sub', text: 'at once, from this one balance' })]),
+        h('span', { class: 'v', text: strategies(live().length) })])
+    ]);
+  }
+
+  // the harp: the newest price a Jack found by asking the castle's name, and what became of it
+  function until(q) { return Number(q.validUntil || q.expiry); }
+  function quoteFate(q) {
+    for (var i = S.fills.length - 1; i >= 0; i--) { var f = S.fills[i]; if (f.quoteId && f.quoteId === q.id) return { s: f.status === 'reverted' ? 'expired' : 'filled', f: f }; }
+    return { s: clock() / 1000 < until(q) ? 'open' : 'expired' };
+  }
+  // The card shows the song that matters: one still open, else the newest one a Jack filled, else the newest.
+  function sung() {
+    var i, n = S.quotes.length;
+    for (i = n - 1; i >= 0; i--) if (quoteFate(S.quotes[i]).s === 'open') return S.quotes[i];
+    for (i = n - 1; i >= 0; i--) if (quoteFate(S.quotes[i]).s === 'filled') return S.quotes[i];
+    return S.quotes[n - 1];
+  }
+  // A quote rarely knows who asked; the fill that took it does.
+  function asker(q) { var f = quoteFate(q).f; return f && !(q.requesterName || q.requester) ? who(f) : who(q); }
+  var HP = null, drawnHarp = '';
+  function drawHarp() {
+    var q = sung(), el = R('harp');
+    var key = S.quotes.length + '|' + (q ? q.id + quoteFate(q).s : '') + '|' + S.fills.length + S.mode + S.quotes.filter(function (o) { return quoteFate(o).s === 'open'; }).length;
+    if (key !== drawnHarp) {
+      drawnHarp = key; HP = null;
+      if (!q) {
+        fill(el, h('div', { class: 'hen-top' }, [vignette('harp', 'big'), h('p', { class: 'empty', text: 'No Jack has asked yet. Resolve ' + (S.config.quoteName || 'quote.feefifofum.eth') + ' with any ENS client that follows CCIP-Read, and the harp sings a signed price.' })]));
+        return;
+      }
+      // Most Jacks ask the name (CCIP-Read); a Jack can also ask the castle's castle_quote tool over MCP for the same signed price.
+      var mcp = q.via === 'mcp';
+      var fate = quoteFate(q), bar = h('i'), txt = h('span'), exp = h('div', { class: 'exp num', 'data-s': fate.s }, [h('div', { class: 'bar' }, bar), txt]);
+      HP = { q: q, bar: bar, txt: txt, exp: exp, t0: q.t || clock() };
+      var older = S.quotes.filter(function (o) { return o !== q; }).slice(-4).reverse();
+      fill(el, [
+        h('div', { class: 'card' }, [
+          h('div', { class: 'qname num' }, mcp ? ['castle_quote', h('span', { text: 'the castle’s MCP tool · good 30 s' })] : [q.name || S.config.quoteName || 'quote.feefifofum.eth', h('span', { text: 'ENS · CCIP-Read · good 30 s' })]),
+          q.key && !mcp ? h('div', { class: 'seal num', text: 'text record ' + q.key }) : null,
+          h('ol', { class: 'steps', 'aria-label': 'How the price was found' }, mcp ? [
+            h('li', { text: asker(q) + ' asks the castle’s castle_quote tool' }), h('li', { text: 'fee prices it; fi signs the quote' }),
+            h('li', { text: 'the router checks fi’s seal and the expiry when it fills' })] : [
+            h('li', { text: asker(q) + ' asks the name' }), h('li', { text: 'the resolver reverts OffchainLookup: ask the gateway' }),
+            h('li', { text: 'the gateway answers; fi signs the quote' }), h('li', { text: 'the resolver checks fi’s seal and the expiry' })]),
+          h('div', { class: 'deal num' }, [asker(q) + ' pays ', h('b', { text: money(q.amountIn, q.tokenIn) }), ' and gets ', h('b', { text: money(q.amountOut, q.tokenOut) }),
+            h('span', { class: 'by', text: fx(rate(q)) + ' USDC per WETH, from ' + nameOf(q.strategy) })]),
+          exp,
+          h('div', { class: 'seal num' }, ['signed by fi ' + short(q.signerAddr) + (q.digest ? ' · digest ' + short(q.digest) : '') + ' · served ' + hhmmss(q.t || clock()) + ' · ', txEl(null, q)])
+        ]),
+        older.length ? h('ul', { class: 'list num' }, older.map(function (o) {
+          var fo = quoteFate(o);
+          return h('li', null, [h('span', null, [h('span', { class: 'who', text: asker(o) }), h('br'), h('span', { class: 'muted', text: money(o.amountOut, o.tokenOut) + ' for ' + money(o.amountIn, o.tokenIn) })]),
+            h('span', { class: 'amt' }, [fx(rate(o)), h('br'), h('span', { class: 'chip', 'data-s': fo.s, text: fo.s.toUpperCase() })])]);
+        })) : null
+      ]);
+    }
+    tickHarp();
+  }
+  function tickHarp() {
+    if (!HP) return;
+    var q = HP.q, fate = quoteFate(q), rem = until(q) - clock() / 1000, span = Math.max(1, until(q) - HP.t0 / 1000);
+    HP.exp.setAttribute('data-s', fate.s);
+    HP.bar.style.width = (fate.s === 'open' ? Math.max(0, Math.min(1, rem / span)) * 100 : fate.s === 'filled' ? 100 : 0).toFixed(1) + '%';
+    HP.txt.textContent = fate.s === 'open' ? 'good for ' + left(rem) : fate.s === 'filled' ? 'taken by ' + who(fate.f) + ' at ' + hhmmss(fate.f.t) : 'expired at ' + hhmmss(until(q) * 1000) + (fate.f ? '; ' + who(fate.f) + ' tried at ' + hhmmss(fate.f.t) + ' and was refused' : ', unfilled');
+  }
+
+  // the hen: every Uniswap v4 swap the hook filled from the hoard
+  var drawnHen = '';
+  function drawHen() {
+    var eggs = S.fills.filter(function (f) { return f.route === 'v4' && f.status !== 'reverted'; }), el = R('hen');
+    var key = eggs.length + '|' + S.intents.length + S.mode;
+    if (key === drawnHen) return;
+    drawnHen = key;
+    if (!eggs.length) {
+      fill(el, h('div', { class: 'hen-top' }, [vignette('hen', 'big'), h('p', { class: 'empty', text: 'No swap has come to the pool yet. When one does, the hook fills it from the hen, at the curve’s price, in the swap’s own transaction.' })]));
+      return;
+    }
+    var f = eggs[eggs.length - 1], it = null;
+    for (var i = S.intents.length - 1; i >= 0 && !it; i--) if (f.intentId && S.intents[i].id === f.intentId) it = S.intents[i];
+    var got = {}, paid = {};
+    TOK.forEach(function (s) { got[s] = Z; paid[s] = Z; });
+    eggs.forEach(function (e) { paid[e.tokenIn] = (paid[e.tokenIn] || Z) + big(e.amountIn); got[e.tokenOut] = (got[e.tokenOut] || Z) + big(e.amountOut); });
+    function str(b) { var o = {}; for (var k in b) o[k] = b[k].toString(); return bagStr(o); }
+    var feeTxt = f.fee ? bagStr(f.fee) : null;
+    fill(el, [
+      h('div', { class: 'card' }, [
+        h('div', { class: 'hen-top' }, [vignette('hen', 'sm'), h('div', { class: 'eggs', 'aria-label': plural(eggs.length, 'swap') + ' filled just in time' }, eggs.slice(-14).map(function () { return egg(); }))]),
+        h('div', { class: 'deal num' }, [who(f) + ' paid ', h('b', { text: money(f.amountIn, f.tokenIn) }), h('span', { class: 'by', text: 'and got ' + money(f.amountOut, f.tokenOut) + ' at ' + fx(rate(f)) + ' USDC per WETH' + (feeTxt ? ', the hen’s fee ' + feeTxt + ' included' : '') })]),
+        h('div', { class: 'delta num' }, ['The hoard: ', h('span', { class: 'p', text: '+' + money(f.amountIn, f.tokenIn) }), ', ', h('span', { class: 'm', text: '−' + money(f.amountOut, f.tokenOut) })]),
+        h('div', { class: 'seal num' }, ['one tx: the v4 swap, and Aqua’s pull from the castle and push into it · ' + (it ? 'fo sent it from a ' + (it.source || '') + '-style order · ' : '') + hhmmss(f.t) + ' · ', txEl(f.tx, f)])
+      ]),
+      h('p', { class: 'note num', text: plural(eggs.length, 'swap') + ' filled just in time. Swappers paid ' + str(paid) + ' and got ' + str(got) + '.' })
+    ]);
+  }
+
+  function txEl(tx, ev) {
+    if (!tx) return h('span', { class: 'muted', text: !ev || ev.type === 'fill' ? '—' : ev.type === 'allocation.refused' ? 'refused in simulation, never sent' : 'off-chain, no gas' });
+    if (S.mode === 'mock') return h('span', { class: 'tx num', title: 'Mock data: not a real transaction' }, [short(tx), h('em', { text: 'mock' })]);
+    if (!S.config.explorer) return h('span', { class: 'tx num', text: short(tx) });
+    return h('a', { class: 'tx num', href: S.config.explorer + '/tx/' + tx, target: '_blank', rel: 'noopener' }, short(tx));
+  }
+
+  var drawnFor = null, drawnId = 0, nodes = {};
+  function sceneEl(sc) {
+    var ev = sc.ev;
+    var gloss = sc.gl.filter(Boolean).map(function (x, i) { return h('div', null, i === 0 ? h('b', { text: x }) : x); });
+    var meta = h('div', { class: 'gl num' }, [hhmmss(ev.t || clock()), ev.block ? ' · block ' + ev.block : '', ' · ', txEl(ev.tx, ev)]);
+    return h('div', { class: 'scene', 'data-tone': sc.tone || null }, [
+      h('div', { class: 'ti', role: 'img', 'aria-label': sc.ti }, sc.ti.split(' ').map(function (w) { return letters(w, true); })),
+      vignette(sc.v), h('div', { class: 'gl' }, gloss), meta
+    ]);
+  }
+  function drawFrieze() {
+    var el = R('frieze');
+    if (drawnFor !== S) { el.replaceChildren(); drawnFor = S; drawnId = 0; nodes = {}; }
+    if (S.redraw && nodes[S.redraw] && nodes[S.redraw].parentNode) {
+      var sc0 = S.scenes[S.scenes.length - 1], nn = sceneEl(sc0);
+      nn.style.animation = 'none'; nodes[S.redraw].replaceWith(nn); nodes[S.redraw] = nn;
+    }
+    S.redraw = 0;
+    S.scenes.forEach(function (sc) {
+      if (sc.id <= drawnId) return;
+      drawnId = sc.id;
+      el.insertBefore(nodes[sc.id] = sceneEl(sc), el.firstChild);
+    });
+    while (el.children.length > 40) el.removeChild(el.lastChild);
+    var n = el.children.length, t = R('unroll');
+    t.hidden = n < 2;
+    t.textContent = el.dataset.open ? 'Roll the tapestry back up' : 'Unroll the whole tapestry (' + n + ' scenes)';
+  }
+
+  function routeEl(f) {
+    if (f.route === 'v4') return h('span', { class: 'route' }, [egg(), 'the hen, v4 hook']);
+    var st = strat(f.strategy);
+    return h('span', { class: 'route' }, [h('i', { style: 'background:' + (st ? hue(st) : VC.gold) }), the(nameOf(f.strategy)) + (f.quoteId ? ', a price found by name' : '') + ', Aqua']);
+  }
+  var drawnFills = '';
+  function drawFills() {
+    var key = S.fills.length + S.mode + S.strategies.length;
+    if (drawnFills === key) return;
+    drawnFills = key;
+    var el = R('fills');
+    if (!S.fills.length) { fill(el, h('p', { class: 'empty', text: 'No Jack has traded with the giant yet.' })); return; }
+    var rows = S.fills.slice(-25).reverse().map(function (f) {
+      var bad = f.status === 'reverted';
+      return h('tr', null, [
+        h('td', { class: 'num', text: hhmmss(f.t) }),
+        h('td', { text: who(f) }),
+        h('td', null, routeEl(f)),
+        h('td', { class: 'num' }, [h('span', { class: 'u', text: 'paid ' }), money(f.amountIn, f.tokenIn)]),
+        h('td', { class: 'num' }, bad ? [h('span', { class: 'muted', text: 'nothing' }), h('div', { class: 'rv', text: 'reverted ' + revText(f.revert) })] : [h('span', { class: 'u', text: 'got ' }), money(f.amountOut, f.tokenOut)]),
+        h('td', { class: 'r num' }, bad ? '—' : [fx(rate(f)), h('span', { class: 'u', text: ' USDC/WETH' })]),
+        h('td', null, txEl(f.tx, f))
+      ]);
+    });
+    fill(el, h('table', { class: 'led' }, [
+      h('thead', null, h('tr', null, [h('th', { text: 'Time' }), h('th', { text: 'Jack' }), h('th', { text: 'Filled by' }), h('th', { text: 'Paid' }), h('th', { text: 'Got' }), h('th', { class: 'r', text: 'USDC / WETH' }), h('th', { text: 'Tx' })])),
+      h('tbody', null, rows)
+    ]));
+  }
+
+  function drawFace() {
+    var el = R('face'), last = S.fills[S.fills.length - 1], hd = S.hoard, sym = 'USDC', bal = limitOf(sym);
+    fill(el, [
+      h('div', { class: 'f1' }, [letters('fee·fi·fo·fum'), R('src').cloneNode(true)]),
+      hd ? h('div', { class: 'f2 num', text: money(hd.USDC, 'USDC') + ' · ' + money(hd.WETH, 'WETH') }) : null,
+      h('div', { class: 'bar' }, live().map(function (st) { return h('i', { style: 'background:' + hue(st) + ';width:' + (bal > Z ? Number(bag(st.alloc, sym)) / Number(bal) * 100 : 0).toFixed(1) + '%' }); })),
+      h('div', { class: 'f3 num' }, [h('b', { text: fx(overX(), 2) + '×' }), ' the hoard promised to ' + strategies(live().length) + (S.refusals.length ? ' · ' + S.refusals.length + ' refused' : '')]),
+      last ? h('div', { class: 'f4 num', text: 'Last: ' + who(last) + (last.status === 'reverted' ? ' was refused' : ' paid ' + money(last.amountIn, last.tokenIn) + (last.route === 'v4' ? ' on v4' : '')) }) : null
+    ]);
+  }
+
+  function drawHeader() {
+    var m = S.mode, src = R('src');
+    src.setAttribute('data-m', m);
+    R('srcTxt').textContent = m === 'live' ? 'Live from the castle' : m === 'mock' ? 'Mock stream · synthetic' : 'Connecting';
+    R('ens').textContent = S.config.quoteName || 'quote.feefifofum.eth';
+  }
+
+  var dirty = true;
+  function render() {
+    drawHeader(); drawChant(); drawGiant(); drawGauges(); drawBargains(); drawHoard(); drawHarp(); drawHen(); drawFrieze(); drawFills(); drawFace();
+    dirty = false;
+  }
+
+  // ---------------------------------------------------------------- sources
+  var TYPES = ['snapshot', 'hoard', 'price', 'leverage.set', 'strategy.shipped', 'strategy.docked', 'cap.set', 'allocation.refused', 'quote.served', 'intent.routed', 'fill', 'agent'];
+  function feed(ev) { if (!ev || !ev.type) return; apply(ev); dirty = true; }
+
+  var es = null, liveOk = 0, MOCK = null;
+  function base() { return String(CONFIG.stream).replace(/\/$/, '').replace(/\/stream$/, ''); }
+  // The service went quiet: play the labelled mock, and keep asking the service to come back.
+  function fallBack(why) {
+    if (es) { es.close(); es = null; }
+    startMock(why + ' The mock is playing until it answers.');
+  }
+  function startLive() {
+    MOCK = null; R('mockbar').hidden = true;
+    reset('live');
+    S.config = Object.assign({}, CONFIG);
+    var got = false, mine = null, run = S;
+    liveOk = clock();
+    // The snapshot gives config, the crew and the hoard; the stream from seq 0 then retells the whole tale in order.
+    state().then(function (snap) {
+      if (S !== run) return;
+      // A service still telling the lease edition's tale (stream v1) has no hoard to show: play the mock and keep asking.
+      if (!snap || snap.v !== 2) { fallBack('The castle service speaks an older tale.'); return; }
+      feed(Object.assign({}, snap, { type: 'snapshot', quotes: [], fills: [], refusals: [], intents: [], strategies: [] }));
+      S.scenes = [];
+      try { mine = es = new EventSource(base() + '/stream?since=0'); } catch (e) { fallBack('The castle service could not be reached.'); return; }
+      function on(e) { got = true; liveOk = clock(); try { var ev = JSON.parse(e.data); if (ev.type !== 'snapshot') feed(ev); } catch (x) { /* a malformed frame is skipped, not fatal */ } }
+      TYPES.forEach(function (t) { es.addEventListener(t, on); });
+      es.onmessage = on;
+      es.onopen = function () { got = true; liveOk = clock(); };
+    }, function () { if (S === run) fallBack('The castle service did not answer.'); });
+    setTimeout(function () { if (S === run && !got && (!es || es === mine)) fallBack('The castle service did not answer.'); }, 15000);
+  }
+  function state() { return fetch(base() + '/state').then(function (r) { if (!r.ok) throw new Error('state ' + r.status); return r.json(); }); }
+  // Balances and fee's price are refreshed from the snapshot too, in case a hoard event was missed.
+  function liveHoard() {
+    if (!es || S.mode !== 'live') return;
+    var run = S;
+    state().then(function (snap) {
+      if (S !== run) return;
+      if (snap.hoard) S.hoard = snap.hoard;
+      if (snap.price) S.price = snap.price;
+      dirty = true;
+    }, function () { /* the watchdog decides */ });
+  }
+  // The service closes each SSE response every few seconds and the browser reconnects; only a long silence counts.
+  function liveWatch() {
+    if (CONFIG && CONFIG.stream && S.mode === 'mock' && MOCK && MOCK.why && ++retries % 6 === 0) state().then(function (snap) { if (snap && snap.v === 2 && S.mode === 'mock') startLive(); }, function () {});
+    if (!es || S.mode !== 'live') return;
+    if (es.readyState === 1) liveOk = clock();
+    else if (clock() - liveOk > 25000) fallBack('The castle service went quiet.');
+  }
+  var retries = 0;
+
+  // ---------------------------------------------------------------- the mock: the demo on a loop
+  // It follows docs/SPEC.md's demo. Every fill moves the hoard and its strategy's promise by exactly what the Jack
+  // paid and got, so the gauge, the hoard and the ledger always agree. Quotes keep SPEC's 30 s life.
+  function startMock(why) {
+    if (es) { es.close(); es = null; }
+    reset('mock');
+    var T = [], beats = [], seed = 7, t0 = clock(), B0 = 9412000;
+    function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+    function hx(n) { var s = '0x'; for (var i = 0; i < n; i++) s += '0123456789abcdef'[Math.floor(rnd() * 16)]; return s; }
+    function W(x) { return (BigInt(Math.round(x * 1e6)) * BigInt(1e12)).toString(); }
+    function U(x) { return String(Math.round(x * 1e6)); }
+    function B(u, w) { return { USDC: U(u), WETH: W(w) }; }
+    function A(sym, x) { return sym === 'USDC' ? U(x) : W(x); }
+    function V(s) { return Math.floor(t0 / 1000 + s); }
+    function at(s, ev) { ev.tx = ev.tx === null ? null : (ev.tx || hx(64)); T.push({ at: s, ev: ev }); return ev; }
+    function beat(s, label) { beats.push({ at: s, label: label }); }
+    var hoard = { u: 965, w: 0.4 }, al = {}, sH = hx(64), sE = hx(64), pool = hx(64), fiAddr = hx(40), resolver = hx(40), agy = '0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c';
+    function ship(s, slot, hash, label, kind, u, w) { al[hash] = { u: u, w: w }; at(s, { type: 'strategy.shipped', slot: slot, hash: hash, label: label, kind: kind, alloc: B(u, w), shippedBy: 'fi' }); }
+    function quote(s, id, hash, pay, get) {
+      at(s, { type: 'quote.served', tx: null, id: id, name: 'quote.feefifofum.eth', key: 'quote:' + pay[0] + ':' + get[0] + ':' + A(pay[0], pay[1]), sender: resolver, requester: agy,
+        requesterName: 'agy.feefifofum.eth', strategy: hash, tokenIn: pay[0], tokenOut: get[0], amountIn: A(pay[0], pay[1]), amountOut: A(get[0], get[1]), validUntil: V(s + 30),
+        signer: 'fi', signerAddr: fiAddr, digest: hx(64) });
+    }
+    function fillEv(s, x) {
+      var ok = !x.revert, inU = x.pay[0] === 'USDC';
+      var ev = at(s, { type: 'fill', route: x.route || 'aqua', strategy: x.hash, quoteId: x.q || null, intentId: x.i || null, taker: agy, takerName: 'agy.feefifofum.eth',
+        tokenIn: x.pay[0], tokenOut: x.get[0], amountIn: A(x.pay[0], x.pay[1]), amountOut: A(x.get[0], x.get[1]), fee: x.fee || null, pool: x.route === 'v4' ? pool : null,
+        status: ok ? 'success' : 'reverted', revert: x.revert || null });
+      if (!ok) return;
+      var du = inU ? x.pay[1] : -x.get[1], dw = inU ? -x.get[1] : x.pay[1], a = al[x.hash];
+      hoard.u += du; hoard.w += dw;
+      if (a) { a.u += du; a.w += dw; ev.alloc = B(a.u, a.w); }
+      at(s, { type: 'hoard', tx: ev.tx, hoard: B(hoard.u, hoard.w), reason: 'fill' });
+    }
+    at(0, { type: 'snapshot', tx: null, config: { chainId: 11155111, quoteName: 'quote.feefifofum.eth', explorer: '', decimals: { USDC: 6, WETH: 18 } },
+      agents: S.order.map(function (id) { return { id: id, role: ROLE[id], alive: true }; }), hoard: B(965, 0.4), price: null, leverage: {}, caps: {}, strategies: [], quotes: [], fills: [], refusals: [], intents: [] });
+    at(2, { type: 'price', mid: '2412.50', spreadBps: 12, source: 'Chainlink ETH/USD', by: 'fee' });
+    beat(4, 'fum lets each coin be promised twice');
+    at(4, { type: 'leverage.set', token: 'USDC', bps: 20000, by: 'fum' });
+    at(4.5, { type: 'leverage.set', token: 'WETH', bps: 20000, by: 'fum' });
+    at(6, { type: 'cap.set', slot: 0, label: 'harp', cap: B(965, 0.4), by: 'fum' });
+    at(6.5, { type: 'cap.set', slot: 1, label: 'hen', cap: B(965, 0.4), by: 'fum' });
+    at(7, { type: 'cap.set', slot: 2, label: 'greedy', cap: B(965, 0.4), by: 'fum' });
+    beat(9, 'fi ships the harp and the hen: 1.6× the hoard');
+    ship(9, 0, sH, 'harp', 'PriceExtruction', 772, 0.32);
+    ship(11, 1, sE, 'hen', 'XYCSwap + flatFee', 772, 0.32);
+    beat(15, 'greedy asks 0.5× more, past fum’s line');
+    at(15, { type: 'allocation.refused', slot: 2, label: 'greedy', hash: hx(64), asked: B(482.5, 0.2), committed: B(1544, 0.64), balance: B(965, 0.4), limit: B(1930, 0.8),
+      error: 'OverAllocated', errorArgs: { token: 'USDC', committedAfter: U(2026.5), limit: U(1930) }, by: 'fi', status: 'reverted' });
+    beat(21, 'agy asks the castle’s name, and fills the price');
+    quote(21, 'q-1', sH, ['USDC', 120.77], ['WETH', 0.05]);
+    fillEv(25, { hash: sH, q: 'q-1', pay: ['USDC', 120.77], get: ['WETH', 0.05] });
+    quote(29, 'q-2', sH, ['USDC', 50], ['WETH', 0.0207]);
+    beat(34, 'fo carries an order to the hen');
+    at(34, { type: 'intent.routed', tx: null, id: 'i-1', source: 'UniswapX', swapper: agy, swapperName: 'agy.feefifofum.eth', tokenIn: 'USDC', tokenOut: 'WETH', amountIn: U(10), route: 'v4', strategy: sE, by: 'fo' });
+    fillEv(37, { route: 'v4', hash: sE, i: 'i-1', pay: ['USDC', 10], get: ['WETH', 0.00408], fee: { USDC: U(0.03) } });
+    beat(60, 'the same song, 31 s old, no longer fills');
+    fillEv(60, { hash: sH, q: 'q-2', pay: ['USDC', 50], get: ['WETH', 0.0207], revert: 'QuoteExpired(' + V(59) + ')' });
+    T.sort(function (a, b) { return a.at - b.at; });
+    T.forEach(function (x, i) { x.ev.seq = i + 1; x.ev.v = 2; x.ev.t = t0 + x.at * 1000; x.ev.block = x.ev.tx ? B0 + Math.floor(x.at / 12) : null; x.ev.src = 'mock'; });
+    MOCK = { T: T, beats: beats, i: 0, t0: t0, end: 70, why: why };
+    drawMockbar();
+  }
+  function mockTick() {
+    if (!MOCK) return;
+    var el = (clock() - MOCK.t0) / 1000;
+    while (MOCK.i < MOCK.T.length && MOCK.T[MOCK.i].at <= el) { feed(MOCK.T[MOCK.i].ev); MOCK.i++; }
+    if (el > MOCK.end) startMock(MOCK.why);
+    markBeat(el);
+  }
+  // Jump the loop to a beat: rebuild from zero with the clock moved back, so every countdown stays honest.
+  function jump(at) {
+    startMock(MOCK.why);
+    var shift = at * 1000;
+    MOCK.T.forEach(function (x) {
+      x.ev.t -= shift; if (x.ev.validUntil) x.ev.validUntil -= at;
+      if (x.ev.revert) x.ev.revert = x.ev.revert.replace(/\((\d{9,})\)/, function (m, u) { return '(' + (Number(u) - at) + ')'; });
+    });
+    MOCK.t0 -= shift;
+    mockTick();
+    dirty = true;
+  }
+  function drawMockbar() {
+    var el = R('mockbar');
+    el.hidden = false;
+    fill(el, [h('p', { class: 'mocktxt' }, [h('b', { text: 'Mock stream.' }), ' Synthetic data playing the demo on a loop, with time squeezed. Nothing here is a real transaction.' + (MOCK.why ? ' ' + MOCK.why : '')])]
+      .concat(MOCK.beats.map(function (b, i) { return h('button', { 'data-at': b.at, onclick: function () { jump(b.at); } }, (i + 1) + '. ' + b.label); }))
+      .concat([h('button', { onclick: function () { jump(0); } }, 'Start over')]));
+  }
+  var lastBeat = -1;
+  function markBeat(el) {
+    var k = -1;
+    MOCK.beats.forEach(function (b, i) { if (el >= b.at) k = i; });
+    if (k === lastBeat) return;
+    lastBeat = k;
+    var bs = R('mockbar').querySelectorAll('button[data-at]');
+    for (var i = 0; i < bs.length; i++) flag(bs[i], 'data-now', i === k);
+  }
+
+  // ---------------------------------------------------------------- sizing and the loop
+  // Width picks the layout; the card face is only for a SHORT box (a market card or a collapsed soc). A phone
+  // opening the bundle is narrow but tall, and gets the whole app in one column.
+  function size() {
+    var w = root.getBoundingClientRect().width, rn = root.getRootNode ? root.getRootNode() : null, host = rn && rn.host;
+    var boxH = host ? (host.clientHeight || (host.parentElement ? host.parentElement.clientHeight : 0)) : window.innerHeight;
+    var short = boxH > 0 && boxH < 420;
+    var sz = short && w < 268 ? 'watch' : short && w < 420 ? 'mini' : w < 720 ? 'compact' : 'full';
+    if (root.getAttribute('data-size') !== sz) { root.setAttribute('data-size', sz); dirty = true; }
+  }
+  if (typeof ResizeObserver === 'function') new ResizeObserver(size).observe(root);
+  size();
+
+  R('unroll').addEventListener('click', function () {
+    var f = R('frieze');
+    if (f.dataset.open) delete f.dataset.open; else f.dataset.open = '1';
+    R('unroll').setAttribute('aria-expanded', String(!!f.dataset.open));
+    drawFrieze();
+  });
+  root.querySelectorAll('[data-lt]').forEach(function (n) { put(n, letters(n.getAttribute('data-lt'), true)); });
+  put(R('mark'), letters('fee·fi·fo·fum'));
+  fill(R('foot'), ['The Castle on Ethereum Sepolia · 1inch Aqua + SwapVM · ENS CCIP-Read · Uniswap v4 hook', 'Event schema: miniapp/STREAM.md', 'Lettering: Almendra, SIL OFL'].map(function (t) { return h('span', { text: t }); }));
+  reset('idle');
+  buildGiant(); buildCastleArt(); buildGauges();
+
+  var visible = true;
+  if (typeof IntersectionObserver === 'function') new IntersectionObserver(function (en) { visible = en[0].isIntersecting; }).observe(root);
+  var last = 0, timer = null;
+  function frame(ts) {
+    if (!root.isConnected) { if (es) es.close(); clearInterval(timer); return; }
+    if (visible && (ts - last > 200 || dirty)) { last = ts; render(); }
+    requestAnimationFrame(frame);
+  }
+  timer = setInterval(function () { if (MOCK) mockTick(); }, 250);
+
+  var qs = '';
+  try { qs = window.location.search || ''; } catch (e) { qs = ''; }
+  if (!/[?&]mock=1/.test(qs) && CONFIG && CONFIG.stream) startLive();
+  else startMock(CONFIG ? '' : 'The castle service is not wired into this build yet.');
+  setInterval(liveWatch, 5000);
+  setInterval(liveHoard, 30000);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -4,6 +4,7 @@
 //
 //   node miniapp/build.mjs            -> miniapp/dist/fee-fi-fo-fum.html (the mock plays: no config)
 //   node miniapp/build.mjs --live     -> config from miniapp/config.json (+ addresses from contracts/deployments/sepolia.json)
+//   node miniapp/build.mjs --live --page fee-fi-fo-fum-tale -> miniapp/dist/fee-fi-fo-fum-tale.html
 //
 // esbuild comes from ESBUILD (a module path) or normal resolution; `npm i -g esbuild` is enough.
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
@@ -14,11 +15,13 @@ import vm from 'node:vm';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, '..');
 const LIVE = process.argv.includes('--live');
+// --page fee-fi-fo-fum-tale builds the tale, the storybook retelling published as a second miniapp.
+const PAGE = process.argv.includes('--page') ? process.argv[process.argv.indexOf('--page') + 1] : 'fee-fi-fo-fum';
 
 const esbuild = await import(process.env.ESBUILD ? pathToFileURL(process.env.ESBUILD).href : 'esbuild');
 const { transformSync } = esbuild.default || esbuild;
 
-let html = readFileSync(join(HERE, 'fee-fi-fo-fum.html'), 'utf8');
+let html = readFileSync(join(HERE, PAGE + '.html'), 'utf8');
 
 if (LIVE) {
   // miniapp/config.json holds what the page reads (the service URL, names, the explorer). The addresses come from the
@@ -71,7 +74,7 @@ const score = Math.max(0, 100 - blocked.length * 30 - warned.length * 5);
 console.error(`pre-flight: ${bytes} B, score ${score}/100${blocked.length ? ', blocked ' + blocked.join(' ') : ''}${warned.length ? ', warnings ' + warned.join(' ') : ''}`);
 
 mkdirSync(join(HERE, 'dist'), { recursive: true });
-const out = join(HERE, 'dist', 'fee-fi-fo-fum.html');
+const out = join(HERE, 'dist', PAGE + '.html');
 writeFileSync(out, html);
 console.log(out);
 if (blocked.length || warned.length) process.exit(1);

@@ -20,7 +20,7 @@ async function vaultRead(fn, args = []) {
 
 export const tools = {
   castle_status: {
-    description: 'The Castle now: the hoard (the vault\'s USDC and WETH), fee\'s price (mid, spread), the live SwapVM strategies (harp, the RFQ priced by fi\'s signed quotes; hen, the XYC curve the v4 hook fills from), whether each agent is alive, and the contract addresses. Read live from Ethereum Sepolia.',
+    description: 'Returns the current state of CastleVault on Ethereum Sepolia, read at call time. The result has the vault\'s USDC and WETH balances (the hoard field), the latest price that fee (the pricing agent) reported, with its mid, spread and whether it is fresh, and the active SwapVM strategies. harp is the RFQ strategy, priced from quotes that fi signs, and hen is the XYC curve that the v4 hook fills from. The result also says whether each agent has reported recently and lists the contract addresses. Use it before quoting or routing to see what the vault can fill.',
     input: {},
     run: async () => {
       const h = await head();
@@ -37,7 +37,7 @@ export const tools = {
   },
 
   castle_quote: {
-    description: 'A firm harp quote, the same JSON the ENS text record quote.feefifofum.eth serves for key "quote:<tokenIn>:<tokenOut>:<amountIn>", for agents that skip ENS. tokenIn/tokenOut are "USDC" or "WETH"; amountIn is base units as a decimal string ("1000000" is 1 USDC). The quote is priced by fee, signed by fi (EIP-712, checked on-chain by PriceExtruction), valid for 30 s, and carries takerTraitsAndData ready for router.swap. Errors name why there is no quote (fee silent, harp not shipped, allocation too small).',
+    description: 'Returns a firm quote from the RFQ strategy (harp) as the same JSON that the ENS text record of quote.feefifofum.eth returns for the key "quote:<tokenIn>:<tokenOut>:<amountIn>". Use it when you do not resolve ENS. tokenIn and tokenOut are "USDC" or "WETH", and amountIn is in base units as a decimal string ("1000000" is 1 USDC). The price comes from fee\'s latest report, fi signs the quote as an EIP-712 Quote that PriceExtruction checks on-chain, and the quote is valid for 30 seconds. It carries takerTraitsAndData for router.swap. When no quote can be given, the error says why, for example that fee has not reported a price for over 60 seconds, that harp is not shipped, or that its allocation is too small for the amount.',
     input: { tokenIn: z.string(), tokenOut: z.string(), amountIn: z.string() },
     run: async ({ tokenIn, tokenOut, amountIn }) => {
       if (!/^\d+$/.test(amountIn)) throw new Error('amountIn must be base units as a decimal string');
@@ -53,16 +53,16 @@ export const tools = {
   },
 
   castle_fill: {
-    description: 'The unsigned calls that fill a harp quote: {approve, tx} where tx is router.swap(order, tokenIn, tokenOut, amountIn, takerTraitsAndData). Sign and send them from your own wallet before the quote\'s validUntil; this tool never sends anything. With tx_hash instead: records that fill attempt, so a reverted fill (which emits no logs) still reaches the castle stream.',
+    description: 'Returns the two unsigned calls that fill a quote from castle_quote or the ENS record. approve approves the router for amountIn of tokenIn, and tx calls router.swap(order, tokenIn, tokenOut, amountIn, takerTraitsAndData). Sign and send both from your own wallet before the quote\'s validUntil. This tool never sends a transaction. If you pass tx_hash instead, the service records that fill attempt, so that a reverted fill, which emits no logs, still appears on the castle stream.',
     input: { quoteId: z.string().optional(), taker: z.string().optional(), tx_hash: z.string().optional() },
     run: async ({ quoteId, taker, tx_hash }) => {
       if (tx_hash) {
         const ev = await refusedFill(tx_hash, { quoteId: quoteId ?? null });
-        return ev ? { recorded: true, status: 'reverted', revert: ev.revert, tx: tx_hash } : { recorded: false, note: 'the tx succeeded (its fill comes from the chain) or is already recorded', tx: tx_hash };
+        return ev ? { recorded: true, status: 'reverted', revert: ev.revert, tx: tx_hash } : { recorded: false, note: 'the transaction did not revert, so its fill is read from the chain, or it is already recorded', tx: tx_hash };
       }
       if (!quoteId) throw new Error('quoteId is required (from castle_quote or the ENS record)');
       const q = quoteById(quoteId);
-      if (!q) throw new Error(`no quote ${quoteId} on this service (quotes live 30 s; ask castle_quote again)`);
+      if (!q) throw new Error(`this service has no quote ${quoteId}; quotes are kept for 30 s, so call castle_quote again`);
       const left = q.validUntil - Math.floor(Date.now() / 1000);
       if (left <= 0) throw new Error(`quote ${quoteId} expired ${-left}s ago (PriceExtruction would revert QuoteExpired)`);
       const order = { maker: q.order.maker, traits: BigInt(q.order.traits), data: q.order.data };
@@ -72,14 +72,14 @@ export const tools = {
       if (taker && isAddress(taker)) allowance = (await client.readContract({ address: q.tokenIn, abi: abi('ERC20'), functionName: 'allowance', args: [getAddress(taker), q.router] }).catch(() => null))?.toString() ?? null;
       return {
         quoteId, secondsLeft: left, amountIn: q.amountIn, amountOut: q.amountOut,
-        approve: { to: q.tokenIn, data: approve, value: '0', note: allowance != null && BigInt(allowance) >= BigInt(q.amountIn) ? 'already approved' : 'approve the router for tokenIn once' },
+        approve: { to: q.tokenIn, data: approve, value: '0', note: allowance != null && BigInt(allowance) >= BigInt(q.amountIn) ? 'the allowance already covers amountIn' : 'send this approve first, for exactly amountIn' },
         tx: { to: q.router, data, value: '0', chainId: env.chainId },
       };
     },
   },
 
   castle_allocations: {
-    description: 'The Castle\'s promises. Per strategy: its Aqua allocation (virtual balance) per token, fum\'s cap for its slot, and its fills. Per token: the vault balance, committed (the sum of live allocations), fum\'s leverage and the headroom left before a ship reverts OverAllocated. Promises may add up to more than the balance: that is shared liquidity, bounded by leverage.',
+    description: 'Returns how the vault\'s balances are allocated to its strategies. For each active strategy it gives the Aqua allocation (a virtual balance) of each token, the cap that fum (the risk agent) set for the strategy\'s slot, and the number of fills. For each token it gives the vault\'s balance, the committed amount (the sum of the active strategies\' allocations), fum\'s leverage limit in basis points, and the headroom left before a ship reverts with OverAllocated. The allocations can add up to more than the balance, because the strategies share the same liquidity up to the leverage limit.',
     input: {},
     run: async () => {
       if (!addr('castle')) throw new Error('no CastleVault in the deployments file yet');
@@ -106,7 +106,7 @@ export const tools = {
   },
 
   castle_route: {
-    description: 'fo routes a UniswapX-format order: it compares harp\'s signed quote with the v4 pool (filled just in time from the Castle\'s hen) and returns the better route with ready calldata. order: {swapper, input: {token, amount}, outputs: [{token, amount (the minimum), recipient}], deadline, nonce} in the UniswapX shape (startAmount/endAmount also accepted). Tokens are "USDC"/"WETH" or addresses. There is no UniswapX reactor on Sepolia, so the swapper signs and sends the returned calls itself.',
+    description: 'Asks fo, the routing agent, to route a UniswapX-format order. fo compares a signed quote from the RFQ strategy (harp) with the Uniswap v4 pool, which the v4 hook fills just in time from the hen strategy, and returns the route that pays more, with calldata ready to sign. order is {swapper, input: {token, amount}, outputs: [{token, amount (the minimum), recipient}], deadline, nonce} in the UniswapX shape, and startAmount and endAmount are also accepted. Tokens are "USDC", "WETH" or addresses. Sepolia has no UniswapX reactor, so the swapper signs and sends the returned calls itself.',
     input: { order: z.record(z.any()) },
     run: async ({ order }) => {
       const fo = process.env.FO_URL;

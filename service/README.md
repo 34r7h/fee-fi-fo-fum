@@ -1,79 +1,94 @@
 # castle service
 
-The Castle's front door ([docs/SPEC.md](../docs/SPEC.md), "The castle service"): the ERC-3668 gateway behind
-`quote.feefifofum.eth`, the MCP tools solvers use, and the castle stream the miniapp reads. It reads Ethereum
-Sepolia, holds fi's key to sign quotes, and holds no one else's: every tool that moves tokens returns the calls for
-the caller to sign.
+The castle service is the off-chain part of the product, described in [docs/SPEC.md](../docs/SPEC.md) under "The
+castle service". It runs the ERC-3668 gateway for `quote.feefifofum.eth`, the MCP tools that solvers call, and the
+event stream that the web app reads. It reads Ethereum Sepolia and holds one private key, fi's, which it uses only to
+sign quotes. Because it holds no other key, every tool that moves tokens returns unsigned calls for the caller to sign
+and send.
 
-**Live:** `https://handoff.lol/t/castle/`. It runs on the operator's sandbox host (helen) as systemd user services
-and is reached through the castle agent's handoff tunnel.
+The live instance is at `https://handoff.lol/t/castle/`. It runs as systemd user services on the operator's sandbox
+host (helen) and is reached through the handoff tunnel of the agent `castle`.
 
-| Route | What |
+| Route | What it does |
 |---|---|
-| `GET /ccip/{sender}/{data}.json`, `POST /ccip {sender, data}` | The ERC-3668 gateway for `quote.feefifofum.eth` (below) |
-| `POST /mcp` | MCP over Streamable HTTP (stateless): the five tools below |
-| `GET /tools`, `POST /tools/<name>` | The same tools as REST, JSON in and JSON out |
-| `GET /stream` | SSE per [miniapp/STREAM.md](../miniapp/STREAM.md) v2: `snapshot` first, then typed events, `id` = `seq`; `Last-Event-ID` resumes and `?since=0` replays |
+| `GET /ccip/{sender}/{data}.json`, `POST /ccip {sender, data}` | The ERC-3668 gateway for `quote.feefifofum.eth`, described below |
+| `POST /mcp` | MCP over Streamable HTTP (stateless), serving the five tools below |
+| `GET /tools`, `POST /tools/<name>` | The same tools over REST, with JSON in and JSON out |
+| `GET /stream` | Server-sent events as defined in [miniapp/STREAM.md](../miniapp/STREAM.md) v2. A `snapshot` comes first, then typed events whose `id` is their `seq`. `Last-Event-ID` resumes the stream, and `?since=0` replays it from the start. |
 | `GET /state` | The snapshot as JSON |
-| `GET /health` | `fiKeyLoaded` and fi's address (never the key), `foPolling`, the indexer's cursor and last error |
-| `POST /report` | A crew member's signed report (below) |
-| `GET /fo/next`, `POST /fo/answer` | fo's pull channel for `castle_route`: fo polls for the next order and posts its route, both signed by fo (`src/fo.mjs`) |
+| `GET /health` | Whether fi's key is loaded and fi's address (never the key), whether fo is polling, and the indexer's cursor and last error |
+| `POST /report` | A signed report from one of the agents, described under "The stream" |
+| `GET /fo/next`, `POST /fo/answer` | The pull channel that `castle_route` uses to reach fo. fo polls for the next order and posts its route, and both requests are signed by fo (`src/fo.mjs`). |
 
 Every route answers with `Access-Control-Allow-Origin: *`.
 
 ## The gateway
 
-A solver asks for a text record of `quote.feefifofum.eth`, for example with viem:
+A solver reads a text record of `quote.feefifofum.eth`, for example with viem's
 `getEnsText({ name: 'quote.feefifofum.eth', key: 'quote:USDC:WETH:500000', universalResolverAddress })`.
-UniversalResolverV2 reaches the OffchainQuoteResolver, which reverts `OffchainLookup` with this service's URL, and
-the gateway answers:
+UniversalResolverV2 calls the OffchainQuoteResolver, which reverts with `OffchainLookup` and this service's URL. The
+client then sends the request to the gateway, which answers according to the key.
 
 | Key | Value |
 |---|---|
-| `quote:<tokenIn>:<tokenOut>:<amountIn>` | harp's firm quote as one JSON line (tokens `USDC` or `WETH`, amounts in base units) |
+| `quote:<tokenIn>:<tokenOut>:<amountIn>` | A firm quote from the RFQ strategy (`harp`) as one JSON line. Tokens are `USDC` or `WETH`, and amounts are in base units. |
 | `castle` | The CastleVault address |
-| anything else | `404 {message}` |
+| any other key | `404 {message}` |
 
-The answer is `{data: abi.encode(bytes result, uint64 expires, bytes sig)}`, where `sig` is fi's signature over
-`keccak256(abi.encodePacked(hex"1900", resolver, expires, keccak256(callData), keccak256(result)))` (the ENS
-offchain-resolver SignatureVerifier), which the resolver checks in `resolveWithProof`. A quote is priced from fee's
-latest signed price (mid widened by fee's spread against the solver), signed by fi as an EIP-712 `Quote` under
-PriceExtruction's domain, and valid for 30 s. Before anyone sees it, the service checks it with `router.quote` and
-against harp's Aqua allocation and the vault's balance, so a quote it serves is one `router.swap` fills until
-`validUntil`. The record carries `takerTraitsAndData`, ready for `router.swap(order, tokenIn, tokenOut, amountIn,
-takerTraitsAndData)` after the solver approves the router. With fee silent for over 60 s, or harp not shipped, the
-gateway answers `503` and no quote goes out.
+The answer is `{data: abi.encode(bytes result, uint64 expires, bytes sig)}`. `sig` is fi's signature over
+`keccak256(abi.encodePacked(hex"1900", resolver, expires, keccak256(callData), keccak256(result)))`, which is the
+format of the ENS offchain resolver's SignatureVerifier, and the resolver checks it in `resolveWithProof`.
+
+The service prices each quote from the latest signed price report of fee, the agent that reads Chainlink ETH/USD and
+sets the mid price and spread. It takes the mid price and widens it by fee's spread against the solver. fi, the agent
+that signs quotes, signs the result as an EIP-712 `Quote` under PriceExtruction's domain, and the quote is valid for
+30 seconds. Before the service returns a quote, it checks the quote with `router.quote` and against harp's Aqua
+allocation and the vault's balance, so that any quote it serves can be filled with `router.swap` until `validUntil`.
+The record carries `takerTraitsAndData`, which the solver passes to
+`router.swap(order, tokenIn, tokenOut, amountIn, takerTraitsAndData)` after approving the router for `amountIn`. If
+fee has not reported a price for more than 60 seconds, or if harp is not shipped, the gateway answers `503` and serves
+no quote.
 
 ## Tools
 
-| Tool | Does |
+| Tool | What it returns |
 |---|---|
-| `castle_status` | The hoard, fee's price and whether it is fresh, the live strategies, which agents are up, the contracts |
-| `castle_quote {tokenIn, tokenOut, amountIn}` | The same JSON as the ENS record, for agents that skip ENS |
-| `castle_fill {quoteId, taker?}` | The unsigned approve and `router.swap` calls for a quote; given `tx_hash`, it records that attempt (a reverted fill emits no logs) |
-| `castle_allocations` | Per token: balance, committed, headroom, leverage. Per strategy: slot, allocation, cap, fills |
-| `castle_route {order}` | fo's route for a UniswapX-format order: harp or the v4 pool, whichever pays more, with calldata. With `FO_URL` set the service posts the order to fo's `/route`; without it, fo's poll takes the order (`GET /fo/next`, a long poll of up to 15 s) and posts the route back (`POST /fo/answer`), each signed by fo's key (EIP-191 over `castle-fo/1`, checked against `agents/crew.json`), and the tool answers within 20 s or says fo is not polling |
+| `castle_status` | The vault's USDC and WETH balances, fee's latest price and whether it is fresh, the active strategies, which agents are reporting, and the contract addresses |
+| `castle_quote {tokenIn, tokenOut, amountIn}` | The same JSON as the ENS text record, for agents that do not resolve ENS |
+| `castle_fill {quoteId, taker?}` | The unsigned approve and `router.swap` calls for a quote. Given `tx_hash` instead, it records that fill attempt, because a reverted fill emits no logs. |
+| `castle_allocations` | The balance, committed amount, headroom and leverage limit of each token, and the slot, allocation, cap and fill count of each strategy |
+| `castle_route {order}` | The route that fo chooses for a UniswapX-format order, either the RFQ strategy or the v4 pool depending on which pays more, with calldata |
+
+fo is the agent that receives UniswapX-format orders and routes each one. `castle_route` reaches fo in one of two
+ways. If `FO_URL` is set, the service posts the order to fo's `/route`. Otherwise fo polls the service with
+`GET /fo/next`, a long poll of up to 15 seconds, and posts its route back with `POST /fo/answer`. Both requests are
+signed by fo's key (EIP-191 over `castle-fo/1`) and checked against `agents/crew.json`. The tool answers within 20
+seconds, or reports that fo is not polling.
 
 ## The stream
 
-The indexer polls the chain every `CASTLE_POLL_SECONDS` for the CastleVault's events (`Shipped`, `Docked`,
-`CapSet`, `LeverageSet`), the vault's balances (deposits and withdrawals), and the router's `Swapped` events whose
-maker is the vault. A fill whose taker
-is CastleJITHook is `route: "v4"`, filled just in time from hen; any other is `route: "aqua"`. A fill is linked to
-the quote in its takerData (`quoteId`) and to the order fo routed (`intentId`). The off-chain half comes from the
-crew as signed reports: fee's `price`, fo's `intent.routed`, fi's reverted greedy ship (`allocation.refused`, the
-vault's error decoded from the tx), and liveness beats. Each report is EIP-191 by the agent's own Sepolia key,
-checked against `agents/crew.json`, at most 5 minutes old, and limited to that agent's types. Events persist to
-`$CASTLE_DATA_DIR/events-<vault>.jsonl`, so a restart resumes where it stopped and a new vault starts a new stream.
+The indexer polls the chain every `CASTLE_POLL_SECONDS` seconds. It reads the CastleVault's events (`Shipped`,
+`Docked`, `CapSet` and `LeverageSet`), the vault's token balances, which change with deposits and withdrawals, and
+the router's `Swapped` events whose maker is the vault. A fill whose taker is CastleJITHook gets `route: "v4"`,
+because the v4 hook filled it just in time from the `hen` strategy, and any other fill gets `route: "aqua"`. Each
+fill is linked to the quote named in its takerData (`quoteId`) and to the order that fo routed (`intentId`).
+
+The rest of the stream comes from the agents as signed reports. fee reports `price`, fo reports `intent.routed`, and
+fi reports a `greedy` ship that reverted as `allocation.refused`, with the vault's error decoded from the transaction.
+Every agent also sends liveness reports. Each report is signed with EIP-191 by the agent's own Sepolia key and checked
+against `agents/crew.json`. The service rejects a report that is more than 5 minutes old or whose type that agent may
+not send. Events are written to `$CASTLE_DATA_DIR/events-<vault>.jsonl`, so a restarted service resumes where it
+stopped, and a new vault address starts a new stream.
 
 ## Where values come from
 
-There is no address in the source. The service reads:
-- `contracts/deployments/sepolia.json` (`external` and `contracts`), re-read on every call;
-- `contracts/out-abi/<Name>.json`, falling back to interface fragments in `src/abi.mjs`;
-- `agents/crew.json` (the crew's addresses) and `miniapp/config.json` (display names);
-- fi's key from `CASTLE_FI_KEY_PATH`: a file holding one 0x-prefixed key, mode 0600, outside the repo;
-- env (`.env.example`).
+The source contains no addresses. The service reads its values from the following places:
+- `contracts/deployments/sepolia.json` (`external` and `contracts`), which it reads again on every call;
+- `contracts/out-abi/<Name>.json`, falling back to the interface fragments in `src/abi.mjs`;
+- `agents/crew.json` for the agents' addresses, and `miniapp/config.json` for display names;
+- fi's key from the file at `CASTLE_FI_KEY_PATH`, which holds one 0x-prefixed key, has mode 0600 and is kept outside
+  the repo;
+- the environment, as listed in `.env.example`.
 
 ## Test
 
@@ -82,23 +97,27 @@ npm test                                   # lib/ccip-sign.mjs against the contr
 node test/gateway-fork.mjs --service <url> --rpc <rpc> --deployments <file>   # a running service, end to end
 ```
 
-`agents/scripts/crew-fork.sh` runs the whole demo on an anvil fork with this service and the crew, and ends with
-`test/gateway-fork.mjs`.
+`agents/scripts/crew-fork.sh` runs the whole demo on an anvil fork with this service and the agents, and finishes by
+running `test/gateway-fork.mjs`.
 
 ## Hosting (helen)
 
-`deploy/helen/` holds the units as installed:
-- `castle-service` is the node server on `:8791`, with `~/.config/castle/castle.env` (see `castle.env.example`).
-- `castle-tunnel` is `tunnel_agent.mjs` as agent `castle`, with `LOCAL=http://localhost:8791`.
-- `castle-sync.timer` runs `git pull --ff-only` every 2 minutes and restarts the service when `service/` changes,
-  so a push to `service/` must start cleanly.
+`deploy/helen/` holds the systemd units as they are installed:
+- `castle-service` runs the node server on port 8791 with `~/.config/castle/castle.env` (see `castle.env.example`);
+- `castle-tunnel` runs `tunnel_agent.mjs` as the agent `castle`, with `LOCAL=http://localhost:8791`;
+- `castle-sync.timer` runs `sync.sh` every 2 minutes. The script updates the checkout with `git pull --ff-only` and
+  restarts the service when a file under `service/` changed, so every change to `service/` must start cleanly.
 
-The tunnel relays a response only once it has ended, so `CASTLE_SSE_WINDOW_MS=2500` closes each SSE response
-after 2.5 s. The browser's EventSource reconnects with `Last-Event-ID` and gets every event in order, in batches
-of up to 2.5 s.
+During judging, the checkout on helen follows the tag `live-run` instead of `main` (WORKLOG, Sat 13:17Z), so a change
+to `service/` reaches the live service only after that tag moves.
+
+The tunnel relays a response only after the response has ended, so `CASTLE_SSE_WINDOW_MS=2500` closes each SSE
+response after 2.5 seconds. The browser's EventSource then reconnects with `Last-Event-ID` and receives every event
+in order, in batches of up to 2.5 seconds.
 
 ```sh
 cd service && npm ci && SEPOLIA_RPC_URL=… CASTLE_FI_KEY_PATH=… node src/server.mjs
 ```
 
-The lease edition's service (lease, CCA and crew tools, stream v1) is at tag `lease-edition`.
+The service of the earlier lease edition, with the lease, CCA and crew tools and stream v1, is at tag
+`lease-edition`.

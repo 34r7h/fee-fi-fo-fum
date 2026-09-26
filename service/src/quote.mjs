@@ -40,12 +40,12 @@ export function priceQ96For(symIn, mid, spreadBps) {
   return (Q96 * m * (10_000n - s)) / (10n ** 20n * 10_000n);
 }
 
-// fee's price, as fee last reported it (signed). Stale means fee is down, and the harp stays silent.
+// fee's price, as fee last reported it (signed). A price older than FEE_STALE_MS means fee is down, and no quote is served.
 export function feePrice() {
   const p = view().price;
   if (!p || !p.mid) return { ok: false, error: 'fee has not reported a price yet' };
   const age = Date.now() - (p.t ?? 0);
-  if (age > FEE_STALE_MS) return { ok: false, error: `fee's price is ${Math.round(age / 1000)}s old (fee is silent; limit ${FEE_STALE_MS / 1000}s)` };
+  if (age > FEE_STALE_MS) return { ok: false, error: `fee's latest price is ${Math.round(age / 1000)} s old, and a quote needs one under ${FEE_STALE_MS / 1000} s old` };
   return { ok: true, ...p };
 }
 
@@ -75,7 +75,7 @@ let n = 0;
 export async function harpQuote({ tokenIn: symIn, tokenOut: symOut, amountIn }) {
   symIn = String(symIn).toUpperCase(); symOut = String(symOut).toUpperCase();
   const tokenIn = tokenAddr(symIn), tokenOut = tokenAddr(symOut);
-  if (!tokenIn || !tokenOut || tokenIn === tokenOut) return { ok: false, status: 400, error: 'tokens must be USDC and WETH, one each way' };
+  if (!tokenIn || !tokenOut || tokenIn === tokenOut) return { ok: false, status: 400, error: 'tokenIn and tokenOut must be USDC and WETH, one of each' };
   const amt = BigInt(amountIn);
   if (amt <= 0n) return { ok: false, status: 400, error: 'amountIn must be above zero' };
   const router = addr('router'), priceEx = addr('priceExtruction');
@@ -102,16 +102,16 @@ export async function harpQuote({ tokenIn: symIn, tokenOut: symOut, amountIn }) 
   } catch (e) {
     const raw = e?.walk?.((x) => typeof x?.data === 'string')?.data;
     forgetHarp();
-    return { ok: false, status: 422, error: `the router refuses this quote: ${raw ? decodeRevert(raw) : e?.shortMessage || e?.message}` };
+    return { ok: false, status: 422, error: `router.quote reverted for this quote: ${raw ? decodeRevert(raw) : e?.shortMessage || e?.message}` };
   }
   if (checked !== amountOut) return { ok: false, status: 500, error: `router.quote pays ${checked}, the record says ${amountOut}` };
-  // router.quote never touches the maker's wallet: a quote past harp's allocation or the hoard passes there and
-  // reverts in swap. Refuse it now instead.
+  // router.quote does not read the maker's balances, so a quote larger than harp's allocation or the vault's balance
+  // would pass it and then revert in swap. Such a quote is rejected here.
   const [[alloc], held] = await Promise.all([
     client.readContract({ address: addr('aqua'), abi: abi('Aqua'), functionName: 'rawBalances', args: [h.order.maker, router, h.hash, tokenOut] }),
     client.readContract({ address: tokenOut, abi: abi('ERC20'), functionName: 'balanceOf', args: [h.order.maker] }),
   ]);
-  if (amountOut > alloc || amountOut > held) return { ok: false, status: 422, error: `harp can pay at most ${alloc < held ? alloc : held} ${symOut} (allocation ${alloc}, hoard ${held}); this quote needs ${amountOut}` };
+  if (amountOut > alloc || amountOut > held) return { ok: false, status: 422, error: `harp can pay at most ${alloc < held ? alloc : held} ${symOut} (its Aqua allocation is ${alloc} and the vault holds ${held}), and this quote needs ${amountOut}` };
 
   const price = priceOf(symIn, amt, amountOut);
   recent.set(id, { ...record, symIn, symOut, price });

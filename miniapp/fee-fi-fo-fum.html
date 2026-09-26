@@ -1,14 +1,15 @@
 <!doctype html>
 <!--
-  fee-fi-fo-fum: one hoard, every market. The dapp.
+  fee-fi-fo-fum: the dapp for the feefifofum vault on Ethereum Sepolia.
 
-  Trade with the giant from your own wallet on Ethereum Sepolia. The Castle keeps one hoard, a 1inch Aqua maker, and its
-  one balance backs every strategy at once. Ask the harp for a price by its ENS name (quote.feefifofum.eth, CCIP-Read,
-  straight from this page) and fill it through the SwapVM router, or swap on the hen, the castle's Uniswap v4 pool,
-  which the hook fills from the hoard in your swap's own transaction. fo compares the two for you.
+  CastleVault is a 1inch Aqua maker whose single USDC/WETH balance backs every strategy it ships. This page lets a wallet
+  trade against two of them. The RFQ strategy (harp, slot 0) sells at a price the signer fi signs; the page reads that
+  quote from the ENS name quote.feefifofum.eth through CCIP-Read and fills it through the SwapVM router. The hook strategy
+  (hen, slot 1) fills swaps in a Uniswap v4 pool from the vault inside the swap transaction; the page quotes it with the
+  V4Quoter and swaps through PoolSwapTest. The router agent fo's comparison of the two quotes is shown for each amount.
 
-  Nothing here is mocked: every number is read from the chain or the castle service, and every action is a transaction
-  your wallet signs, linked to Etherscan. The storybook retelling is the second miniapp, fee-fi-fo-fum-tale.
+  Every figure is read from Sepolia or the vault service (/state), and every action is a transaction the connected
+  wallet signs, with an Etherscan link. The replay of the live run is the second miniapp, fee-fi-fo-fum-tale.
 
   Constraints: one classic script (the site runs it inside a shadow root with a proxied `document`), no ES modules,
   no innerHTML, no browser storage, nothing positioned fixed, sized by its own container.
@@ -185,32 +186,32 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   <div class="wrap">
     <header class="top">
       <div class="mark" data-r="mark"></div>
-      <span class="tag">One hoard, every market.</span>
+      <span class="tag">A 1inch Aqua vault on Sepolia, with an RFQ strategy and a Uniswap v4 hook</span>
       <span class="sp"></span>
       <span class="net" data-r="net">Sepolia</span>
       <span class="who num" data-r="who"></span>
-      <a class="tale" href="https://handoff.lol/app/impecc/fee-fi-fo-fum-tale">Read the tale</a>
+      <a class="tale" href="https://handoff.lol/app/impecc/fee-fi-fo-fum-tale">Live-run replay</a>
     </header>
-    <p class="lede">Trade with the giant from your own wallet. <b>One hoard</b> in the Castle backs every price at once. Ask <b>the harp</b> for a firm price by its ENS name and fill it, or swap on <b>the hen</b>, a Uniswap v4 pool the castle fills just in time. <b>fo</b> tells you which pays more. Everything below is read from Ethereum Sepolia or sent from your wallet.</p>
+    <p class="lede">This page trades USDC and WETH against the feefifofum vault on Ethereum Sepolia from your own wallet. The vault (CastleVault, a 1inch Aqua maker) holds one balance that backs two strategies at once. The RFQ strategy, called harp, sells at a price signed by the agent fi; the page reads the signed quote from the ENS name quote.feefifofum.eth through CCIP-Read and fills it through the SwapVM router. The hook strategy, called hen, fills swaps in a Uniswap v4 pool from the vault balance inside the swap transaction. The router agent fo compares both quotes for the amount you enter. Every figure is read from Sepolia or the vault service, and every action is a transaction from your wallet.</p>
 
     <div class="band" aria-hidden="true"></div>
 
     <div class="main">
-      <section class="panel" aria-label="Your purse">
-        <h2 class="reg" data-lt="YOUR PURSE"></h2>
+      <section class="panel" aria-label="Your wallet">
+        <h2 class="reg" data-lt="YOUR WALLET"></h2>
         <div data-r="purse"></div>
         <div class="gold-box" data-r="gold"></div>
       </section>
-      <section class="panel" aria-label="The castle">
-        <h2 class="reg" data-lt="THE CASTLE"></h2>
+      <section class="panel" aria-label="The vault">
+        <h2 class="reg" data-lt="THE VAULT"></h2>
         <div data-r="castle"></div>
       </section>
     </div>
 
     <div class="band" aria-hidden="true"></div>
 
-    <section aria-label="Trade with the giant">
-      <h2 class="reg" data-lt="TRADE WITH THE GIANT"></h2>
+    <section aria-label="Swap">
+      <h2 class="reg" data-lt="SWAP"></h2>
       <div class="tradebar num">
         <label for="fff-amt">You pay</label>
         <input class="amt-in" id="fff-amt" data-r="amt" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="0.25" aria-label="Amount you pay">
@@ -222,8 +223,8 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       </div>
       <div class="fo" data-r="fo" aria-live="polite"></div>
       <div class="two">
-        <div class="card" data-r="harp" aria-label="The harp"></div>
-        <div class="card" data-r="hen" aria-label="The hen"></div>
+        <div class="card" data-r="harp" aria-label="Harp, the RFQ strategy"></div>
+        <div class="card" data-r="hen" aria-label="Hen, the Uniswap v4 hook strategy"></div>
       </div>
     </section>
 
@@ -461,28 +462,28 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   }
   function nameMe() { if (LIB && LIB.nameOf && W.addr) { var a = W.addr; LIB.nameOf(a).then(function (n) { if (same(a, W.addr)) { W.ens = n || null; dirty = true; } }, function () {}); } }
 
-  // Errors in plain words. The wallet's code first, then the castle's own error names through the module.
+  // Errors in plain words: the wallet's error code first, then the contracts' error names decoded by the module.
   function plain(e) {
     var m = String((e && (e.shortMessage || e.message || e.reason)) || e || ''), c = e && e.code;
     if (c === 4001 || c === 'ACTION_REJECTED' || /user (rejected|denied)|rejected the request/i.test(m)) return 'You turned it down in your wallet. Nothing was sent.';
-    if (/insufficient funds/i.test(m)) return 'Not enough Sepolia ETH for gas. The faucets under your purse have some.';
+    if (/insufficient funds/i.test(m)) return 'Not enough Sepolia ETH for gas. The faucets listed under your wallet balances provide it.';
     var d = null;
     try { d = LIB && LIB.decodeError ? LIB.decodeError(e) : null; } catch (x) { d = null; }
     if (d) {
-      if (/^QuoteExpired/.test(d)) return 'The harp’s song ran out: a price lasts 30 s. Ask again.';
+      if (/^QuoteExpired/.test(d)) return 'The quote expired. RFQ quotes are valid for 30 s; get a new quote.';
       if (/allowance/i.test(d)) return 'The allowance is too small. Approve first.';
-      if (/balance|exceeds/i.test(d)) return 'Not enough in your purse for that.';
-      return 'The castle refused: ' + d + '.';
+      if (/balance|exceeds/i.test(d)) return 'Your wallet balance is too low for this amount.';
+      return 'The transaction would revert: ' + d + '.';
     }
     return m.replace(/^Error:\s*/, '').slice(0, 220) || 'Something went wrong.';
   }
 
-  // ---------------------------------------------------------------- the castle: vault views and the service's /state
+  // ---------------------------------------------------------------- the vault: on-chain views and the vault service's /state
   var K = { state: null, vault: null, err: null, at: 0 };
   function base() { return String(C.stream || '').replace(/\/$/, '').replace(/\/stream$/, ''); }
   function refreshCastle() {
     if (C.stream) fetch(base() + '/state').then(function (r) { if (!r.ok) throw new Error('state ' + r.status); return r.json(); })
-      .then(function (s) { K.state = s; K.at = Date.now(); K.err = null; dirty = true; }, function () { K.err = 'The castle service did not answer; the vault figures below come from the chain.'; dirty = true; });
+      .then(function (s) { K.state = s; K.at = Date.now(); K.err = null; dirty = true; }, function () { K.err = 'The vault service did not answer, so the figures below come from the chain only.'; dirty = true; });
     if (LIB && LIB.vault) LIB.vault().then(function (v) { K.vault = v; dirty = true; }, function (e) { console.warn('fee-fi-fo-fum: vault read failed: ' + e.message); });
   }
   function liveStrats() { var s = K.state && K.state.strategies || []; return s.filter(function (x) { return !x.docked; }); }
@@ -492,7 +493,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   function limit(sym) { if (K.vault && K.vault.limit) return bag(K.vault.limit, sym); return hoard(sym) * levBps(sym) / BigInt(10000); }
   function stratByLabel(l) { var s = liveStrats(); for (var i = s.length - 1; i >= 0; i--) if (s[i].label === l) return s[i]; return null; }
 
-  // ---------------------------------------------------------------- the trade: one amount, one direction, two treasures
+  // ---------------------------------------------------------------- the trade: one amount and direction, quoted by both strategies
   var T = { tin: 'USDC', gen: 0, harp: { s: 'idle' }, hen: { s: 'idle' }, flow: null };
   var trades = { mine: [] };
   function tout() { return T.tin === 'USDC' ? 'WETH' : 'USDC'; }
@@ -515,16 +516,31 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   }
   function harpWhy(e) {
     var m = plain(e);
-    return /revert|resolve|lookup|gateway|null|empty/i.test(m) ? 'The harp did not sing for that amount: ' + m + ' The harp can only sell what it holds.' : m;
+    return /revert|resolve|lookup|gateway|null|empty/i.test(m) ? 'The RFQ strategy returned no quote for this amount (' + m.replace(/\.$/, '') + '). It can sell only up to its allocation.' : m;
   }
-  function quoteHen() {
-    var a = amountIn(), g = T.gen, tin = T.tin;
+  // After each hen swap fi docks the hen and ships it re-priced a block or two later; in between the v4 quoter reverts
+  // with UnexpectedRevertBytes (0x6190b2b0). The card says so and asks again every 4 s until the new hen answers.
+  function quoteHen(retry) {
+    var a = amountIn(), g = T.gen, tin = T.tin, n = typeof retry === 'number' ? retry : 0;
     if (!a) { T.hen = { s: 'idle' }; dirty = true; return; }
     if (!LIB) { T.hen = { s: 'err', err: 'The browser module for the v4 quote is missing from this build.' }; dirty = true; return; }
-    T.hen = { s: 'asking' }; dirty = true;
+    if (!n) { T.hen = { s: 'asking' }; dirty = true; }
     LIB.henQuote(tin, a.toString()).then(function (out) {
       if (g === T.gen) { T.hen = { s: 'ready', out: big(out), amountIn: a, tin: tin }; dirty = true; }
-    }, function (e) { if (g === T.gen) { T.hen = { s: 'err', err: 'The hen cannot fill that: ' + plain(e) }; dirty = true; } });
+    }, function (e) {
+      if (g !== T.gen) return;
+      if (henAway(e) && n < 30) {
+        T.hen = { s: 'restock' }; dirty = true;
+        setTimeout(function () { if (g === T.gen) { refreshCastle(); quoteHen(n + 1); } }, 4000);
+        return;
+      }
+      T.hen = { s: 'err', err: 'The v4 pool cannot fill this amount. ' + plain(e) }; dirty = true;
+    });
+  }
+  function henAway(e) {
+    var d = null;
+    try { d = LIB.decodeError(e); } catch (x) { d = null; }
+    return /0x6190b2b0/i.test(d || '') || !!(K.state && !stratByLabel('hen'));
   }
   function secsLeft(q) { return Number(q.validUntil) - Date.now() / 1000; }
 
@@ -558,13 +574,13 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   function fillHarp() {
     var hp = T.harp, a = amountIn();
     if (hp.s !== 'ready' || !a) return;
-    if (secsLeft(hp.q) < 8) { T.harp = { s: 'err', err: 'The harp’s song ran out: a price lasts 30 s. Ask again.' }; dirty = true; return; }
+    if (secsLeft(hp.q) < 8) { T.harp = { s: 'err', err: 'The quote expired. RFQ quotes are valid for 30 s; get a new quote.' }; dirty = true; return; }
     var tin = T.tin, to = tout();
     T.flow = { kind: 'harp', steps: [], err: null }; dirty = true;
     Promise.resolve(LIB.harpCalls(hp.q, W.addr)).then(function (calls) { run('harp', calls, function (st) {
       // The approve took a few blocks: if the price is near its end, ask the harp again before the fill.
       if (st.label !== 'fill' || secsLeft(T.harp.q || hp.q) >= 15) return null;
-      T.flow.note = 'The first price ran out while the approve was mined, so the harp was asked again.';
+      T.flow.note = 'The first quote expired while the approval was being mined, so the page fetched a new quote before the fill.';
       return LIB.askHarp(tin, to, a.toString()).then(function (q) {
         var rec = q.record || q;
         T.harp = { s: 'ready', q: rec, text: q.text, key: hp.key, at: Date.now() };
@@ -584,7 +600,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       run('hen', calls, null, function (F, before, after) { addTrade('hen', F, tin, to, before, after, { expectIn: a, expectOut: hn.out }); });
     }, function (e) { T.flow = { kind: 'hen', steps: [], err: plain(e) }; dirty = true; });
   }
-  // After a trade, the price the page showed is spent: ask both treasures again for the next one.
+  // After a trade the shown quotes are stale, so both strategies are quoted again.
   function requote() { T.gen++; var g = T.gen; setTimeout(function () { if (g === T.gen) { askHarp(); quoteHen(); } }, 2500); }
   function addTrade(kind, F, tin, to, before, after, x) {
     var last = F.steps[F.steps.length - 1];
@@ -611,15 +627,15 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   function drawPurse() {
     var b = W.bal;
     once('purse', JSON.stringify([W.addr, W.chain, W.err, b && [String(b.ETH), String(b.USDC), String(b.WETH)], !!(W.eth || wallet())]), function (el) {
-      var kids = [h('div', { class: 'art' }, [vignette('purse', 'sm'), h('p', { class: 'note', text: W.addr ? 'Your wallet, as Sepolia sees it.' : 'Connect a wallet to trade. Asking the harp and the hen for a price needs no wallet.' })])];
+      var kids = [h('div', { class: 'art' }, [vignette('purse', 'sm'), h('p', { class: 'note', text: W.addr ? 'Balances of the connected wallet on Sepolia.' : 'Connect a wallet to trade. Quotes from both strategies load without a wallet.' })])];
       if (!W.addr) {
         kids.push(h('div', { class: 'btns' }, [h('button', { class: 'btn gold', type: 'button', text: 'Connect a wallet', onclick: connect })]));
       } else {
         kids.push(h('div', { class: 'rows num' }, [
-          h('div', { class: 'row' }, [h('span', { class: 'k' }, ['You', h('span', { class: 'sub', text: W.ens || 'no ENS name' })]), h('span', { class: 'v' }, addrLink(W.addr))]),
+          h('div', { class: 'row' }, [h('span', { class: 'k' }, ['Address', h('span', { class: 'sub', text: W.ens || 'no ENS name' })]), h('span', { class: 'v' }, addrLink(W.addr))]),
           purseRow('ETH', 'for gas'), purseRow('USDC', 'Circle USDC'), purseRow('WETH', 'wrapped ETH')
         ]));
-        if (W.chain !== CHAIN) kids.push(h('p', { class: 'err', text: 'Your wallet is on another network. The castle lives on Sepolia.' }), h('div', { class: 'btns' }, [h('button', { class: 'btn', type: 'button', text: 'Switch to Sepolia', onclick: switchChain })]));
+        if (W.chain !== CHAIN) kids.push(h('p', { class: 'err', text: 'Your wallet is on another network. The vault is deployed on Sepolia.' }), h('div', { class: 'btns' }, [h('button', { class: 'btn', type: 'button', text: 'Switch to Sepolia', onclick: switchChain })]));
       }
       if (W.err) kids.push(h('p', { class: 'err', text: W.err }));
       fill(el, kids);
@@ -635,10 +651,10 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     once('gold', JSON.stringify([W.addr, W.chain, f && f.steps.map(function (s) { return s.s + s.hash; }), f && f.err]), function (el) {
       var input = h('input', { class: 'amt-in', type: 'text', inputmode: 'decimal', value: '0.001', 'aria-label': 'ETH to wrap' });
       fill(el, [
-        h('div', null, [h('b', { text: 'Need test gold? ' }), 'Sepolia ETH pays for gas: ',
-          h('a', { href: 'https://cloud.google.com/application/web3/faucet/ethereum/sepolia', target: '_blank', rel: 'noopener', text: 'Google’s faucet' }), ' or ',
-          h('a', { href: 'https://www.alchemy.com/faucets/ethereum-sepolia', target: '_blank', rel: 'noopener', text: 'Alchemy’s' }), '. Test USDC: ',
-          h('a', { href: 'https://faucet.circle.com', target: '_blank', rel: 'noopener', text: 'Circle’s faucet' }), ' (pick Ethereum Sepolia).']),
+        h('div', null, [h('b', { text: 'Test tokens. ' }), 'Gas is paid in Sepolia ETH, available from ',
+          h('a', { href: 'https://cloud.google.com/application/web3/faucet/ethereum/sepolia', target: '_blank', rel: 'noopener', text: 'Google’s faucet' }), ' and ',
+          h('a', { href: 'https://www.alchemy.com/faucets/ethereum-sepolia', target: '_blank', rel: 'noopener', text: 'Alchemy’s' }), '. Test USDC comes from ',
+          h('a', { href: 'https://faucet.circle.com', target: '_blank', rel: 'noopener', text: 'Circle’s faucet' }), ' (choose Ethereum Sepolia), and WETH comes from wrapping ETH below.']),
         h('div', { class: 'btns num' }, ['Wrap ', input, ' ETH into WETH ', h('button', { class: 'btn ghost sm', type: 'button', text: 'Wrap', disabled: !onSepolia() || (f && !f.done && !f.err),
           onclick: function () {
             var v = parseAmt(input.value, 'ETH');
@@ -657,29 +673,29 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     function P(v) { return (Number(v) / sc * 100).toFixed(2) + '%'; }
     var harp = stratByLabel('harp'), hen = stratByLabel('hen'), a = harp ? bag(harp.alloc, sym) : Z, b = hen ? bag(hen.alloc, sym) : Z;
     return h('div', { class: 'meter num' }, [
-      h('div', { class: 'mh' }, [h('b', { text: sym }), h('span', null, [h('b', { text: amt(com, sym) }), ' promised of ', amt(lim, sym), ' (fum’s line, ' + fx(Number(levBps(sym)) / 10000, Number(levBps(sym)) % 10000 ? 2 : 0) + '× the hoard)'])]),
-      h('div', { class: 'bar', role: 'img', 'aria-label': sym + ': ' + amt(com, sym) + ' promised of ' + amt(lim, sym) }, [
+      h('div', { class: 'mh' }, [h('b', { text: sym }), h('span', null, [h('b', { text: amt(com, sym) }), ' committed of a ', amt(lim, sym), ' limit (' + fx(Number(levBps(sym)) / 10000, Number(levBps(sym)) % 10000 ? 2 : 0) + '× the balance, set by fum)'])]),
+      h('div', { class: 'bar', role: 'img', 'aria-label': sym + ': ' + amt(com, sym) + ' committed of a ' + amt(lim, sym) + ' limit' }, [
         h('i', { style: 'width:' + P(a) }), h('i', { class: 'hen', style: 'left:' + P(a) + ';width:' + P(b) }), hd > Z ? h('s', { style: 'left:' + P(hd) }) : null]),
-      h('div', { class: 'mf' }, [h('span', { text: 'the hoard holds ' + money(hd, sym) }), h('span', { text: money(room, sym) + ' of room' })])
+      h('div', { class: 'mf' }, [h('span', { text: 'vault balance ' + money(hd, sym) }), h('span', { text: money(room, sym) + ' uncommitted' })])
     ]);
   }
   function drawCastle() {
     var st = K.state, p = st && st.price;
     once('castle', JSON.stringify([st && st.seq, K.at && Math.floor(K.at / 15000), K.vault && JSON.stringify(K.vault, function (k, v) { return typeof v === 'bigint' ? v.toString() : v; }), K.err]), function (el) {
-      if (!st && !K.vault) { fill(el, h('p', { class: 'empty', text: K.err || 'Counting the gold…' })); return; }
+      if (!st && !K.vault) { fill(el, h('p', { class: 'empty', text: K.err || 'Reading the vault…' })); return; }
       var mid = p ? Number(p.mid) : NaN;
       var s = liveStrats();
       fill(el, [
-        h('div', { class: 'art' }, [vignette('castle', 'sm'), h('p', { class: 'note' }, ['One balance in the Castle, ', addrLink(C.castle, short(C.castle)), ', a 1inch Aqua maker, backs every strategy at once. fum sets how far the promises may stretch.'])]),
+        h('div', { class: 'art' }, [vignette('castle', 'sm'), h('p', { class: 'note' }, ['CastleVault ', addrLink(C.castle, short(C.castle)), ' is a 1inch Aqua maker. Its single balance backs every strategy it ships, and the risk agent fum sets how much the strategies may commit in total, as a multiple of that balance.'])]),
         h('div', { class: 'rows num' }, [
-          h('div', { class: 'row gold' }, [h('span', { class: 'k' }, [h('i', { class: 'cn' }), 'USDC in the castle']), h('span', { class: 'v' }, [amt(hoard('USDC'), 'USDC'), h('small', { text: 'USDC' })])]),
-          h('div', { class: 'row gold' }, [h('span', { class: 'k' }, [h('i', { class: 'cn' }), 'WETH in the castle']), h('span', { class: 'v' }, [amt(hoard('WETH'), 'WETH'), h('small', { text: 'WETH' })])]),
-          h('div', { class: 'row' }, [h('span', { class: 'k' }, ['fee’s price', h('span', { class: 'sub', text: p ? String(p.source || '').replace(/\s+round\s+\d+$/i, '').replace(/^chainlink/i, 'Chainlink') + ' · spread ' + p.spreadBps + ' bps' : 'not set yet' })]), h('span', { class: 'v' }, [fx(mid), h('small', { text: 'USDC / WETH' })])])
+          h('div', { class: 'row gold' }, [h('span', { class: 'k' }, [h('i', { class: 'cn' }), 'USDC in the vault']), h('span', { class: 'v' }, [amt(hoard('USDC'), 'USDC'), h('small', { text: 'USDC' })])]),
+          h('div', { class: 'row gold' }, [h('span', { class: 'k' }, [h('i', { class: 'cn' }), 'WETH in the vault']), h('span', { class: 'v' }, [amt(hoard('WETH'), 'WETH'), h('small', { text: 'WETH' })])]),
+          h('div', { class: 'row' }, [h('span', { class: 'k' }, ['Reference price, set by fee', h('span', { class: 'sub', text: p ? String(p.source || '').replace(/\s+round\s+\d+$/i, '').replace(/^chainlink/i, 'Chainlink') + ' · spread ' + p.spreadBps + ' bps' : 'not set yet' })]), h('span', { class: 'v' }, [fx(mid), h('small', { text: 'USDC / WETH' })])])
         ]),
         meter('USDC'), meter('WETH'),
         h('ul', { class: 'strats num' }, s.length ? s.map(function (x) {
           return h('li', null, [h('span', { class: 'sw', style: 'background:' + (x.label === 'hen' ? VC.woad : VC.gold) }),
-            h('div', null, [h('div', { class: 'nm' }, [x.label || short(x.hash), h('span', { text: (x.kind || '') + ' · slot ' + x.slot })]), h('div', { class: 'muted', text: x.label === 'harp' ? 'sells at fi’s signed price, found by name' : x.label === 'hen' ? 'fills the v4 pool just in time' : '' })]),
+            h('div', null, [h('div', { class: 'nm' }, [x.label || short(x.hash), h('span', { text: (x.kind || '') + ' · slot ' + x.slot })]), h('div', { class: 'muted', text: x.label === 'harp' ? 'RFQ strategy: sells at the price fi signs, served through ENS' : x.label === 'hen' ? 'hook strategy: fills the Uniswap v4 pool from the vault during each swap' : '' })]),
             h('div', { class: 'r', text: 'can sell up to ' + (T.tin === 'USDC' ? money(bag(x.alloc, 'WETH'), 'WETH') : money(bag(x.alloc, 'USDC'), 'USDC')) })]);
         }) : h('li', { class: 'empty', text: 'No strategy is live right now.' })),
         K.err ? h('p', { class: 'note', text: K.err }) : null
@@ -700,14 +716,15 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   }
 
   function flowList(F) {
-    var names = { approve: 'Approve ' + (F.kind === 'hen' ? 'the v4 swap router' : 'the SwapVM router') + ' to take your ' + T.tin, fill: 'Fill the harp’s price', swap: 'Swap on the hen', wrap: 'Wrap ETH into WETH' };
-    var st = { wait: 'waiting', sign: 'sign in your wallet', sent: 'mining…', ok: 'done', fail: 'failed' };
+    var names = { approve: 'Approve ' + (F.kind === 'hen' ? 'the v4 swap router' : 'the SwapVM router') + ' to take your ' + T.tin, fill: 'Fill the RFQ quote through the SwapVM router', swap: 'Swap through the v4 pool', wrap: 'Wrap ETH into WETH' };
+    var st = { wait: 'waiting', sign: 'sign in your wallet', sent: 'being mined', ok: 'done', fail: 'failed' };
     return h('ol', { class: 'flow num' }, F.steps.map(function (s) {
       return h('li', { 'data-s': s.s }, [h('span', { class: 'dot' }), h('span', { text: names[s.label] || s.label }), h('span', { class: 'st' }, s.hash ? [st[s.s] + ' · ', txLink(s.hash)] : st[s.s])]);
     }));
   }
   function canSend(a) { return onSepolia() && !!a && !(W.bal && W.bal[T.tin] < a) && !(T.flow && !T.flow.done && !T.flow.err && T.flow.kind !== 'wrap'); }
 
+  var NAME = { harp: 'RFQ strategy (harp)', hen: 'v4 pool (hen)' };
   function drawFo() {
     var hp = T.harp, hn = T.hen, a = amountIn();
     once('fo', JSON.stringify([hp.s, hp.q && hp.q.amountOut, hn.s, hn.out && String(hn.out), T.tin]), function (el) {
@@ -715,10 +732,14 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       if (hp.s === 'ready' && hn.s === 'ready') {
         var ho = big(hp.q.amountOut), no = hn.out, better = ho >= no ? 'harp' : 'hen', hi = ho >= no ? ho : no, lo = ho >= no ? no : ho;
         var more = lo > Z ? (Number(hi - lo) / Number(lo) * 100) : 0;
-        fill(el, [mark, h('span', null, ['fo would send this order to ', h('b', { text: 'the ' + better }), ': it pays ', h('b', { text: money(hi, tout()) }), ', ' + fx(more, 1) + '% more than the ' + (better === 'harp' ? 'hen' : 'harp') + '’s ' + money(lo, tout()) + '.'])]);
+        fill(el, [mark, h('span', null, ['The router agent fo would send this order to the ', h('b', { text: NAME[better] }), ', which pays ', h('b', { text: money(hi, tout()) }), ', ' + fx(more, 1) + '% more than the ' + NAME[better === 'harp' ? 'hen' : 'harp'] + ' at ' + money(lo, tout()) + '.'])]);
         flag(R('harp'), 'data-pick', better === 'harp'); flag(R('hen'), 'data-pick', better === 'hen');
+      } else if (hp.s === 'ready' && (hn.s === 'err' || hn.s === 'restock') || hn.s === 'ready' && hp.s === 'err') {
+        var side = hp.s === 'ready' ? 'harp' : 'hen', gets = side === 'harp' ? big(hp.q.amountOut) : hn.out, why = hn.s === 'restock' ? 'the hook strategy is being re-priced after the last swap' : 'the ' + NAME[side === 'harp' ? 'hen' : 'harp'] + ' cannot quote this amount right now';
+        fill(el, [mark, h('span', null, ['The router agent fo would send this order to the ', h('b', { text: NAME[side] }), ', which pays ', h('b', { text: money(gets, tout()) }), ', because ' + why + '.'])]);
+        flag(R('harp'), 'data-pick', side === 'harp'); flag(R('hen'), 'data-pick', side === 'hen');
       } else {
-        fill(el, [mark, h('span', { text: a ? 'fo compares the harp’s price with the hen’s for your amount…' : 'Enter an amount, and fo will say whether the harp or the hen pays more.' })]);
+        fill(el, [mark, h('span', { text: a ? 'Comparing the RFQ quote with the v4 pool quote for this amount.' : 'Enter an amount to compare the RFQ quote with the v4 pool quote.' })]);
         flag(R('harp'), 'data-pick', false); flag(R('hen'), 'data-pick', false);
       }
     });
@@ -729,30 +750,30 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     var hp = T.harp, F = T.flow && T.flow.kind === 'harp' ? T.flow : null, a = amountIn();
     once('harp', JSON.stringify([hp.s, hp.q && hp.q.id, hp.err, F && F.steps.map(function (s) { return s.s + s.hash; }), F && F.err, F && F.note, onSepolia(), W.bal && String(W.bal[T.tin]), canSend(a), R('harp').hasAttribute('data-pick')]), function (el) {
       HB = null;
-      var head = h('div', { class: 'ch' }, [h('div', null, [h('h2', { class: 'reg', 'aria-label': 'The harp' }, letters('THE HARP', true)), h('div', { class: 'qname' }, [C.quoteName || 'quote.feefifofum.eth', h('span', { text: 'ENS · CCIP-Read · good 30 s' })])]),
-        R('harp').hasAttribute('data-pick') ? h('span', { class: 'chip pick', text: 'FO’S PICK' }) : vignette('harp', 'sm')]);
+      var head = h('div', { class: 'ch' }, [h('div', null, [h('h2', { class: 'reg', 'aria-label': 'Harp' }, letters('HARP', true)), h('div', { class: 'qname' }, [C.quoteName || 'quote.feefifofum.eth', h('span', { text: 'RFQ strategy · ENS CCIP-Read · quotes valid 30 s' })])]),
+        R('harp').hasAttribute('data-pick') ? h('span', { class: 'chip pick', text: 'BEST QUOTE' }) : vignette('harp', 'sm')]);
       var kids = [head];
-      if (hp.s === 'idle') kids.push(h('p', { class: 'empty', text: 'Enter an amount: this page asks the castle’s ENS name for a price, straight from your browser.' }));
-      else if (hp.s === 'asking') kids.push(h('p', { class: 'empty', text: 'Asking ' + (C.quoteName || 'quote.feefifofum.eth') + ': the resolver sends the question to the castle’s gateway, and fi signs the answer…' }));
-      else if (hp.s === 'err') kids.push(h('p', { class: 'err', text: hp.err }), h('div', { class: 'btns' }, [h('button', { class: 'btn ghost sm', type: 'button', text: 'Ask again', onclick: askHarp })]));
+      if (hp.s === 'idle') kids.push(h('p', { class: 'empty', text: 'Enter an amount. The page then reads a signed quote from the ENS name directly from your browser.' }));
+      else if (hp.s === 'asking') kids.push(h('p', { class: 'empty', text: 'Reading the text record of ' + (C.quoteName || 'quote.feefifofum.eth') + '. The resolver forwards the request to the vault’s gateway through CCIP-Read, and fi signs the quote.' }));
+      else if (hp.s === 'err') kids.push(h('p', { class: 'err', text: hp.err }), h('div', { class: 'btns' }, [h('button', { class: 'btn ghost sm', type: 'button', text: 'Get a new quote', onclick: askHarp })]));
       else {
         var q = hp.q, bar = h('i'), txt = h('span'), exp = h('div', { class: 'exp num' }, [h('div', { class: 'tb' }, bar), txt]);
         HB = { q: q, bar: bar, txt: txt, exp: exp, t0: hp.at };
         kids.push(
           h('div', { class: 'deal num' }, ['Pay ', h('b', { text: money(q.amountIn, symOf(q.tokenIn)) }), ', get ', h('b', { text: money(q.amountOut, symOf(q.tokenOut)) }),
-            h('span', { class: 'by', text: fx(symOf(q.tokenIn) === 'USDC' ? usdcPerWeth(q.amountIn, q.amountOut) : usdcPerWeth(q.amountOut, q.amountIn)) + ' USDC per WETH, from the harp (slot 0)' })]),
+            h('span', { class: 'by', text: fx(symOf(q.tokenIn) === 'USDC' ? usdcPerWeth(q.amountIn, q.amountOut) : usdcPerWeth(q.amountOut, q.amountIn)) + ' USDC per WETH from the RFQ strategy in slot 0' })]),
           exp,
           h('div', { class: 'seal num' }, ['text record ' + hp.key + ' · signed by fi ', addrLink(q.signer), ' · quote ' + q.id])
         );
         if (!F || F.err || F.done) kids.push(h('div', { class: 'btns' }, [
-          h('button', { class: 'btn gold', type: 'button', text: W.addr ? 'Fill at this price' : 'Connect to fill', disabled: W.addr ? !canSend(a) : false, onclick: W.addr ? fillHarp : connect }),
-          h('button', { class: 'btn ghost sm', type: 'button', text: 'Ask again', onclick: askHarp })]));
+          h('button', { class: 'btn gold', type: 'button', text: W.addr ? 'Fill this quote' : 'Connect a wallet to fill', disabled: W.addr ? !canSend(a) : false, onclick: W.addr ? fillHarp : connect }),
+          h('button', { class: 'btn ghost sm', type: 'button', text: 'Get a new quote', onclick: askHarp })]));
       }
       if (F) {
         kids.push(flowList(F));
         if (F.note) kids.push(h('p', { class: 'note', text: F.note }));
         if (F.err) kids.push(h('p', { class: 'err', text: F.err }));
-        if (F.done) kids.push(h('p', { class: 'ok', text: 'Filled. The castle paid you from the hoard; see your trades below.' }));
+        if (F.done) kids.push(h('p', { class: 'ok', text: 'Filled. The vault paid the output from its balance, and the trade is listed under Your trades.' }));
       }
       fill(el, kids);
     });
@@ -763,38 +784,39 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     var rem = secsLeft(HB.q), span = Math.max(1, Number(HB.q.validUntil) - HB.t0 / 1000);
     HB.bar.style.width = (Math.max(0, Math.min(1, rem / span)) * 100).toFixed(1) + '%';
     HB.exp.setAttribute('data-s', rem > 0 ? 'open' : 'gone');
-    HB.txt.textContent = rem > 0 ? 'good for ' + Math.ceil(rem) + ' s' : 'ran out at ' + hhmmss(Number(HB.q.validUntil) * 1000) + ': ask again';
+    HB.txt.textContent = rem > 0 ? 'valid for ' + Math.ceil(rem) + ' s' : 'expired at ' + hhmmss(Number(HB.q.validUntil) * 1000);
   }
 
   function drawHen() {
     var hn = T.hen, F = T.flow && T.flow.kind === 'hen' ? T.flow : null, a = amountIn();
     once('hen', JSON.stringify([hn.s, hn.out && String(hn.out), hn.err, F && F.steps.map(function (s) { return s.s + s.hash; }), F && F.err, onSepolia(), W.bal && String(W.bal[T.tin]), canSend(a), R('hen').hasAttribute('data-pick')]), function (el) {
-      var head = h('div', { class: 'ch' }, [h('div', null, [h('h2', { class: 'reg', 'aria-label': 'The hen' }, letters('THE HEN', true)), h('div', { class: 'qname' }, ['USDC/WETH v4 pool', h('span', { text: 'no liquidity of its own' })])]),
-        R('hen').hasAttribute('data-pick') ? h('span', { class: 'chip pick', text: 'FO’S PICK' }) : vignette('hen', 'sm')]);
+      var head = h('div', { class: 'ch' }, [h('div', null, [h('h2', { class: 'reg', 'aria-label': 'Hen' }, letters('HEN', true)), h('div', { class: 'qname' }, ['USDC/WETH Uniswap v4 pool', h('span', { text: 'hook strategy · no pool liquidity' })])]),
+        R('hen').hasAttribute('data-pick') ? h('span', { class: 'chip pick', text: 'BEST QUOTE' }) : vignette('hen', 'sm')]);
       var kids = [head];
-      if (hn.s === 'idle') kids.push(h('p', { class: 'empty', text: 'Enter an amount: the v4 quoter tells you what the hen pays. The castle’s hook fills your swap from the hoard, inside your own transaction.' }));
-      else if (hn.s === 'asking') kids.push(h('p', { class: 'empty', text: 'Asking the v4 quoter what the hen pays…' }));
-      else if (hn.s === 'err') kids.push(h('p', { class: 'err', text: hn.err }), h('div', { class: 'btns' }, [h('button', { class: 'btn ghost sm', type: 'button', text: 'Ask again', onclick: quoteHen })]));
+      if (hn.s === 'idle') kids.push(h('p', { class: 'empty', text: 'Enter an amount. The Uniswap v4 quoter simulates the swap, and during a real swap the vault’s hook supplies the output from the vault balance in the same transaction.' }));
+      else if (hn.s === 'asking') kids.push(h('p', { class: 'empty', text: 'Getting a quote from the Uniswap v4 quoter.' }));
+      else if (hn.s === 'restock') kids.push(h('p', { class: 'empty', text: 'The hook strategy is being re-priced after the last swap. Its quote will show here in a few seconds.' }));
+      else if (hn.s === 'err') kids.push(h('p', { class: 'err', text: hn.err }), h('div', { class: 'btns' }, [h('button', { class: 'btn ghost sm', type: 'button', text: 'Get a new quote', onclick: quoteHen })]));
       else {
         kids.push(
           h('div', { class: 'deal num' }, ['Pay ', h('b', { text: money(hn.amountIn, hn.tin) }), ', get about ', h('b', { text: money(hn.out, hn.tin === 'USDC' ? 'WETH' : 'USDC') }),
-            h('span', { class: 'by', text: fx(hn.tin === 'USDC' ? usdcPerWeth(hn.amountIn, hn.out) : usdcPerWeth(hn.out, hn.amountIn)) + ' USDC per WETH, from the hen (slot 1), its fee included' })]),
-          h('div', { class: 'seal num', text: 'You get at least ' + money(hn.out * BigInt(99) / BigInt(100), hn.tin === 'USDC' ? 'WETH' : 'USDC') + ', or the swap reverts. One tx: the v4 swap and Aqua’s pull and push.' })
+            h('span', { class: 'by', text: fx(hn.tin === 'USDC' ? usdcPerWeth(hn.amountIn, hn.out) : usdcPerWeth(hn.out, hn.amountIn)) + ' USDC per WETH from the hook strategy in slot 1, fee included' })]),
+          h('div', { class: 'seal num', text: 'The swap reverts if it would pay less than ' + money(hn.out * BigInt(99) / BigInt(100), hn.tin === 'USDC' ? 'WETH' : 'USDC') + '. It is a single transaction in which the hook pulls from and pushes to the vault through Aqua.' })
         );
         if (!F || F.err || F.done) kids.push(h('div', { class: 'btns' }, [
-          h('button', { class: 'btn gold', type: 'button', text: W.addr ? 'Swap on the hen' : 'Connect to swap', disabled: W.addr ? !canSend(a) : false, onclick: W.addr ? swapHen : connect }),
-          h('button', { class: 'btn ghost sm', type: 'button', text: 'Quote again', onclick: quoteHen })]));
+          h('button', { class: 'btn gold', type: 'button', text: W.addr ? 'Swap through the v4 pool' : 'Connect a wallet to swap', disabled: W.addr ? !canSend(a) : false, onclick: W.addr ? swapHen : connect }),
+          h('button', { class: 'btn ghost sm', type: 'button', text: 'Get a new quote', onclick: quoteHen })]));
       }
       if (F) {
         kids.push(flowList(F));
         if (F.err) kids.push(h('p', { class: 'err', text: F.err }));
-        if (F.done) kids.push(h('p', { class: 'ok', text: 'Swapped. The hen laid it just in time; see your trades below.' }));
+        if (F.done) kids.push(h('p', { class: 'ok', text: 'Swapped. The hook filled the swap from the vault, and the trade is listed under Your trades.' }));
       }
       fill(el, kids);
     });
   }
 
-  // Your trades: what this page just sent, and the castle's record of fills where you were the taker.
+  // Your trades: what this page sent, plus the vault service's record of fills where this wallet was the taker.
   function allTrades() {
     var out = trades.mine.slice(), seen = {};
     out.forEach(function (t) { if (t.tx) seen[t.tx.toLowerCase()] = 1; });
@@ -809,9 +831,9 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   function drawTrades() {
     var list = allTrades();
     once('trades', JSON.stringify([W.addr, list.map(function (t) { return t.tx + t.status; })]), function (el) {
-      if (!W.addr) { fill(el, h('p', { class: 'empty', text: 'Connect a wallet to see your trades with the giant.' })); return; }
-      if (!list.length) { fill(el, h('p', { class: 'empty', text: 'No trades from ' + short(W.addr) + ' yet. Fill the harp’s price or swap on the hen above.' })); return; }
-      var where = { harp: 'the harp, a price found by name', hen: 'the hen, the v4 pool', wrap: 'wrapped ETH' };
+      if (!W.addr) { fill(el, h('p', { class: 'empty', text: 'Connect a wallet to list its trades with the vault.' })); return; }
+      if (!list.length) { fill(el, h('p', { class: 'empty', text: 'No trades from ' + short(W.addr) + ' with the vault yet.' })); return; }
+      var where = { harp: 'RFQ strategy (harp) via ENS', hen: 'v4 pool (hen)', wrap: 'wrapped ETH' };
       fill(el, h('table', { class: 'led num' }, [
         h('thead', null, h('tr', null, ['Time', 'Where', 'Paid', 'Got', 'USDC / WETH', 'Tx'].map(function (t, i) { return h('th', { class: i >= 2 && i <= 4 ? 'r' : null, text: t }); }))),
         h('tbody', null, list.map(function (t) {
@@ -836,8 +858,8 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   root.querySelectorAll('[data-lt]').forEach(function (n) { put(n, letters(n.getAttribute('data-lt'), true)); });
   put(R('mark'), letters('fee·fi·fo·fum'));
   fill(R('foot'), [
-    h('span', null, ['The Castle ', addrLink(C.castle || '0x', 'on Etherscan'), ' · 1inch Aqua + SwapVM · ENS CCIP-Read · Uniswap v4 hook']),
-    h('a', { href: 'https://handoff.lol/app/impecc/fee-fi-fo-fum-tale', text: 'The tale: the whole live run as a tapestry' }),
+    h('span', null, ['CastleVault ', addrLink(C.castle || '0x', 'on Etherscan'), ' · 1inch Aqua and SwapVM · ENS CCIP-Read · Uniswap v4 hook']),
+    h('a', { href: 'https://handoff.lol/app/impecc/fee-fi-fo-fum-tale', text: 'Replay of the live run' }),
     h('span', { text: 'Lettering: Almendra, SIL OFL' })
   ]);
   R('amt').addEventListener('input', changed);

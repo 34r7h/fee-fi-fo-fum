@@ -90,6 +90,8 @@ Three residual trusts. None of them is removed by the lease or the auction.
 
 **R3. Verification.** Castle `0x6bF53228d8c5c3b0192B2028bD52fc4E9d1be8Ec` and JackHook `0x50919ddaaf8294865652D53b45f210019AB2fcAd` are Sourcify `exact_match` at commit `7b863212f649c07327ac53966e8fae40f813cfb7`. Etherscan verification is still pending an operator API key (`contracts/deployments/sepolia.json`).
 
+**R4. Repeat dissolve.** `dissolve()` has no once-per-epoch guard and does not look at whether an auction is open. After `settleAuction()` the unsold WETH is back in Castle and `auction` is `address(0)`. If the lease is still past `expiry + dissolveGrace`, anyone can call `dissolve()` again. A graduated auction writes the clearing price, which can be the 80% floor, so each round can set the anchor 20% lower. The deployed `dissolveGrace` is `1800` seconds. The live mitigation is for the owner to raise it to `1 days` (`MAX_DISSOLVE_GRACE`) while an auction runs, and for fi to `claim` immediately after settle. The next redeploy should allow at most one dissolve per epoch, and none while an auction is open.
+
 ## Status
 
 Work in progress. See [WORKLOG.md](WORKLOG.md).

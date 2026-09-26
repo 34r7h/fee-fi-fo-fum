@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 14:42 JST
+- **Last regenerated:** 2026-09-26 14:45 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -65,7 +65,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
-| fee-fi-fo-fum.html against a mock castle stream <br>`p5-mock` `198a1550` | impecc | impecc | Sat 21:00 | in_progress |  |  |
+| fee-fi-fo-fum.html against a mock castle stream <br>`p5-mock` `198a1550` | impecc | impecc | Sat 21:00 | in_progress | ccb9ae0 | n/a (mock); minified 73.7KB, pre-flight 100/100 (per impecc); agy validating |
 | Wire fee-fi-fo-fum.html to the live castle stream and publish it on handoff.lol <br>`p5-live` `fd20d4c5` | impecc | impecc | Sun 02:00 | in_progress |  |  |
 | Durable hosting for the castle service, so the live demo survives past the event <br>`p5-durable` `7ab03bab` | handoff-claude | handoff-claude | Sun 02:00 | done | service/ (c015774, 5a654bf) | https://handoff.lol/t/castle/ live; paid 0.15 USDC (receipt 80f9d048) |
 
@@ -105,7 +105,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784216.
+Live balances read at block 11784231.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -122,7 +122,7 @@ Live balances read at block 11784216.
 
 | Item | Value |
 |---|---|
-| Source | `miniapp/fee-fi-fo-fum.html` |
+| Source | `miniapp/fee-fi-fo-fum.html` (ccb9ae0: full mock demo plus replay tab; source 93.7KB, minified 73.7KB) |
 | Published URL |  |
 | Validation score |  |
 | Castle service URL (durable) | https://handoff.lol/t/castle/ (MCP /mcp, REST /tools, SSE /stream, /state, /fills), hosted on helen and following main; verified responding 14:03 JST |
@@ -242,3 +242,5 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:35 | operator | +0.0186 ETH to the treasury (0x5d37b019…). |
 | Sat 14:38 | SirKit | Distributed it: deployer +0.01 (now 0.0253), fee +0.004 (0.0080), fi +0.004 (0.0070), fum +0.002 (0.0040), all verified on-chain. The treasury keeps 0.0021. |
 | Sat 14:40 | SirKit | Ordered handoff-claude to deploy p2-ensname-fix now with the operator-approved XMBL_GATE=skip, with p2-sepolia-settle to follow in a second deploy. |
+| Sat 14:41 | impecc | fee-fi-fo-fum.html plays the full five-beat demo from the mock stream, with a replay tab and Jack the Giant Killer copy (ccb9ae0). p5-mock submitted. |
+| Sat 14:42 | SirKit | Sent p5-mock to agy for validation. |

@@ -163,7 +163,10 @@ async function scan(from, to) {
         const shift = (cfg.shifts || []).find((s) => s.agent === agentByAddr(holder));
         emit('shift.changed', { from: prev ? agentByAddr(state.lease?.holder) : null, to: agentByAddr(holder), city: shift?.city ?? null, auction: null }, { ...meta, src: 'service' });
       } else if (/Relinked$/.test(n)) {
-        const holderName = dnsDecode(arg(d, 'holderName'));
+        // Castle v2 names the holder's crew label (castle.<parent> now shares <label>.<parent>'s record); v1 sent a DNS name.
+        const label = arg(d, 'holderLabel');
+        const parent = (miniappConfig().name || 'castle.feefifofum.eth').split('.').slice(1).join('.');
+        const holderName = label ? `${label}.${parent}` : dnsDecode(arg(d, 'holderName'));
         emit('castle.relinked', { node: arg(d, 'node'), holderNode: arg(d, 'holderNode'), holderName, mcpEndpoint: holderName ? await mcpOf(holderName) : null }, meta);
       } else if (n === 'Docked') {
         emit('strategy.docked', { hash: arg(d, 'strategyHash'), epoch: str(arg(d, 'epoch')), dockedBy: agentByAddr(arg(d, 'dockedBy')) }, meta);

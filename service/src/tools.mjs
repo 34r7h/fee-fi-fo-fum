@@ -165,8 +165,9 @@ export const tools = {
       const member = crew().find((c) => c.agent_id === agent_id);
       if (!member) throw new Error(`${agent_id} has not applied; call castle_join first`);
       // The crew that may claim is Castle's on-chain crew (set by the operator); castle_join is the application.
-      const onChain = await client.readContract({ address: castle, abi: abi('Castle'), functionName: 'crew', args: [member.addr] }).catch(() => null);
-      if (onChain === false) return { ok: false, reason: 'NotCrew', from: member.addr, note: 'applied through castle_join, but Castle.crew(addr) is false until the operator calls setCrew' };
+      // Castle v2: crew = an operator-set crew label AND that name owned, unexpired, in the agent registry.
+      const onChain = await client.readContract({ address: castle, abi: abi('Castle'), functionName: 'isCrew', args: [member.addr] }).catch(() => null);
+      if (onChain === false) return { ok: false, reason: 'NotCrew', from: member.addr, note: 'applied through castle_join, but Castle.isCrew(addr) is false until the operator calls setCrew(addr, label) for a name addr owns' };
       const h = await head();
       const lease = await readLease();
       if (lease?.expiry != null && h.timestamp <= lease.expiry) {

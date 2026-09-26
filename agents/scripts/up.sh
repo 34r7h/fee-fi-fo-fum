@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# Starts the crew as separate processes (default: fee fi fo fum), so `kill -9 $(cat agents/logs/fee.pid)` takes
-# down exactly one giant. Logs are agents/logs/<id>.log (JSON lines) and pids agents/logs/<id>.pid, both
-# git-ignored.
+# Starts the crew as separate processes (default: fee fi fo fum), so each can stop or crash on its own. Logs are
+# agents/logs/<id>.log (JSON lines) and pids agents/logs/<id>.pid, both git-ignored.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 mkdir -p logs

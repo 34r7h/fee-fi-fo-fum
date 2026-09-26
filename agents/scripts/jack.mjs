@@ -1,94 +1,156 @@
 #!/usr/bin/env node
-// Jack, a taker from outside the castle: fills against a strategy Castle shipped, through the live SwapVM router,
-// from a crew EOA's own key. It is how the failover demo proves the fence with mined txs (p3-failover-e2e):
-//   the gap      after expiry, before a claim: the live strategy only takes USDC in (wind-down, reduce-only);
-//   the fence    after a claim: the OLD epoch's strategy reverts FeeFiFoFum();
-//   the new book the new epoch's strategy fills.
-// Every fill is simulated first. --force sends it anyway, so a revert is mined and has a tx link.
-// On Castle v3 the fence runs the live curve only when the taker brings the holder's heartbeat co-signed by fo:
-// --heartbeat auto (the default on v3) takes the castle service's (CASTLE_SERVICE_URL) or logs/heartbeat.json,
-// --heartbeat none leaves it out (the wind-down branch), and 0x<138 bytes> passes one as is.
+// Jack on a fork: the outside solver's moves, for rehearsals only (on Sepolia the Jack is agy, with its own tools).
+// It refuses any RPC that is not anvil and acts as agy (0xDDf2…AE4c) by impersonation, so no key signs anything.
+// Each command prints one JSON line.
 //
-//   node agents/scripts/jack.mjs --as fum --strategy latest|previous|0x<hash> --in USDC|WETH --amount <atomic> [--min-out N] [--heartbeat auto|none|0x…] [--force]
-import { concat, decodeAbiParameters, encodePacked, erc20Abi, getAddress, maxUint256, pad, parseAbi, toHex } from 'viem';
-import { loadEnv } from '../lib/env.mjs';
-import { publicClient, walletClient, loadAccount, contractAddress, txLink } from '../lib/chain.mjs';
-import { AQUA_SHIPPED } from '../lib/book.mjs';
-import { readLease } from '../lib/lease.mjs';
-import { heartbeatStatus } from '../lib/shift.mjs';
-import { unpackHeartbeat } from '../lib/heartbeat.mjs';
+//   node scripts/jack.mjs quote USDC WETH 1000000 [--save q.json]   resolve quote.feefifofum.eth by CCIP-Read and fill it
+//   node scripts/jack.mjs stale q.json                                 the same quote after validUntil: a mined QuoteExpired revert,
+//                                                                      recorded through castle_fill {tx_hash}
+//   node scripts/jack.mjs v4 USDC 1000000 [minOut]                     swap on the Castle's v4 pool (the hook fills it from hen)
+//   node scripts/jack.mjs stress                                       a harp fill sized so fills push committed WETH past
+//                                                                      balance x leverage by less than harp holds: fum docks harp
+//   node scripts/jack.mjs route USDC WETH 1000000 [minOut]             a UniswapX-format order through castle_route (fo), then its calls
+// env: SEPOLIA_RPC_URL (the anvil fork), DEPLOYMENTS_PATH (the fork's deployments), CASTLE_SERVICE_URL
+import fs from 'node:fs';
+import { createPublicClient, createWalletClient, http, getAddress, encodeAbiParameters, encodeFunctionData, decodeErrorResult } from 'viem';
+import { sepolia } from 'viem/chains';
+import { loadEnv, env } from '../lib/env.mjs';
+import { contractAddress, abi } from '../lib/chain.mjs';
 
 loadEnv();
-const argv = process.argv.slice(2);
-const opt = (n, d) => { const i = argv.indexOf(`--${n}`); return i >= 0 ? argv[i + 1] : d; };
-const FORCE = argv.includes('--force');
-const who = opt('as', 'fum');
-const ROUTER_ABI = parseAbi([
-  'struct Order { address maker; uint256 traits; bytes data; }',
-  'function swap(Order order, address tokenIn, address tokenOut, uint256 amount, bytes takerTraitsAndData) returns (uint256 amountIn, uint256 amountOut, bytes32 orderHash)',
-  'function quote(Order order, address tokenIn, address tokenOut, uint256 amount, bytes takerTraitsAndData) view returns (uint256 amountIn, uint256 amountOut, bytes32 orderHash)',
-  'error FeeFiFoFum()',
-  'error WindDownReduceOnly(address tokenIn)',
-  'error TakerTraitsInsufficientMinOutputAmount(uint256 amountOut, uint256 amountOutMin)',
-  'error SafeTransferFromFailed()',
-]);
-const ORDER = [{ type: 'tuple', components: [{ name: 'maker', type: 'address' }, { name: 'traits', type: 'uint256' }, { name: 'data', type: 'bytes' }] }];
+const AGY = '0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c';
+const NAME = 'quote.feefifofum.eth';
+const RPC = env('SEPOLIA_RPC_URL');
+const SERVICE = (env('CASTLE_SERVICE_URL') || '').replace(/\/$/, '');
+const MIN_SQRT = 4295128739n + 1n;
+const MAX_SQRT = 1461446703485210103287273052203988822378723970342n - 1n;
+const chain = { ...sepolia, rpcUrls: { default: { http: [RPC] } } };
+const pub = createPublicClient({ chain, transport: http(RPC) });
+const rpc = (method, params = []) => pub.request({ method, params });
+const out = (o) => console.log(JSON.stringify(o, (_k, v) => (typeof v === 'bigint' ? v.toString() : v)));
+const T = () => ({ USDC: getAddress(contractAddress('usdc')), WETH: getAddress(contractAddress('weth')) });
 
-// SwapVM 1.0.2 TakerTraitsLib.build: ten uint16 slice ends packed in a uint160, uint16 flags, then the slices:
-// threshold, to, deadline, four hook datas, two callback datas, instructionsArgs (the v3 heartbeat), signature.
-function takerData({ isExactIn = true, threshold, useTransferFromAndAquaPush = true, instructionsArgs = '0x' }) {
-  const th = threshold != null ? pad(toHex(BigInt(threshold)), { size: 32 }) : '0x';
-  const i0 = (th.length - 2) / 2;
-  const i9 = i0 + (instructionsArgs.length - 2) / 2;
-  const idx = [i0, i0, i0, i0, i0, i0, i0, i0, i0, i9].reduce((acc, v, k) => acc | (BigInt(v) << BigInt(16 * k)), 0n);
-  const flags = (isExactIn ? 0x0001 : 0) | (useTransferFromAndAquaPush ? 0x0040 : 0);
-  return concat([encodePacked(['uint160', 'uint16'], [idx, flags]), th, instructionsArgs]);
+async function asAgy(fn) {
+  await rpc('anvil_impersonateAccount', [AGY]);
+  try { return await fn(createWalletClient({ account: AGY, chain, transport: http(RPC) })); }
+  finally { await rpc('anvil_stopImpersonatingAccount', [AGY]); }
+}
+async function call(w, to, data, gas) {
+  const hash = await w.sendTransaction({ to, data, ...(gas ? { gas } : {}) });
+  const rc = await pub.waitForTransactionReceipt({ hash });
+  return { hash, status: rc.status, gasUsed: rc.gasUsed, block: rc.blockNumber };
+}
+async function service(tool, args) {
+  const r = await fetch(`${SERVICE}/tools/${tool}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(args) });
+  const j = await r.json();
+  if (!r.ok) throw new Error(`${tool}: ${j.error}`);
+  return j;
+}
+const balances = async () => {
+  const t = T();
+  const [u, w] = await Promise.all([t.USDC, t.WETH].map((a) => pub.readContract({ address: a, abi: abi('ERC20'), functionName: 'balanceOf', args: [AGY] })));
+  return { USDC: u, WETH: w };
+};
+
+const version = await rpc('web3_clientVersion');
+if (!/anvil/i.test(version)) throw new Error(`refusing: ${RPC} is ${version}, not anvil (jack.mjs is for fork rehearsals)`);
+if (SERVICE && !/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/|$)/.test(SERVICE)) throw new Error(`refusing: CASTLE_SERVICE_URL ${SERVICE} is not this fork's local service`);
+const [cmd, ...a] = process.argv.slice(2);
+const opt = (n) => { const i = a.indexOf(`--${n}`); return i >= 0 ? a[i + 1] : null; };
+
+// Resolve quote:<in>:<out>:<amt> through ENS (CCIP-Read) and fill it through the router.
+async function harpFill(tin, tout, amt, save) {
+  const key = `quote:${tin}:${tout}:${amt}`;
+  const text = await pub.getEnsText({ name: NAME, key, universalResolverAddress: contractAddress('universalResolver'), strict: true });
+  const rec = JSON.parse(text);
+  if (save) fs.writeFileSync(save, text);
+  const before = await balances();
+  const res = await asAgy(async (w) => {
+    const ap = await call(w, rec.tokenIn, encodeFunctionData({ abi: abi('ERC20'), functionName: 'approve', args: [rec.router, BigInt(rec.amountIn)] }));
+    const order = { maker: rec.order.maker, traits: BigInt(rec.order.traits), data: rec.order.data };
+    const sw = await call(w, rec.router, encodeFunctionData({ abi: abi('SwapVM'), functionName: 'swap', args: [order, rec.tokenIn, rec.tokenOut, BigInt(rec.amountIn), rec.takerTraitsAndData] }));
+    return { approve: ap, swap: sw };
+  });
+  const after = await balances();
+  return { key, via: 'getEnsText through UniversalResolverV2 (CCIP-Read)', quoteId: rec.id, signer: rec.signer, amountIn: rec.amountIn, amountOut: rec.amountOut, validUntil: rec.validUntil, tx: res.swap.hash, status: res.swap.status, gasUsed: res.swap.gasUsed, received: after[tout] - before[tout], paid: before[tin] - after[tin] };
 }
 
-const pc = publicClient();
-const account = loadAccount(who);
-const wallet = walletClient(account);
-const castle = contractAddress('castle'), router = contractAddress('router'), aqua = contractAddress('aqua');
-const tokens = { USDC: contractAddress('usdc'), WETH: contractAddress('weth') };
-const tokenIn = tokens[opt('in', 'USDC').toUpperCase()], tokenOut = tokenIn === tokens.USDC ? tokens.WETH : tokens.USDC;
-const amount = BigInt(opt('amount', '1000000'));
-
-// The strategies Castle shipped, oldest first, with their order bytes from Aqua's Shipped event.
-const head = await pc.getBlockNumber();
-const logs = (await pc.getLogs({ address: aqua, event: AQUA_SHIPPED, fromBlock: head > 5000n ? head - 5000n : 0n, toBlock: head }))
-  .filter((l) => getAddress(l.args.maker) === getAddress(castle));
-if (!logs.length) throw new Error('Castle has shipped nothing in the last 5000 blocks');
-const pick = opt('strategy', 'latest');
-const log = pick === 'latest' ? logs.at(-1) : pick === 'previous' ? logs.at(-2) : logs.find((l) => l.args.strategyHash === pick);
-if (!log) throw new Error(`no strategy ${pick}`);
-const [order] = decodeAbiParameters(ORDER, log.args.strategy);
-
-const lease = await readLease(pc);
-const hbOpt = opt('heartbeat', lease.version === 3 ? 'auto' : 'none');
-const hb = hbOpt === 'none' ? null : hbOpt.startsWith('0x') ? hbOpt : (await heartbeatStatus())?.heartbeat ?? null;
-const heartbeat = hb ? { validUntil: unpackHeartbeat(hb).validUntil } : null;
-const data = takerData({ threshold: opt('min-out', '1'), instructionsArgs: hb ?? '0x' });
-const req = { address: router, abi: ROUTER_ABI, functionName: 'swap', args: [order, tokenIn, tokenOut, amount, data], account };
-// The router pulls tokenIn from the taker (transferFrom + Aqua push): approve it once, before simulating the fill.
-const allowance = await pc.readContract({ address: tokenIn, abi: erc20Abi, functionName: 'allowance', args: [account.address, router] });
-if (allowance < amount) {
-  const h = await wallet.writeContract({ address: tokenIn, abi: erc20Abi, functionName: 'approve', args: [router, maxUint256] });
-  await pc.waitForTransactionReceipt({ hash: h });
+if (cmd === 'quote') {
+  const [tin, tout, amt] = a;
+  out({ jack: 'quote', ...(await harpFill(tin, tout, amt, opt('save'))) });
+} else if (cmd === 'stress') {
+  // Buy WETH from harp until the vault promises more WETH than balance x leverage, but not so much that hen alone
+  // is over too: fum should dock harp and stop. Selling x WETH moves committed to (h - x) + e and the limit to
+  // lev (B - x), so x must pass (lev B - h - e) / (lev - 1) and stay under B - e / lev (h, e: harp's and hen's
+  // WETH; B: the vault's WETH). The midpoint, priced in USDC at fee's mid.
+  const t = T(), vault = getAddress(contractAddress('castle')), router = getAddress(contractAddress('router'));
+  const V = abi('CastleVault');
+  const rv = (fn, args = []) => pub.readContract({ address: vault, abi: V, functionName: fn, args });
+  const alloc = async (slot) => {
+    const hash = await rv('strategyIn', [slot]);
+    if (/^0x0+$/.test(hash)) return 0n;
+    const [bal] = await pub.readContract({ address: getAddress(contractAddress('aqua')), abi: abi('Aqua'), functionName: 'rawBalances', args: [vault, router, hash, t.WETH] });
+    return bal;
+  };
+  const [B, lev, h, e] = await Promise.all([
+    pub.readContract({ address: t.WETH, abi: abi('ERC20'), functionName: 'balanceOf', args: [vault] }),
+    rv('leverageOf', [t.WETH]), alloc(0), alloc(1),
+  ]);
+  const L = BigInt(lev);
+  const lo = (L * B - 10_000n * (h + e)) > 0n ? (L * B - 10_000n * (h + e)) / (L - 10_000n) : 0n;
+  const hi = B - (e * 10_000n) / L;
+  if (hi <= lo) throw new Error(`no fill docks harp alone: needs more than ${lo} WETH and at most ${hi} (B ${B}, harp ${h}, hen ${e})`);
+  const x = (lo + hi) / 2n;
+  if (x > h) throw new Error(`harp holds ${h} WETH, less than the ${x} this needs`);
+  const s = await (await fetch(`${SERVICE}/state`)).json();
+  const usdc = (x * BigInt(Math.round(Number(s.price.mid) * 100))) / 10n ** 14n;
+  out({ jack: 'stress', wethOut: x, between: [lo, hi], vaultWeth: B, harpWeth: h, henWeth: e, leverageBps: Number(lev), ...(await harpFill('USDC', 'WETH', usdc.toString())) });
+} else if (cmd === 'stale') {
+  const rec = JSON.parse(fs.readFileSync(a[0], 'utf8'));
+  // Wait out the quote in real time (the demo's "31 s later"). The fork's clock can trail the wall clock by a few
+  // seconds; if it still has not passed validUntil, the next block is stamped just past it, never further.
+  const wait = (Number(rec.validUntil) + 1) * 1000 - Date.now();
+  if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+  if ((await pub.getBlock()).timestamp <= BigInt(rec.validUntil)) await rpc('evm_setNextBlockTimestamp', [`0x${(BigInt(rec.validUntil) + 1n).toString(16)}`]);
+  const order = { maker: rec.order.maker, traits: BigInt(rec.order.traits), data: rec.order.data };
+  const data = encodeFunctionData({ abi: abi('SwapVM'), functionName: 'swap', args: [order, rec.tokenIn, rec.tokenOut, BigInt(rec.amountIn), rec.takerTraitsAndData] });
+  const res = await asAgy(async (w) => {
+    await call(w, rec.tokenIn, encodeFunctionData({ abi: abi('ERC20'), functionName: 'approve', args: [rec.router, BigInt(rec.amountIn)] }));
+    return call(w, rec.router, data, 300_000n);   // unsimulated: the revert is mined
+  });
+  let reason = null;
+  try { await pub.call({ account: AGY, to: rec.router, data, blockNumber: res.block - 1n }); } catch (e) {
+    const raw = e?.walk?.((x) => typeof x?.data === 'string')?.data;
+    try { const d = decodeErrorResult({ abi: abi('PriceExtruction'), data: raw }); reason = `${d.errorName}(${d.args.join(',')})`; } catch { reason = raw?.slice(0, 10) ?? e.shortMessage; }
+  }
+  const recorded = SERVICE ? await service('castle_fill', { tx_hash: res.hash, quoteId: rec.id }).catch((e) => ({ error: e.message })) : null;
+  out({ jack: 'stale', quoteId: rec.id, validUntil: rec.validUntil, tx: res.hash, status: res.status, revert: reason, recorded });
+} else if (cmd === 'v4') {
+  const [tin, amt, minOut = '0'] = a;
+  const t = T();
+  const tokenIn = t[tin], swapTest = getAddress(contractAddress('poolSwapTest'));
+  const [c0, c1] = BigInt(t.USDC) < BigInt(t.WETH) ? [t.USDC, t.WETH] : [t.WETH, t.USDC];
+  const key = { currency0: c0, currency1: c1, fee: 0, tickSpacing: 60, hooks: getAddress(contractAddress('hook')) };
+  const zeroForOne = tokenIn === c0;
+  const hookData = BigInt(minOut) > 0n ? encodeAbiParameters([{ type: 'uint256' }], [BigInt(minOut)]) : '0x';
+  const before = await balances();
+  const res = await asAgy(async (w) => {
+    await call(w, tokenIn, encodeFunctionData({ abi: abi('ERC20'), functionName: 'approve', args: [swapTest, BigInt(amt)] }));
+    return call(w, swapTest, encodeFunctionData({ abi: abi('PoolSwapTest'), functionName: 'swap', args: [key, { zeroForOne, amountSpecified: -BigInt(amt), sqrtPriceLimitX96: zeroForOne ? MIN_SQRT : MAX_SQRT }, { takeClaims: false, settleUsingBurn: false }, hookData] }));
+  });
+  const after = await balances();
+  const tout = tin === 'USDC' ? 'WETH' : 'USDC';
+  out({ jack: 'v4', pool: key, amountIn: amt, tx: res.hash, status: res.status, gasUsed: res.gasUsed, received: after[tout] - before[tout], paid: before[tin] - after[tin] });
+} else if (cmd === 'route') {
+  const [tin, tout, amt, minOut = '1'] = a;
+  const now = Math.floor(Date.now() / 1000);
+  const order = { info: { reactor: null, swapper: AGY, nonce: String(now), deadline: now + 120 }, swapper: AGY, nonce: String(now), deadline: now + 120, input: { token: tin, startAmount: amt, endAmount: amt }, outputs: [{ token: tout, startAmount: minOut, endAmount: minOut, recipient: AGY }] };
+  const r = await service('castle_route', { order });
+  const before = await balances();
+  const sent = await asAgy(async (w) => { const xs = []; for (const c of r.calls) xs.push(await call(w, c.to, c.data)); return xs; });
+  const after = await balances();
+  out({ jack: 'route', intent: r.id, route: r.route, compared: r.compared, amountIn: amt, quotedOut: r.amountOut, txs: sent.map((x) => ({ tx: x.hash, status: x.status })), received: after[tout] - before[tout], paid: before[tin] - after[tin] });
+} else {
+  console.error('usage: jack.mjs quote|stale|v4|route|stress …');
+  process.exit(2);
 }
-let expected = null;
-try { await pc.simulateContract(req); } catch (e) { expected = e?.walk?.((x) => x?.data?.errorName)?.data?.errorName || e?.shortMessage || String(e); }
-if (expected && !FORCE) {
-  console.log(JSON.stringify({ jack: who, strategy: log.args.strategyHash, leaseState: lease.state, heartbeat, sent: false, expected }));
-  process.exit(1);
-}
-const balanceOut = () => pc.readContract({ address: tokenOut, abi: erc20Abi, functionName: 'balanceOf', args: [account.address] });
-const before = await balanceOut();
-const hash = await wallet.writeContract({ ...req, ...(expected ? { gas: 400_000n } : {}) });
-const rc = await pc.waitForTransactionReceipt({ hash, timeout: 180_000 });
-const amountOut = rc.status === 'success' ? (await balanceOut()) - before : 0n;
-console.log(JSON.stringify({
-  jack: who, strategy: log.args.strategyHash, leaseEpoch: String(lease.epoch), leaseState: lease.state, heartbeat,
-  tokenIn: opt('in', 'USDC').toUpperCase(), amount: String(amount), amountOut: String(amountOut), status: rc.status, reason: rc.status === 'success' ? null : expected,
-  tx: txLink(hash), gasUsed: String(rc.gasUsed),
-}));
-process.exitCode = rc.status === 'success' ? 0 : 3;

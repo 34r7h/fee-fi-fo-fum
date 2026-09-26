@@ -116,6 +116,7 @@ h2.reg .lt{height:26px}
 .st[data-k=fenced][data-on] .nm{color:var(--madder)}
 .strats{display:grid;gap:3px;margin-top:6px}
 .bk{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--ink)}
+.refused{margin:2px 0 16px}
 .bk svg{width:18px;height:18px;flex:none}
 .bk[data-s=FENCED],.bk[data-s=DOCKED]{color:var(--madder)}
 .bk[data-s=WIND-DOWN]{color:var(--woad)}
@@ -257,6 +258,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       <nav class="tabs" role="tablist" aria-label="View">
         <button role="tab" aria-selected="true" data-tab="castle">The castle</button>
         <button role="tab" aria-selected="false" data-tab="replay">The replay</button>
+        <button role="tab" aria-selected="false" data-tab="v2" hidden>The v2 run</button>
       </nav>
     </header>
 
@@ -316,6 +318,16 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         <p class="note" data-r="replayNote"></p>
         <div data-r="timeline"></div>
         <div data-r="replay"></div>
+      </section>
+    </div>
+
+    <div data-view="v2" hidden>
+      <section aria-labelledby="h-v2">
+        <h2 class="reg" id="h-v2" data-lt="THE LIVE FAILOVER"></h2>
+        <p class="note" data-r="v2Note"></p>
+        <div data-r="v2Timeline"></div>
+        <div class="refused" data-r="v2Refused"></div>
+        <div data-r="v2Table"></div>
       </section>
     </div>
 
@@ -675,6 +687,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   function derive(f) {
     var L = leaseAt(f.t);
     if (!L) return { d: 'unknown', L: null };
+    if (f.programEpoch == null) return { d: 'unknown', L: L };
     if (String(f.programEpoch) !== L.epoch) return { d: 'fenced', L: L };
     if (f.t / 1000 > L.expiry) return { d: 'wind-down', L: L };
     return { d: 'live', L: L };
@@ -1106,7 +1119,11 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     fill(R('replayNote'), S.mode === 'chain'
       ? 'Rebuilt from Sepolia logs alone. Reverted fills leave no logs, so the fenced attempts need the castle service to be listed; every other fill is judged here from the lease events.'
       : 'Each fill is judged again from the lease history alone: the epoch baked into its book against the lease’s epoch at that moment, then the block time against the lease’s expiry. The last column says whether that verdict matches what happened.');
-    drawTimeline();
+    drawTimeline(R('timeline'));
+    fill(R('replay'), judged());
+  }
+  // The replay table, judged from whichever castle state is current in S.
+  function judged() {
     var rows = S.fills.slice().reverse().map(function (f) {
       var r = derive(f), ok = r.d === f.decision;
       return h('tr', null, [
@@ -1116,22 +1133,21 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         h('td', { class: 'num opt', text: r.L ? ep(r.L.epoch) : '?' }),
         h('td', { class: 'num opt', text: r.L ? (f.t / 1000 > r.L.expiry ? left(f.t / 1000 - r.L.expiry) + ' past' : left(r.L.expiry - f.t / 1000) + ' left') : '?' }),
         h('td', null, fateEl(r.d)),
-        h('td', { class: 'agree', 'data-ok': ok ? 'yes' : 'no', text: ok ? 'agrees' : 'differs: ' + f.decision }),
+        h('td', { class: 'agree', 'data-ok': ok ? 'yes' : 'no', text: f.status === 'reverted' ? (f.decision ? (ok ? 'agrees' : 'differs') + ': reverted ' + f.revert : 'reverted; error not recovered') : ok ? 'agrees' : 'differs: ' + f.decision }),
         h('td', null, txEl(f.tx))
       ]);
     });
-    fill(R('replay'), S.fills.length ? h('table', { class: 'led' }, [
+    return S.fills.length ? h('table', { class: 'led' }, [
       h('thead', null, h('tr', null, [h('th', { text: 'When' }), h('th', { text: 'Jack' }), h('th', { text: 'Book epoch' }), h('th', { class: 'opt', text: 'Lease epoch' }), h('th', { class: 'opt', text: 'Lease' }), h('th', { text: 'Verdict' }), h('th', { text: 'Chain' }), h('th', { text: 'Tx' })])),
       h('tbody', null, rows)
-    ]) : h('p', { class: 'empty', text: 'No fills to judge yet.' }));
+    ]) : h('p', { class: 'empty', text: 'No fills to judge yet.' });
   }
-  function drawTimeline() {
-    var el = R('timeline');
+  function drawTimeline(el, end) {
     if (!S.leases.length) { el.replaceChildren(); return; }
     // Narrow frames get a narrow viewBox and short labels, so the text stays at reading size.
     var narrow = root.getAttribute('data-size') !== 'full';
     var W = narrow ? 360 : 1000, H = 126, L = 10, Rr = 10, ends = [-1e9, -1e9];
-    var t0 = S.leases[0].t, t1 = Math.max(clock(), S.lease ? S.lease.expiry * 1000 : 0);
+    var t0 = S.leases[0].t, t1 = end || Math.max(clock(), S.lease ? S.lease.expiry * 1000 : 0);
     S.fills.forEach(function (f) { t1 = Math.max(t1, f.t); });
     function X(t) { return L + (W - L - Rr) * (t - t0) / Math.max(1, t1 - t0); }
     var g = [sv('path', { d: 'M' + L + ' 60H' + (W - Rr), stroke: '#E6DAC0', 'stroke-width': 18, 'stroke-linecap': 'round' })];
@@ -1190,6 +1206,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   function render() {
     drawHeader(); drawChant(); tickRoundel(); drawFence(); drawHoard(); drawStalk(); drawFrieze(); drawFills();
     if (!R('replay').closest('[hidden]')) drawReplay();
+    if (!R('v2Table').closest('[hidden]')) drawHistory();
     drawFace();
     dirty = false;
   }
@@ -1268,8 +1285,8 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   };
   var CH = null;
   function stopChain() { if (CH) { clearTimeout(CH.timer); CH.dead = true; CH = null; } }
-  function rpc(method, params) {
-    var urls = CONFIG.rpcs, c = CH, tries = 0;
+  function rpc(method, params, cc) {
+    var urls = CONFIG.rpcs, c = cc || CH, tries = 0;
     function go() {
       var i = c.rpc % urls.length;
       return fetch(urls[i], { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: method, params: params }) })
@@ -1298,20 +1315,16 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     for (var i = 0; i < ag.length; i++) if (same(ag[i].addr, addr)) return ag[i].id;
     return null;
   }
-  function chainEv(type, body, log) {
-    return Object.assign({ v: 1, type: type, t: CH.time(log), block: log ? hexN(log.blockNumber) : null, tx: log ? log.transactionHash : null, src: 'chain' }, body);
-  }
-  function startChain(why) {
-    stopChain(); MOCK = null;
-    if (es) { es.close(); es = null; }
-    reset('chain');
-    S.config = Object.assign({}, CONFIG);
-    var c = CH = { rpc: 0, cursor: 0, castleTx: {}, auctions: [], shipEpoch: {}, leases: [], fillTx: {}, expiredFor: '', bal: '', times: {}, why: why || '' };
-    var castle = CONFIG.contracts.castle.address, aqua = CONFIG.external.aqua, deploy = Number(CONFIG.contracts.castle.block);
+  function parentName() { return String(CONFIG.name || 'castle.feefifofum.eth').split('.').slice(1).join('.'); }
+  function ensOf(addr) { return whoIs(addr) ? whoIs(addr) + '.' + parentName() : null; }
+  // One reader of a Castle's logs and of the Aqua fills against it. Chain mode runs one on the live Castle, and the
+  // v2 tab runs one on Castle v2. Every event goes to emit(), in block order.
+  function reader(castle, emit) {
+    var c = { rpc: 0, cursor: 0, castleTx: {}, auctions: [], shipEpoch: {}, leases: [], fillTx: {}, expiredFor: '', times: {} }, aqua = CONFIG.external.aqua;
+    function q(m, p) { return rpc(m, p, c); }
     c.time = function (log) { return log && log.blockTimestamp ? hexN(log.blockTimestamp) * 1000 : log && c.times[log.blockNumber] ? c.times[log.blockNumber] : clock(); };
-    var parent = String(CONFIG.name || 'castle.feefifofum.eth').split('.').slice(1).join('.');
-    drawChainNote();
-    function leaseAtBlock(b) { var cur = null; c.leases.forEach(function (l) { if (l.block <= b) cur = l; }); return cur; }
+    function ev(type, body, log) { return Object.assign({ v: 1, type: type, t: c.time(log), block: log ? hexN(log.blockNumber) : null, tx: log ? log.transactionHash : null, src: 'chain' }, body); }
+    c.leaseAtBlock = function (b) { var cur = null; c.leases.forEach(function (l) { if (l.block <= b) cur = l; }); return cur; };
     function one(log) {
       var n = TOPIC[log.topics[0]], w = wordsOf(log.data), tp = log.topics;
       if (!n) return;
@@ -1323,8 +1336,8 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       }
       if (!same(log.address, castle)) {
         lapse(c.time(log) / 1000);
-        if (n === 'BidSubmitted') feed(chainEv('auction.bid', { auction: log.address, bidId: String(hexN(tp[1])), owner: wAddr(tp[2]), ownerName: whoIs(wAddr(tp[2])) ? whoIs(wAddr(tp[2])) + '.' + parent : null, maxPrice: q96View(w[0]), amount: BigInt(w[1]).toString() }, log));
-        else if (n === 'Checkpoint') feed(chainEv('auction.checkpoint', { auction: log.address, clearing: q96View(w[1]), sold: null, raised: null }, log));
+        if (n === 'BidSubmitted') emit(ev('auction.bid', { auction: log.address, bidId: String(hexN(tp[1])), owner: wAddr(tp[2]), ownerName: ensOf(wAddr(tp[2])), maxPrice: q96View(w[0]), amount: BigInt(w[1]).toString() }, log));
+        else if (n === 'Checkpoint') emit(ev('auction.checkpoint', { auction: log.address, clearing: q96View(w[1]), sold: null, raised: null }, log));
         return;
       }
       var b = hexN(log.blockNumber), t = c.time(log);
@@ -1333,27 +1346,27 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       if (n === 'Renewed' || n === 'Claimed') {
         var epoch = BigInt(tp[1]).toString(), holder = wAddr(tp[2]), exp = hexN(w[0]), prev = c.leases[c.leases.length - 1];
         c.leases.push({ block: b, epoch: epoch, expiry: exp, holder: holder, agent: whoIs(holder) });
-        if (n === 'Renewed') feed(chainEv('lease.renewed', { epoch: epoch, holder: holder, holderAgent: whoIs(holder), expiry: exp, attestor: 'fo', digest: w[1] }, log));
-        else feed(chainEv('lease.claimed', { epoch: epoch, prevEpoch: BigInt(w[1]).toString(), holder: holder, holderAgent: whoIs(holder), expiry: exp, gapSeconds: prev ? Math.max(0, Math.round(t / 1000 - prev.expiry)) : null }, log));
+        if (n === 'Renewed') emit(ev('lease.renewed', { epoch: epoch, holder: holder, holderAgent: whoIs(holder), expiry: exp, attestor: 'fo', digest: w[1] }, log));
+        else emit(ev('lease.claimed', { epoch: epoch, prevEpoch: BigInt(w[1]).toString(), holder: holder, holderAgent: whoIs(holder), expiry: exp, gapSeconds: prev ? Math.max(0, Math.round(t / 1000 - prev.expiry)) : null }, log));
       } else if (n === 'Relinked') {
         var label = wStr(log.data, 0);
-        feed(chainEv('castle.relinked', { node: tp[1], holderNode: tp[2], holderName: label ? label + '.' + parent : null }, log));
+        emit(ev('castle.relinked', { node: tp[1], holderNode: tp[2], holderName: label ? label + '.' + parentName() : null }, log));
       } else if (n === 'Shipped') {
-        var se = BigInt(tp[2]).toString(), by = leaseAtBlock(b);
+        var se = BigInt(tp[2]).toString(), by = c.leaseAtBlock(b);
         c.shipEpoch[tp[1]] = se;
-        feed(chainEv('strategy.shipped', { hash: tp[1], epoch: se, shippedBy: by ? by.agent : null, center: BigInt(w[0]) > BigInt(0) ? q96View(w[0]) : null, weth: BigInt(w[1]).toString(), usdc: BigInt(w[2]).toString() }, log));
+        emit(ev('strategy.shipped', { hash: tp[1], epoch: se, shippedBy: by ? by.agent : null, center: BigInt(w[0]) > BigInt(0) ? q96View(w[0]) : null, weth: BigInt(w[1]).toString(), usdc: BigInt(w[2]).toString() }, log));
       } else if (n === 'Docked') {
-        feed(chainEv('strategy.docked', { hash: tp[1], epoch: BigInt(tp[2]).toString(), dockedBy: whoIs(wAddr(tp[3])) }, log));
+        emit(ev('strategy.docked', { hash: tp[1], epoch: BigInt(tp[2]).toString(), dockedBy: whoIs(wAddr(tp[3])) }, log));
       } else if (n === 'PriceWritten') {
-        feed(chainEv('price.written', { key: 'handoff-price', price: q96View(w[0]) }, log));
+        emit(ev('price.written', { key: 'handoff-price', price: q96View(w[0]) }, log));
       } else if (n === 'AuctionOpened') {
         var au = wAddr(tp[1]);
         if (c.auctions.indexOf(au) < 0) c.auctions.push(au);
-        feed(chainEv('auction.opened', { auction: au, kind: BigInt(w[3]) ? 'dissolution' : 'shift-change', amount: BigInt(w[0]).toString(), floor: q96View(w[1]), startBlock: b, endBlock: hexN(w[2]), hook: (CONFIG.contracts.jackHook || {}).address || null }, log));
+        emit(ev('auction.opened', { auction: au, kind: BigInt(w[3]) ? 'dissolution' : 'shift-change', amount: BigInt(w[0]).toString(), floor: q96View(w[1]), startBlock: b, endBlock: hexN(w[2]), hook: (CONFIG.contracts.jackHook || {}).address || null }, log));
       } else if (n === 'AuctionSettled') {
-        feed(chainEv('auction.cleared', { auction: wAddr(tp[1]), clearing: q96View(w[0]), sold: null, raised: BigInt(w[1]).toString() }, log));
+        emit(ev('auction.cleared', { auction: wAddr(tp[1]), clearing: q96View(w[0]), sold: null, raised: BigInt(w[1]).toString() }, log));
       } else if (n === 'Dissolved') {
-        feed(chainEv('castle.dissolved', { caller: null, auction: null }, log));
+        emit(ev('castle.dissolved', { caller: null, auction: null }, log));
       }
     }
     // One router.swap is one fill: Aqua pulls one token from the castle and pushes the other in. The taker is the tx sender.
@@ -1362,21 +1375,21 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         return p.then(function () {
           var f = c.fillTx[h0]; delete c.fillTx[h0];
           if (f.n !== 2 || !f.legs.Pulled || !f.legs.Pushed || same(f.legs.Pulled.token, f.legs.Pushed.token) || c.castleTx[h0]) return null;
-          return rpc('eth_getTransactionByHash', [h0]).then(function (tx) {
-            var out = f.legs.Pulled, inn = f.legs.Pushed, hash = (out || inn).hash, b = hexN(f.log.blockNumber), L = leaseAtBlock(b), pe = c.shipEpoch[hash] || null;
+          return q('eth_getTransactionByHash', [h0]).then(function (tx) {
+            var out = f.legs.Pulled, inn = f.legs.Pushed, hash = (out || inn).hash, b = hexN(f.log.blockNumber), L = c.leaseAtBlock(b), pe = c.shipEpoch[hash] || null;
             var tIn = inn && same(inn.token, CONFIG.external.usdc) ? 'USDC' : 'WETH', tOut = tIn === 'USDC' ? 'WETH' : 'USDC';
             lapse(c.time(f.log) / 1000);
             var d = pe != null && L && pe !== L.epoch ? 'fenced' : L && c.time(f.log) / 1000 > L.expiry ? 'wind-down' : 'live';
-            feed(chainEv('fill', { id: h0 + ':0', taker: tx && tx.from, takerName: tx ? (whoIs(tx.from) ? whoIs(tx.from) + '.' + parent : null) : null, tokenIn: tIn, tokenOut: tOut,
+            emit(ev('fill', { id: h0 + ':0', taker: tx && tx.from, takerName: tx ? ensOf(tx.from) : null, tokenIn: tIn, tokenOut: tOut,
               amountIn: inn ? inn.amount : '0', amountOut: out ? out.amount : '0', strategy: hash, programEpoch: pe, leaseEpoch: L ? L.epoch : null, expiry: L ? L.expiry : null,
               decision: d, status: 'success', revert: null }, f.log));
           });
         });
       }, Promise.resolve());
     }
-    function logs(addr, from, to) { return rpc('eth_getLogs', [{ address: addr, fromBlock: '0x' + from.toString(16), toBlock: '0x' + to.toString(16) }]); }
+    function logs(addr, from, to) { return q('eth_getLogs', [{ address: addr, fromBlock: '0x' + from.toString(16), toBlock: '0x' + to.toString(16) }]); }
     function sorted(a) { return a.sort(function (x, y) { return hexN(x.blockNumber) - hexN(y.blockNumber) || hexN(x.logIndex) - hexN(y.logIndex); }); }
-    function scan(from, to) {
+    c.scan = function scan(from, to) {
       var hi = Math.min(to, from + 1999);
       return logs([castle, aqua], from, hi).then(function (ls) {
         var known = c.auctions.slice();
@@ -1391,8 +1404,27 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
           }, Promise.resolve()).then(function () { return fills(Object.keys(c.fillTx)); });
         });
       }).then(function () { c.cursor = hi; if (hi < to) return scan(hi + 1, to); });
+    };
+    // The lease lapsing is no transaction: it is derived from block time, as the extruction derives it.
+    function lapse(at) {
+      var L = c.leases[c.leases.length - 1];
+      if (!L || (at == null ? nowS() : at) <= L.expiry || c.expiredFor === L.epoch + ':' + L.expiry) return;
+      c.expiredFor = L.epoch + ':' + L.expiry;
+      emit({ v: 1, type: 'lease.expired', t: L.expiry * 1000, block: null, tx: null, src: 'chain', epoch: L.epoch, holder: L.holder, holderAgent: L.agent, expiry: L.expiry });
     }
-    function call(to, data) { return rpc('eth_call', [{ to: to, data: data }, 'latest']); }
+    c.lapse = lapse;
+    return c;
+  }
+  function startChain(why) {
+    stopChain(); MOCK = null;
+    if (es) { es.close(); es = null; }
+    reset('chain');
+    S.config = Object.assign({}, CONFIG);
+    var castle = CONFIG.contracts.castle.address, deploy = Number(CONFIG.contracts.castle.block);
+    var c = CH = reader(castle, feed);
+    c.why = why || ''; c.bal = ''; c.polls = 0;
+    drawChainNote();
+    function call(to, data) { return rpc('eth_call', [{ to: to, data: data }, 'latest'], c); }
     function views() {
       var pad = castle.slice(2).toLowerCase(); while (pad.length < 64) pad = '0' + pad;
       return Promise.all([call(CONFIG.external.weth, '0x70a08231' + pad), call(CONFIG.external.usdc, '0x70a08231' + pad), call(castle, '0x2942b8e6')]).then(function (r) {
@@ -1401,26 +1433,19 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         if (k !== c.bal) { c.bal = k; feed({ v: 1, type: 'inventory', t: clock(), block: c.cursor, tx: null, src: 'chain', weth: BigInt(r[0]).toString(), usdc: BigInt(r[1]).toString() }); }
       });
     }
-    // The lease lapsing is no transaction: it is derived from block time, as the extruction derives it.
-    function lapse(at) {
-      var L = c.leases[c.leases.length - 1];
-      if (!L || (at == null ? nowS() : at) <= L.expiry || c.expiredFor === L.epoch + ':' + L.expiry) return;
-      c.expiredFor = L.epoch + ':' + L.expiry;
-      feed({ v: 1, type: 'lease.expired', t: L.expiry * 1000, block: null, tx: null, src: 'chain', epoch: L.epoch, holder: L.holder, holderAgent: L.agent, expiry: L.expiry });
-    }
     function poll() {
       if (c.dead) return;
-      Promise.all([rpc('eth_blockNumber', []), c.cursor ? null : rpc('eth_getBlockByNumber', ['0x' + deploy.toString(16), false])]).then(function (r) {
+      Promise.all([rpc('eth_blockNumber', [], c), c.cursor ? null : rpc('eth_getBlockByNumber', ['0x' + deploy.toString(16), false], c)]).then(function (r) {
         var head = hexN(r[0]);
         if (!c.cursor) {
           feed({ v: 1, type: 'snapshot', t: r[1] ? hexN(r[1].timestamp) * 1000 : clock(), block: deploy, tx: CONFIG.contracts.castle.tx || null, src: 'chain', config: CONFIG, shifts: CONFIG.shifts || [],
             agents: (CONFIG.agents || []).map(function (a) { return { id: a.id, role: a.role, addr: a.addr, ens: a.ens, alive: null }; }), lease: null, leases: [], strategies: [], fills: [] });
           c.cursor = deploy - 1;
         }
-        return (head > c.cursor ? scan(c.cursor + 1, head) : Promise.resolve()).then(views);
+        return (head > c.cursor ? c.scan(c.cursor + 1, head) : Promise.resolve()).then(views);
       }).then(function () {
         if (c.dead) return;
-        c.failed = 0; lapse(); dirty = true;
+        c.lapse(); dirty = true;
         c.timer = setTimeout(poll, 12000);
       }, function () {
         if (c.dead) return;
@@ -1430,13 +1455,82 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       // while the chain is read directly, look for the service coming back
       if (CONFIG.stream && ++c.polls % 5 === 0) fetch(base() + '/health').then(function (r) { if (r.ok && !c.dead) startLive(); }, function () { /* still away */ });
     }
-    c.polls = 0;
     poll();
   }
   function drawChainNote() {
     var el = R('mockbar');
     el.hidden = false;
     fill(el, h('p', { class: 'mocktxt' }, [h('b', { text: 'Chain replay.' }), ' ' + (CH && CH.why ? CH.why + ' ' : '') + 'This page is reading Castle and Aqua on Ethereum Sepolia directly, so every scene is a real transaction. Agent heartbeats and reverted fill attempts need the castle service, so they do not show here.']));
+  }
+
+  // ---------------------------------------------------------------- the v2 run: Castle v2's whole life, read from Sepolia
+  // Its leases and fills come from logs. A reverted tx leaves no logs, so the two headline reverts are read by hash:
+  // status 0 from the receipt, and the error from replaying the call on an archive node at the block before.
+  var HIST = null, drawnHist = '';
+  function startHistory() {
+    var hc = CONFIG && CONFIG.history;
+    if (!hc || HIST) return;
+    var keep = S; reset('history'); var st = S; S = keep;
+    st.config = Object.assign({}, CONFIG);
+    var H = HIST = { S: st, refused: [], state: 'reading' };
+    function emit(ev) { var k = S; S = st; try { apply(ev); } finally { S = k; } dirty = true; }
+    var c = reader(hc.castle, emit);
+    function q(m, p) { return rpc(m, p, c); }
+    function replay(tx, b) {
+      if (!CONFIG.archive) return Promise.resolve(null);
+      return fetch(CONFIG.archive, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_call',
+        params: [{ from: tx.from, to: tx.to, data: tx.input, value: tx.value, gas: tx.gas }, '0x' + (b - 1).toString(16)] }) })
+        .then(function (r) { return r.json(); })
+        .then(function (j) { var d = j.error && j.error.data; d = d && d.data || d; return typeof d === 'string' && /^0x[0-9a-f]{8}/i.test(d) ? d.toLowerCase() : null; }, function () { return null; });
+    }
+    // The book's epoch is baked into the order's program, so the swap calldata carries it as a 32-byte value.
+    function epochIn(input) {
+      var hx = String(input).toLowerCase();
+      for (var i = st.leases.length - 1; i >= 0; i--) {
+        var e = BigInt(st.leases[i].epoch).toString(16);
+        while (e.length < 64) e = '0' + e;
+        if (hx.indexOf(e) > 9) return st.leases[i].epoch;
+      }
+      return null;
+    }
+    function reverted(h0) {
+      return Promise.all([q('eth_getTransactionByHash', [h0]), q('eth_getTransactionReceipt', [h0])]).then(function (r) {
+        var tx = r[0], rc = r[1];
+        if (!tx || !rc || hexN(rc.status) !== 0) return null;
+        var b = hexN(rc.blockNumber);
+        return Promise.all([q('eth_getBlockByNumber', [rc.blockNumber, false]), replay(tx, b)]).then(function (x) {
+          var t = hexN(x[0].timestamp) * 1000, d = x[1] || '', sel = d.slice(0, 10), w = wordsOf('0x' + d.slice(10));
+          if (same(tx.to, hc.castle)) {
+            H.refused.push({ t: t, block: b, tx: h0, who: whoIs(tx.from) || short(tx.from), call: { '0xb7c8cfb9': 'renew()', '0xac9650d8': 'multicall()' }[tx.input.slice(0, 10)] || 'Castle',
+              why: sel === '0xbf5cd21d' ? 'NotHolder, because ' + up(whoIs(wAddr(w[1])) || short(wAddr(w[1]))) + ' holds the castle' : 'reverted; the error was not recovered' });
+            dirty = true;
+            return;
+          }
+          var fenced = sel === '0x0f7adc36';
+          emit({ v: 1, type: 'fill', t: t, block: b, tx: h0, src: 'chain', id: h0 + ':0', taker: tx.from, takerName: ensOf(tx.from), strategy: null, programEpoch: epochIn(tx.input),
+            decision: fenced ? 'fenced' : null, status: 'reverted', revert: fenced ? 'FeeFiFoFum()' : null });
+        });
+      });
+    }
+    q('eth_blockNumber', []).then(function (hd) { return c.scan(hc.from, hc.to || hexN(hd)); })
+      .then(function () { c.lapse(); return (hc.reverts || []).reduce(function (p, h0) { return p.then(function () { return reverted(h0); }); }, Promise.resolve()); })
+      .then(function () { st.fills.sort(function (a, b) { return a.t - b.t; }); H.state = 'done'; dirty = true; }, function () { H.state = 'failed'; dirty = true; });
+  }
+  function drawHistory() {
+    var H = HIST, key = H ? [H.state, H.S.fills.length, H.S.leases.length, H.refused.length, root.getAttribute('data-size')].join('|') : '';
+    if (!H || drawnHist === key) return;
+    drawnHist = key;
+    var st = H.S, end = 0, fenced = st.fills.filter(function (f) { return f.status === 'reverted'; }).length;
+    st.leases.forEach(function (l) { end = Math.max(end, l.expiry * 1000); });
+    st.fills.forEach(function (f) { end = Math.max(end, f.t); });
+    fill(R('v2Note'), H.state === 'reading' ? 'Reading Castle v2 from Sepolia…' : H.state === 'failed' ? 'Sepolia did not answer, so the v2 run could not be read. It will try again when the tab is reopened.'
+      : 'Castle v2 ran the live failover on 26 September 2026. Every lease and fill below is read from its Sepolia logs: ' + st.fills.length + ' fills, ' + fenced + ' of them reverted, and '
+        + H.refused.length + ' refused call' + (H.refused.length === 1 ? '' : 's') + '. A reverted tx leaves no logs, so those are read by hash, and the error is recovered by replaying the call.');
+    var keep = S; S = st;
+    try { drawTimeline(R('v2Timeline'), end); fill(R('v2Table'), st.fills.length ? judged() : null); } finally { S = keep; }
+    fill(R('v2Refused'), H.refused.map(function (r) {
+      return h('div', { class: 'bk num', 'data-s': 'FENCED' }, [stitch('fenced', ''), h('span', null, [hhmmss(r.t) + ' · block ' + r.block + ' · ', h('b', { text: up(r.who) }), ' called ' + r.call + ' and the castle refused it: ' + r.why + '. ', txEl(r.tx)])]);
+    }));
   }
 
   // ---------------------------------------------------------------- the mock: the five beats of the demo, on a loop
@@ -1586,12 +1680,14 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   if (typeof ResizeObserver === 'function') new ResizeObserver(size).observe(root);
   size();
 
+  root.querySelector('[data-tab=v2]').hidden = !(CONFIG && CONFIG.history);
   root.querySelectorAll('[data-tab]').forEach(function (b) {
     b.addEventListener('click', function () {
       var tab = b.getAttribute('data-tab');
       root.querySelectorAll('[data-tab]').forEach(function (x) { x.setAttribute('aria-selected', String(x === b)); });
       root.querySelectorAll('[data-view]').forEach(function (v) { v.hidden = v.getAttribute('data-view') !== tab; });
-      drawnReplay = -1; dirty = true;
+      if (tab === 'v2') { if (HIST && HIST.state === 'failed') HIST = null; startHistory(); }
+      drawnReplay = -1; drawnHist = ''; dirty = true;
     });
   });
   R('unroll').addEventListener('click', function () {

@@ -2,8 +2,8 @@
 //   - an auction is running: log its clearing price and raise as they move; once its endBlock has passed, settle it.
 //     settleAuction() sweeps the USDC and the unsold WETH home and, if the auction graduated, writes the clearing
 //     price to ENS as the next shift's anchor. fum then reads the anchor back from the resolver;
-//   - no auction, and the castle has just rotated (a claim after a lapse, not the genesis) and the new holder has
-//     shipped its book: open the shift-change auction on the WETH the book leaves free, once per epoch
+//   - no auction, and the castle has just rotated (a claim after a lapse, not the genesis, within FUM_FRESH_BLOCKS)
+//     and the new holder has shipped its book: open the shift-change auction on the WETH the book leaves free, once per epoch
 //     (FUM_LOT_WETH caps the lot, in wei);
 //   - FUM_DISSOLVE=1 only: the lease lapsed dissolveGrace ago and nobody claimed it, so dissolve(): dock the whole
 //     book and auction all the WETH, once per lapsed epoch. It is off by default because it spends the hoard.
@@ -18,6 +18,9 @@ import { ensAnchorQ96 } from '../lib/book.mjs';
 const LOT_CAP = env('FUM_LOT_WETH', '') ? BigInt(env('FUM_LOT_WETH')) : null;
 const DISSOLVE = env('FUM_DISSOLVE') === '1';
 const LOOKBACK_BLOCKS = BigInt(env('SHIFT_LOOKBACK_BLOCKS', 900));
+// A rotation is fresh for this many blocks after its claim (75 is about 15 min on Sepolia). An older one, such as
+// the rotation before fum started, gets no auction.
+const FRESH_BLOCKS = BigInt(env('FUM_FRESH_BLOCKS', 75));
 const Q96 = 1n << 96n;
 const usdcPerWeth = (q) => (q == null ? null : Number((q * 10n ** 12n * 100n) / Q96) / 100);
 const ZERO = /^0x0{40}$/i;
@@ -60,6 +63,7 @@ async function openOnRotation(ctx, lease) {
   const claim = claims.at(-1);
   // The genesis claim (prevEpoch 0) is not a shift change; a claim older than the lookback is not fresh.
   if (!claim || claim.args.prevEpoch === 0n) return ctx.logChange('rotation', 'no-rotation', { epoch: lease.epoch, claimed: Boolean(claim) });
+  if (lease.block - claim.blockNumber > FRESH_BLOCKS) return ctx.logChange('rotation', 'rotation-not-fresh', { epoch: lease.epoch, claimBlock: claim.blockNumber, freshBlocks: FRESH_BLOCKS });
   const opened = await events(ctx, lease, 'AuctionOpened', { epoch: lease.epoch });
   if (opened.length) return ctx.logChange('rotation', 'auction-done-this-epoch', { epoch: lease.epoch, auction: opened.at(-1).args.auction });
   const shipped = await events(ctx, lease, 'Shipped', { epoch: lease.epoch });

@@ -1,0 +1,8 @@
+{
+  "name": "fffo-ens-scripts",
+  "private": true,
+  "type": "module",
+  "description": "ENSv2 scripts for fee-fi-fo-fum: the handoff agent registry under feefifofum.eth",
+  "scripts": { "agents": "node agent-registry.mjs" },
+  "dependencies": { "viem": "^2.56.9" }
+}

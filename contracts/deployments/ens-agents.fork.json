@@ -1,0 +1,169 @@
+{
+  "chainId": 11155111,
+  "universalResolver": "0x5d25C1D6aCBb71B7a28AA7899618a3412a8303e3",
+  "rootRegistry": "0x9703DBD26dAB89504490994138cF2c575251a9cE",
+  "ethRegistry": "0x657eA849311d3D5823348ddEd7C2AaAFb3EDE09E",
+  "parent": "feefifofum.eth",
+  "registrar": "0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99",
+  "txs": [
+    {
+      "what": "deploy agent registry (UserRegistry)",
+      "hash": "0xb8bf24b786239c128d0948242c9925c2d7e443e35de5f30d71c11d9d7cf1bff4",
+      "block": 11783982
+    },
+    {
+      "what": "deploy agent resolver (PermissionedResolver)",
+      "hash": "0x862a1d7e08e30192d4fa1ff300b8056dbd5d04e79d39b25eda74256a2c8208a3",
+      "block": 11783983
+    },
+    {
+      "what": "[fork] register feefifofum.eth as the ETHRegistrar",
+      "hash": "0x8e354cf9e87f532299cd93925b710bbfe06ff033d2c8e75cb707fbbd12649e8a",
+      "block": 11783984
+    },
+    {
+      "what": "agent registry setParent(.eth, feefifofum)",
+      "hash": "0xa3d98ac90008ea75b20da79a1880ec2118f2ef571e2942e78fc14068922b27b3",
+      "block": 11783985
+    },
+    {
+      "what": "register fee.feefifofum.eth -> 0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538",
+      "hash": "0xfb46829669461327577727676cf5abf6fd4f92506823ef8ec16d185d3fdda5f2",
+      "block": 11783986
+    },
+    {
+      "what": "records for fee.feefifofum.eth (3)",
+      "hash": "0x2dc3c669b6b70d529c4ef4e2b89cb05b92b4fd4184b79dc7fa845f1510ce0add",
+      "block": 11783987
+    },
+    {
+      "what": "register fi.feefifofum.eth -> 0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2",
+      "hash": "0x89fdb24c220574f9125227ca3634afca96fdafa5602a1a6360fc150fcdd6d9b5",
+      "block": 11783988
+    },
+    {
+      "what": "records for fi.feefifofum.eth (3)",
+      "hash": "0xef8cc959a0a748f1037f5ab5f5380efe11000f38674ec4f75a4482853ff3a498",
+      "block": 11783989
+    },
+    {
+      "what": "register fo.feefifofum.eth -> 0x8689a407A2488A5b2f2De05d2C6978a798f93D56",
+      "hash": "0xfec61d2e21183b0d77e02f92de8b45af921f53858f1e46c0135c12c27e877be4",
+      "block": 11783990
+    },
+    {
+      "what": "records for fo.feefifofum.eth (3)",
+      "hash": "0xdba554018ff0b1a9068851ca0f76099a43c33aecdd30c5f976b1fdf1c265252a",
+      "block": 11783991
+    },
+    {
+      "what": "register fum.feefifofum.eth -> 0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2",
+      "hash": "0x2a565ec11b4014e7d543dea6bb3e0346ce0aa495e582592110b7fe6a7f50ac61",
+      "block": 11783992
+    },
+    {
+      "what": "records for fum.feefifofum.eth (3)",
+      "hash": "0x2c980809b308f52d9d596a73cf01af538c4bfa2a0aa60b58722e0a169c5557f9",
+      "block": 11783993
+    },
+    {
+      "what": "register agy.feefifofum.eth -> 0x750428A8f5B81Aa019c40783d26780297654AE33",
+      "hash": "0x4ecb1afa73cd4ad6e269e8e5b770a344b33fb7c073e2d499dc99c3fbba59f1a6",
+      "block": 11783994
+    },
+    {
+      "what": "records for agy.feefifofum.eth (3)",
+      "hash": "0x3ae1d670faa20de5d2b5f58e2720cf0a56f6a25c99d7288819f54e9e2baf59d1",
+      "block": 11783995
+    }
+  ],
+  "agentRegistry": "0x2F2164507471a1a46506f902aBfdfB9d22e4bE09",
+  "resolver": "0x9D2251b5162701BC2bD97d61bc8aa3e53446285E",
+  "names": {
+    "fee": {
+      "name": "fee.feefifofum.eth",
+      "node": "0x212b011f0a7340cac0323bed5bd3dd6cb6f245f400f714667d713ac031941ce0",
+      "labelhash": "0x833b9f6abf0b529613680afe2a00fa663cc95cbdc47d726d85a044462eabbf02",
+      "handoff_agent": "fee",
+      "addr": "0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538",
+      "mcp": "https://handoff.lol/mcp",
+      "registered_at": null,
+      "verified": {
+        "owner": "0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538",
+        "expiry": 1821934516,
+        "urAddr": "0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538",
+        "urMcp": "https://handoff.lol/mcp",
+        "ok": true,
+        "block": 11783995
+      }
+    },
+    "fi": {
+      "name": "fi.feefifofum.eth",
+      "node": "0x972f26d86c78db32dab0f37dbacb9189fbcb07465c5c500a09ca1d62bd1acab3",
+      "labelhash": "0xd7884a76b5eebe601ddb427195752db0165b44150b83c38b75b75ca295e99dfe",
+      "handoff_agent": "fi",
+      "addr": "0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2",
+      "mcp": "https://handoff.lol/mcp",
+      "registered_at": null,
+      "verified": {
+        "owner": "0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2",
+        "expiry": 1821934516,
+        "urAddr": "0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2",
+        "urMcp": "https://handoff.lol/mcp",
+        "ok": true,
+        "block": 11783995
+      }
+    },
+    "fo": {
+      "name": "fo.feefifofum.eth",
+      "node": "0x1df13f4433bb3897f08e701a5614172873f801b7c5b37422c8da11648a3b9e43",
+      "labelhash": "0x01b5a54615d9bcc40c7105286fdcbe6a1354081d018d0a0e13b2653fc80f7b09",
+      "handoff_agent": "fo",
+      "addr": "0x8689a407A2488A5b2f2De05d2C6978a798f93D56",
+      "mcp": "https://handoff.lol/mcp",
+      "registered_at": null,
+      "verified": {
+        "owner": "0x8689a407A2488A5b2f2De05d2C6978a798f93D56",
+        "expiry": 1821934516,
+        "urAddr": "0x8689a407A2488A5b2f2De05d2C6978a798f93D56",
+        "urMcp": "https://handoff.lol/mcp",
+        "ok": true,
+        "block": 11783995
+      }
+    },
+    "fum": {
+      "name": "fum.feefifofum.eth",
+      "node": "0x3fab15f182aef6b2e525eae01d8d09e62756e9316fcf3a8a96da23132f3851b0",
+      "labelhash": "0xbc99c6c50c48ca01f95585b7853ddc37e72c4d29cc37498636665cf5380a65f1",
+      "handoff_agent": "fum",
+      "addr": "0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2",
+      "mcp": "https://handoff.lol/mcp",
+      "registered_at": null,
+      "verified": {
+        "owner": "0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2",
+        "expiry": 1821934516,
+        "urAddr": "0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2",
+        "urMcp": "https://handoff.lol/mcp",
+        "ok": true,
+        "block": 11783995
+      }
+    },
+    "agy": {
+      "name": "agy.feefifofum.eth",
+      "node": "0x5565ddb8fb345b44c1ef60743c807492883d0ec306beedcad757a1c248d4a709",
+      "labelhash": "0xc81761cfd5f0f869af5d09be67e7a3aa26579732d082554808c712ac8299c9fb",
+      "handoff_agent": "agy",
+      "addr": "0x750428A8f5B81Aa019c40783d26780297654AE33",
+      "mcp": "https://handoff.lol/mcp",
+      "registered_at": "2026-07-26T02:40:25.777Z",
+      "verified": {
+        "owner": "0x750428A8f5B81Aa019c40783d26780297654AE33",
+        "expiry": 1821934516,
+        "urAddr": "0x750428A8f5B81Aa019c40783d26780297654AE33",
+        "urMcp": "https://handoff.lol/mcp",
+        "ok": true,
+        "block": 11783995
+      }
+    }
+  }
+}

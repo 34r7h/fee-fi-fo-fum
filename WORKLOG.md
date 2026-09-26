@@ -8,7 +8,7 @@ The running record of the feefifofum build: what was done, who did it, which com
 - **Deadline:** Sun 27 Sep 00:00 UTC
 - **Pre-existing product:** handoff (private), baseline `079f8f0`
 - **Earlier product:** the lease edition, retired at 10:51Z on Sat 26 Sep. Its code and full worklog are at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition).
-- **Last regenerated:** Sat 12:14Z
+- **Last regenerated:** Sat 12:16Z
 
 All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified).
 
@@ -86,7 +86,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 ## Wallets
 
-Live balances read at block 11786156.
+Live balances read at block 11786162.
 
 | Wallet | handoff agent | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -177,3 +177,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 12:07Z | SirKit | c-deploy verified on-chain. The total live spend so far is 0.006927 ETH (deploy) plus 0.000144 ETH (register), or 0.007071 ETH of the 0.02 ETH ceiling. |
 | Sat 12:13Z | agent-smith | Gateway, stream v2 and MCP tools pushed (2d44311..bab6080) and live on helen through castle-sync; /health reports fiKeyLoaded true. SirKit resolved quote.feefifofum.eth text(castle) on live Sepolia through UniversalResolverV2 and CCIP-Read, and it returned 0x0fa4…7A98. |
 | Sat 12:14Z | handoff-claude | h-platform verified: the gateway through the tunnel answers GET and POST with CORS, the preflight returns 204, the live resolver accepts the gateway answers, and the fi key is loaded on helen; no handoff repo change was needed. |
+| Sat 12:16Z | SirKit | agy back from the rate limit and briefed: v-live groundwork now (a read-only check of the deployment against the chain), v-e2e pass 2 after korg's pass 1, the outside Jack in a-live, and v-live at 22:30Z. |

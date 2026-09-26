@@ -38,7 +38,10 @@ export function deployments() {
   const raw = readJson(env.deploymentsPath) || {};
   const ens = readJson(env.ensDeploymentsPath) || {};
   const obj = (v) => (v && typeof v === 'object' ? v : {});
-  const src = { agentRegistry: ens.agentRegistry, agentResolver: ens.resolver, ...raw, ...obj(raw.external), ...obj(raw.contracts) };
+  // contracts.castle is Castle v3 from its deploy on, and v2 moved to raw.v2. This service still speaks v2, so it
+  // keeps serving the v2 castle and fence until the v3 port sets CASTLE_VERSION=3 at genesis.
+  const v2 = process.env.CASTLE_VERSION !== '3' ? obj(raw.v2) : {};
+  const src = { agentRegistry: ens.agentRegistry, agentResolver: ens.resolver, ...raw, ...obj(raw.external), ...obj(raw.contracts), ...v2 };
   const out = {};
   for (const [k, v] of Object.entries(src)) {
     if (isAddr(v)) out[k] = { address: v, block: null };

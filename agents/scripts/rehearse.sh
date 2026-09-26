@@ -37,7 +37,7 @@ for id in fee fi fo fum; do [ -f "logs/$id.log" ] && mv "logs/$id.log" "logs/reh
 ./scripts/local-castle.sh --stop >/dev/null
 ./scripts/local-castle.sh
 if [ "$MODE" = withhold ]; then export FEE_STAGE_HANG=1 FEE_FORCE_RENEW=1 FO_STALE_QUOTES_S=${FO_STALE_QUOTES_S:-60}; fi
-if [ "$MODE" = e2e ]; then export FI_CLAIM_DELAY_S=${FI_CLAIM_DELAY_S:-30}; fi
+if [ "$MODE" = e2e ]; then export FI_CLAIM_DELAY_S=${FI_CLAIM_DELAY_S:-30} SHIP_HOLD_S=${SHIP_HOLD_S:-45}; fi
 eval "$(./scripts/local-castle.sh --env)"
 ./scripts/up.sh >/dev/null
 
@@ -54,9 +54,9 @@ if [ "$MODE" = failover ]; then
   echo "== kill -9 fee"
   kill -9 "$(cat logs/fee.pid)"; rm -f logs/fee.pid
   echo "== fi claims after expiry (gapS = seconds between expiry and the claim; must be < $LEASE)"
-  wait_for logs/fi.log '"event":"claimed".*"docked":[1-9]' $((LEASE + 60))
-  echo "== fi ships its own book in the new epoch"
-  wait_for logs/fi.log '"event":"shipped".*"centreVsEnsBps":0,"fenceEpochOk":true' 60
+  wait_for logs/fi.log '"event":"claimed"' $((LEASE + 60))
+  echo "== fi ships its own book in the new epoch, docking fee's fenced one in the same multicall"
+  wait_for logs/fi.log '"event":"shipped".*"docked":[1-9].*"centreVsEnsBps":0,"fenceEpochOk":true' 60
   echo "== fee restarts from stale state; its renew is sent unsimulated and reverts on-chain"
   FEE_STALE=1 ./scripts/up.sh fee >/dev/null
   wait_for logs/fee.log '"event":"stale-renew"' 90
@@ -72,18 +72,21 @@ elif [ "$MODE" = e2e ]; then
   lease_state() { node -e 'import("./lib/lease.mjs").then(async (l) => { const c = await import("./lib/chain.mjs"); console.log((await l.readLease(c.publicClient())).state); })'; }
   echo "== fee ships; a taker fills the live book"
   wait_for logs/fee.log '"event":"shipped".*"centreVsEnsBps":0,"fenceEpochOk":true' 60
+  OLD=$(grep '"event":"shipped"' logs/fee.log | tail -1 | grep -o '"strategyHash":"0x[0-9a-f]*"' | cut -d'"' -f4)
   jack --strategy latest --in USDC --amount 500000
   echo "== kill -9 fee; wait for expiry"
   kill -9 "$(cat logs/fee.pid)"; rm -f logs/fee.pid
   for _ in $(seq 1 $((LEASE + 30))); do [ "$(lease_state)" = EXPIRED ] && break; sleep 1; done
   echo "== (a) wind-down in the gap: the live strategy takes USDC in only"
   jack --strategy latest --in USDC --amount 500000
-  echo "== fi claims after the gap (within one lease period), docking fee's book"
+  echo "== fi claims after the gap (within one lease period); fee's book stays on Aqua, fenced, for SHIP_HOLD_S"
   wait_for logs/fi.log '"event":"claimed"' $((LEASE + 60))
   echo "== (b) the old epoch's strategy is fenced: FeeFiFoFum(), mined"
-  wait_for logs/fi.log '"event":"shipped"' 60
-  set +e; jack --strategy previous --in USDC --amount 500000 --force; rc=$?; set -e
+  set +e; jack --strategy "$OLD" --in USDC --amount 500000 --force | tee logs/jack-b.json; rc=$?; set -e
   [ "$rc" = 3 ] || { echo "FAIL: the old-epoch fill did not revert (exit $rc)" >&2; exit 1; }
+  grep -q 'FeeFiFoFum' logs/jack-b.json || { echo "FAIL: the old-epoch fill reverted, but not with FeeFiFoFum()" >&2; exit 1; }
+  echo "== fi ships in the new epoch, docking fee's fenced book in the same multicall"
+  wait_for logs/fi.log '"event":"shipped".*"docked":[1-9]' 90
   echo "== (c) the new epoch's book fills"
   jack --strategy latest --in USDC --amount 500000
   echo "== (d) fee restarts stale; its renew reverts on-chain"

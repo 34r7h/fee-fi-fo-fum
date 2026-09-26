@@ -11,15 +11,19 @@
 //   FEE_STALE=1        a restart from stale state: fee believes it still holds the castle and sends a renew
 //                      without simulating it, so the chain rejects it with a mined, reverted tx;
 //   FEE_FORCE_RENEW=1  when fo withholds the seal, fee signs the attestation itself and sends the renew anyway
-//                      (once per epoch): Castle takes only fo's signature, so it reverts BadAttestation(fee).
+//                      (once per epoch): Castle takes only fo's signature, so it reverts BadAttestation(fee);
+//   FEE_STANDBY=1      fee is the standby for this shift (fi holds): it claims the castle once it has lapsed,
+//                      FEE_CLAIM_DELAY_S after expiry, exactly as fi would.
 import { readLease } from '../lib/lease.mjs';
-import { renewIfDue, requestSeal, send, claimCastle, shipIfDue } from '../lib/shift.mjs';
+import { renewIfDue, send, claimCastle, shipIfDue, standbyClaim, staleRenew } from '../lib/shift.mjs';
 import { signAttestation } from '../lib/attest.mjs';
 import { env } from '../lib/env.mjs';
 
 const STALE = env('FEE_STALE') === '1';
 const FORCE = env('FEE_FORCE_RENEW') === '1';
 const HANG = env('FEE_STAGE_HANG') === '1';
+const STANDBY = env('FEE_STANDBY') === '1';
+const CLAIM_DELAY_S = Number(env('FEE_CLAIM_DELAY_S', 0));
 let staleShot = false;
 let forcedEpoch = null;
 
@@ -35,7 +39,7 @@ async function forgedRenew(ctx, lease, withheld) {
 export default {
   intervalMs: 5_000,
   async init(ctx) {
-    ctx.log('fee-mode', { stageHang: HANG, stale: STALE, forceRenew: FORCE });
+    ctx.log('fee-mode', { stageHang: HANG, stale: STALE, forceRenew: FORCE, standby: STANDBY, claimDelayS: CLAIM_DELAY_S });
   },
   async tick(ctx) {
     const lease = await readLease(ctx.pc);
@@ -44,19 +48,17 @@ export default {
     ctx.logChange('lease', 'lease', { state: lease.state, epoch: lease.epoch, mine, holder: lease.holder });
 
     if (STALE && !staleShot) {
-      // Demo (d): fee comes back believing it still holds the castle. It sends one renew with whatever seal
-      // fo gives it (or an empty one), unsimulated, so the reason is on-chain: NotHolder or LeaseExpired.
+      // Demo (d): fee comes back believing it still holds the castle: one unsimulated renew, rejected on-chain.
       staleShot = true;
-      const seal = await requestSeal(ctx, lease).catch(() => ({ sealed: false }));
-      const expiry = BigInt(lease.now + lease.leasePeriod);
-      const r = await send(ctx, 'renew', [seal.sealed ? BigInt(seal.expiry) : expiry, seal.sealed ? BigInt(seal.deadline) : BigInt(lease.now + 30), seal.sealed ? seal.signature : '0x'], { force: true });
-      return ctx.log('stale-renew', { mined: r.mined, ok: r.ok, reason: r.reason ?? null, tx: r.hash || null });
+      await staleRenew(ctx, lease);
+      return;
     }
     if (lease.expiry === 0) {
       // Genesis: the castle has never been claimed. The first shift is fee's (fi only claims after a real expiry).
       const r = await claimCastle(ctx);
       return ctx.log('genesis-claim', { ok: r.ok, tx: r.hash || null, reason: r.reason || null });
     }
+    if (STANDBY && !mine) { await standbyClaim(ctx, lease, { delayS: CLAIM_DELAY_S }); return; }
     const r = await renewIfDue(ctx, lease);
     if (FORCE && r.due && !r.renewed && r.reason && lease.state === 'LIVE' && forcedEpoch !== lease.epoch) await forgedRenew(ctx, lease, r.reason);
     if (!HANG) await shipIfDue(ctx, lease);

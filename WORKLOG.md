@@ -8,7 +8,7 @@ The running record of the feefifofum build: what was done, who did it, which com
 - **Deadline:** Sun 27 Sep 00:00 UTC
 - **Pre-existing product:** handoff (private), baseline `079f8f0`
 - **Earlier product:** the lease edition, retired at 10:51Z on Sat 26 Sep. Its code and full worklog are at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition).
-- **Last regenerated:** Sat 13:04Z
+- **Last regenerated:** Sat 13:12Z
 
 All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified).
 
@@ -48,14 +48,14 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 | Task | Owner | Assignee | Due | Status | Commit | On-chain |
 |---|---|---|---|---|---|---|
-| Miniapp: one hoard, every market <br>`m-miniapp` `0a8f80ab` | impecc | impecc | Sat 21:30Z | in_progress |  |  |
+| Miniapp: one hoard, every market <br>`m-miniapp` `0a8f80ab` | impecc | impecc | Sat 21:30Z | done | d4a53a0 | published v1.1.0 |
 | Deck and video script <br>`m-deck` `04cf6e79` | impecc | impecc | Sat 23:00Z | in_progress |  |  |
 
 ### Validation and the one live run
 
 | Task | Owner | Assignee | Due | Status | Commit | On-chain |
 |---|---|---|---|---|---|---|
-| The one live run on Sepolia <br>`a-live` `a92e968f` | agent-smith | agent-smith | Sat 22:00Z | in_progress |  |  |
+| The one live run on Sepolia <br>`a-live` `a92e968f` | agent-smith | agent-smith | Sat 22:00Z | done | 4d1f983, cacf0f8 | agents/live-run/11786346: 17 txs |
 | **BLOCKER** Fork end-to-end of the whole demo (two passes) <br>`v-e2e` `48b54583` | agy | agy | Sat 20:00Z | done | dbb243d | two post-deploy fork passes, distinct txs |
 | Verify the live run on-chain <br>`v-live` `e113e331` | agy | agy | Sat 22:30Z | done |  | PASS: every live tx, balances, live CCIP-Read |
 
@@ -63,7 +63,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 | Task | Owner | Assignee | Due | Status | Commit | On-chain |
 |---|---|---|---|---|---|---|
-| README, sponsor write-ups and FEEDBACK <br>`s-writeups` `ae2058f7` | mister-anderson | mister-anderson | Sat 23:00Z | in_progress |  |  |
+| README, sponsor write-ups and FEEDBACK <br>`s-writeups` `ae2058f7` | mister-anderson | mister-anderson | Sat 23:00Z | review |  |  |
 | AI_USAGE.md and WORKLOG.md <br>`s-ai` `e16fb6a1` | SirKit | SirKit | Sat 23:30Z | todo |  |  |
 | OPERATOR: record the video and submit on ETHGlobal <br>`s-submit` `fd56d78b` | OPERATOR |  | Sat 23:59Z | todo |  |  |
 
@@ -86,7 +86,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 ## Wallets
 
-Live balances read at block 11786395.
+Live balances read at block 11786432.
 
 | Wallet | handoff agent | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -106,7 +106,7 @@ Live balances read at block 11786395.
 |---|---|
 | Castle service | https://handoff.lol/t/castle/ (health: fiKeyLoaded true, stream v2) |
 | Gateway (ERC-3668) | https://handoff.lol/t/castle/ccip/{sender}/{data}.json: live; getEnsText(quote.feefifofum.eth, castle) through UniversalResolverV2 returns the vault (checked by SirKit) |
-| Miniapp | --live build reads sepolia.json (e7da5ea); publish after a-live |
+| Miniapp | https://handoff.lol/app/impecc/fee-fi-fo-fum (v1.1.0, published; checked by SirKit in a fresh Chrome profile: live, 0 console errors, all three beats) |
 
 ## Documentation
 
@@ -128,7 +128,7 @@ Live balances read at block 11786395.
 | 2. (ENS) agy resolves quote.feefifofum.eth through UniversalResolverV2 plus CCIP-Read (quote q-1790427574-6, served via ccip, signed by fi) and fills it: 0.5 USDC for 0.000185925 WETH | [0xb1e065aa…](https://sepolia.etherscan.io/tx/0xb1e065aa641b2c4625d0bdbd9ef28926164426cf87a608e3e72b1fd9846e5cfb) approve, [0x763d6de1…](https://sepolia.etherscan.io/tx/0x763d6de1cb3312803742fa80b1eed47060a1785e038a63b1f98f5cd375ea9fe8) fill (Aqua Pulled and Pushed) | SirKit (receipt events; the stream quote.served matches the fill) |
 | 3. (Uniswap) agy swaps 0.5 USDC on the Castle's v4 pool; the hook fills it just in time from hen: 0.000164970 WETH | [0x1f846b85…](https://sepolia.etherscan.io/tx/0x1f846b85087d0ae1c3c0e15f0cd723cc43cd0ed78cebb6f75a96f9472983f5b7) approve, [0x53f773de…](https://sepolia.etherscan.io/tx/0x53f773ded5f3f8c8586d05c9129a897a0796a92ee0a1c27a1711ba708290e116) swap (one tx: Aqua Pulled and Pushed, hook JitFill, v4 Swap) | SirKit (receipt events) |
 | F. fee sees hen drift from the mid after the v4 fill; fi docks and re-ships hen at the mid | [0x32a20d16…](https://sepolia.etherscan.io/tx/0x32a20d169556fd013eaa69cb2dc2db2108275c9513d36e24b0886ceab23d638a) dock, [0x03dbf62b…](https://sepolia.etherscan.io/tx/0x03dbf62b16214b7bf36dce5b742ad80c7deccc466a9925328f9b26a817e267f3) re-ship | SirKit |
-| 4. The miniapp shows all three from a clean browser | pending publish (m-miniapp) |  |
+| 4. The miniapp shows all three from a clean browser | https://handoff.lol/app/impecc/fee-fi-fo-fum | SirKit (a fresh browser profile) |
 
 ## Operator-owned contributions
 
@@ -192,3 +192,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 12:58Z | agent-smith | a-live phase C LIVE, which is BEAT 1: fi shipped harp and hen at 80% each from one balance, and greedy reverted OverAllocated. 0.000607 ETH. SirKit verified the receipts and replayed greedy at the block before to decode OverAllocated(WETH, 3903882690184150, 3717983514461096). Phases D and E (agy) have the go. |
 | Sat 13:00Z | agy | a-live phases D and E LIVE, which are BEATS 2 and 3. D: CCIP-Read quote q-1790427574-6 through UniversalResolverV2 and the gateway, signed by fi, filled through router.swap (0x763d6de1). E: the v4 swap through PoolSwapTest, filled by CastleJITHook from hen in one tx (0x53f773de: Aqua Pulled and Pushed, JitFill, v4 Swap). 0.000631 ETH. Then F: fee re-centred hen (dock 0x32a20d16, ship 0x03dbf62b). SirKit verified every receipt and its events, and matched the stream quote.served to the fill. |
 | Sat 13:04Z | agy | v-live PASS, verified by SirKit after one send-back (phase F added, the leverage labels corrected, greedy replayed to OverAllocated). Live spend in total: 0.0091 ETH of the 0.02 ETH ceiling (deploy 0.006927, register 0.000144, a-live 0.002033). |
+| Sat 13:12Z | SirKit | Verified a-live (all 17 live txs match SirKit's own receipt and event checks; record at agents/live-run/11786346) and m-miniapp (published; a fresh Chrome profile shows LIVE FROM THE CASTLE and all three beats with 0 console errors, which is beat 4). Requested follow-ups: header name quote.feefifofum.eth, and two stale README lines. |

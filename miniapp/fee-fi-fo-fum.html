@@ -1029,6 +1029,8 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     // The snapshot gives config, the crew and the hoard; the stream from seq 0 then retells the whole tale in order.
     state().then(function (snap) {
       if (S !== run) return;
+      // A service still telling the lease edition's tale (stream v1) has no hoard to show: play the mock and keep asking.
+      if (!snap || snap.v !== 2) { fallBack('The castle service speaks an older tale.'); return; }
       feed(Object.assign({}, snap, { type: 'snapshot', quotes: [], fills: [], refusals: [], intents: [], strategies: [] }));
       S.scenes = [];
       try { mine = es = new EventSource(base() + '/stream?since=0'); } catch (e) { fallBack('The castle service could not be reached.'); return; }
@@ -1053,7 +1055,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   }
   // The service closes each SSE response every few seconds and the browser reconnects; only a long silence counts.
   function liveWatch() {
-    if (CONFIG && CONFIG.stream && S.mode === 'mock' && MOCK && MOCK.why && ++retries % 6 === 0) fetch(base() + '/health').then(function (r) { if (r.ok && S.mode === 'mock') startLive(); }, function () {});
+    if (CONFIG && CONFIG.stream && S.mode === 'mock' && MOCK && MOCK.why && ++retries % 6 === 0) state().then(function (snap) { if (snap && snap.v === 2 && S.mode === 'mock') startLive(); }, function () {});
     if (!es || S.mode !== 'live') return;
     if (es.readyState === 1) liveOk = clock();
     else if (clock() - liveOk > 25000) fallBack('The castle service went quiet.');

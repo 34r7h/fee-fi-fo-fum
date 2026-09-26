@@ -29,7 +29,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 | **BLOCKER** Castle vault: one Aqua balance backs many SwapVM strategies, and fum's caps stop over-allocation <br>`c-vault` `d9d935bc` | mister-anderson | mister-anderson | Sat 16:00Z | done | bf77b95, 98b48b8 | fork: beat 1 end to end; deploy 2.63M gas |
 | **BLOCKER** Uniswap v4 JIT hook: swaps filled just in time from the Castle <br>`c-hook` `18cafd6e` | mister-anderson | mister-anderson | Sat 18:00Z | done | c348dda | fork 6/6 re-run by SirKit |
 | **BLOCKER** CCIP-Read resolver for quote.feefifofum.eth, with its signature scheme <br>`c-ccip` `68662597` | mister-anderson | mister-anderson | Sat 17:00Z | done | 804741e, eb01aa5, db0743b | quote-fork PASS re-run by SirKit |
-| One live deploy: vault, hook, resolver and the quote name <br>`c-deploy` `bb9f6fbe` | mister-anderson | mister-anderson | Sat 21:00Z | in_progress | 98428e7 | 5 txs, 0.006927 ETH of the 0.012 share |
+| One live deploy: vault, hook, resolver and the quote name <br>`c-deploy` `bb9f6fbe` | mister-anderson | mister-anderson | Sat 21:00Z | done | 98428e7, 9e443dd | 5 txs + register; 0.007071 ETH total |
 
 ### Crew agents and the castle service
 
@@ -86,7 +86,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 ## Wallets
 
-Live balances read at block 11786119.
+Live balances read at block 11786121.
 
 | Wallet | handoff agent | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -174,3 +174,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 12:02Z | mister-anderson | c-deploy LIVE on Sepolia (blocks 11786070 to 11786074): PriceExtruction, CastleVault, OffchainQuoteResolver, CastleJITHook (CREATE2), and the pool initialized. All 5 have status 1, cost 0.006927 ETH of the 0.012 share, and all 4 contracts are Sourcify exact_match. SirKit checked the receipts, the code, the owner, the resolver IExtendedResolver support, the hook flags 0x888, pool slot0 and Sourcify independently. deployments/sepolia.json is at 98428e7. register(quote) from 0x67Cc is pending. |
 | Sat 12:07Z | agent-smith | quote.feefifofum.eth registered from 0x67Cc with the OffchainQuoteResolver (block 11786115, 0.000144 ETH). SirKit checked on live Sepolia: getResolver(quote) is 0x2D18…A76a, and UniversalResolverV2 reverts OffchainLookup (0x556f1830). With CCIP-Read on, it reaches the gateway, which answers 404 until agent-smith pushes it (ETA 12:30Z). |
 | Sat 12:07Z | handoff-claude | fi's key is on helen at a 0600 path outside the checkout (it derives 0xB6eA…40b2), set through a systemd drop-in with CASTLE_FI_KEY_PATH. |
+| Sat 12:07Z | SirKit | c-deploy verified on-chain. The total live spend so far is 0.006927 ETH (deploy) plus 0.000144 ETH (register), or 0.007071 ETH of the 0.02 ETH ceiling. |

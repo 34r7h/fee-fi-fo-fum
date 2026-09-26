@@ -214,6 +214,7 @@ async function scan(from, to) {
       } else if (/AuctionSettled$/.test(n)) {
         // settleAuction(): the CCA's currency and unsold WETH swept home; a graduated auction's clearing price goes to ENS.
         const clearing = arg(d, 'clearingPriceQ96');
+        clearedAuctions.add(getAddress(arg(d, 'auction')));   // the settle is the clear: no derived duplicate
         emit('auction.cleared', {
           auction: getAddress(arg(d, 'auction')), clearing: clearing != null ? priceView(clearing) : null, sold: null,
           raised: str(arg(d, 'currencyRaised')), priceWritten: Boolean(arg(d, 'priceWritten')),
@@ -369,7 +370,9 @@ async function tick() {
     if (state.auction?.auction === a) Object.assign(state.auction, { status: v.status, clearing: v.clearing ?? state.auction.clearing, endBlock: v.endBlock });
     if (v.status === 'ended' && !clearedAuctions.has(a)) {
       clearedAuctions.add(a);
-      emit('auction.cleared', { auction: a, clearing: v.clearing, sold: null, raised: null }, { block: v.endBlock, tx: null, src: 'derived' });
+      // Not settled yet: the clear as the auction's own view reports it, stamped at its end block.
+      const t = v.endBlock != null ? (await blockTime(v.endBlock).catch(() => null)) : null;
+      emit('auction.cleared', { auction: a, clearing: v.clearing, sold: null, raised: null }, { block: v.endBlock, tx: null, t: t != null ? t * 1000 : undefined, src: 'derived' });
     }
   }
   lastScan = { block: Number(h.number), at: Date.now() };

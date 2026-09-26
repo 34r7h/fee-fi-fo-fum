@@ -9,7 +9,7 @@
 // Idempotent: every step reads chain state first and skips what is already true. Then it VERIFIES from the
 // outside: registry.findOwner/findExpiry (the contract-level read JackHook makes) and UniversalResolverV2.
 //
-//   node agent-registry.mjs --rpc <url> [--fork] [--castle <Castle>] [--agent agy ...] [--mcp label=url ...] [--castle-mcp url] [--dry-run]
+//   node agent-registry.mjs --rpc <url> [--fork] [--castle <Castle>] [--agent agy ...] [--addr label=0x… ...] [--mcp label=url ...] [--castle-mcp url] [--dry-run]
 //
 // --fork is for an anvil fork: it impersonates whoever must act for us (the parent's owner, the ETHRegistrar)
 // and tops up gas, so the whole flow runs before live funds land. State goes to
@@ -45,6 +45,8 @@ const DEFAULT_MCP = process.env.AGENT_MCP_ENDPOINT || 'https://handoff.lol/mcp';
 const CASTLE_MCP = opt('castle-mcp', process.env.CASTLE_MCP_ENDPOINT || 'https://handoff.lol/t/castle/mcp');
 const SHIFT_ROLES = new Set(['shift trader', 'hot standby']);
 const MCP_OVERRIDE = Object.fromEntries(many('mcp').filter(Boolean).map((kv) => kv.split(/=(.*)/s).slice(0, 2)));
+// --addr label=0x… names the EOA an agent asked for when its handoff wallet_address has not caught up yet.
+const ADDR_OVERRIDE = Object.fromEntries(many('addr').filter(Boolean).map((kv) => kv.split(/=(.*)/s).slice(0, 2)));
 const YEAR = 365n * 24n * 3600n;
 
 const deps = JSON.parse(fs.readFileSync(path.join(repo, 'contracts/deployments/sepolia.json'), 'utf8'));
@@ -259,8 +261,11 @@ for (const a of roster) if (MCP_OVERRIDE[a.label]) a.mcp = MCP_OVERRIDE[a.label]
 for (const a of roster) {
   if (a.source === 'handoff.lol' || !a.addr) {
     const rec = await handoffAgent(a.id);
-    a.addr = rec.wallet_address;
+    a.addr = ADDR_OVERRIDE[a.label] || rec.wallet_address;
     a.registered_at = rec.registered_at;
+    if (ADDR_OVERRIDE[a.label] && !sameAddr(ADDR_OVERRIDE[a.label], rec.wallet_address)) {
+      log(`  NOTE ${a.id}: registering to ${ADDR_OVERRIDE[a.label]}; its handoff wallet_address is still ${rec.wallet_address}`);
+    }
   }
   if (!a.addr || !isAddress(a.addr)) throw new Error(`${a.id} has no wallet address`);
   a.addr = getAddress(a.addr);

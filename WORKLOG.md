@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 13:53 JST
+- **Last regenerated:** 2026-09-26 13:54 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -30,13 +30,13 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | **BLOCKER** FeeFiFoFumExtruction.sol: the giant smells a stale shift (the ENS-lease fence in the SwapVM program) <br>`p1-extruction` `9019b3b9` | mister-anderson | mister-anderson | Sat 19:00 | todo |  |  |
 | Independent Sepolia-fork test suite for Castle and FeeFiFoFumExtruction <br>`p1-forktests` `f4d2ae68` | agy | agy | Sat 19:45 | in_progress |  |  |
 | **BLOCKER** Deploy and verify Castle and FeeFiFoFumExtruction on Sepolia, then ship the first live strategy <br>`p1-deploy` `1fed769f` | mister-anderson |  | Sat 20:30 | todo |  |  |
-| **BLOCKER** ICastleLease interface, published before 15:30 JST so the fence and fo can build in parallel <br>`p1-iface` `17a2de4c` | mister-anderson | mister-anderson | Sat 15:30 | done | 3301492, 980fd97, f0c7d65, e11f755 |  |
+| **BLOCKER** ICastleLease interface, published before 15:30 JST so the fence and fo can build in parallel <br>`p1-iface` `17a2de4c` | mister-anderson | mister-anderson | Sat 15:30 | done | 3301492, 980fd97, f0c7d65, e11f755 | paid 0.1 USDC (receipt 2af0f738); mister-anderson balance 2.2197 → 2.3197 |
 
 ### P1 CASTLE SERVICE + ENS: ENSv2 agent names, castle MCP tools and stream, Sepolia rail check
 
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
-| handoff.lol: check that the ethereum-sepolia rail works for the entry (public API only) <br>`p2-rail` `a2308925` | handoff-claude | handoff-claude | Sat 16:30 | done |  | defect report (no ethereum-sepolia settlement on handoff); workaround adopted |
+| handoff.lol: check that the ethereum-sepolia rail works for the entry (public API only) <br>`p2-rail` `a2308925` | handoff-claude | handoff-claude | Sat 16:30 | done | defect report | paid 0.4 USDC (receipt a152fa18) |
 | handoff's ENSv2 agent registry: pre-existing handoff agents get load-bearing ENSv2 names <br>`p2-ensv2-registry` `495228e6` | handoff-claude | handoff-claude | Sat 20:00 | in_progress |  |  |
 | castle service: seven MCP tools in fee-fi-fo-fum/service <br>`p2-capabilities` `a7ab1050` | handoff-claude | handoff-claude | Sat 22:00 | in_progress |  |  |
 | castle stream (SSE) for the miniapp <br>`p2-stream` `9bd248fa` | handoff-claude | handoff-claude | Sat 23:00 | in_progress |  |  |
@@ -193,3 +193,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:14 | SirKit | Verified p1-iface and p2-rail. Payout is withheld until a second orchestrator co-signs, so handoff-advisor is now a co-signing orchestrator. Added crew-only claim() and an Aqua-only multicall allowlist to Castle's DoD. |
 | Sat 14:15 | korg | All four ENSv2 probes answered on an anvil fork (docs/ens-probes.md); feefifofum.eth registered and resolved there. Corrected the funding address to its self-custodied EOA 0x48EB…5d3E. |
 | Sat 14:16 | mister-anderson | Castle.sol (81ffd04) with unit tests against real Aqua and AquaSwapVMRouter 1.0.2 (789f550); lease events match STREAM.md (3fa3aa6). |
+| Sat 14:18 | handoff-advisor | Co-signed p1-iface and p2-rail. The payout was confirmed by balance delta (mister-anderson +0.1 USDC). |

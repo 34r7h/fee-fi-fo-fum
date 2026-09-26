@@ -9,8 +9,11 @@ The human operator directs the swarm and owns these decisions and outputs. They 
 - Chose Option A from handoff-advisor's research, appointed the orchestrator and picked the swarm.
 - Set the binding role map for the swarm, and ruled that validators never build.
 - Ruled that all entry work lives in this public repo and none goes in the handoff repo.
-- Confirmed Continuity-track registration, linked the GitHub repo to the handoff project, and funded the Sepolia treasury.
+- Confirmed Continuity-track registration, linked the GitHub repo to the handoff project, and funded the Sepolia treasury (ETH, including PoW-faucet mining, and Circle USDC).
 - Named the entry **fee-fi-fo-fum** and set its Jack the Giant Killer voice ([docs/NAMING.md](docs/NAMING.md)).
+- Approved the XMBL_GATE=skip deploys of the handoff.lol platform fixes, and set the standing rule not to hold up progress.
+- Set the cost rule: Sepolia ETH is real money, so there is exactly one live demo run and every rehearsal runs on a fork. Required that the project description be short and on point.
+- Challenged the running cost of on-chain lease renewals, which led to the zero-idle-gas liveness redesign (Castle v3), and approved its redeploy budget.
 - Still to come (tracked on the board): review sign-offs, recording and voicing the video, and the sponsor booth conversations.
 
 ## Planning artifacts
@@ -38,17 +41,27 @@ These are AI agents on handoff.lol, directed by the human operator.
 
 ## Files
 
-| File | Written by | AI-written? | Notes |
+Commit identity: commits in this repo authored as `34r7h` were made by **SirKit** (AI orchestrator) using the operator's local git identity: WORKLOG.md, AI_USAGE.md, docs/NAMING.md, docs/PLAN.md (handoff-advisor's research, committed by SirKit) and README drafts. PRODUCT.md and .impeccable/surfaces/ also landed in a SirKit commit, but impecc wrote them. Every other agent commits under its own name.
+
+| Path | Written by (per `git log`) | AI-written? | Notes |
 |---|---|---|---|
-| README.md | SirKit | yes | draft; impecc owns the final voice |
-| docs/PLAN.md | handoff-advisor | yes | research |
+| README.md | SirKit, korg, impecc | yes | pitch and loop (SirKit), trust assumptions and technical sections (korg), Live section and voice (impecc) |
+| docs/PLAN.md | handoff-advisor | yes | research; the operator chose Option A |
 | docs/NAMING.md | SirKit | yes | from the operator's direction |
-| WORKLOG.md | SirKit | yes | generated from the board and submitted evidence |
+| WORKLOG.md | SirKit | yes | generated from the handoff board, submitted evidence and live chain reads |
 | AI_USAGE.md | SirKit | yes | this file |
-| contracts/src/, contracts/script/ | mister-anderson | yes | Castle, FeeFiFoFumExtruction, deploy scripts |
-| contracts/test/ | mister-anderson, agy | yes | Sepolia-fork tests; agy's commits predate the validator-only role ruling |
-| contracts/probes/, docs/ens-probes.md, docs/ens.md, docs/1inch.md, docs/uniswap.md | korg | yes | research and probes |
-| agents/ | agent-smith (agy: one early commit) | yes | fee, fi, fo, fum |
-| service/ | handoff-claude, then agent-smith | yes | the castle service |
-| miniapp/fee-fi-fo-fum.html, miniapp/build.mjs, miniapp/STREAM.md | impecc | yes | the miniapp |
-| PRODUCT.md, .impeccable/surfaces/ | impecc | yes | swept into SirKit's commit f7e88df by accident; impecc wrote them |
+| contracts/src/, contracts/script/, contracts/out-abi/, contracts/broadcast/, foundry config | mister-anderson | yes | Castle, FeeFiFoFumExtruction, JackHook, deploy scripts, exported ABIs |
+| contracts/test/ | mister-anderson, agy | yes | unit and Sepolia-fork tests; agy's 4 commits predate the validator-only ruling |
+| contracts/deployments/ | mister-anderson, handoff-claude, agent-smith | yes | addresses, txs and constructor args for contracts, the ENS registry and the agent names |
+| contracts/scripts/ (ENS) | handoff-claude, then agent-smith | yes | ENSv2 agent-registry scripts |
+| contracts/probes/, docs/ens-probes.md, docs/ens.md, docs/1inch.md, docs/uniswap.md, FEEDBACK.md | korg | yes | ENSv2 probes, sponsor write-ups, builder feedback |
+| docs/cca-auction.md | mister-anderson | yes | the live CCA run and its parameters |
+| agents/ | agent-smith (agy: 3 early commits) | yes | fee, fi, fo, fum: roles, shift library, scripts, tests |
+| service/ | handoff-claude (scaffold), then agent-smith | yes | the castle service: MCP tools, SSE stream, indexer |
+| miniapp/ | impecc | yes | fee-fi-fo-fum.html, build.mjs, config.json, STREAM.md |
+| docs/video-script.md, DESIGN.md, PRODUCT.md, .impeccable/ | impecc | yes | video script and shot list, design system, product brief |
+| Deck (claude.ai artifact) | impecc | yes | 12 slides; shared by the operator |
+
+## Prompts and specs
+
+The swarm worked from the handoff project spec (project `2af16779`: description, 7 goals, 38 task definitions of done), docs/PLAN.md and docs/NAMING.md. Agents coordinated through signed handoff messages; the task results and verification reasons on the board record what each agent was asked for and what it delivered.

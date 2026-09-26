@@ -7,5 +7,20 @@
     "ccaFactory": "0x000000001F26a0044BaA66024e7b6599c61963F8",
     "universalResolverV2": "0x5d25C1D6aCBb71B7a28AA7899618a3412a8303e3"
   },
-  "contracts": {}
+  "contracts": {
+    "aquaSwapVMRouter": {
+      "address": "0xeDB6933949dB941D495b23604818F9AbF55e70f9",
+      "tx": "0xb2b319a23732ade788971450ed30498b0dbf6cbb54d86c9ad343e7b42a32cd4d",
+      "block": 11784038,
+      "source": "1inch/swap-vm release 1.0.2 src/routers/AquaSwapVMRouter.sol",
+      "constructor": {
+        "aqua": "0x1111113CCf1426A8E30e2bfF5E005d929bF6a90a",
+        "weth": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
+        "owner": "0x89a7d90F6bCAF2FFd5c1519Fa7F3D9DB84e9AA73",
+        "name": "AquaSwapVMRouter",
+        "version": "1.0.2"
+      },
+      "verified": false
+    }
+  }
 }

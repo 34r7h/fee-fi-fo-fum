@@ -1,108 +1,71 @@
-# fee-fi-fo-fum
+# feefifofum
 
-**The giant never sleeps.**
+**One hoard, every market.**
 
-A dead agent can't send the transaction that cancels its quotes. To every Jack watching the market, a crashed market-making agent is a sleeping giant with its gold left out. **fee-fi-fo-fum** is the giant that wakes up. Its liquidity is live only while its operator holds an ENS lease. The moment the lease lapses, the giant smells the intruder, and stale fills die on-chain with no transaction from the agent that fell. When no one takes the castle, the hoard isn't looted: it goes to a fair Uniswap auction, and any Jack with a name can climb up and bid.
+A market maker's capital sits split across pools, and its stale quotes leak value to arbitrage. feefifofum keeps one balance in the Castle vault and backs many quotes from it through 1inch Aqua. Solvers discover firm quotes gaslessly through ENS CCIP-Read. Uniswap v4 swaps are filled just in time from the same balance.
 
-It is a DeFi swarm on [handoff.lol](https://handoff.lol): four agents (**fee**, **fi**, **fo** and **fum**) and one miniapp for humans. It is built on **1inch Aqua/SwapVM**, **Uniswap CCA** and **ENSv2**, and everything on-chain runs on **Ethereum Sepolia**.
+It is an ETHGlobal Tokyo 2026 Continuity entry. The existing project is handoff. This repo is the new work. The build scope is [docs/SPEC.md](docs/SPEC.md) at `d70dafa`. Where this file and the spec differ, the spec wins.
 
-It is an ETHGlobal Tokyo 2026 entry in the Continuity track. The existing project is **handoff** (baseline `079f8f0`); this repo is the new work.
+## The four beats
+
+All four are on Ethereum Sepolia. Transaction links are filled after the one live deploy and the one live run. Nothing here is a live transaction yet.
+
+| # | Beat | What you should see |
+|---|---|---|
+| 1 | One Castle balance backs `harp` and `hen`. Their promises add up to more than the balance. A third ship past fum's leverage cap reverts `OverAllocated`. | two `Shipped` transactions, one reverted ship |
+| 2 | A solver resolves `quote.feefifofum.eth` through CCIP-Read, gets a firm quote signed by fi, and fills it. | the gateway log line and the fill transaction |
+| 3 | A Uniswap v4 swap on the Castle's pool is filled just in time from the Castle. The pool holds no LP deposit. | one transaction that contains both a v4 `Swap` and Aqua `Pulled` / `Pushed` |
+| 4 | The miniapp shows all three from a clean browser. | the published URL, after the miniapp task |
+
+## How to verify
+
+The spec's demo is the check. Until the live run, the proof is a Sepolia fork, not mainnet and not a live Sepolia transaction.
+
+1. The Castle holds USDC and WETH. fum sets leverage to 2×.
+2. fi ships `harp` and `hen`, each promising the full hoard. fi ships `greedy`. That third ship reverts `OverAllocated`.
+3. A solver asks `quote.feefifofum.eth` for the text record `quote:USDC:WETH:<amount>`. The resolver reverts `OffchainLookup`. The gateway answers. The solver fills through AquaSwapVMRouter. The Castle's balances move.
+4. The same solver swaps on the v4 pool through PoolSwapTest. CastleJITHook fills the swap from `hen` in that transaction.
+
+Fork probe already run for the ENS half: [contracts/probes/quote-register](contracts/probes/quote-register), recorded in [docs/research.md](docs/research.md). `quote` registers in one `register()` call, and UniversalResolverV2 surfaces `OffchainLookup` for `text()` only when the resolver supports interface `0x9061b923`.
 
 ## Pre-existing and new
 
-The private handoff baseline is commit `079f8f0`, 2026-09-25 17:09 JST, before hacking began at 21:00 JST. New work lives in this public repo, plus five commits the entry depends on in the private handoff repo after the baseline, all by handoff-claude (AI) and deployed to handoff.lol:
+The private handoff baseline is commit `079f8f0`, 2026-09-25 17:09 JST, before hacking began. Five commits in that private repo, after the baseline, are part of the entry. All five are by handoff-claude. They are not in this public repo:
 
 | Commit | Time (JST) | What |
 |---|---|---|
-| `95932ef` | 09-26 14:20 | `ens_name` accepts an ENSv2 name, verified on-chain via UniversalResolverV2 (replayable `ens_proof`) |
+| `95932ef` | 09-26 14:20 | `ens_name` accepts an ENSv2 name, checked on-chain via UniversalResolverV2 |
 | `0115146` | 09-26 14:58 | ethereum-sepolia projects are paid on ethereum-sepolia through a direct EIP-3009 rail |
 | `105f1dd` | 09-26 15:07 | an agent rotates its own `wallet_address` with an EIP-191 proof of possession |
 | `3cfdb3f` | 09-26 15:18 | one payout submission per task on the self-submitted rails |
 | `0495862` | 09-26 16:03 | the EIP-3009 payout nonce is derived from the payout, so a duplicate reverts on-chain |
 
-Pre-existing, in handoff: the broker, signed messaging, agent heartbeat, `ens_name` on the agent record, the ENSv1 subnames, the ethereum-sepolia rail, and the ringout scaffolding.
+The previous product in this repo, the lease edition, is retired. Its tree is tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition). New work does not read Castle, the fence, or JackHook from that tag.
 
-New, in this repo: Castle, the ENSv2 parent `feefifofum.eth` and its subregistry, the four crew agents, the castle service, and the miniapp. The sponsor write-ups are [docs/1inch.md](docs/1inch.md), [docs/uniswap.md](docs/uniswap.md) and [docs/ens.md](docs/ens.md). The address table is filled only with deployments that are already on Sepolia.
+New, against the spec: CastleVault, PriceExtruction, CastleJITHook, OffchainQuoteResolver, the quote name, the castle gateway, and the four crew agents. Source that is already on `main` is linked from the sponsor notes. Hook and resolver permalinks, and every transaction, wait for the deploy.
 
-| What | Address | Where it was checked |
-|---|---|---|
-| ETHRegistry | `0x657ea849311d3d5823348dded7c2aaafb3ede09e` | `docs/ens-probes.md` |
-| ETHRegistrar | `0xabe76f6c8dfced81aa5a2bb8034202a7136b94ca` | `docs/ens-probes.md` |
-| UniversalResolverV2 | `0x5d25c1d6acbb71b7a28aa7899618a3412a8303e3` | `docs/ens-probes.md` |
-| feefifofum subregistry | `0x2F2164507471a1a46506f902aBfdfB9d22e4bE09` | register tx `0xc51ab2660dd9a0029a201a4acd5330d7e7c2eac063cbfe58bb31039d30338378` |
-| feefifofum resolver | `0x9D2251b5162701BC2bD97d61bc8aa3e53446285E` | same transaction |
-| Aqua | `0x1111113CCf1426A8E30e2bfF5E005d929bF6a90a` | `contracts/deployments/sepolia.json` |
-| AquaSwapVMRouter 1.0.2 | `0xeDB6933949dB941D495b23604818F9AbF55e70f9` | deploy tx `0xb2b319a23732ade788971450ed30498b0dbf6cbb54d86c9ad343e7b42a32cd4d` |
-| WETH | `0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14` | `contracts/deployments/sepolia.json` |
-| Circle USDC | `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238` | `contracts/deployments/sepolia.json` |
-| CCA factory | `0x000000001F26a0044BaA66024e7b6599c61963F8` | `contracts/deployments/sepolia.json` |
-| Castle (v3) | `0xADB3cBb0983C1E061c550F2c0BbEdF131fFC8936` | deploy tx `0xb7fc618b80a4f4a2968bacda2ed81c214624a505845de2c8e42aebbc96c4c69b` (block 11785223), `contracts/deployments/sepolia.json` |
-| FeeFiFoFumExtruction (v3) | `0xe54643fC662bd2C569BD614D29336af95C8B73CC` | deploy tx `0x47751f5e81c3952304a811283a0d9d9e07d350c1b552c76634afd176e712929f` (block 11785221) |
-| JackHook (v2 and v3) | `0x50919ddaaf8294865652D53b45f210019AB2fcAd` | deploy tx `0x94cdb321f6279e83bd718dd20ac613a525d45ebf15ac0714b90c2356827dc539` |
-| Castle (v2, retired at v3 genesis) | `0x6bF53228d8c5c3b0192B2028bD52fc4E9d1be8Ec` | `contracts/deployments/sepolia.json` under `v2` (block 11784308) |
-| FeeFiFoFumExtruction (v2, retired at v3 genesis) | `0xfA0455bca2B521664021A883aA78fBEAa470f271` | deploy tx `0x14ac049eeac5f13512c99c67942a4eb88e56f04910b3bc0a5e760fe3ab03629f` |
+## Addresses already on Sepolia
 
-## The loop
-
-```
-(1) ENSv2 name castle.feefifofum.eth, owned by Castle.sol
-      Castle keeps the lease (holder, expiry, epoch). The holder renews it daily with
-      fo's attestation, and the holder and fo co-sign a heartbeat every ~30 s off-chain.
-      After expiry, or a challenge left unanswered for 60 s, crew may claim it,
-      and every claim bumps the fencing epoch. linkToNode points castle.* at the current shift.
-        │  read at fill time: Castle's lease plus the heartbeat the taker brings
-        ▼
-(2) 1inch Aqua + SwapVM 1.0.2. The maker is Castle.sol (the giant's castle and its hoard).
-      Program = FeeFiFoFumExtruction → XYCConcentrateGrowLiquidity2D → FlatFeeIn
-        valid heartbeat, same epoch → fill
-        no valid heartbeat          → wind down (reduce-only, wide spread)
-        epoch changed               → revert FeeFiFoFum()   (the giant smells a stale shift)
-        │  shift change, or nobody claims the castle
-        ▼
-(3) Uniswap CCA is the exit, not the entrance
-      JackHook: any agent with a name in handoff's ENSv2 registry may bid,
-      and the incoming giant gets no privilege.
-      clearingPrice goes back to ENS (setData), and the next shift centres its curve on it.
-        └────────► back to (1)
-```
-
-## The four syllables
-
-| Agent | Role |
+| What | Address |
 |---|---|
-| **fee** | Shift trader. Holds the castle, renews the lease, ships and re-ships the book. |
-| **fi** | Hot standby. Wakes when fee falls, claims the castle, relinks it, and re-ships at a new epoch. |
-| **fo** | Fencer and witness. Signs or withholds the attestation every renewal needs, replays fills, and reports incidents. |
-| **fum** | Auctioneer. Runs the shift-change and dissolution CCAs, and writes the clearing price back to ENS. |
+| Aqua | [`0x1111113CCf1426A8E30e2bfF5E005d929bF6a90a`](https://sepolia.etherscan.io/address/0x1111113CCf1426A8E30e2bfF5E005d929bF6a90a) |
+| AquaSwapVMRouter 1.0.2 | [`0xeDB6933949dB941D495b23604818F9AbF55e70f9`](https://sepolia.etherscan.io/address/0xeDB6933949dB941D495b23604818F9AbF55e70f9) |
+| Circle USDC | [`0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`](https://sepolia.etherscan.io/address/0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238) |
+| WETH9 | [`0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14`](https://sepolia.etherscan.io/address/0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14) |
+| v4 PoolManager | [`0xE03A1074c86CFeDd5C142C4F04F1a1536e203543`](https://sepolia.etherscan.io/address/0xE03A1074c86CFeDd5C142C4F04F1a1536e203543) |
+| v4 PoolSwapTest | [`0x9b6b46e2c869aa39918db7f52f5557fe577b6eee`](https://sepolia.etherscan.io/address/0x9b6b46e2c869aa39918db7f52f5557fe577b6eee) |
+| v4 StateView | [`0xe1dd9c3fa50edb962e442f60dfbc432e24537e4c`](https://sepolia.etherscan.io/address/0xe1dd9c3fa50edb962e442f60dfbc432e24537e4c) |
+| v4 Quoter | [`0x61b3f2011a92d183c7dbadbda940a7555ccf9227`](https://sepolia.etherscan.io/address/0x61b3f2011a92d183c7dbadbda940a7555ccf9227) |
+| ENSv2 feefifofum registry | [`0x2F2164507471a1a46506f902aBfdfB9d22e4bE09`](https://sepolia.etherscan.io/address/0x2F2164507471a1a46506f902aBfdfB9d22e4bE09) |
+| UniversalResolverV2 | [`0x5d25C1D6aCBb71B7a28AA7899618a3412a8303e3`](https://sepolia.etherscan.io/address/0x5d25C1D6aCBb71B7a28AA7899618a3412a8303e3) |
+| Registrar (`ROLE_REGISTRAR`) | [`0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99`](https://sepolia.etherscan.io/address/0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99) |
 
-## Layout
+Codesizes for the v4 rows and for Aqua are in [docs/research.md](docs/research.md). AquaSwapVMRouter's codesize was 20541 at the same public Sepolia endpoint on 2026-09-26. CastleVault, PriceExtruction, CastleJITHook and OffchainQuoteResolver are not deployed. Their addresses will be added in `contracts/deployments/sepolia.json` after the deploy.
 
-| Path | Contents |
-|---|---|
-| `contracts/` | Foundry: Castle.sol, FeeFiFoFumExtruction.sol, JackHook.sol, and Sepolia-fork tests |
-| `agents/` | fee, fi, fo and fum: handoff agents with viem on Ethereum Sepolia |
-| `service/` | The castle service: MCP tools and the live stream |
-| `miniapp/` | `fee-fi-fo-fum.html`: a world-clock ring of shifts, the lease countdown, the fence state, the hoard, a live CCA chart, a tapestry of every event and a replay tab that re-judges each fill; `STREAM.md` is the stream schema |
-| `docs/` | The plan, naming, sponsor write-ups, FEEDBACK.md and AI_USAGE.md |
-| `WORKLOG.md` | A running record of what was built, by whom, and where it lives on-chain |
+## Write-ups
 
-## Live
-
-- Castle service (MCP, REST, SSE): https://handoff.lol/t/castle/, with MCP at `/mcp`, tools at `/tools` and the stream at `/stream`
-- Miniapp: https://handoff.lol/app/impecc/fee-fi-fo-fum (v1.0.5, app hash `bb5c4695d1688f490aebde9161535f9405cfd4498d550278`, validator 100/100). It reads the castle stream. If the service is quiet, it reads Castle, Aqua and the CCA on Sepolia directly and says "Chain replay". The labelled mock plays only if neither answers. Build it with `node miniapp/build.mjs --live`.
-
-## Trust assumptions
-
-Three residual trusts in v3. None of them is removed by the lease or the auction. R4 records a v2 flaw that v3 fixes.
-
-**R1. ENS admin and name ownership.** `0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99` is the castle EOA and still holds root `ROLE_REGISTRAR` (`1 << 0`) and `RENEW` on the feefifofum subregistry `0x2F2164507471a1a46506f902aBfdfB9d22e4bE09`. It can register new labels. It can no longer unregister a name, repoint its resolver or subregistry, or grant those powers again. `hasRootRoles` is false for `ROLE_UNREGISTER` (bit 12), `UNREGISTER_ADMIN` (140), `SET_RESOLVER` (20), `SET_RESOLVER_ADMIN` (148), `SET_SUBREGISTRY` (24) and `SET_SUBREGISTRY_ADMIN` (152). The revokes are `0x14b20820366ad908fc06bb3a3d16a6c86977b42db464d3a32df503147586b844` (block 11784392) and `0x5973bca0ee11925f48a9d5b2e05d7185067e77879b4b2e7eec996cd182bdae9a` (block 11784434). In v3, Castle owns `castle.feefifofum.eth` itself. From genesis on, `registry.getOwner(labelhash("castle"))` returns the Castle contract, and the holder is read from `castle.holder()`, not from the registry. REGISTRAR cannot touch a name that has not expired. Castle registers the name for 365 days (`NAME_PERIOD`) and renews it only when a lease would outlive it, about once a year, so keeping the name costs ~0 idle gas. On the resolver `0x9D2251b5162701BC2bD97d61bc8aa3e53446285E`, the same EOA holds `LINK_ADMIN` and `SET_DATA_ADMIN`, so it could grant itself `SET_DATA` and rewrite the anchor price. That EOA is therefore trusted the way Castle's owner `0x89a7d90F6bCAF2FFd5c1519Fa7F3D9DB84e9AA73` is trusted. Right after v3 genesis, it revokes v2's `LINK | SET_DATA`, which leaves Castle v3 as the only contract that writes the anchor.
-
-**R2. Self-bid.** The holder or the auctioneer can bid in an auction Castle itself opened. The floor is 80% of the anchor (`FLOOR_PCT` in `Castle.sol`) and the auction lasts 25 blocks (`AUCTION_BLOCKS`). Graduation requires currency equal to 50% of the lot valued at that floor (`GRADUATION_PCT`); below that, the anchor does not move. A bid that does graduate can clear at the floor, which moves the anchor by 20% in that round. Nothing in the contracts stops the holder or the auctioneer from being that bidder. The bound holds only if an outside Jack bids.
-
-**R3. Verification.** Castle v3 `0xADB3cBb0983C1E061c550F2c0BbEdF131fFC8936` and FeeFiFoFumExtruction v3 `0xe54643fC662bd2C569BD614D29336af95C8B73CC` are Sourcify `exact_match`, for both runtime and creation code, at commit `acf30e4ac8e887e5e33992b07a3019e93957401b`. That is the commit agy and handoff-advisor validated, compiled with the `castle-size` profile (200 optimizer runs) to fit EIP-170. JackHook `0x50919ddaaf8294865652D53b45f210019AB2fcAd`, which both versions use, and the retired v2 Castle `0x6bF53228d8c5c3b0192B2028bD52fc4E9d1be8Ec` and fence `0xfA0455bca2B521664021A883aA78fBEAa470f271` are Sourcify `exact_match` at commit `7b863212f649c07327ac53966e8fae40f813cfb7`. Etherscan verification is still pending an operator API key (`contracts/deployments/sepolia.json`).
-
-**R4. Repeat dissolve (v2 only, fixed in v3).** In v3, `dissolve()` reverts while an auction is open and runs at most once per epoch (`dissolvedEpoch`). An unanswered challenge counts as the lease ending at its deadline. The retired v2 Castle has neither guard. After `settleAuction()`, it could be dissolved again once its lease was past `expiry + dissolveGrace`, and each graduated round could set the anchor up to 20% lower. The owner raised v2's grace to `86400` (`MAX_DISSOLVE_GRACE`) in tx `0xf8be3efb437ef996c1d457461e06b2f62bde4324ac93df7a599d50fa1e6a4def` (block 11784702). After v3 genesis, v2's `expiry()` reads v3's 365-day registration of the shared label, so v2 can't be dissolved (fork-tested). The revoke of v2's resolver `LINK | SET_DATA` then stops it writing the anchor at all.
-
-## Status
-
-Work in progress. See [WORKLOG.md](WORKLOG.md).
+- [docs/1inch.md](docs/1inch.md) — the Aqua app
+- [docs/uniswap.md](docs/uniswap.md) — the v4 hook
+- [docs/ens.md](docs/ens.md) — the quote name
+- [FEEDBACK.md](FEEDBACK.md) — what the Uniswap docs and testnet actually did
+- [docs/research.md](docs/research.md) — the measurements behind the spec's research gates

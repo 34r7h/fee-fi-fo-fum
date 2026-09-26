@@ -1,43 +1,29 @@
 # ENS
 
-The handoff baseline stored `ens_name` on the agent record and used ENSv1 subnames. This project uses ENSv2 as the liveness signal. A shift is live only while `castle.feefifofum.eth` is unexpired. The token id minted at claim is the fencing epoch. The probes, and why that name cannot be a `.eth` registration, are in [ens-probes.md](ens-probes.md).
+Solvers find a firm quote by resolving `quote.feefifofum.eth` through UniversalResolverV2. The name's resolver reverts `OffchainLookup`. The gateway returns a quote signed by fi. The resolver checks that signature and returns the text record.
 
-## What is live
+Scope: [SPEC.md](SPEC.md) at `d70dafa`. The fork measurement is [research.md](research.md) and [contracts/probes/quote-register](../contracts/probes/quote-register).
 
-| Name | Value |
-|---|---|
-| Parent `feefifofum.eth` | register [`0xc51ab266…8378`](https://sepolia.etherscan.io/tx/0xc51ab2660dd9a0029a201a4acd5330d7e7c2eac063cbfe58bb31039d30338378) |
-| Subregistry | [`0x2F2164507471a1a46506f902aBfdfB9d22e4bE09`](https://sepolia.etherscan.io/address/0x2F2164507471a1a46506f902aBfdfB9d22e4bE09) |
-| Resolver | [`0x9D2251b5162701BC2bD97d61bc8aa3e53446285E`](https://sepolia.etherscan.io/address/0x9D2251b5162701BC2bD97d61bc8aa3e53446285E) |
-| UniversalResolverV2 | [`0x5d25c1d6acbb71b7a28aa7899618a3412a8303e3`](https://sepolia.etherscan.io/address/0x5d25c1d6acbb71b7a28aa7899618a3412a8303e3) |
-| ETHRegistry | [`0x657ea849311d3d5823348dded7c2aaafb3ede09e`](https://sepolia.etherscan.io/address/0x657ea849311d3d5823348dded7c2aaafb3ede09e) |
+## The name
 
-A live read at block timestamp `1790409564`: `castle` on the subregistry has expiry `1790408832`, so `getOwner` is `address(0)`. `latestOwnerOf` the current token is `0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538` (fee). The token id is `5067924479523343920357688704886482849781669170077692837114763432112309665795`. The first claim was [`0xb97ac95e…b6a0`](https://sepolia.etherscan.io/tx/0xb97ac95edc11333e2b80d482219cdf051d0febfa37f0f79abd736edb5e9db6a0).
+`quote` is a label on the feefifofum subregistry [`0x2F2164507471a1a46506f902aBfdfB9d22e4bE09`](https://sepolia.etherscan.io/address/0x2F2164507471a1a46506f902aBfdfB9d22e4bE09).
 
-## Call sites
+`0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99` holds root `ROLE_REGISTRAR` (`1 << 0`) on that registry. One call is enough:
 
-The lines are from the deployed source, commit `7b863212f649c07327ac53966e8fae40f813cfb7`.
+```solidity
+register("quote", owner, address(0), resolver, 0, expiry)
+```
 
-- [`Castle.renew` calls `REGISTRY.renew`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/Castle.sol#L296) at line 296.
-- [`Castle.claim` calls `REGISTRY.register`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/Castle.sol#L312) with role bitmap `0` at line 312.
-- [`Castle.relink` calls `RESOLVER.linkToNode`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/Castle.sol#L389) at line 389.
-- [`Castle._writePrice` calls `RESOLVER.setData`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/Castle.sol#L561) for `handoff-price` at line 561.
-- [`JackHook.validate`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/JackHook.sol#L29) calls `getOwner` at line 29 and `getExpiry` at line 31.
+On a fork of Sepolia at block 11785866 that call set `getOwner` to the registrar and `getResolver("quote")` to the resolver deployed in the same transaction. The label was unowned before the call. No live register has been sent. The live name, the resolver address, and the register transaction are filled in after the deploy.
 
-The `.eth` registrar's minimum duration is 28 days and it does not grant `ROLE_RENEW`. The castle label is registered on the subregistry instead. That constraint is measured in [ens-probes.md](ens-probes.md).
+## OffchainLookup
 
-## Agent names
+UniversalResolverV2 is [`0x5d25C1D6aCBb71B7a28AA7899618a3412a8303e3`](https://sepolia.etherscan.io/address/0x5d25C1D6aCBb71B7a28AA7899618a3412a8303e3).
 
-The five names under `feefifofum.eth` are the move off the baseline's `ens_name` string and ENSv1 subnames. Each has `addr`, ENSIP-26 `agent-endpoint[mcp]`, and a `handoff-agent` text record. The values below are the ones verified through UniversalResolverV2 at block 11784331 in `contracts/deployments/ens-agents.sepolia.json`.
+A `text()` lookup through `resolve(bytes,bytes)` reverts `OffchainLookup` (`0x556f1830`) with `sender` equal to the universal resolver, when the name's resolver advertises `IExtendedResolver` (`supportsInterface(0x9061b923) == true`). The same lookup without that interface returns `ResolverError(bytes)` (`0x95c0c752`) and an empty payload. OffchainQuoteResolver has to implement that interface. The solver uses viem `getEnsText` with `universalResolverAddress` set to this contract. viem itself was not run in the research probe. The revert the client reads was.
 
-| Name | addr | agent-endpoint[mcp] | handoff-agent |
-|---|---|---|---|
-| `fee.feefifofum.eth` | `0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538` | `https://handoff.lol/t/castle/mcp` | `fee` |
-| `fi.feefifofum.eth` | `0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2` | `https://handoff.lol/t/castle/mcp` | `fi` |
-| `fo.feefifofum.eth` | `0x8689a407A2488A5b2f2De05d2C6978a798f93D56` | `https://handoff.lol/mcp` | `fo` |
-| `fum.feefifofum.eth` | `0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2` | `https://handoff.lol/mcp` | `fum` |
-| `agy.feefifofum.eth` | `0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c` | `https://handoff.lol/mcp` | `agy` |
+The gateway URL in the spec is `https://handoff.lol/t/castle/ccip/{sender}/{data}.json`. The record key is `quote:<tokenIn>:<tokenOut>:<amountIn>`. The signed result is one JSON line, ABI-encoded as a string. The gateway and the resolver source are not deployed yet, so this document does not link a live quote.
 
-handoff's `ens_name` field now accepts an ENSv2 name and checks it with UniversalResolverV2. That change is private handoff commit `95932ef`, by handoff-claude. It is not in this repo.
+## What is retired
 
-[`JackHook.validate`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/JackHook.sol#L27) admits a bid only when `owner` holds the label passed in `hookData` on this registry. The labels registered there are the five above, so a bidder who does not own one of them does not get in.
+The lease edition's `castle.feefifofum.eth` lease, heartbeat, and `linkToNode` fence are not how this name works. That product is at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition).

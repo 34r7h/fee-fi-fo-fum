@@ -1,19 +1,36 @@
 # Uniswap
 
-Uniswap CCA is the exit. When a shift ends, or when nobody claims a lapsed castle, Castle opens an auction of the WETH it holds. JackHook is the validation hook: a bid is allowed only when the bidder holds a non-expired name in the feefifofum registry. This build does not deploy a v4 pool or a v4 hook.
+Beat 3 is a Uniswap v4 pool that holds no liquidity. CastleJITHook fills every exact-in swap from the Castle's `hen` strategy in `beforeSwap`, and `beforeAddLiquidity` reverts so nobody else can deposit.
+
+Scope: [SPEC.md](SPEC.md) at `d70dafa`. Address measurements: [research.md](research.md).
+
+## The pool
+
+`currency0` is Circle USDC `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`. `currency1` is WETH9 `0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14`. Fee is 0. Tick spacing is 60. The hook is CastleJITHook. The fee the swap pays is `hen`'s SwapVM `flatFee`, not the pool fee.
+
+The hook's flags are `BEFORE_SWAP`, `BEFORE_SWAP_RETURNS_DELTA`, and `BEFORE_ADD_LIQUIDITY`. The salt is mined against the CREATE2 deployer `0x4e59b44847b379578588920ca78fbf26c0b4956c`.
+
+`beforeSwap` takes `amountIn` from the pool, swaps the Castle's `hen` order through AquaSwapVMRouter, settles `amountOut` back to the PoolManager, and returns the delta. Exact-out reverts `ExactOutNotSupported`. Optional `hookData` of `abi.encode(uint256 minAmountOut)` reverts `TooLittleOut` when the quote is short.
+
+The demo swap goes through PoolSwapTest, not a frontend router. One transaction should show a v4 `Swap` and Aqua `Pulled` / `Pushed`. That transaction does not exist yet.
 
 ## Addresses
 
-| Contract | Address | Deploy |
-|---|---|---|
-| CCA factory | [`0x000000001F26a0044BaA66024e7b6599c61963F8`](https://sepolia.etherscan.io/address/0x000000001F26a0044BaA66024e7b6599c61963F8) | external, `contracts/deployments/sepolia.json` |
-| JackHook | [`0x50919ddaaf8294865652D53b45f210019AB2fcAd`](https://sepolia.etherscan.io/address/0x50919ddaaf8294865652D53b45f210019AB2fcAd) | [`0x94cdb321…c539`](https://sepolia.etherscan.io/tx/0x94cdb321f6279e83bd718dd20ac613a525d45ebf15ac0714b90c2356827dc539) |
+From Uniswap's deployments page, section "Sepolia: 11155111", checked with `eth_getCode` at block 11785837. Codesizes are in [research.md](research.md).
 
-## Call sites
+| Contract | Address |
+|---|---|
+| PoolManager | [`0xE03A1074c86CFeDd5C142C4F04F1a1536e203543`](https://sepolia.etherscan.io/address/0xE03A1074c86CFeDd5C142C4F04F1a1536e203543) |
+| PoolSwapTest | [`0x9b6b46e2c869aa39918db7f52f5557fe577b6eee`](https://sepolia.etherscan.io/address/0x9b6b46e2c869aa39918db7f52f5557fe577b6eee) |
+| StateView | [`0xe1dd9c3fa50edb962e442f60dfbc432e24537e4c`](https://sepolia.etherscan.io/address/0xe1dd9c3fa50edb962e442f60dfbc432e24537e4c) |
+| Quoter | [`0x61b3f2011a92d183c7dbadbda940a7555ccf9227`](https://sepolia.etherscan.io/address/0x61b3f2011a92d183c7dbadbda940a7555ccf9227) |
+| PositionManager | [`0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4`](https://sepolia.etherscan.io/address/0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4) |
+| Universal Router, unlabeled current row | [`0x3A9D48AB9751398BbFa63ad67599Bb04e4BdF98b`](https://sepolia.etherscan.io/address/0x3A9D48AB9751398BbFa63ad67599Bb04e4BdF98b) |
 
-The lines are from the deployed source, commit `7b863212f649c07327ac53966e8fae40f813cfb7`.
+CastleJITHook is not in the tree yet. No permalink, no address, no pool id.
 
-- [`Castle._openAuction` calls `CCA_FACTORY.create`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/Castle.sol#L546) at line 546. The auction is 25 blocks and the floor is 80% of the anchor. [`requiredCurrencyRaised`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/Castle.sol#L543) at line 543 is set to 50% of the lot valued at that floor.
-- [`JackHook.validate`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/JackHook.sol#L29) reads `getOwner` at line 29 and `getExpiry` at line 31. `hookData` is the bidder's label. It does not call UniversalResolverV2.
-- [`Castle.settleAuction`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/Castle.sol#L467) writes the clearing price through `_writePrice` when the auction graduated (lines 467–479). [`_writePrice` calls `RESOLVER.setData`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/Castle.sol#L561) at line 561.
-- Developer-experience notes are in [FEEDBACK.md](../FEEDBACK.md). The form itself is for the operator to submit.
+## UniswapX
+
+No reactor is published for Sepolia, and the reactors published for other chains have no code on Sepolia. fo still accepts UniswapX-format orders off-chain through `castle_route` and picks `harp` or the v4 route. Filling a live UniswapX reactor is stretch, on a chain that has one.
+
+The lease edition's CCA auction and JackHook are not this product. They remain at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition).

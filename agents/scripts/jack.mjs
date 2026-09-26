@@ -5,13 +5,18 @@
 //   the fence    after a claim: the OLD epoch's strategy reverts FeeFiFoFum();
 //   the new book the new epoch's strategy fills.
 // Every fill is simulated first. --force sends it anyway, so a revert is mined and has a tx link.
+// On Castle v3 the fence runs the live curve only when the taker brings the holder's heartbeat co-signed by fo:
+// --heartbeat auto (the default on v3) takes the castle service's (CASTLE_SERVICE_URL) or logs/heartbeat.json,
+// --heartbeat none leaves it out (the wind-down branch), and 0x<138 bytes> passes one as is.
 //
-//   node agents/scripts/jack.mjs --as fum --strategy latest|previous|0x<hash> --in USDC|WETH --amount <atomic> [--min-out N] [--force]
+//   node agents/scripts/jack.mjs --as fum --strategy latest|previous|0x<hash> --in USDC|WETH --amount <atomic> [--min-out N] [--heartbeat auto|none|0x…] [--force]
 import { concat, decodeAbiParameters, encodePacked, erc20Abi, getAddress, maxUint256, pad, parseAbi, toHex } from 'viem';
 import { loadEnv } from '../lib/env.mjs';
 import { publicClient, walletClient, loadAccount, contractAddress, txLink } from '../lib/chain.mjs';
 import { AQUA_SHIPPED } from '../lib/book.mjs';
 import { readLease } from '../lib/lease.mjs';
+import { heartbeatStatus } from '../lib/shift.mjs';
+import { unpackHeartbeat } from '../lib/heartbeat.mjs';
 
 loadEnv();
 const argv = process.argv.slice(2);
@@ -29,13 +34,15 @@ const ROUTER_ABI = parseAbi([
 ]);
 const ORDER = [{ type: 'tuple', components: [{ name: 'maker', type: 'address' }, { name: 'traits', type: 'uint256' }, { name: 'data', type: 'bytes' }] }];
 
-// SwapVM 1.0.2 TakerTraitsLib.build: ten uint16 slice ends packed in a uint160, uint16 flags, then the slices.
-function takerData({ isExactIn = true, threshold, useTransferFromAndAquaPush = true }) {
+// SwapVM 1.0.2 TakerTraitsLib.build: ten uint16 slice ends packed in a uint160, uint16 flags, then the slices:
+// threshold, to, deadline, four hook datas, two callback datas, instructionsArgs (the v3 heartbeat), signature.
+function takerData({ isExactIn = true, threshold, useTransferFromAndAquaPush = true, instructionsArgs = '0x' }) {
   const th = threshold != null ? pad(toHex(BigInt(threshold)), { size: 32 }) : '0x';
   const i0 = (th.length - 2) / 2;
-  const idx = [i0, i0, i0, i0, i0, i0, i0, i0, i0, i0].reduce((acc, v, k) => acc | (BigInt(v) << BigInt(16 * k)), 0n);
+  const i9 = i0 + (instructionsArgs.length - 2) / 2;
+  const idx = [i0, i0, i0, i0, i0, i0, i0, i0, i0, i9].reduce((acc, v, k) => acc | (BigInt(v) << BigInt(16 * k)), 0n);
   const flags = (isExactIn ? 0x0001 : 0) | (useTransferFromAndAquaPush ? 0x0040 : 0);
-  return concat([encodePacked(['uint160', 'uint16'], [idx, flags]), th]);
+  return concat([encodePacked(['uint160', 'uint16'], [idx, flags]), th, instructionsArgs]);
 }
 
 const pc = publicClient();
@@ -57,7 +64,10 @@ if (!log) throw new Error(`no strategy ${pick}`);
 const [order] = decodeAbiParameters(ORDER, log.args.strategy);
 
 const lease = await readLease(pc);
-const data = takerData({ threshold: opt('min-out', '1') });
+const hbOpt = opt('heartbeat', lease.version === 3 ? 'auto' : 'none');
+const hb = hbOpt === 'none' ? null : hbOpt.startsWith('0x') ? hbOpt : (await heartbeatStatus())?.heartbeat ?? null;
+const heartbeat = hb ? { validUntil: unpackHeartbeat(hb).validUntil } : null;
+const data = takerData({ threshold: opt('min-out', '1'), instructionsArgs: hb ?? '0x' });
 const req = { address: router, abi: ROUTER_ABI, functionName: 'swap', args: [order, tokenIn, tokenOut, amount, data], account };
 // The router pulls tokenIn from the taker (transferFrom + Aqua push): approve it once, before simulating the fill.
 const allowance = await pc.readContract({ address: tokenIn, abi: erc20Abi, functionName: 'allowance', args: [account.address, router] });
@@ -68,14 +78,17 @@ if (allowance < amount) {
 let expected = null;
 try { await pc.simulateContract(req); } catch (e) { expected = e?.walk?.((x) => x?.data?.errorName)?.data?.errorName || e?.shortMessage || String(e); }
 if (expected && !FORCE) {
-  console.log(JSON.stringify({ jack: who, strategy: log.args.strategyHash, leaseState: lease.state, sent: false, expected }));
+  console.log(JSON.stringify({ jack: who, strategy: log.args.strategyHash, leaseState: lease.state, heartbeat, sent: false, expected }));
   process.exit(1);
 }
+const balanceOut = () => pc.readContract({ address: tokenOut, abi: erc20Abi, functionName: 'balanceOf', args: [account.address] });
+const before = await balanceOut();
 const hash = await wallet.writeContract({ ...req, ...(expected ? { gas: 400_000n } : {}) });
 const rc = await pc.waitForTransactionReceipt({ hash, timeout: 180_000 });
+const amountOut = rc.status === 'success' ? (await balanceOut()) - before : 0n;
 console.log(JSON.stringify({
-  jack: who, strategy: log.args.strategyHash, leaseEpoch: String(lease.epoch), leaseState: lease.state,
-  tokenIn: opt('in', 'USDC').toUpperCase(), amount: String(amount), status: rc.status, reason: rc.status === 'success' ? null : expected,
+  jack: who, strategy: log.args.strategyHash, leaseEpoch: String(lease.epoch), leaseState: lease.state, heartbeat,
+  tokenIn: opt('in', 'USDC').toUpperCase(), amount: String(amount), amountOut: String(amountOut), status: rc.status, reason: rc.status === 'success' ? null : expected,
   tx: txLink(hash), gasUsed: String(rc.gasUsed),
 }));
 process.exitCode = rc.status === 'success' ? 0 : 3;

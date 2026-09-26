@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 13:56 JST
+- **Last regenerated:** 2026-09-26 14:03 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -65,7 +65,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 |---|---|---|---|---|---|---|
 | fee-fi-fo-fum.html against a mock castle stream <br>`p5-mock` `198a1550` | impecc | impecc | Sat 21:00 | in_progress |  |  |
 | Wire fee-fi-fo-fum.html to the live castle stream and publish it on handoff.lol <br>`p5-live` `fd20d4c5` | impecc | impecc | Sun 02:00 | in_progress |  |  |
-| Durable hosting for the castle service, so the live demo survives past the event <br>`p5-durable` `7ab03bab` | handoff-claude | handoff-claude | Sun 02:00 | in_progress |  |  |
+| Durable hosting for the castle service, so the live demo survives past the event <br>`p5-durable` `7ab03bab` | handoff-claude | handoff-claude | Sun 02:00 | review | service/ | https://handoff.lol/t/castle/ live (state, tools, stream, MCP tools/list verified) |
 
 ### P3 SUBMISSION: write-ups, feedback, deck/video, rehearsal, submit
 
@@ -104,14 +104,14 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funded (ETH / USDC / WETH) |
 |---|---|---|---|---|
-| treasury (SirKit) | SirKit | `0xc3Af4CCa3ba691C74F18fa8D3a7ad6816eC65dF2` |  | 0 ETH / 20 USDC / 0 WETH (USDC tx 0x1dc2132a…4884, Circle faucet) |
-| deployer (mister-anderson) | mister-anderson | `0x89a7d90F6bCAF2FFd5c1519Fa7F3D9DB84e9AA73` |  |  |
-| korg | korg | `0x48EB8a8c5dC69Dc578f861dAf987882206aF5d3E` (self-custodied; 0xAa6F… is broker-custodial, do not fund) |  |  |
-| fee | fee (registered on handoff, online, heartbeat every 20s) | `0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538` |  |  |
-| fi | fi (registered on handoff, online, heartbeat every 20s) | `0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2` |  |  |
-| fo | fo (registered on handoff, online, heartbeat every 20s) | `0x8689a407A2488A5b2f2De05d2C6978a798f93D56` |  |  |
-| fum | fum (registered on handoff, online, heartbeat every 20s) | `0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2` |  |  |
-| castle (service) | castle (handoff-claude) | `0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99` |  |  |
+| treasury (SirKit) | SirKit | `0xc3Af4CCa3ba691C74F18fa8D3a7ad6816eC65dF2` |  | 0.0036 ETH / 26 USDC left (0.05 ETH in: [0x56611a5a…](https://sepolia.etherscan.io/tx/0x56611a5aa6825a47ca91c85081bb0cb59e743b7079adcab8381ed3924e75cdea)) |
+| deployer (mister-anderson) | mister-anderson | `0x89a7d90F6bCAF2FFd5c1519Fa7F3D9DB84e9AA73` |  | 0.02 ETH [0x6d65d570…](https://sepolia.etherscan.io/tx/0x6d65d570d5f7eac8b00e741388c062d1f9e92ebb034b007563aa5facd94332cb) / 8 USDC [0x4422def9…](https://sepolia.etherscan.io/tx/0x4422def903a2962bfdec6af118c2244138772061deaaf91c7bff588cccc358db) |
+| korg | korg | `0x48EB8a8c5dC69Dc578f861dAf987882206aF5d3E` (self-custodied; 0xAa6F… is broker-custodial, do not fund) |  | 0.008 ETH [0x13d35fd1…](https://sepolia.etherscan.io/tx/0x13d35fd1cbbfa60bd1ce50f9f0bf6737729124598529281366ad98df6d081881) |
+| fee | fee (registered on handoff, online, heartbeat every 20s) | `0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538` |  | 0.005 ETH [0xb4a1bb3b…](https://sepolia.etherscan.io/tx/0xb4a1bb3b10ec04fc210e8f9ee4f3506571d30fde48f83daa771677bdf30b29e4) / 2 USDC [0x4a5bb82a…](https://sepolia.etherscan.io/tx/0x4a5bb82a1d606a90d154108a816bd73e02d86ba0ba1db1bffcf65f274843945e) |
+| fi | fi (registered on handoff, online, heartbeat every 20s) | `0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2` |  | 0.004 ETH [0x742d1ba8…](https://sepolia.etherscan.io/tx/0x742d1ba88af97c175cd2ee407a9e128876189576f4d4cacb3b3ba555b4daca1b) / 2 USDC [0xc5df2983…](https://sepolia.etherscan.io/tx/0xc5df298310764455ab7f7292214dac2df1bf04a922d9880aa359b3a48e1899bd) |
+| fo | fo (registered on handoff, online, heartbeat every 20s) | `0x8689a407A2488A5b2f2De05d2C6978a798f93D56` |  | 0.001 ETH [0x0033036a…](https://sepolia.etherscan.io/tx/0x0033036adf3a82bc53bfb4e08c90592c30679981365985ccf242123fa883744b) |
+| fum | fum (registered on handoff, online, heartbeat every 20s) | `0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2` |  | 0.003 ETH [0xd63f3304…](https://sepolia.etherscan.io/tx/0xd63f33041b7a3ac024ecaba8fb6c73eb0dd95e0b8c372c1ff8d2cc7582a709c6) / 2 USDC [0xad17fe88…](https://sepolia.etherscan.io/tx/0xad17fe88e2310c40cf758e8bd611e382a3226e48d414f5093713bda1a2578115) |
+| castle (service) | castle (handoff-claude) | `0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99` |  | 0.005 ETH [0xaeba391d…](https://sepolia.etherscan.io/tx/0xaeba391d38c81761afbf1dd52db8365162e66e05d28f63d07a58811181746ceb) + [0x76c425e7…](https://sepolia.etherscan.io/tx/0x76c425e74d6123e6115529e22daea9c88d3ecd79af59b6104f2d112acd03c20d) |
 
 ## Miniapp and live demo
 
@@ -120,8 +120,8 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | Source | `miniapp/fee-fi-fo-fum.html` |
 | Published URL |  |
 | Validation score |  |
-| Castle service URL (durable) |  |
-| Stream URL |  |
+| Castle service URL (durable) | https://handoff.lol/t/castle/ (MCP /mcp, REST /tools, SSE /stream, /state, /fills), hosted on helen and following main; verified responding 14:03 JST |
+| Stream URL | https://handoff.lol/t/castle/stream |
 
 ## Documentation
 
@@ -160,6 +160,7 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:05 | Linked the GitHub repo (PAT) to handoff project 2af16779 |
 | Sat 14:05 | Sent Sepolia ETH to the treasury 0xc3Af4CCa3ba691C74F18fa8D3a7ad6816eC65dF2 |
 | Sat 13:47 | Funded the treasury with 20 Circle Sepolia USDC (tx 0x1dc2132a810bd8f2551e337193a446bb507478f9d2be5a4dcc522f1e95fb4884) |
+| Sat 14:00 | Funded the treasury with 0.05 Sepolia ETH and a further 20 USDC |
 
 ## Log
 
@@ -196,3 +197,6 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:16 | mister-anderson | Castle.sol (81ffd04) with unit tests against real Aqua and AquaSwapVMRouter 1.0.2 (789f550); lease events match STREAM.md (3fa3aa6). |
 | Sat 14:18 | handoff-advisor | Co-signed p1-iface and p2-rail. The payout was confirmed by balance delta (mister-anderson +0.1 USDC). |
 | Sat 14:22 | SirKit | Treasury on-chain: 20 USDC arrived from the Circle faucet at 13:47 JST; native Sepolia ETH is still 0 (checked via publicnode, tenderly, ethpandaops and Blockscout). ETH is needed for gas before anything can move. |
+| Sat 14:00 | operator | 0.05 Sepolia ETH to the treasury (0x56611a5a…); USDC topped up to 46 in total. |
+| Sat 14:03 | SirKit | Distributed gas at about 1 gwei: deployer 0.02, korg 0.008, fee 0.005, fi 0.004, fum 0.003, fo 0.001, castle 0.005 ETH; USDC: deployer 8, fee/fi/fum 2 each. Every balance verified on-chain. |
+| Sat 14:03 | handoff-claude | The castle service is live and durable at https://handoff.lol/t/castle/ (p5-durable submitted). ENSv2 agent-registry script works on a fork, 5/5 names. Flagged Castle.sol resolver selectors that are absent from the deployed PermissionedResolver. |

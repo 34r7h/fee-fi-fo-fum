@@ -1,6 +1,6 @@
 # Castle v3: liveness with zero idle gas
 
-> **Status: NOT DEPLOYED.** The live contracts are still v2 (commit `7b86321`). Their addresses are in `contracts/deployments/sepolia.json` and the README. The v3 source is on `main`, starting at commit `7aafaba`. The v3 ABIs are in `contracts/out-abi/v3/`.
+> **Status: LIVE on Sepolia; genesis pending.** Castle v3 is at `0xADB3cBb0983C1E061c550F2c0BbEdF131fFC8936` and its fence FeeFiFoFumExtruction at `0xe54643fC662bd2C569BD614D29336af95C8B73CC`, deployed in blocks 11785221 to 11785227. Both are Sourcify `exact_match` at commit `acf30e4`. On 2026-09-26 at 08:43Z, agy and handoff-advisor each returned PASS on `acf30e4` (its `contracts/src` is identical to `7aafaba`). They measured 175 unit tests passed and 0 failed (10,000 fuzz runs), and 18 fork tests passed and 0 failed at latest Sepolia (blocks 11785117 and 11785107). The operator chose to ship v3 live. Until genesis (the castle EOA's role grants, then fee's first claim), v2 at `0x6bF5…e8Ec` is still the fillable book. The first v3 claim registers `castle.feefifofum.eth` to Castle, which retires v2. Addresses are in `contracts/deployments/sepolia.json`, with v2 under `v2`. The ABIs are in `contracts/out-abi/v3/`.
 
 In v2, a shift stayed live by renewing an ENS lease every 90 seconds. Each renewal was a 73k-gas transaction, which cost about 2.9M gas an hour even when nobody traded. v3 moves liveness off-chain: the lease is checked at fill time, against a signature the taker brings. On-chain, gas is spent only for a daily renewal, or when someone suspects the holder is dead.
 
@@ -121,7 +121,22 @@ forge test --no-match-path "test/fork/*" --fuzz-runs 10000
 forge test --match-path test/fork/CastleFork.t.sol       # latest state; FORK_BLOCK=<n> to pin
 ```
 
-## Deploy plan
+## Deploy
+
+Deployed by `0x89a7…AA73` with `script/DeployCastle.s.sol`, `JACK_HOOK=0x50919ddaaf8294865652D53b45f210019AB2fcAd`, maxFee 1.5 gwei. The same sequence was rehearsed on an anvil fork of latest Sepolia first.
+
+| Step | Tx | Block | Gas | ETH |
+| --- | --- | --- | --- | --- |
+| `FeeFiFoFumExtruction` | `0x47751f5e81c3952304a811283a0d9d9e07d350c1b552c76634afd176e712929f` | 11785221 | 730,647 | 0.00077384 |
+| `Castle` | `0xb7fc618b80a4f4a2968bacda2ed81c214624a505845de2c8e42aebbc96c4c69b` | 11785223 | 5,502,946 | 0.00608591 |
+| `setCrew` fee | `0x91a9b2a1880f02081b8520f30d9a16d49541d4e54bbaa6cc7c8f46093e8fe9a7` | 11785224 | 50,025 | 0.00005391 |
+| `setCrew` fi | `0xd1dbd72b1204ff7e5bc4ec6f2cb0610079cc98428cf372521331f1f5bc74fc44` | 11785226 | 50,013 | 0.00005606 |
+| `setAuctioneer` fum | `0x2d0467d6c23fdfe29acabcb30619e5509189a1085a19fcead4e982da4ac8fba8` | 11785227 | 47,278 | 0.00005012 |
+| **Total** | | | **6,380,909** | **0.00701985** (cap 0.012) |
+
+`setAnchorPrice` was skipped. v3 reads the same resolver record v2's graduated CCA wrote: 2150.21 USDC per WETH (`170356870810259155100` Q96). The deploy doesn't register `castle.feefifofum.eth`. Just after it, `registry.getOwner(labelhash("castle"))` was `0x0` and Castle's holder and epoch were zero.
+
+## Deploy plan (as approved)
 
 One live attempt, with a gas cap of 0.012 ETH. It goes ahead only after agy and handoff-advisor PASS.
 
@@ -162,5 +177,5 @@ These figures were measured by broadcasting the same sequence to an anvil fork o
 - v2's auctioneer could still open and settle a v2 auction, which would write the shared anchor. There are three ways to close that:
   - fum stops touching v2 (free);
   - the owner key calls `v2.setAuctioneer(address(0))` (about 27k gas);
-  - the admin revokes v2's roles. **SirKit chose this, narrowly:** after v3 is live, the castle EOA `0x67Cc…0C99` (resolver LINK_ADMIN and SET_DATA_ADMIN) sends `resolver.revokeRootRoles(LINK | SET_DATA, v2)`, about 70k gas. v2 keeps REGISTRAR and RENEW, which can't touch a label v3 holds.
+  - the admin revokes v2's roles. **SirKit chose this, narrowly:** right after v3 genesis, the castle EOA `0x67Cc…0C99` (resolver LINK_ADMIN and SET_DATA_ADMIN) sends `resolver.revokeRootRoles(LINK | SET_DATA, v2)`, about 70k gas. v2 keeps REGISTRAR and RENEW, which can't touch a label v3 holds.
 - v2's hoard can leave v2 only through fills or auctions.

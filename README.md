@@ -36,24 +36,27 @@ New, in this repo: Castle, the ENSv2 parent `feefifofum.eth` and its subregistry
 | WETH | `0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14` | `contracts/deployments/sepolia.json` |
 | Circle USDC | `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238` | `contracts/deployments/sepolia.json` |
 | CCA factory | `0x000000001F26a0044BaA66024e7b6599c61963F8` | `contracts/deployments/sepolia.json` |
-| Castle | `0x6bF53228d8c5c3b0192B2028bD52fc4E9d1be8Ec` | `contracts/deployments/sepolia.json` (block 11784308) |
-| FeeFiFoFumExtruction | `0xfA0455bca2B521664021A883aA78fBEAa470f271` | deploy tx `0x14ac049eeac5f13512c99c67942a4eb88e56f04910b3bc0a5e760fe3ab03629f` |
-| JackHook | `0x50919ddaaf8294865652D53b45f210019AB2fcAd` | deploy tx `0x94cdb321f6279e83bd718dd20ac613a525d45ebf15ac0714b90c2356827dc539` |
+| Castle (v3) | `0xADB3cBb0983C1E061c550F2c0BbEdF131fFC8936` | deploy tx `0xb7fc618b80a4f4a2968bacda2ed81c214624a505845de2c8e42aebbc96c4c69b` (block 11785223), `contracts/deployments/sepolia.json` |
+| FeeFiFoFumExtruction (v3) | `0xe54643fC662bd2C569BD614D29336af95C8B73CC` | deploy tx `0x47751f5e81c3952304a811283a0d9d9e07d350c1b552c76634afd176e712929f` (block 11785221) |
+| JackHook (v2 and v3) | `0x50919ddaaf8294865652D53b45f210019AB2fcAd` | deploy tx `0x94cdb321f6279e83bd718dd20ac613a525d45ebf15ac0714b90c2356827dc539` |
+| Castle (v2, retired at v3 genesis) | `0x6bF53228d8c5c3b0192B2028bD52fc4E9d1be8Ec` | `contracts/deployments/sepolia.json` under `v2` (block 11784308) |
+| FeeFiFoFumExtruction (v2, retired at v3 genesis) | `0xfA0455bca2B521664021A883aA78fBEAa470f271` | deploy tx `0x14ac049eeac5f13512c99c67942a4eb88e56f04910b3bc0a5e760fe3ab03629f` |
 
 ## The loop
 
 ```
-(1) ENSv2 lease: castle.feefifofum.eth
-      The holder renews it with fo's attestation. After expiry anyone may claim it,
-      and the regenerated token id becomes the fencing epoch.
-      linkToNode points castle.* at the current shift.
-        │  read at fill time, directly from the registry
+(1) ENSv2 name castle.feefifofum.eth, owned by Castle.sol
+      Castle keeps the lease (holder, expiry, epoch). The holder renews it daily with
+      fo's attestation, and the holder and fo co-sign a heartbeat every ~30 s off-chain.
+      After expiry, or a challenge left unanswered for 60 s, crew may claim it,
+      and every claim bumps the fencing epoch. linkToNode points castle.* at the current shift.
+        │  read at fill time: Castle's lease plus the heartbeat the taker brings
         ▼
 (2) 1inch Aqua + SwapVM 1.0.2. The maker is Castle.sol (the giant's castle and its hoard).
       Program = FeeFiFoFumExtruction → XYCConcentrateGrowLiquidity2D → FlatFeeIn
-        live and same epoch → fill
-        expired             → wind down (reduce-only, wide spread)
-        epoch changed       → revert FeeFiFoFum()   (the giant smells a stale shift)
+        valid heartbeat, same epoch → fill
+        no valid heartbeat          → wind down (reduce-only, wide spread)
+        epoch changed               → revert FeeFiFoFum()   (the giant smells a stale shift)
         │  shift change, or nobody claims the castle
         ▼
 (3) Uniswap CCA is the exit, not the entrance
@@ -90,15 +93,15 @@ New, in this repo: Castle, the ENSv2 parent `feefifofum.eth` and its subregistry
 
 ## Trust assumptions
 
-Three residual trusts. None of them is removed by the lease or the auction.
+Three residual trusts in v3. None of them is removed by the lease or the auction. R4 records a v2 flaw that v3 fixes.
 
-**R1. Registry admin.** `0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99` is the castle EOA and still holds root `ROLE_REGISTRAR` (`1 << 0`) on the feefifofum subregistry `0x2F2164507471a1a46506f902aBfdfB9d22e4bE09`. It can register new labels. It can no longer unregister a name, repoint its resolver or subregistry, or grant those powers again. `hasRootRoles` is false for `ROLE_UNREGISTER` (bit 12), `UNREGISTER_ADMIN` (140), `SET_RESOLVER` (20), `SET_RESOLVER_ADMIN` (148), `SET_SUBREGISTRY` (24) and `SET_SUBREGISTRY_ADMIN` (152). The revokes are `0x14b20820366ad908fc06bb3a3d16a6c86977b42db464d3a32df503147586b844` (block 11784392) and `0x5973bca0ee11925f48a9d5b2e05d7185067e77879b4b2e7eec996cd182bdae9a` (block 11784434). REGISTRAR remains, so that EOA is still trusted the way Castle's owner `0x89a7d90F6bCAF2FFd5c1519Fa7F3D9DB84e9AA73` is trusted: it can put a new name on the registry.
+**R1. ENS admin and name ownership.** `0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99` is the castle EOA and still holds root `ROLE_REGISTRAR` (`1 << 0`) and `RENEW` on the feefifofum subregistry `0x2F2164507471a1a46506f902aBfdfB9d22e4bE09`. It can register new labels. It can no longer unregister a name, repoint its resolver or subregistry, or grant those powers again. `hasRootRoles` is false for `ROLE_UNREGISTER` (bit 12), `UNREGISTER_ADMIN` (140), `SET_RESOLVER` (20), `SET_RESOLVER_ADMIN` (148), `SET_SUBREGISTRY` (24) and `SET_SUBREGISTRY_ADMIN` (152). The revokes are `0x14b20820366ad908fc06bb3a3d16a6c86977b42db464d3a32df503147586b844` (block 11784392) and `0x5973bca0ee11925f48a9d5b2e05d7185067e77879b4b2e7eec996cd182bdae9a` (block 11784434). In v3, Castle owns `castle.feefifofum.eth` itself. From genesis on, `registry.getOwner(labelhash("castle"))` returns the Castle contract, and the holder is read from `castle.holder()`, not from the registry. REGISTRAR cannot touch a name that has not expired. Castle registers the name for 365 days (`NAME_PERIOD`) and renews it only when a lease would outlive it, about once a year, so keeping the name costs ~0 idle gas. On the resolver `0x9D2251b5162701BC2bD97d61bc8aa3e53446285E`, the same EOA holds `LINK_ADMIN` and `SET_DATA_ADMIN`, so it could grant itself `SET_DATA` and rewrite the anchor price. That EOA is therefore trusted the way Castle's owner `0x89a7d90F6bCAF2FFd5c1519Fa7F3D9DB84e9AA73` is trusted. Right after v3 genesis, it revokes v2's `LINK | SET_DATA`, which leaves Castle v3 as the only contract that writes the anchor.
 
 **R2. Self-bid.** The holder or the auctioneer can bid in an auction Castle itself opened. The floor is 80% of the anchor (`FLOOR_PCT` in `Castle.sol`) and the auction lasts 25 blocks (`AUCTION_BLOCKS`). Graduation requires currency equal to 50% of the lot valued at that floor (`GRADUATION_PCT`); below that, the anchor does not move. A bid that does graduate can clear at the floor, which moves the anchor by 20% in that round. Nothing in the contracts stops the holder or the auctioneer from being that bidder. The bound holds only if an outside Jack bids.
 
-**R3. Verification.** Castle `0x6bF53228d8c5c3b0192B2028bD52fc4E9d1be8Ec` and JackHook `0x50919ddaaf8294865652D53b45f210019AB2fcAd` are Sourcify `exact_match` at commit `7b863212f649c07327ac53966e8fae40f813cfb7`. Etherscan verification is still pending an operator API key (`contracts/deployments/sepolia.json`).
+**R3. Verification.** Castle v3 `0xADB3cBb0983C1E061c550F2c0BbEdF131fFC8936` and FeeFiFoFumExtruction v3 `0xe54643fC662bd2C569BD614D29336af95C8B73CC` are Sourcify `exact_match`, for both runtime and creation code, at commit `acf30e4ac8e887e5e33992b07a3019e93957401b`. That is the commit agy and handoff-advisor validated, compiled with the `castle-size` profile (200 optimizer runs) to fit EIP-170. JackHook `0x50919ddaaf8294865652D53b45f210019AB2fcAd`, which both versions use, and the retired v2 Castle `0x6bF53228d8c5c3b0192B2028bD52fc4E9d1be8Ec` and fence `0xfA0455bca2B521664021A883aA78fBEAa470f271` are Sourcify `exact_match` at commit `7b863212f649c07327ac53966e8fae40f813cfb7`. Etherscan verification is still pending an operator API key (`contracts/deployments/sepolia.json`).
 
-**R4. Repeat dissolve.** `dissolve()` has no once-per-epoch guard and does not look at whether an auction is open. After `settleAuction()` the unsold WETH is back in Castle and `auction` is `address(0)`. If the lease is still past `expiry + dissolveGrace`, anyone can call `dissolve()` again. A graduated auction writes the clearing price, which can be the 80% floor, so each round can set the anchor 20% lower. Castle was deployed with `dissolveGrace` at `1800` seconds. The owner has since raised it to `86400`, which is `1 days` (`MAX_DISSOLVE_GRACE`), in tx `0xf8be3efb437ef996c1d457461e06b2f62bde4324ac93df7a599d50fa1e6a4def` (block 11784702). fi also claims immediately after settle. The next redeploy should allow at most one dissolve per epoch, and none while an auction is open.
+**R4. Repeat dissolve (v2 only, fixed in v3).** In v3, `dissolve()` reverts while an auction is open and runs at most once per epoch (`dissolvedEpoch`). An unanswered challenge counts as the lease ending at its deadline. The retired v2 Castle has neither guard. After `settleAuction()`, it could be dissolved again once its lease was past `expiry + dissolveGrace`, and each graduated round could set the anchor up to 20% lower. The owner raised v2's grace to `86400` (`MAX_DISSOLVE_GRACE`) in tx `0xf8be3efb437ef996c1d457461e06b2f62bde4324ac93df7a599d50fa1e6a4def` (block 11784702). After v3 genesis, v2's `expiry()` reads v3's 365-day registration of the shared label, so v2 can't be dissolved (fork-tested). The revoke of v2's resolver `LINK | SET_DATA` then stops it writing the anchor at all.
 
 ## Status
 

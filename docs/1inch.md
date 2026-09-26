@@ -8,7 +8,8 @@ Aqua and SwapVM were not in the handoff baseline (`079f8f0`). Castle is the Aqua
 |---|---|---|
 | Aqua | [`0x1111113CCf1426A8E30e2bfF5E005d929bF6a90a`](https://sepolia.etherscan.io/address/0x1111113CCf1426A8E30e2bfF5E005d929bF6a90a) | external, `contracts/deployments/sepolia.json` |
 | AquaSwapVMRouter 1.0.2 | [`0xeDB6933949dB941D495b23604818F9AbF55e70f9`](https://sepolia.etherscan.io/address/0xeDB6933949dB941D495b23604818F9AbF55e70f9) | [`0xb2b319a2…cd4d`](https://sepolia.etherscan.io/tx/0xb2b319a23732ade788971450ed30498b0dbf6cbb54d86c9ad343e7b42a32cd4d) |
-| FeeFiFoFumExtruction | [`0xfA0455bca2B521664021A883aA78fBEAa470f271`](https://sepolia.etherscan.io/address/0xfA0455bca2B521664021A883aA78fBEAa470f271) | [`0x14ac049e…629f`](https://sepolia.etherscan.io/tx/0x14ac049eeac5f13512c99c67942a4eb88e56f04910b3bc0a5e760fe3ab03629f) |
+| FeeFiFoFumExtruction (v3) | [`0xe54643fC662bd2C569BD614D29336af95C8B73CC`](https://sepolia.etherscan.io/address/0xe54643fC662bd2C569BD614D29336af95C8B73CC) | [`0x47751f5e…929f`](https://sepolia.etherscan.io/tx/0x47751f5e81c3952304a811283a0d9d9e07d350c1b552c76634afd176e712929f) |
+| FeeFiFoFumExtruction (v2, retired at v3 genesis) | [`0xfA0455bca2B521664021A883aA78fBEAa470f271`](https://sepolia.etherscan.io/address/0xfA0455bca2B521664021A883aA78fBEAa470f271) | [`0x14ac049e…629f`](https://sepolia.etherscan.io/tx/0x14ac049eeac5f13512c99c67942a4eb88e56f04910b3bc0a5e760fe3ab03629f) |
 
 ## Call sites
 

@@ -26,16 +26,17 @@
       }
     },
     "feeFiFoFumExtruction": {
-      "address": "0xfA0455bca2B521664021A883aA78fBEAa470f271",
-      "tx": "0x14ac049eeac5f13512c99c67942a4eb88e56f04910b3bc0a5e760fe3ab03629f",
-      "block": 11784305,
-      "gasUsed": 468641,
-      "commit": "7b863212f649c07327ac53966e8fae40f813cfb7",
+      "version": "v3",
+      "address": "0xe54643fC662bd2C569BD614D29336af95C8B73CC",
+      "tx": "0x47751f5e81c3952304a811283a0d9d9e07d350c1b552c76634afd176e712929f",
+      "block": 11785221,
+      "gasUsed": 730647,
+      "commit": "acf30e4ac8e887e5e33992b07a3019e93957401b",
       "source": "contracts/src/FeeFiFoFumExtruction.sol",
-      "compiler": "solc 0.8.30, via_ir, optimizer 700 runs",
+      "compiler": "solc 0.8.30, via_ir, optimizer 200 runs (foundry compilation_restrictions / castle-size profile, to fit EIP-170)",
       "constructorArgs": "0x",
       "verified": {
-        "sourcify": "exact_match",
+        "sourcify": "exact_match (runtime and creation)",
         "etherscan": "pending operator API key"
       }
     },
@@ -51,8 +52,96 @@
       "verified": {
         "sourcify": "exact_match",
         "etherscan": "pending operator API key"
-      }
+      },
+      "usedBy": [
+        "castle v2 0x6bF53228d8c5c3b0192B2028bD52fc4E9d1be8Ec",
+        "castle v3 0xADB3cBb0983C1E061c550F2c0BbEdF131fFC8936"
+      ]
     },
+    "castle": {
+      "version": "v3",
+      "address": "0xADB3cBb0983C1E061c550F2c0BbEdF131fFC8936",
+      "tx": "0xb7fc618b80a4f4a2968bacda2ed81c214624a505845de2c8e42aebbc96c4c69b",
+      "block": 11785223,
+      "gasUsed": 5502946,
+      "commit": "acf30e4ac8e887e5e33992b07a3019e93957401b",
+      "source": "contracts/src/Castle.sol",
+      "compiler": "solc 0.8.30, via_ir, optimizer 200 runs (foundry compilation_restrictions / castle-size profile, to fit EIP-170)",
+      "constructorArgs": "0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000001111113ccf1426a8e30e2bff5e005d929bf6a90a000000000000000000000000edb6933949db941d495b23604818f9abf55e70f9000000000000000000000000e54643fc662bd2c569bd614d29336af95c8b73cc0000000000000000000000002f2164507471a1a46506f902abfdfb9d22e4be090000000000000000000000009d2251b5162701bc2bd97d61bc8aa3e53446285e000000000000000000000000fff9976782d46cc05630d1f6ebab18b2324d6b140000000000000000000000001c7d4b196cb0c7b01d743fbc6116a902379c72380000000000000000000000008689a407a2488a5b2f2de05d2c6978a798f93d5600000000000000000000000089a7d90f6bcaf2ffd5c1519fa7f3d9db84e9aa7300000000000000000000000000000000000000000000000000000000000002400000000000000000000000000000000000000000000000000000000000000280000000000000000000000000000000000000000000000000000000000001518000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000002faf080000000000000000000000000000000000000000000000000000000000000003c000000000000000000000000000000001f26a0044baa66024e7b6599c61963f800000000000000000000000050919ddaaf8294865652d53b45f210019ab2fcad00000000000000000000000000000000000000000000000000000000000007080000000000000000000000000000000000000000000000000000000000000006636173746c650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001706636173746c650a6665656669666f66756d0365746800000000000000000000",
+      "verified": {
+        "sourcify": "exact_match (runtime and creation)",
+        "etherscan": "pending operator API key"
+      },
+      "config": {
+        "owner": "0x89a7d90F6bCAF2FFd5c1519Fa7F3D9DB84e9AA73",
+        "label": "castle",
+        "name": "castle.feefifofum.eth",
+        "registry": "0x2F2164507471a1a46506f902aBfdfB9d22e4bE09",
+        "resolver": "0x9D2251b5162701BC2bD97d61bc8aa3e53446285E",
+        "fence": "0xe54643fC662bd2C569BD614D29336af95C8B73CC",
+        "jackHook": "0x50919ddaaf8294865652D53b45f210019AB2fcAd",
+        "fo": "0x8689a407A2488A5b2f2De05d2C6978a798f93D56",
+        "crew": {
+          "fee": "0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538",
+          "fi": "0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2"
+        },
+        "auctioneer": "0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2",
+        "leasePeriod": 86400,
+        "namePeriod": 31536000,
+        "responseWindow": 60,
+        "challengeCooldown": 600,
+        "windDownFeeBps": 50000000,
+        "decayPeriod": 60,
+        "dissolveGrace": 1800,
+        "heartbeat": "EIP-712 Heartbeat(uint256 epoch,uint64 validUntil) under Castle's domain (\"fee-fi-fo-fum Castle\", \"1\", 11155111, Castle), co-signed by the holder and fo; taker instructionsArgs = validUntil(8) | holderSig(65) | foSig(65); valid while now <= validUntil <= now + 120",
+        "ownerTxs": {
+          "setCrew(fee)": "0x91a9b2a1880f02081b8520f30d9a16d49541d4e54bbaa6cc7c8f46093e8fe9a7",
+          "setCrew(fi)": "0xd1dbd72b1204ff7e5bc4ec6f2cb0610079cc98428cf372521331f1f5bc74fc44",
+          "setAuctioneer(fum)": "0x2d0467d6c23fdfe29acabcb30619e5509189a1085a19fcead4e982da4ac8fba8"
+        },
+        "rolesNeeded": {
+          "registryRoot": "REGISTRAR|RENEW = (1<<0)|(1<<16) = 65537",
+          "resolverRoot": "SET_DATA|LINK = (1<<24)|(1<<28) = 285212672"
+        }
+      },
+      "roles": {
+        "status": "pending: the castle EOA 0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99 grants both, as for v2",
+        "registryRootGrant": {
+          "to": "0x2F2164507471a1a46506f902aBfdfB9d22e4bE09",
+          "call": "grantRootRoles(65537, Castle)",
+          "tx": null
+        },
+        "resolverRootGrant": {
+          "to": "0x9D2251b5162701BC2bD97d61bc8aa3e53446285E",
+          "call": "grantRootRoles(285212672, Castle)",
+          "tx": null
+        }
+      },
+      "anchor": {
+        "priceQ96": "170356870810259155100",
+        "usdcPerWeth": "2150.206005",
+        "source": "inherited: v3 reads the same resolver record (castle.feefifofum.eth, handoff-price) that v2's graduated CCA wrote at settle, tx 0x9a813eb505f08ad54cc20583ba00bec9f75ee0319d6d789b5cae6d58a6c981cf (block 11784532); no setAnchorPrice"
+      },
+      "genesis": {
+        "status": "pending: fee claims after the grants; the first claim registers castle.feefifofum.eth to Castle for namePeriod and retires v2",
+        "txs": []
+      },
+      "deploy": {
+        "deployer": "0x89a7d90F6bCAF2FFd5c1519Fa7F3D9DB84e9AA73",
+        "maxFeeGwei": 1.5,
+        "gasUsed": 6380909,
+        "ethSpent": "0.00701985",
+        "cap": "0.012 ETH",
+        "validatedBy": [
+          "agy",
+          "handoff-advisor"
+        ],
+        "validatedCommit": "acf30e4ac8e887e5e33992b07a3019e93957401b"
+      }
+    }
+  },
+  "v2": {
+    "retired": "at v3 genesis: the first v3 claim registers castle.feefifofum.eth to the v3 Castle, which changes v2's epoch, so every v2 order reverts FeeFiFoFum()",
     "castle": {
       "address": "0x6bF53228d8c5c3b0192B2028bD52fc4E9d1be8Ec",
       "tx": "0xe9efeb3227c5c7c2887215da49bb9148f9767d4147a9b1377f0820f85b088775",
@@ -216,6 +305,20 @@
           "anchorWritten": true,
           "unsoldWethReturned": "1352564779656110"
         }
+      }
+    },
+    "feeFiFoFumExtruction": {
+      "address": "0xfA0455bca2B521664021A883aA78fBEAa470f271",
+      "tx": "0x14ac049eeac5f13512c99c67942a4eb88e56f04910b3bc0a5e760fe3ab03629f",
+      "block": 11784305,
+      "gasUsed": 468641,
+      "commit": "7b863212f649c07327ac53966e8fae40f813cfb7",
+      "source": "contracts/src/FeeFiFoFumExtruction.sol",
+      "compiler": "solc 0.8.30, via_ir, optimizer 700 runs",
+      "constructorArgs": "0x",
+      "verified": {
+        "sourcify": "exact_match",
+        "etherscan": "pending operator API key"
       }
     }
   }

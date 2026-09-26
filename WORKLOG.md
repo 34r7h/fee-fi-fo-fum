@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 17:34 JST
+- **Last regenerated:** 2026-09-26 17:37 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -75,8 +75,8 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
-| README before/after, the three sponsor integration write-ups, and the contract address table <br>`p6-writeups` `3fb7f7a3` | korg | korg | Sun 07:00 | rejected |  |  |
-| FEEDBACK.md for Uniswap and the developers.uniswap.org/hackathon-feedback form <br>`p6-feedback` `d0587b18` | korg | korg | Sun 07:00 | rejected |  |  |
+| README before/after, the three sponsor integration write-ups, and the contract address table <br>`p6-writeups` `3fb7f7a3` | korg | korg | Sun 07:00 | done | README.md, docs/1inch.md, docs/uniswap.md, docs/ens.md (58bcb4a, 456dbea) | every sponsor call cited as a permalink at the deployed 7b86321 and checked line by line; 20/20 links and 16/16 addresses resolve; verified by SirKit |
+| FEEDBACK.md for Uniswap and the developers.uniswap.org/hackathon-feedback form <br>`p6-feedback` `d0587b18` | korg | korg | Sun 07:00 | done | FEEDBACK.md (f7aa1d5, 456dbea) | CCA DX: requiredCurrencyRaised exists but nothing guides its value; the form draft is ready for the operator to submit; verified by SirKit |
 | Pitch deck, plus the script and shot list for a 2-4 min demo video <br>`p6-deck` `005db56f` | impecc | impecc | Sun 07:00 | done | deck artifact 8emvtymY…; docs/video-script.md 99b43c7 | 11 slides with real Sepolia txs (all status 1, captions match); script with 7 tx links; co-signed |
 | **BLOCKER** Two full rehearsals of the five-beat demo on Sepolia from a clean browser <br>`p6-rehearsal` `3eb4aa41` | agy | agy | Sun 05:00 | in_progress |  |  |
 | AI_USAGE.md and the final WORKLOG.md pass <br>`p6-ai-usage` `8abb390e` | SirKit | SirKit | Sun 08:00 | done | AI_USAGE.md bf999b9, de24ce3, 2701078; README 2701078 | every path attributed, including agy's fo commit 6376485 and the third-party submodules; the 95 SirKit and 49 task-sync commits disclosed; the 5 private handoff commits after 079f8f0 listed; verified by handoff-advisor |
@@ -108,7 +108,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11785078.
+Live balances read at block 11785090.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -373,3 +373,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 17:30 | SirKit | agy resubmitted p4-cca-e2e with the two hashes corrected; every hash checked on Sepolia, so it is verified and a co-sign has been requested. |
 | Sat 17:35 | SirKit | handoff-advisor co-signed p3-fo, p3-fum and p2-capabilities, having reproduced the fork auction and MCP bid independently. The WORKLOG now carries the fork MCP run for p4-cca-e2e (demo row 6 and the task row) so it can be co-signed. |
 | Sat 17:45 | SirKit | handoff-advisor co-signed p4-cca-e2e; 29 of 35 tasks are verified. Sent korg's p6-writeups back because its Castle.sol line citations match the undeployed v3 source, not the deployed 7b86321 (all 20 links and 16 addresses resolve). Sent p6-feedback back because the CCA does have a graduation parameter (requiredCurrencyRaised). The castle agent was adopted to the operator's account. |
+| Sat 17:55 | SirKit | korg fixed both write-ups at 456dbea (permalinks at the deployed 7b86321; the CCA graduation point corrected); verified, co-sign requested. mister-anderson measured v3 at 6.44M deployer gas (~0.0063 ETH); funding 0.007 ETH is approved once agy and handoff-advisor pass, and v2 loses only its resolver LINK|SET_DATA roles so it cannot overwrite the shared ENS price. |

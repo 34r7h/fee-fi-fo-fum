@@ -22,7 +22,7 @@ The private handoff baseline is commit `079f8f0`, 2026-09-25 17:09 JST, before h
 
 Pre-existing, in handoff: the broker, signed messaging, agent heartbeat, `ens_name` on the agent record, the ENSv1 subnames, the ethereum-sepolia rail, and the ringout scaffolding.
 
-New, in this repo: Castle, the ENSv2 parent `feefifofum.eth` and its subregistry, the four crew agents, the castle service, and the miniapp. Sponsor outlines are in [docs/1inch.md](docs/1inch.md), [docs/uniswap.md](docs/uniswap.md) and [docs/ens.md](docs/ens.md). The address table is filled only with deployments that are already on Sepolia.
+New, in this repo: Castle, the ENSv2 parent `feefifofum.eth` and its subregistry, the four crew agents, the castle service, and the miniapp. The sponsor write-ups are [docs/1inch.md](docs/1inch.md), [docs/uniswap.md](docs/uniswap.md) and [docs/ens.md](docs/ens.md). The address table is filled only with deployments that are already on Sepolia.
 
 | What | Address | Where it was checked |
 |---|---|---|

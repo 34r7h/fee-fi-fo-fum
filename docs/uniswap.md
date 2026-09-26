@@ -1,15 +1,17 @@
-# Uniswap — outline
+# Uniswap
 
-This is the groundwork for the sponsor write-up. It is not the finished page.
+Uniswap CCA is the exit. When a shift ends, or when nobody claims a lapsed castle, Castle opens an auction of the WETH it holds. JackHook is the validation hook: a bid is allowed only when the bidder holds a non-expired name in the feefifofum registry. This build does not deploy a v4 pool or a v4 hook.
 
-## What is new
+## Addresses
 
-Uniswap CCA is the exit when a shift ends or nobody claims the castle. JackHook is the validation hook: a bid is allowed only when the bidder holds a non-expired ENSv2 name. The registry reads are in `docs/ens-probes.md`.
+| Contract | Address | Deploy |
+|---|---|---|
+| CCA factory | [`0x000000001F26a0044BaA66024e7b6599c61963F8`](https://sepolia.etherscan.io/address/0x000000001F26a0044BaA66024e7b6599c61963F8) | external, `contracts/deployments/sepolia.json` |
+| JackHook | [`0x50919ddaaf8294865652D53b45f210019AB2fcAd`](https://sepolia.etherscan.io/address/0x50919ddaaf8294865652D53b45f210019AB2fcAd) | [`0x94cdb321…c539`](https://sepolia.etherscan.io/tx/0x94cdb321f6279e83bd718dd20ac613a525d45ebf15ac0714b90c2356827dc539) |
 
-## What is already on Sepolia
+## Call sites
 
-The CCA factory recorded in `contracts/deployments/sepolia.json` is `0x000000001F26a0044BaA66024e7b6599c61963F8`. No auction from this project is deployed there yet, and `JackHook.sol` is not in `contracts/src`.
-
-## Still to write
-
-The auction parameters, the hook's call into `getOwner` and `getExpiry`, where `clearingPrice` is written back to ENS, and the developer-experience notes that belong in `FEEDBACK.md`.
+- `Castle._openAuction` calls `CCA_FACTORY.create` at `contracts/src/Castle.sol` line 612. The auction is 25 blocks, the floor is 80% of the anchor, and graduation requires currency equal to 50% of the lot at that floor.
+- `JackHook.validate` reads `getOwner` and `getExpiry` at `contracts/src/JackHook.sol` lines 29 and 31. `hookData` is the bidder's label. It does not call UniversalResolverV2.
+- `Castle.settleAuction` writes the clearing price through `_writePrice` when the auction graduated (`Castle.sol` lines 467–479). `_writePrice` calls `RESOLVER.setData` at line 627.
+- Developer-experience notes are in [FEEDBACK.md](../FEEDBACK.md). The form itself is for the operator to submit.

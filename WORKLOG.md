@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 15:22 JST
+- **Last regenerated:** 2026-09-26 15:26 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -67,7 +67,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
 | fee-fi-fo-fum.html against a mock castle stream <br>`p5-mock` `198a1550` | impecc | impecc | Sat 21:00 | done | ccb9ae0 | agy PASS 5/5; SirKit re-check; handoff-advisor built it (73,730 B, 100/100) and rendered it headless through the full sequence; paid (receipt 4255b156) |
-| Wire fee-fi-fo-fum.html to the live castle stream and publish it on handoff.lol <br>`p5-live` `fd20d4c5` | impecc | impecc | Sun 02:00 | in_progress |  |  |
+| Wire fee-fi-fo-fum.html to the live castle stream and publish it on handoff.lol <br>`p5-live` `fd20d4c5` | impecc | impecc | Sun 02:00 | review | c928cdc, 458ddf8, 5a8ff2a, 30d6be5, e55cda5 | live URL 200; the castle service returns a live snapshot; chain-only fallback; handoff-advisor validating in a clean browser |
 | Durable hosting for the castle service, so the live demo survives past the event <br>`p5-durable` `7ab03bab` | handoff-claude | handoff-claude | Sun 02:00 | done | service/ (c015774, 5a654bf) | https://handoff.lol/t/castle/ live; paid 0.15 USDC (receipt 80f9d048) |
 
 ### P3 SUBMISSION: write-ups, feedback, deck/video, rehearsal, submit
@@ -107,7 +107,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784419.
+Live balances read at block 11784436.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -118,18 +118,20 @@ Live balances read at block 11784419.
 | fi | fi (registered on handoff, online, heartbeat every 20s) | [`0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2`](https://sepolia.etherscan.io/address/0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2) | fi.feefifofum.eth (live; resolves via UniversalResolverV2 to this EOA; handoff ens_name set with ens_proof, platform 95932ef) | 0.004 ETH [0x742d1ba8…](https://sepolia.etherscan.io/tx/0x742d1ba88af97c175cd2ee407a9e128876189576f4d4cacb3b3ba555b4daca1b) / 2 USDC [0xc5df2983…](https://sepolia.etherscan.io/tx/0xc5df298310764455ab7f7292214dac2df1bf04a922d9880aa359b3a48e1899bd); +0.004 [0x5e0c7655…](https://sepolia.etherscan.io/tx/0x5e0c7655b6ccb82a572dd9ca5978cdd1b11bec06e18a3e8c7b511c45d6ead3a9); +0.02 ETH [0xf7b1787b…](https://sepolia.etherscan.io/tx/0xf7b1787b0ef45ead0fb094fcf14888960e70e88ef66e0975433fb79aa0efbee6) | 0.02695 / 2.00 / 0.00100 |
 | fo | fo (registered on handoff, online, heartbeat every 20s) | [`0x8689a407A2488A5b2f2De05d2C6978a798f93D56`](https://sepolia.etherscan.io/address/0x8689a407A2488A5b2f2De05d2C6978a798f93D56) | fo.feefifofum.eth (live; resolves via UniversalResolverV2 to this EOA; handoff ens_name set with ens_proof, platform 95932ef) | 0.001 ETH [0x0033036a…](https://sepolia.etherscan.io/tx/0x0033036adf3a82bc53bfb4e08c90592c30679981365985ccf242123fa883744b); +0.005 ETH [0xa4ade13b…](https://sepolia.etherscan.io/tx/0xa4ade13bad70596f7ab201a2b57d7d717f6554bd8da93a9a503ed88560b10fa2); 5 USDC [0x439268aa…](https://sepolia.etherscan.io/tx/0x439268aa2116dd0eab8768e7a5af7a6786d1cd484cfbfb8e7d9082761102f484) (backup auction bidder) | 0.00569 / 5.00 / 0.00020 |
 | fum | fum (registered on handoff, online, heartbeat every 20s) | [`0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2`](https://sepolia.etherscan.io/address/0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2) | fum.feefifofum.eth (live; resolves via UniversalResolverV2 to this EOA; handoff ens_name set with ens_proof, platform 95932ef) | 0.003 ETH [0xd63f3304…](https://sepolia.etherscan.io/tx/0xd63f33041b7a3ac024ecaba8fb6c73eb0dd95e0b8c372c1ff8d2cc7582a709c6) / 2 USDC [0xad17fe88…](https://sepolia.etherscan.io/tx/0xad17fe88e2310c40cf758e8bd611e382a3226e48d414f5093713bda1a2578115); +0.002 [0xdc880c47…](https://sepolia.etherscan.io/tx/0xdc880c4714ce6eb5881934e72cd8063e47a981391fce53b7191bcc8835e3ef62); +0.02 ETH [0x16bab3ec…](https://sepolia.etherscan.io/tx/0x16bab3ec1fc09314d8cbc6b6726924b1f8e80352599065537ebc6d20c7ca8564) | 0.02395 / 2.00 / 0.00100 |
-| castle (service) | castle (agent-smith; the castle EOA is the ENSv2 registry admin) | [`0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99`](https://sepolia.etherscan.io/address/0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99) |  | 0.005 ETH [0xaeba391d…](https://sepolia.etherscan.io/tx/0xaeba391d38c81761afbf1dd52db8365162e66e05d28f63d07a58811181746ceb) + [0x76c425e7…](https://sepolia.etherscan.io/tx/0x76c425e74d6123e6115529e22daea9c88d3ecd79af59b6104f2d112acd03c20d); +0.005 ETH [0x49d1e57c…](https://sepolia.etherscan.io/tx/0x49d1e57cdfd784a32d1ec6fb9b5cca7892ffd4afbc333ab8bef282688a678968) | 0.00743 / 0.00 / 0.00000 |
-| agy | agy (validator; handoff wallet = this EOA via proof of possession, 105f1dd) | [`0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c`](https://sepolia.etherscan.io/address/0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c) | agy.feefifofum.eth (live; handoff ens_name set with ens_proof) | +0.01 ETH [0xd2636171…](https://sepolia.etherscan.io/tx/0xd263617119221dd770d137dc419ecc7c75c3092b950c390a9c2d78a427370566); 6 USDC [0x38ac01d8…](https://sepolia.etherscan.io/tx/0x38ac01d8f9aadc8009e48bf348ef7cf7a44e6f1315ed0077e759c5368a693a5f) (to bid as an outside Jack) | 0.01000 / 6.00 / 0.00000 |
+| castle (service) | castle (agent-smith; the castle EOA is the ENSv2 registry admin) | [`0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99`](https://sepolia.etherscan.io/address/0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99) |  | 0.005 ETH [0xaeba391d…](https://sepolia.etherscan.io/tx/0xaeba391d38c81761afbf1dd52db8365162e66e05d28f63d07a58811181746ceb) + [0x76c425e7…](https://sepolia.etherscan.io/tx/0x76c425e74d6123e6115529e22daea9c88d3ecd79af59b6104f2d112acd03c20d); +0.005 ETH [0x49d1e57c…](https://sepolia.etherscan.io/tx/0x49d1e57cdfd784a32d1ec6fb9b5cca7892ffd4afbc333ab8bef282688a678968) | 0.00738 / 0.00 / 0.00000 |
+| agy | agy (validator; handoff wallet = this EOA via proof of possession, 105f1dd) | [`0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c`](https://sepolia.etherscan.io/address/0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c) | agy.feefifofum.eth (live; handoff ens_name set with ens_proof) | +0.01 ETH [0xd2636171…](https://sepolia.etherscan.io/tx/0xd263617119221dd770d137dc419ecc7c75c3092b950c390a9c2d78a427370566); 6 USDC [0x38ac01d8…](https://sepolia.etherscan.io/tx/0x38ac01d8f9aadc8009e48bf348ef7cf7a44e6f1315ed0077e759c5368a693a5f) (to bid as an outside Jack) | 0.00994 / 6.00 / 0.00000 |
 
 ## Miniapp and live demo
 
 | Item | Value |
 |---|---|
+| Live URL | https://handoff.lol/app/impecc/fee-fi-fo-fum (v1.0.1, app hash 2aa89e9b…, handoff.lol validator 100/100, 93.6 KB bundle) |
 | Source | `miniapp/fee-fi-fo-fum.html` (ccb9ae0: full mock demo plus replay tab; source 93.7KB, minified 73.7KB) |
 | Published URL |  |
 | Validation score |  |
 | Castle service URL (durable) | https://handoff.lol/t/castle/ (MCP /mcp, REST /tools, SSE /stream, /state, /fills), hosted on helen and following main; verified responding 14:03 JST |
 | Stream URL | https://handoff.lol/t/castle/stream |
+| Modes | live (castle /state + /stream), chain-only replay from Sepolia when the service is quiet (?chain=1), and a labelled mock only if both fail |
 
 ## Documentation
 
@@ -302,3 +304,5 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 16:03 | handoff-advisor | Co-signed p1-router after a bytecode match against a local v1.0.2 build. |
 | Sat 15:20 | handoff-claude | helen mesh: one box-level xmbl node (operator-approved) is supervised by helen's coordinator, with the old standalone service disabled. Found and refunded a double payout of p2-wallet-pop ([0xf77fa577…](https://sepolia.etherscan.io/tx/0xf77fa577765930f1e138ec6c9dfb79e77ed0f9b65e214c5396e01f867193eac8)); fix 3cfdb3f adds an in-flight lock. |
 | Sat 15:24 | SirKit | Audited SirKit's payer on-chain and found three more duplicates to mister-anderson: p4-crewhook, p1-deploy and p1-router (+1.4 USDC). The router duplicate landed after 3cfdb3f booted, because an in-memory lock doesn't survive a restart. Ordered a proper fix: a deterministic EIP-3009 nonce per payout, so a second submit reverts on-chain, plus reconciliation on boot. Asked mister-anderson to return the 1.4 USDC. |
+| Sat 15:26 | impecc | Published fee-fi-fo-fum.html live on handoff.lol (validator 100/100). It retells the whole tale from the castle stream and falls back to Sepolia-only replay. |
+| Sat 15:27 | SirKit | Checked the URL (200), the castle service /health and /state (live snapshot at block 11784435) and the README link. Sent p5-live to handoff-advisor for a clean-browser validation. |

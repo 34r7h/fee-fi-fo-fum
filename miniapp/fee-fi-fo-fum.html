@@ -536,6 +536,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       case 'no': add(gat(36, 38, vGiant('w')), gat(90, 58, vJack(false, true), -14), gat(104, 20, VP.x())); break;
       case 'fall': add(gat(50, 40, vGiant('z')), gat(72, 26, VP.zzz())); break;
       case 'wake': add(gat(50, 40, vGiant('o')), gat(84, 20, VP.sun())); break;
+      case 'built': add(gat(36, 58, vCastle(true)), gat(98, 20, VP.sun())); break;
       default: add(gat(34, 58, vCastle(true)), gat(90, 58, vCoins(4)), gat(104, 58, vCoins(2)));
     }
     return sv('svg', { class: 'vg' + (cls ? ' ' + cls : ''), viewBox: '0 0 120 64', 'aria-hidden': 'true' }, g);
@@ -595,7 +596,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         break;
       case 'hoard': if (ev.hoard) S.hoard = ev.hoard; return;
       case 'price': S.price = ev; acted(ev.by || 'fee', ev); break;
-      case 'leverage.set': S.leverage[ev.token] = ev.bps; acted(ev.by || 'fum', ev); break;
+      case 'leverage.set': S.leverage[ev.token] = ev.bps; if (!built(ev)) acted(ev.by || 'fum', ev); break;
       case 'cap.set':
         S.caps[ev.slot] = ev.cap;
         live().forEach(function (x) { if (String(x.slot) === String(ev.slot)) x.cap = ev.cap; });
@@ -633,12 +634,18 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   // ---------------------------------------------------------------- the tapestry: one scene per event worth telling
   // A deal from the taker's side: what it paid, what it got, and the price that makes.
   function deal(x) { return money(x.amountIn, x.tokenIn) + ' for ' + money(x.amountOut, x.tokenOut); }
+  // The CastleVault's constructor emits LeverageSet 1× as a default: that is the castle being built, not fum acting.
+  function built(ev) {
+    var tx = String(ev.tx || '').toLowerCase(), dep = String(S.config.castleTx || '').toLowerCase();
+    return ev.by === 'castle' || ev.by === 'deploy' || (!!tx && tx === dep);
+  }
   function scene(ev) {
     var nm = nameOf(ev.hash || ev.strategy);
     switch (ev.type) {
       case 'snapshot': return { ev: ev, v: 'begin', ti: 'HERE THE TALE BEGINS', gl: [S.hoard ? 'One hoard: ' + bagStr(S.hoard) : 'The hoard is still being counted', live().length ? 'backing ' + strategies(live().length) : 'no strategy shipped yet'] };
       case 'price': return { ev: ev, v: 'price', ti: 'HERE FEE SETS THE PRICE', gl: [fx(Number(ev.mid)) + ' USDC per WETH', (ev.source ? 'from ' + ev.source + ' · ' : '') + 'spread ' + ev.spreadBps + ' bps'] };
-      case 'leverage.set': return { ev: ev, v: 'cap', fold: 'lev', ti: Number(ev.bps) === 20000 ? 'HERE FUM LETS EACH COIN BE PROMISED TWICE' : 'HERE FUM SETS HOW FAR THE HOARD STRETCHES',
+      case 'leverage.set': return built(ev) ? { ev: ev, v: 'built', fold: 'built', ti: 'HERE THE CASTLE IS BUILT', gl: ['leverage ' + times(ev.bps) + ' by default, until fum sets it', TOK.filter(function (s) { return S.leverage[s]; }).map(function (s) { return s + ' ' + times(S.leverage[s]); }).join(' · ')] }
+        : { ev: ev, v: 'cap', fold: 'lev', ti: Number(ev.bps) === 20000 ? 'HERE FUM LETS EACH COIN BE PROMISED TWICE' : 'HERE FUM SETS HOW FAR THE HOARD STRETCHES',
         gl: ['promises may total ' + times(ev.bps) + ' the hoard', TOK.filter(function (s) { return S.leverage[s]; }).map(function (s) { return s + ' ' + times(S.leverage[s]); }).join(' · ')] };
       case 'cap.set': return { ev: ev, v: 'cap', fold: 'cap', ti: 'HERE FUM SETS THE CAPS', gl: ['slot ' + ev.slot + (ev.label ? ', ' + ev.label : '') + ': up to', bagStr(ev.cap)] };
       case 'strategy.shipped': return { ev: ev, v: 'ship', tone: 'gold', ti: 'HERE ' + up(ev.shippedBy || 'fi') + ' SHIPS ' + up(the(ev.label || 'a strategy')), gl: [nm + ' promises ' + bagStr(ev.alloc), 'from the one hoard: no gold moves'] };

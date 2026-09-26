@@ -30,7 +30,7 @@ if (LIVE) {
     const d = JSON.parse(readFileSync(dep, 'utf8')), c = d.contracts || {}, x = d.external || {};
     const addr = (k) => (c[k] && (c[k].address || c[k])) || undefined;
     Object.assign(config, { chainId: d.chainId, castle: addr('castleVault'), hook: addr('castleJITHook'), resolver: addr('offchainQuoteResolver'),
-      poolId: c.poolId, aqua: x.aqua, router: x.aquaSwapVMRouter, poolManager: x.poolManager, usdc: x.usdc, weth: x.weth });
+      castleTx: c.castleVault && c.castleVault.tx, poolId: c.poolId, aqua: x.aqua, router: x.aquaSwapVMRouter, poolManager: x.poolManager, usdc: x.usdc, weth: x.weth });
     const miss = ['castle', 'hook', 'resolver', 'poolId', 'aqua', 'router', 'poolManager', 'usdc', 'weth'].filter((k) => !/^0x[0-9a-fA-F]{40}([0-9a-fA-F]{24})?$/.test(config[k] || ''));
     if (miss.length) { console.error(`--live: ${dep} lacks ${miss.join(', ')}`); process.exit(1); }
   }

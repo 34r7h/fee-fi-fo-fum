@@ -10,11 +10,13 @@ The human operator directs the swarm and owns these decisions and outputs. They 
 - Set the binding role map for the swarm, and ruled that validators never build.
 - Ruled that all entry work lives in this public repo and none goes in the handoff repo.
 - Confirmed Continuity-track registration, linked the GitHub repo to handoff, and funded the Sepolia treasury (ETH, including PoW-faucet mining, and Circle USDC).
-- Named the entry **fee-fi-fo-fum** and set its Jack the Giant Killer voice ([docs/NAMING.md](docs/NAMING.md)).
+- Named the entry **fee-fi-fo-fum**. The storybook voice first set for its copy was later replaced by a plain-writing rule ([docs/NAMING.md](docs/NAMING.md)).
 - Approved the XMBL_GATE=skip deploys of the handoff.lol platform fixes, and set the standing rule not to hold up progress.
 - Set the cost rule: Sepolia ETH is real money, so there is exactly one live run and every rehearsal runs on a fork. Required that the project description be short and on point.
 - Approved a 0.02 ETH gas ceiling for the one live deploy and live run, and asked that the total budget be watched.
 - Ruled that the main miniapp is the product's web3 interface, where users trade with the castle from their own wallet as live Sepolia txs, because the demo must be live and prove the work on-chain. The storybook retelling became a second miniapp ([docs/SPEC.md](docs/SPEC.md#the-miniapps)).
+- Ruled that no AI-style prose ("broetry": slogans, fragments, metaphors standing in for mechanics) may appear anywhere a person might read, and rejected the first draft of the ETHGlobal form text on those grounds.
+- Asked for the demo video as a 3–4 minute screencast of the dapp with a voiceover and captions, which the operator redubs.
 - Still to come (tracked on the board): recording and voicing the video, the ETHGlobal and Uniswap feedback forms, and the sponsor booth conversations.
 
 ## Planning artifacts
@@ -36,7 +38,7 @@ These are AI agents on handoff.lol, directed by the human operator.
 | Agent | Role (operator's binding role map) |
 |---|---|
 | SirKit | Orchestrator: the spec, planning, assignment, tracking, AI_USAGE.md, WORKLOG.md |
-| agy | Architecture brief (PIVOT.md); validator: spec review, fork end-to-end runs, the outside Jack in the live run, live verification (no building) |
+| agy | Architecture brief (PIVOT.md); validator: spec review, fork end-to-end runs, the outside solver in the live run, live verification (no building) |
 | mister-anderson | Contracts: CastleVault, PriceExtruction, CastleJITHook, OffchainQuoteResolver, their tests and the deploy; then the README and sponsor write-ups (taken over from korg) |
 | agent-smith | Agents: fee, fi, fo, fum and the castle service (CCIP-Read gateway, MCP tools, stream) |
 | impecc | Presentation: the miniapp, the deck, the video script, forward-facing copy |

@@ -8,7 +8,7 @@ The running record of the feefifofum build: what was done, who did it, which com
 - **Deadline:** Sun 27 Sep 00:00 UTC
 - **Pre-existing product:** handoff (private), baseline `079f8f0`
 - **Earlier product:** the lease edition, retired at 10:51Z on Sat 26 Sep. Its code and full worklog are at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition).
-- **Last regenerated:** Sat 11:24Z
+- **Last regenerated:** Sat 11:25Z
 
 All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified).
 
@@ -82,7 +82,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 ## Wallets
 
-Live balances read at block 11785921.
+Live balances read at block 11785923.
 
 | Wallet | handoff agent | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -147,6 +147,7 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 10:51Z | Retired the lease edition (tag lease-edition) and pivoted the entry to agy's architecture brief: one Aqua balance backing many quotes, ENS CCIP-Read quote discovery and v4 JIT fills. Kept the Castle Tapestry design and motif, cleared the other agents' memory, and asked for a new handoff project, feefifofum, with tasks oriented to the best agent for each |
 | Sat 11:05Z | Removed handoff-advisor from the swarm |
 | Sat 11:22Z | Asked for frequent commits and a well-organized repo: main carries only this product, and the lease edition lives at its tag |
+| Sat 11:25Z | Approved a 0.02 ETH gas ceiling for the one live deploy and live run, and asked that the total budget be watched |
 
 ## Log
 

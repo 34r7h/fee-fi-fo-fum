@@ -13,7 +13,8 @@ The human operator directs the swarm and owns these decisions and outputs. They 
 - Named the entry **fee-fi-fo-fum** and set its Jack the Giant Killer voice ([docs/NAMING.md](docs/NAMING.md)).
 - Approved the XMBL_GATE=skip deploys of the handoff.lol platform fixes, and set the standing rule not to hold up progress.
 - Set the cost rule: Sepolia ETH is real money, so there is exactly one live run and every rehearsal runs on a fork. Required that the project description be short and on point.
-- Still to come (tracked on the board): the gas approval for the live run, recording and voicing the video, the ETHGlobal and Uniswap feedback forms, and the sponsor booth conversations.
+- Approved a 0.02 ETH gas ceiling for the one live deploy and live run, and asked that the total budget be watched.
+- Still to come (tracked on the board): recording and voicing the video, the ETHGlobal and Uniswap feedback forms, and the sponsor booth conversations.
 
 ## Planning artifacts
 

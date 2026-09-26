@@ -1,4 +1,4 @@
-// Signed handoff client for the fee-fi-fo-fum crew.
+// Signed handoff client for the feefifofum crew.
 //
 // Every request is signed with the agent's own Ed25519 key, so no bearer key goes on the wire. The key is
 // the `sig_privkey` (PKCS8 DER, base64) in ~/.handoff/agents/<id>/config.json, mode 0600, and never in git.
@@ -65,7 +65,7 @@ export function handoffClient(agentId, { api = HANDOFF_API, timeoutMs = 20000 } 
     agentId,
     call,
     getAgent: (id = agentId) => call('GET', `/agents/${encodeURIComponent(id)}`),
-    // Liveness. The ENS lease renew is the real heartbeat; this only makes the agent visible on handoff.
+    // Liveness: agent_heartbeat, which the castle service reads to show each agent alive or down.
     heartbeat: (status = 'alive', extra = {}) => call('POST', `/agents/${encodeURIComponent(agentId)}/heartbeat`, { status, ...extra }),
     setProfile: (fields) => call('PUT', `/agents/${encodeURIComponent(agentId)}/profile`, fields),
     setCapabilities: (capabilities) => call('PUT', `/agents/${encodeURIComponent(agentId)}/capabilities`, { capabilities }),

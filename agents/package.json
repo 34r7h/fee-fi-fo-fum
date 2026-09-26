@@ -2,7 +2,7 @@
   "name": "fee-fi-fo-fum-agents",
   "private": true,
   "type": "module",
-  "description": "fee, fi, fo and fum: the fee-fi-fo-fum crew's runtime (viem on Ethereum Sepolia + signed handoff client)",
+  "description": "fee, fi, fo and fum: the feefifofum crew (pricing, SwapVM strategies and quote signing, intent routing, inventory risk) on Ethereum Sepolia",
   "scripts": {
     "fee": "node run.mjs fee",
     "fi": "node run.mjs fi",

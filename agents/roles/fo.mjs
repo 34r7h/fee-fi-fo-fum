@@ -1,216 +1,123 @@
-// fo, the fencer and witness (p3-fo).
+// fo, the intent forwarder (docs/SPEC.md "The crew").
 //
-// - Seals renewals. POST /attest on 127.0.0.1:FO_PORT is the default channel; it is local and costs nothing.
-//   An `attestation.request` handoff message is the fallback when the holder runs on another machine. For each
-//   request fo re-reads the lease, the holder's handoff heartbeat and the Castle's last Aqua ship itself, then
-//   either signs Attestation(epoch, expiry, deadline) under the Castle's EIP-712 domain or withholds with a
-//   reason (lib/fo-policy.mjs). Castle.renew reverts without fo's signature, so a withheld seal ends the shift
-//   at expiry.
-// - Smells a hang. Every tick it checks the holder: heartbeat present but nothing shipped in the live epoch
-//   staleQuotesS after it began means the trader is hung (a shipped book is re-centred only when the ENS anchor
-//   moves, and the off-market rule catches one the anchor has left). fo posts an incident to the handoff channel and withholds from then on. A staged
-//   hang is a real one: the trader stops shipping (roles/fee.mjs honours FEE_STAGE_HANG), and fo is never told.
-// - Replays fills. Every Aqua fill against the Castle is re-judged against the lease timeline (lib/replay.mjs).
-//   A fill from a stale epoch is a fence breach, and fo reports it.
-// - Castle v3: co-signs heartbeats. POST /heartbeat {epoch, validUntil, holderSig} from the holder: fo checks the
-//   signature is the live holder's, the lease is live and unchallenged, and the book is neither hung nor off-market
-//   (lib/fo-policy.mjs decideHeartbeat), then signs the same Heartbeat(epoch, validUntil). The fence runs the live
-//   curve only with both signatures, so a withheld co-signature winds the book down within one heartbeat TTL.
+// fo takes UniswapX-format orders and routes each one to the better of two fills from the same Castle balance:
+//   harp  a firm quote fi signed (the castle service's castle_quote), filled through router.swap;
+//   v4    the Castle's v4 pool, whose hook fills the swap just in time from hen (the V4Quoter prices it).
+// It answers POST /route {order} on 127.0.0.1:FO_PORT (the castle service's castle_route tool forwards here), returns
+// the chosen route with ready calldata, and reports intent.routed to the service, signed. There is no UniswapX
+// reactor on Sepolia (docs/research.md), so the swapper signs and sends the calls itself. fo holds no on-chain role
+// and sends no transactions.
+//
+// An order, in the UniswapX shape (amounts in base units; tokens as addresses or USDC/WETH):
+//   { swapper, nonce, deadline, input: { token, amount | startAmount },
+//     outputs: [{ token, amount | endAmount | startAmount (the minimum), recipient }] }
 import http from 'node:http';
-import { readLease, crewIdOf } from '../lib/lease.mjs';
-import { decide, decideHeartbeat, DEFAULT_LIMITS } from '../lib/fo-policy.mjs';
-import { signAttestation, attestationDigest } from '../lib/attest.mjs';
-import { signHeartbeat, heartbeatDigest, heartbeatSigner, MAX_HEARTBEAT_TTL } from '../lib/heartbeat.mjs';
-import { ensureChannel, postIncident } from '../lib/incidents.mjs';
-import { lastShipAge, replayFills, CASTLE_EVENTS } from '../lib/replay.mjs';
-import { contractAddress, abi, txLink } from '../lib/chain.mjs';
-import { deviationBps } from '../lib/book.mjs';
+import { encodeAbiParameters, encodeFunctionData, getAddress, isAddress } from 'viem';
+import { contractAddress, abi } from '../lib/chain.mjs';
 import { env } from '../lib/env.mjs';
+import { report, serviceBase } from '../lib/report.mjs';
 
-const PORT = Number(env('FO_PORT', 8711));
-const LOOKBACK_BLOCKS = BigInt(env('FO_LOOKBACK_BLOCKS', 900));   // about 3h of Sepolia blocks
-// Before the first strategy exists (p1-deploy), FO_REQUIRE_SHIPS=0 lets renewals run on liveness alone.
-const REQUIRE_SHIPS = env('FO_REQUIRE_SHIPS', '1') !== '0';
-// After a CCA writes a new price the holder gets this many blocks to re-centre before its book counts as off-market.
-const RECENTRE_GRACE_BLOCKS = BigInt(env('FO_RECENTRE_GRACE_BLOCKS', 5));
-const LIMITS = {
-  ...DEFAULT_LIMITS,
-  ...(env('FO_STALE_QUOTES_S') ? { staleQuotesS: Number(env('FO_STALE_QUOTES_S')) } : {}),
-  ...(env('FO_DEADLINE_S') ? { deadlineS: Number(env('FO_DEADLINE_S')) } : {}),
+const PORT = Number(env('FO_PORT', 8731));
+const MIN_SQRT = 4295128739n + 1n;
+const MAX_SQRT = 1461446703485210103287273052203988822378723970342n - 1n;
+let server = null;
+let n = 0;
+
+const tokenOf = (t) => {
+  const u = String(t || '').toUpperCase();
+  if (u === 'USDC') return getAddress(contractAddress('usdc'));
+  if (u === 'WETH') return getAddress(contractAddress('weth'));
+  return isAddress(t || '') ? getAddress(t) : null;
 };
-const big = (_, v) => (typeof v === 'bigint' ? v.toString() : v);
+const sym = (a) => (a === getAddress(contractAddress('usdc')) ? 'USDC' : a === getAddress(contractAddress('weth')) ? 'WETH' : a);
 
-const S = { epochStart: new Map(), replayFrom: null };
-
-// The block where the live epoch began (its Claimed event), or the lookback floor if the epoch predates it.
-// Only a found Claimed block is cached: before the genesis claim the registry already reports the epoch the claim
-// will keep, so a cached miss would date the shift from the lookback floor and smell a hang that isn't there.
-// null = unknown (no live lease, or the log read failed): fo then draws no hang verdict from quote age.
-async function epochStartBlock(ctx, lease) {
-  const k = String(lease.epoch);
-  if (S.epochStart.has(k)) return S.epochStart.get(k);
-  if (lease.state !== 'LIVE') return null;
-  const floor = lease.block > LOOKBACK_BLOCKS ? lease.block - LOOKBACK_BLOCKS : 0n;
-  let claims;
-  try { claims = await ctx.pc.getLogs({ address: lease.castle, event: CASTLE_EVENTS.Claimed, args: { epoch: lease.epoch }, fromBlock: floor, toBlock: lease.block }); }
-  catch { return null; }
-  if (!claims.length) return floor;   // the shift began before the lookback window: date it from the floor
-  S.epochStart.set(k, claims.at(-1).blockNumber);
-  return claims.at(-1).blockNumber;
+export function parseOrder(o) {
+  const input = o?.input || {};
+  const out = (o?.outputs || [])[0] || {};
+  const tokenIn = tokenOf(input.token), tokenOut = tokenOf(out.token);
+  const amountIn = BigInt(input.amount ?? input.startAmount ?? input.endAmount ?? 0);
+  const minOut = BigInt(out.endAmount ?? out.amount ?? out.startAmount ?? 0);
+  if (!tokenIn || !tokenOut || tokenIn === tokenOut) throw new Error('order needs input.token and outputs[0].token, USDC and WETH one each way');
+  if (amountIn <= 0n) throw new Error('order input amount must be above zero');
+  if (!isAddress(o?.swapper || '')) throw new Error('order needs a swapper address');
+  const deadline = Number(o.deadline || 0);
+  if (deadline && deadline < Date.now() / 1000) throw new Error(`order deadline ${deadline} has passed`);
+  return { swapper: getAddress(o.swapper), recipient: isAddress(out.recipient || '') ? getAddress(out.recipient) : getAddress(o.swapper), tokenIn, tokenOut, amountIn, minOut, deadline, nonce: String(o.nonce ?? '') };
 }
 
-async function observe(ctx) {
-  const lease = await readLease(ctx.pc);
-  if (!lease.deployed) return { lease };
-  const traderId = crewIdOf(ctx.crew, lease.holder);
-  let heartbeatAgeS = null;
-  if (traderId) {
-    const a = await ctx.h.getAgent(traderId).then((j) => j.agent || j).catch(() => null);
-    if (a?.last_seen) heartbeatAgeS = Math.round((Date.now() - Date.parse(a.last_seen)) / 1000);
-  }
-  const since = await epochStartBlock(ctx, lease);
-  const ship = since === null ? null : await lastShipAge(ctx.pc, { castle: lease.castle, epoch: lease.epoch, sinceBlock: since, now: lease.now });
-  // The hang clock: how long the live epoch has gone without its first ship, counted from the epoch's first block.
-  // Once a book of this epoch is on Aqua it stays current until the ENS anchor moves (then the off-market rule
-  // applies), so its age alone is not a hang.
-  let quotesAgeS = null;
-  if (!ship && REQUIRE_SHIPS && since !== null) {
-    const b = await ctx.pc.getBlock({ blockNumber: since });
-    quotesAgeS = lease.now - Number(b.timestamp);
-  }
-  // Off-market: the live book was centred on an anchor the ENS value has since moved away from (a CCA wrote a new
-  // price and the holder never re-centred).
-  let market = {};
-  if (ship?.anchorQ96) {
-    const anchorAt = (blockNumber) => ctx.pc.readContract({ address: lease.castle, abi: abi('Castle'), functionName: 'anchorPriceQ96', blockNumber }).catch(() => null);
-    const now = await anchorAt(lease.block);
-    const then = now && lease.block > RECENTRE_GRACE_BLOCKS ? await anchorAt(lease.block - RECENTRE_GRACE_BLOCKS) : null;
-    if (now && then && then !== now) market = { centre: String(ship.anchorQ96), reference: String(now), deviationBps: null, recentring: { anchorMovedWithinBlocks: Number(RECENTRE_GRACE_BLOCKS) } };
-    else if (now) market = { centre: String(ship.anchorQ96), reference: String(now), deviationBps: deviationBps(ship.anchorQ96, now) };
-  }
-  return { lease, trader: { id: traderId, heartbeatAgeS }, quotes: { ageS: quotesAgeS, lastShipAgeS: ship?.ageS ?? null, lastShipTx: ship?.tx ?? null }, market };
+async function service(path, body) {
+  const base = serviceBase();
+  if (!base) throw new Error('no castle service: CASTLE_SERVICE_URL is unset (or remote while the RPC is a local fork)');
+  const r = await fetch(`${base}${path}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(15_000) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || `service ${path} answered ${r.status}`);
+  return j;
 }
 
-async function attest(ctx, request) {
-  const obs = await observe(ctx);
-  const now = obs.lease.now ?? Math.floor(Date.now() / 1000);
-  const decision = decide({ now, lease: obs.lease, request, trader: obs.trader, quotes: obs.quotes, market: obs.market, limits: LIMITS });
-  if (!decision.sign) {
-    ctx.log('withheld', { reason: decision.reason, requester: request.requester || null, ...decision.detail });
-    if (decision.incident) await postIncident(ctx.h, { kind: decision.reason, epoch: String(obs.lease.epoch), castle: obs.lease.castle, ...decision.detail }, ctx.log).catch((e) => ctx.log('incident-error', { error: e.message }));
-    return { status: 409, body: { withheld: decision.reason, detail: decision.detail } };
-  }
-  if (obs.lease.fo.toLowerCase() !== ctx.account.address.toLowerCase()) {
-    ctx.log('withheld', { reason: 'not-castle-fo', castleFo: obs.lease.fo, me: ctx.account.address });
-    return { status: 409, body: { withheld: 'not-castle-fo', detail: { castleFo: obs.lease.fo } } };
-  }
-  const chainId = await ctx.pc.getChainId();
-  const att = { chainId, castle: obs.lease.castle, ...decision.att };
-  const digest = attestationDigest(att);
-  // Check against the Castle's own digest before signing: a domain mismatch would make every renew revert.
-  const onchain = await ctx.pc.readContract({ address: obs.lease.castle, abi: abi('ICastleLease'), functionName: 'attestationDigest', args: [{ epoch: att.epoch, expiry: BigInt(att.expiry), deadline: BigInt(att.deadline) }] }).catch(() => null);
-  if (onchain && onchain !== digest) {
-    ctx.log('withheld', { reason: 'digest-mismatch', local: digest, castle: onchain });
-    return { status: 500, body: { withheld: 'digest-mismatch' } };
-  }
-  const signature = await signAttestation(ctx.account, att);
-  ctx.log('attested', { epoch: att.epoch, expiry: att.expiry, deadline: att.deadline, requester: request.requester || null, digestChecked: Boolean(onchain), ...decision.checks });
-  return { status: 200, body: { epoch: String(att.epoch), expiry: att.expiry, deadline: att.deadline, signature, digest, signer: ctx.account.address } };
+// harp: fi's signed quote from the service, and the router.swap calls to fill it.
+async function harpRoute(ctx, o) {
+  const q = await service('/tools/castle_quote', { tokenIn: sym(o.tokenIn), tokenOut: sym(o.tokenOut), amountIn: o.amountIn.toString() });
+  const fill = await service('/tools/castle_fill', { quoteId: q.id, taker: o.swapper });
+  return { route: 'harp', strategy: q.strategyHash, amountOut: BigInt(q.amountOut), quoteId: q.id, validUntil: q.validUntil, calls: [fill.approve, fill.tx] };
 }
 
-async function cosign(ctx, request) {
-  const obs = await observe(ctx);
-  const { lease } = obs;
-  if (!lease.deployed || lease.version !== 3) return { status: 409, body: { withheld: 'not-v3', detail: { note: 'heartbeats are Castle v3' } } };
-  const hb = { chainId: await ctx.pc.getChainId(), castle: lease.castle, epoch: request.epoch, validUntil: request.validUntil };
-  let signer = null;
-  try { if (request.epoch !== undefined && request.validUntil !== undefined && request.holderSig) signer = await heartbeatSigner(hb, request.holderSig); } catch { /* not a signature */ }
-  const decision = decideHeartbeat({ now: lease.now, lease, request: { ...request, signer }, quotes: obs.quotes, market: obs.market, limits: LIMITS, maxTtlS: MAX_HEARTBEAT_TTL });
-  if (!decision.sign) {
-    ctx.logChange(`hb-${request.requester}`, 'heartbeat-withheld', { reason: decision.reason, requester: request.requester || null, ...decision.detail });
-    return { status: 409, body: { withheld: decision.reason, detail: decision.detail } };
-  }
-  if (lease.fo.toLowerCase() !== ctx.account.address.toLowerCase()) {
-    ctx.logChange(`hb-${request.requester}`, 'heartbeat-withheld', { reason: 'not-castle-fo', castleFo: lease.fo, me: ctx.account.address });
-    return { status: 409, body: { withheld: 'not-castle-fo', detail: { castleFo: lease.fo } } };
-  }
-  // Check against the Castle's own digest before signing: a domain mismatch would wind every fill down.
-  const digest = heartbeatDigest(hb);
-  const onchain = await ctx.pc.readContract({ address: lease.castle, abi: abi('Castle'), functionName: 'heartbeatDigest', args: [BigInt(hb.epoch), BigInt(hb.validUntil)] }).catch(() => null);
-  if (onchain && onchain !== digest) {
-    ctx.log('heartbeat-withheld', { reason: 'digest-mismatch', local: digest, castle: onchain });
-    return { status: 500, body: { withheld: 'digest-mismatch' } };
-  }
-  const signature = await signHeartbeat(ctx.account, hb);
-  ctx.logChange(`hb-${request.requester}`, 'heartbeat-cosigning', { requester: request.requester || null, epoch: String(hb.epoch), digestChecked: Boolean(onchain), ...decision.checks });
-  ctx.log('cosigned', { epoch: String(hb.epoch), validUntil: Number(hb.validUntil), requester: request.requester || null });
-  return { status: 200, body: { epoch: String(hb.epoch), validUntil: Number(hb.validUntil), signature, digest, signer: ctx.account.address } };
+// v4: the Castle's pool {USDC, WETH, fee 0, tickSpacing 60, hooks: CastleJITHook}, priced by the V4Quoter.
+function poolKey() {
+  const [usdc, weth] = [getAddress(contractAddress('usdc')), getAddress(contractAddress('weth'))];
+  const [c0, c1] = BigInt(usdc) < BigInt(weth) ? [usdc, weth] : [weth, usdc];
+  return { currency0: c0, currency1: c1, fee: 0, tickSpacing: 60, hooks: getAddress(contractAddress('hook')) };
+}
+async function v4Route(ctx, o) {
+  const hook = contractAddress('hook'), quoter = contractAddress('v4Quoter'), swapTest = contractAddress('poolSwapTest');
+  if (!hook || !quoter || !swapTest) throw new Error('the v4 hook, V4Quoter or PoolSwapTest is not in the deployments file');
+  const key = poolKey();
+  const zeroForOne = o.tokenIn === key.currency0;
+  const hookData = o.minOut > 0n ? encodeAbiParameters([{ type: 'uint256' }], [o.minOut]) : '0x';
+  const { result } = await ctx.pc.simulateContract({ address: quoter, abi: abi('V4Quoter'), functionName: 'quoteExactInputSingle', args: [{ poolKey: key, zeroForOne, exactAmount: o.amountIn, hookData }] });
+  const amountOut = result[0];
+  const approve = { to: o.tokenIn, data: encodeFunctionData({ abi: abi('ERC20'), functionName: 'approve', args: [swapTest, o.amountIn] }), value: '0' };
+  const tx = {
+    to: swapTest, value: '0',
+    data: encodeFunctionData({ abi: abi('PoolSwapTest'), functionName: 'swap', args: [key, { zeroForOne, amountSpecified: -o.amountIn, sqrtPriceLimitX96: zeroForOne ? MIN_SQRT : MAX_SQRT }, { takeClaims: false, settleUsingBurn: false }, hookData] }),
+  };
+  return { route: 'v4', strategy: null, amountOut, pool: key, calls: [approve, tx] };
 }
 
-function serve(ctx) {
-  const server = http.createServer(async (req, res) => {
-    const reply = (status, body) => { res.writeHead(status, { 'content-type': 'application/json' }); res.end(JSON.stringify(body, big)); };
-    try {
-      if (req.method === 'GET' && req.url === '/health') return reply(200, await observe(ctx));
-      if (req.method === 'POST' && req.url === '/attest') {
-        let raw = '';
-        for await (const chunk of req) { raw += chunk; if (raw.length > 4096) return reply(413, { error: 'body too large' }); }
-        const body = raw ? JSON.parse(raw) : {};
-        const r = await attest(ctx, { expiry: body.expiry, epoch: body.epoch, requester: body.requester });
-        return reply(r.status, r.body);
-      }
-      if (req.method === 'POST' && req.url === '/heartbeat') {
-        let raw = '';
-        for await (const chunk of req) { raw += chunk; if (raw.length > 4096) return reply(413, { error: 'body too large' }); }
-        const body = raw ? JSON.parse(raw) : {};
-        const r = await cosign(ctx, { epoch: body.epoch, validUntil: body.validUntil, holderSig: body.holderSig, requester: body.requester });
-        return reply(r.status, r.body);
-      }
-      reply(404, { error: 'POST /attest {expiry?, epoch?, requester?}, POST /heartbeat {epoch, validUntil, holderSig, requester?} or GET /health' });
-    } catch (e) { reply(500, { error: e.shortMessage || e.message }); }
+export async function route(ctx, order) {
+  const o = parseOrder(order);
+  const id = `i-${Math.floor(Date.now() / 1000)}-${++n}`;
+  const [h, v] = await Promise.allSettled([harpRoute(ctx, o), v4Route(ctx, o)]);
+  const options = [h, v].filter((x) => x.status === 'fulfilled').map((x) => x.value).filter((x) => x.amountOut >= o.minOut && x.amountOut > 0n);
+  const why = { harp: h.status === 'fulfilled' ? h.value.amountOut.toString() : String(h.reason?.message || h.reason), v4: v.status === 'fulfilled' ? v.value.amountOut.toString() : String(v.reason?.message || v.reason) };
+  if (!options.length) {
+    ctx.log('route-refused', { id, swapper: o.swapper, tokenIn: sym(o.tokenIn), amountIn: o.amountIn, minOut: o.minOut, harp: why.harp, v4: why.v4 });
+    throw Object.assign(new Error(`no route pays at least ${o.minOut}: harp ${why.harp}; v4 ${why.v4}`), { status: 422 });
+  }
+  const best = options.reduce((a, b) => (b.amountOut > a.amountOut ? b : a));
+  const other = best.route === 'harp' ? why.v4 : why.harp;
+  ctx.log('routed', { id, swapper: o.swapper, tokenIn: sym(o.tokenIn), tokenOut: sym(o.tokenOut), amountIn: o.amountIn, minOut: o.minOut, route: best.route, amountOut: best.amountOut, harp: why.harp, v4: why.v4 });
+  await report(ctx, 'intent.routed', {
+    id, source: 'UniswapX', swapper: o.swapper, swapperName: null, tokenIn: sym(o.tokenIn), tokenOut: sym(o.tokenOut), amountIn: o.amountIn.toString(),
+    route: best.route === 'harp' ? 'aqua' : 'v4', strategy: best.strategy, amountOut: best.amountOut.toString(), alternative: other,
   });
-  server.on('error', (e) => ctx.log('attester-error', { error: e.message }));
-  server.listen(PORT, '127.0.0.1', () => ctx.log('attester-listening', { url: `http://127.0.0.1:${PORT}` }));
-  return server;
+  return { id, route: best.route, amountIn: o.amountIn.toString(), amountOut: best.amountOut.toString(), minOut: o.minOut.toString(), quoteId: best.quoteId ?? null, validUntil: best.validUntil ?? null, compared: why, calls: best.calls, note: 'sign and send calls in order from the swapper; a harp quote lives 30 s' };
 }
 
 export default {
-  intervalMs: 10_000,
+  intervalMs: 30_000,
   async init(ctx) {
-    await ensureChannel(ctx.h).then(() => ctx.log('incident-channel', { ok: true }), (e) => ctx.log('incident-channel', { ok: false, error: e.message }));
-    serve(ctx);
+    server = http.createServer(async (req, res) => {
+      const send = (s, b) => { res.writeHead(s, { 'content-type': 'application/json' }); res.end(JSON.stringify(b, (_k, x) => (typeof x === 'bigint' ? x.toString() : x))); };
+      if (req.method !== 'POST' || new URL(req.url, 'http://x').pathname !== '/route') return send(404, { error: 'POST /route {order}' });
+      let body = '';
+      for await (const c of req) body += c;
+      try { send(200, await route(ctx, JSON.parse(body || '{}').order)); }
+      catch (e) { send(e.status || 400, { error: e.shortMessage || e.message }); }
+    });
+    server.listen(PORT, '127.0.0.1', () => ctx.log('listening', { route: `http://127.0.0.1:${PORT}/route` }));
   },
-  async tick(ctx) {
-    const obs = await observe(ctx);
-    if (!obs.lease.deployed) return ctx.logChange('lease', 'lease', { deployed: false });
-    const { lease } = obs;
-    ctx.logChange('lease', 'lease', { state: lease.state, holder: lease.holder, epoch: lease.epoch, castleFoIsMe: lease.fo.toLowerCase() === ctx.account.address.toLowerCase() });
-    // Watch for a hang proactively, not only when asked.
-    if (lease.state === 'LIVE') {
-      const d = decide({ now: lease.now, lease, request: {}, trader: obs.trader, quotes: obs.quotes, market: obs.market, limits: LIMITS });
-      ctx.logChange('verdict', 'verdict', { wouldSign: d.sign, reason: d.reason || null });
-      if (!d.sign && d.incident) await postIncident(ctx.h, { kind: d.reason, epoch: String(lease.epoch), castle: lease.castle, ...d.detail }, ctx.log).catch((e) => ctx.log('incident-error', { error: e.message }));
-    }
-    // Replay the fills since the last tick.
-    const from = S.replayFrom ?? (lease.block > LOOKBACK_BLOCKS ? lease.block - LOOKBACK_BLOCKS : 0n);
-    if (lease.block >= from) {
-      const initial = await readLease(ctx.pc, { blockNumber: from }).catch(() => lease);
-      const shippedEpochOf = (h) => ctx.pc.readContract({ address: lease.castle, abi: abi('Castle'), functionName: 'shippedEpoch', args: [h] }).catch(() => undefined);
-      const r = await replayFills(ctx.pc, { aqua: contractAddress('aqua'), castle: lease.castle, fromBlock: from, toBlock: lease.block, initial, shippedEpochOf });
-      for (const f of r.fills) {
-        ctx.log('fill', { verdict: f.verdict, tx: f.tx, link: txLink(f.tx), shippedEpoch: f.shippedEpoch, epochAtFill: f.epochAtFill });
-        if (f.verdict === 'FENCE-BREACH') await postIncident(ctx.h, { kind: 'fence-breach', epoch: String(f.epochAtFill), tx: f.tx, link: txLink(f.tx), shippedEpoch: String(f.shippedEpoch) }, ctx.log).catch(() => {});
-      }
-      S.replayFrom = lease.block + 1n;
-    }
-  },
-  // Fallback transport: {kind:'attestation.request', expiry?, epoch?} as JSON text. The answer goes back by message
-  // too (charged), so the holder should use POST /attest whenever it can reach fo locally.
+  async tick() {},
   async onMessage(ctx, msg) {
-    let body = null;
-    try { body = JSON.parse(msg.text); } catch { /* not JSON */ }
-    if (body?.kind !== 'attestation.request' || !ctx.crew.agents[msg.from]) return ctx.log('noted', { from: msg.from, kind: msg.kind });
-    const r = await attest(ctx, { expiry: body.expiry, epoch: body.epoch, requester: msg.from });
-    await ctx.h.send(msg.from, JSON.stringify({ kind: r.status === 200 ? 'attestation.granted' : 'attestation.withheld', ...r.body }, big)).catch((e) => ctx.log('reply-error', { error: e.message }));
+    ctx.log('noted', { from: msg.from, kind: msg.kind });
   },
 };

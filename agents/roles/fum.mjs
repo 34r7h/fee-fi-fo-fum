@@ -1,112 +1,85 @@
-// fum, the auctioneer: Castle's exit through Uniswap's CCA (v2.1.0), gated by JackHook. Each tick:
-//   - an auction is running: log its clearing price and raise as they move; once its endBlock has passed, settle it.
-//     settleAuction() sweeps the USDC and the unsold WETH home and, if the auction graduated, writes the clearing
-//     price to ENS as the next shift's anchor. fum then reads the anchor back from the resolver;
-//   - no auction, and the castle has just rotated (a claim after a lapse, not the genesis, within FUM_FRESH_BLOCKS)
-//     and the new holder has shipped its book: open the shift-change auction on the WETH the book leaves free, once per epoch
-//     (FUM_LOT_WETH caps the lot, in wei; below FUM_MIN_LOT_WETH there is no auction);
-//   - FUM_DISSOLVE=1 only: the lease lapsed dissolveGrace ago and nobody claimed it, so dissolve(): dock the whole
-//     book and auction all the WETH, once per lapsed epoch. It is off by default because it spends the hoard.
-// Every send is simulated first (lib/shift.mjs send); a revert the simulation predicts is logged, not mined.
-import { decodeEventLog, formatEther } from 'viem';
+// fum, inventory and risk (docs/SPEC.md "The crew").
+//
+// fum bounds what fi's key can give away. On start it sets the vault's leverage (FUM_LEVERAGE_BPS, 20000 = promises
+// may total 2x the balance) and each slot's cap (FUM_CAP_BPS of the hoard per slot, so harp and hen may each promise
+// the whole hoard). After that it keeps the allocation ledger: after every change it reads each token's balance,
+// committed, limit (balance x leverage) and headroom, and each live strategy's Aqua allocation. Only when fills have
+// pushed committed(token) past limit(token) does it dock, lowest priority first (FUM_DOCK_ORDER: greedy, then harp,
+// then hen), one strategy per tick until the Castle is back under. A single promise larger than the balance is not a
+// reason to dock: that is shared liquidity. The chain's CapSet, LeverageSet and Docked events carry what fum did to
+// the stream (docs/SPEC.md 09caa66).
 import { env } from '../lib/env.mjs';
-import { readLease } from '../lib/lease.mjs';
-import { abi, contractAddress, txLink } from '../lib/chain.mjs';
-import { send } from '../lib/shift.mjs';
-import { ensAnchorQ96 } from '../lib/book.mjs';
+import { ledger, send, tokens, SLOTS } from '../lib/vault.mjs';
 
-const LOT_CAP = env('FUM_LOT_WETH', '') ? BigInt(env('FUM_LOT_WETH')) : null;
-// Opening a CCA deploys a contract (about 4M gas), so a lot below this is not worth an auction (default 0.0005 WETH).
-const MIN_LOT = BigInt(env('FUM_MIN_LOT_WETH', '500000000000000'));
-const DISSOLVE = env('FUM_DISSOLVE') === '1';
-const LOOKBACK_BLOCKS = BigInt(env('SHIFT_LOOKBACK_BLOCKS', 900));
-// A rotation is fresh for this many blocks after its claim (75 is about 15 min on Sepolia). An older one, such as
-// the rotation before fum started, gets no auction.
-const FRESH_BLOCKS = BigInt(env('FUM_FRESH_BLOCKS', 75));
-const Q96 = 1n << 96n;
-const usdcPerWeth = (q) => (q == null ? null : Number((q * 10n ** 12n * 100n) / Q96) / 100);
-const ZERO = /^0x0{40}$/i;
-const CCA_ABI = [
-  { type: 'function', name: 'endBlock', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint64' }] },
-  { type: 'function', name: 'clearingPrice', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
-  { type: 'function', name: 'currencyRaised', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
-  { type: 'function', name: 'isGraduated', stateMutability: 'view', inputs: [], outputs: [{ type: 'bool' }] },
-];
+const LEVERAGE = Number(env('FUM_LEVERAGE_BPS', 20_000));
+const CAP_BPS = BigInt(env('FUM_CAP_BPS', 10_000));
+const GREEDY_CAP = env('FUM_GREEDY_CAP', 'hoard');   // greedy's cap: the hoard, so its ship fails on leverage (OverAllocated), not the cap
+const DOCK_ORDER = env('FUM_DOCK_ORDER', 'greedy,harp,hen').split(',').map((s) => s.trim());
+const fmt = (x) => (typeof x === 'bigint' ? x.toString() : x);
 
-// The Castle events of `name` since the lookback floor, oldest first.
-async function events(ctx, lease, name, args) {
-  const fromBlock = lease.block > LOOKBACK_BLOCKS ? lease.block - LOOKBACK_BLOCKS : 0n;
-  return ctx.pc.getContractEvents({ address: lease.castle, abi: abi('Castle'), eventName: name, args, fromBlock, toBlock: lease.block });
-}
-const logsOf = (receipt, name) => receipt.logs.flatMap((l) => {
-  try { const d = decodeEventLog({ abi: abi('Castle'), data: l.data, topics: l.topics }); return d.eventName === name ? [d.args] : []; } catch { return []; }
-});
+let configured = false;
+let lastKey = null;
 
-async function watchAndSettle(ctx, lease, auction) {
-  const read = (functionName) => ctx.pc.readContract({ address: auction, abi: CCA_ABI, functionName });
-  const [end, clearing, raised, graduated] = await Promise.all([read('endBlock'), read('clearingPrice'), read('currencyRaised'), read('isGraduated')]);
-  ctx.logChange('auction', 'auction', { auction, endBlock: end, blocksLeft: Number(end - lease.block), clearingQ96: clearing, usdcPerWeth: usdcPerWeth(clearing), raised, graduated });
-  if (lease.block < end) return;
-  const r = await send(ctx, 'settleAuction', []);
-  if (!r.ok) return;
-  const [s] = logsOf(r.receipt, 'AuctionSettled');
-  const anchor = await ensAnchorQ96(ctx.pc, lease.castle);
-  ctx.log('settled', {
-    auction, tx: r.hash, link: txLink(r.hash), clearingQ96: s?.clearingPriceQ96, usdcPerWeth: usdcPerWeth(s?.clearingPriceQ96),
-    raised: s?.currencyRaised, priceWritten: s?.priceWritten,
-    // The read-back: what ENS handoff-price holds now, and whether it is the clearing price.
-    ensAnchorQ96: anchor, ensUsdcPerWeth: usdcPerWeth(anchor), anchorIsClearing: s?.priceWritten ? anchor === s.clearingPriceQ96 : null,
-  });
+async function configure(ctx, l) {
+  const t = tokens();
+  for (const [sym, a] of Object.entries(t)) {
+    if (l.tokens[sym].leverageBps !== LEVERAGE) await send(ctx, 'setLeverage', [a, LEVERAGE]);
+  }
+  for (const [name, slot] of Object.entries(SLOTS)) {
+    const base = name === 'greedy' && GREEDY_CAP === 'hoard' ? 10_000n : CAP_BPS;
+    const want = { WETH: (l.tokens.WETH.balance * base) / 10_000n, USDC: (l.tokens.USDC.balance * base) / 10_000n };
+    const have = l.slots[slot].cap;
+    if (want.WETH === 0n && want.USDC === 0n) continue;
+    if (have.WETH !== want.WETH || have.USDC !== want.USDC) {
+      ctx.log('cap', { strategy: name, slot, weth: want.WETH, usdc: want.USDC, leverageBps: LEVERAGE });
+      await send(ctx, 'setCap', [slot, want.WETH, want.USDC]);
+    }
+  }
 }
 
-async function openOnRotation(ctx, lease) {
-  if (lease.state !== 'LIVE') return;
-  const claims = await events(ctx, lease, 'Claimed', { epoch: lease.epoch });
-  const claim = claims.at(-1);
-  // The genesis claim (prevEpoch 0) is not a shift change; a claim older than the lookback is not fresh.
-  if (!claim || claim.args.prevEpoch === 0n) return ctx.logChange('rotation', 'no-rotation', { epoch: lease.epoch, claimed: Boolean(claim) });
-  if (lease.block - claim.blockNumber > FRESH_BLOCKS) return ctx.logChange('rotation', 'rotation-not-fresh', { epoch: lease.epoch, claimBlock: claim.blockNumber, freshBlocks: FRESH_BLOCKS });
-  const opened = await events(ctx, lease, 'AuctionOpened', { epoch: lease.epoch });
-  if (opened.length) return ctx.logChange('rotation', 'auction-done-this-epoch', { epoch: lease.epoch, auction: opened.at(-1).args.auction });
-  const shipped = await events(ctx, lease, 'Shipped', { epoch: lease.epoch });
-  if (!shipped.length) return ctx.logChange('rotation', 'awaiting-new-book', { epoch: lease.epoch, holder: lease.holder });
-  const free = await ctx.pc.readContract({ address: lease.castle, abi: abi('Castle'), functionName: 'freeBalance', args: [contractAddress('weth')] });
-  const lot = LOT_CAP != null && LOT_CAP < free ? LOT_CAP : free;
-  if (lot < MIN_LOT) return ctx.logChange('rotation', 'no-free-weth', { epoch: lease.epoch, freeWeth: formatEther(free), minLotWeth: formatEther(MIN_LOT) });
-  const r = await send(ctx, 'openAuction', [lot]);
-  if (!r.ok) return;
-  const [o] = logsOf(r.receipt, 'AuctionOpened');
-  ctx.log('auction-opened', {
-    kind: 'shift-change', tx: r.hash, link: txLink(r.hash), auction: o?.auction, epoch: lease.epoch, previousEpoch: claim.args.prevEpoch,
-    lotWeth: formatEther(lot), floorQ96: o?.floorQ96, floorUsdcPerWeth: usdcPerWeth(o?.floorQ96), endBlock: o?.endBlock,
-  });
-}
-
-async function dissolveIfDue(ctx, lease) {
-  if (!DISSOLVE || lease.state !== 'EXPIRED' || lease.expiry === 0) return;
-  const grace = Number(await ctx.pc.readContract({ address: lease.castle, abi: abi('Castle'), functionName: 'dissolveGrace' }));
-  if (lease.now < lease.expiry + grace) return ctx.logChange('dissolve', 'dissolve-pending', { at: lease.expiry + grace, inS: lease.expiry + grace - lease.now });
-  // Once per lapsed epoch: after settleAuction the lease is still lapsed, and a second dissolve() would auction the
-  // unsold WETH (or an operator's refill) again at 80% of the anchor the first auction just wrote.
-  const done = await events(ctx, lease, 'Dissolved', { epoch: lease.epoch });
-  if (done.length) return ctx.logChange('dissolve', 'dissolved-this-epoch', { epoch: lease.epoch, tx: done.at(-1).transactionHash });
-  const r = await send(ctx, 'dissolve', []);
-  if (!r.ok) return;
-  const [d] = logsOf(r.receipt, 'Dissolved');
-  const [o] = logsOf(r.receipt, 'AuctionOpened');
-  ctx.log('dissolved', { tx: r.hash, link: txLink(r.hash), strategiesDocked: d?.strategiesDocked, weth: d?.weth, auction: o?.auction, floorUsdcPerWeth: usdcPerWeth(o?.floorQ96), endBlock: o?.endBlock });
+// Have fills pushed what is promised past the leverage limit (limit = balance x leverage)? The first token over and
+// the live strategy to dock for it, lowest priority first; null when the Castle is inside its limits. A promise larger
+// than the balance is not over: only the total against balance x leverage counts.
+export function overLimit(l, order = DOCK_ORDER) {
+  const live = l.slots.filter((s) => s.hash);
+  if (!live.length) return null;
+  for (const token of ['WETH', 'USDC']) {
+    const tk = l.tokens[token];
+    const limit = (tk.balance * BigInt(tk.leverageBps)) / 10_000n;
+    if (tk.committed <= limit) continue;
+    const victim = [...live].sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name))[0];
+    return { token, committed: tk.committed, limit, victim };
+  }
+  return null;
 }
 
 export default {
-  intervalMs: 12_000,
+  intervalMs: 4_000,
   async tick(ctx) {
-    const lease = await readLease(ctx.pc);
-    if (!lease.deployed) return ctx.logChange('lease', 'lease', { deployed: false });
-    ctx.logChange('lease', 'lease', { state: lease.state, epoch: lease.epoch, holder: lease.holder });
-    const auction = await ctx.pc.readContract({ address: lease.castle, abi: abi('Castle'), functionName: 'auction' });
-    if (!ZERO.test(auction)) return watchAndSettle(ctx, lease, auction);
-    await openOnRotation(ctx, lease);
-    await dissolveIfDue(ctx, lease);
+    let l = await ledger(ctx);
+    if (!configured) {
+      if (l.tokens.WETH.balance === 0n && l.tokens.USDC.balance === 0n) return ctx.logChange('wait', 'waiting', { for: 'the hoard to be funded' });
+      await configure(ctx, l);
+      configured = true;
+      l = await ledger(ctx);
+    }
+    const live = l.slots.filter((s) => s.hash);
+    const view = {
+      tokens: Object.fromEntries(Object.entries(l.tokens).map(([k, v]) => [k, { balance: fmt(v.balance), committed: fmt(v.committed), headroom: fmt(v.headroom), leverageBps: v.leverageBps }])),
+      strategies: live.map((s) => ({ strategy: s.name, slot: s.slot, alloc: { WETH: fmt(s.alloc.WETH), USDC: fmt(s.alloc.USDC) } })),
+    };
+    const key = JSON.stringify(view);
+    if (key === lastKey) return;
+    lastKey = key;
+    ctx.log('ledger', view);
+
+    const over = overLimit(l);
+    if (!over) return;
+    const { token, committed, limit, victim } = over;
+    ctx.log('over-limit', { token, committed, limit, balance: l.tokens[token].balance, leverageBps: l.tokens[token].leverageBps, dock: victim.name });
+    const r = await send(ctx, 'dock', [victim.hash]);
+    if (r.ok) ctx.log('docked', { strategy: victim.name, slot: victim.slot, hash: victim.hash, tx: r.hash, reason: `${token} committed ${committed} > limit ${limit}` });
+    lastKey = null;
   },
   async onMessage(ctx, msg) {
     ctx.log('noted', { from: msg.from, kind: msg.kind });

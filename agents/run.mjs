@@ -1,11 +1,10 @@
 #!/usr/bin/env node
-// One crew member of fee-fi-fo-fum:  node agents/run.mjs <fee|fi|fo|fum>
+// One crew member of feefifofum:  node agents/run.mjs <fee|fi|fo|fum>
 //
-// Each agent is its own OS process, so `kill -9` takes down exactly one giant, which the failover demo needs.
+// Each agent is its own OS process, so one can stop or crash without taking the others down.
 // The process:
 //   - signs every handoff call with its own key (lib/handoff.mjs) and sends agent_heartbeat every
-//     HEARTBEAT_MS. Liveness never goes through handoff messages, which are charged and rate-limited. On-chain,
-//     the castle lease renew is the real heartbeat;
+//     HEARTBEAT_MS. Liveness never goes through handoff messages, which are charged and rate-limited;
 //   - runs one handoff-realtime listener (lib/listener.mjs) and hands each inbound message to its role;
 //   - reads and writes Sepolia through viem (lib/chain.mjs) with its self-custodied key;
 //   - runs its role's tick loop (roles/<id>.mjs). Signing decisions stay in code: no model sits between an
@@ -17,6 +16,7 @@ import { AGENTS_ROOT, loadEnv, env } from './lib/env.mjs';
 import { handoffClient } from './lib/handoff.mjs';
 import { publicClient, walletClient, loadAccount, deployments, abi, addressLink } from './lib/chain.mjs';
 import { startListener } from './lib/listener.mjs';
+import { report, serviceBase } from './lib/report.mjs';
 
 loadEnv();
 const crew = JSON.parse(fs.readFileSync(path.join(AGENTS_ROOT, 'crew.json'), 'utf8'));
@@ -52,10 +52,17 @@ let stopping = false;
 // CREW_OFFLINE=1 (fork rehearsals while the live crew runs): no agent_heartbeat and no listener, so the rehearsal
 // never shows as the live agent's liveness and never touches its inbox or its listener.
 const OFFLINE = env('CREW_OFFLINE') === '1';
+// Each beat also goes to the castle service as a signed 'agent' report, so the stream shows who is up (the fork
+// run's only liveness, since it sends no agent_heartbeat).
 const heartbeat = async () => {
-  if (OFFLINE) return;
-  try { await h.heartbeat(); logChange('hb', 'heartbeat', { ok: true }); }
-  catch (e) { logChange('hb', 'heartbeat', { ok: false, error: e.message }); }
+  if (!OFFLINE) {
+    try { await h.heartbeat(); logChange('hb', 'heartbeat', { ok: true }); }
+    catch (e) { logChange('hb', 'heartbeat', { ok: false, error: e.message }); }
+  }
+  if (serviceBase()) {
+    const r = await report({ ...ctx, log: () => {} }, 'agent', {});
+    logChange('beat', 'service-beat', { ok: !!r?.ok, error: r?.ok ? undefined : r?.error ?? 'unreachable' });
+  }
 };
 await heartbeat();
 const hbTimer = setInterval(heartbeat, Number(env('HEARTBEAT_MS', 20_000)));

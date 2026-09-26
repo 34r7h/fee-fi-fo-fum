@@ -1,12 +1,13 @@
 // viem on Ethereum Sepolia for the crew: a public client over the primary and fallback RPCs from env, and a
 // wallet client over the agent's self-custodied key file. Addresses come from contracts/deployments/sepolia.json
-// and ABIs from contracts/out-abi/ (after p1-deploy) or the interface stubs in agents/abi/.
+// (DEPLOYMENTS_PATH points a fork run at its own file) and ABIs from contracts/out-abi/ or lib/abis.mjs.
 import fs from 'node:fs';
 import path from 'node:path';
 import { createPublicClient, createWalletClient, fallback, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { sepolia } from 'viem/chains';
 import { AGENTS_ROOT, REPO_ROOT, env, expandHome } from './env.mjs';
+import { ABIS } from './abis.mjs';
 
 const isLocal = (u) => /^https?:\/\/(127\.0\.0\.1|localhost|0\.0\.0\.0)(:|\/|$)/.test(u);
 
@@ -41,37 +42,43 @@ export function deployments() {
   return JSON.parse(fs.readFileSync(p, 'utf8'));
 }
 
-// Keys the contracts lane uses for the same contract.
-const ALIASES = { router: ['router', 'aquaSwapVMRouter'], extruction: ['extruction', 'feeFiFoFumExtruction', 'fence'] };
-
-// Castle v3 is contracts.castle from its deploy on, and v2 lives on under the deployments' v2 block until its hoard
-// is drained. CASTLE_VERSION=2 addresses v2 (castle and its fence; everything else is shared); the default is v3.
-export const castleVersion = () => (env('CASTLE_VERSION', '3') === '2' ? 2 : 3);
-const V2_ONLY = new Set(['castle', 'extruction']);
+// Keys the contracts lane might use for the same contract (docs/SPEC.md names first). The lease edition's castle
+// (an entry with a "version" of v2 or v3) is retired at tag lease-edition, and nothing here reads it.
+const ALIASES = {
+  castle: ['castleVault', 'CastleVault', 'vault', 'castle'],
+  priceExtruction: ['priceExtruction', 'PriceExtruction'],
+  quoteResolver: ['quoteResolver', 'offchainQuoteResolver', 'OffchainQuoteResolver'],
+  hook: ['castleJITHook', 'CastleJITHook', 'jitHook', 'hook'],
+  router: ['router', 'aquaSwapVMRouter'],
+  poolManager: ['poolManager', 'v4PoolManager'],
+  poolSwapTest: ['poolSwapTest', 'v4PoolSwapTest'],
+  v4Quoter: ['v4Quoter', 'quoter'],
+  chainlink: ['chainlinkEthUsd', 'ethUsdFeed', 'chainlink'],
+  universalResolver: ['universalResolver', 'universalResolverV2'],
+};
+const RETIRED = new Set(['v2', 'v3']);
 
 // The deployed address of a contract by its deployments.json key (e.g. "castle"), or undefined before deploy.
 export function contractAddress(name) {
   const d = deployments();
-  const v2 = castleVersion() === 2 && V2_ONLY.has(name) ? d.v2 : null;
   for (const k of ALIASES[name] || [name]) {
-    const v = v2 ? v2[k] : d.contracts?.[k] ?? d.external?.[k];
-    if (v) return typeof v === 'string' ? v : v.address;
+    const v = d.contracts?.[k] ?? d.external?.[k];
+    if (!v) continue;
+    if (typeof v === 'string') return v;
+    if (v.address && !RETIRED.has(v.version)) return v.address;
   }
   return undefined;
 }
 
-// v3's Castle and fence ABIs are in contracts/out-abi/v3/; v3's Castle ABI also stands in for ICastleLease, whose v3
-// form adds the heartbeat, challenge and respond.
-const V3_ABIS = { Castle: 'Castle', ICastleLease: 'Castle', FeeFiFoFumExtruction: 'FeeFiFoFumExtruction' };
+// ABIs: the contracts lane's export in contracts/out-abi/<Name>.json wins; lib/abis.mjs covers the rest.
 export function abi(name) {
-  const v3 = castleVersion() === 3 && V3_ABIS[name] ? [path.join(REPO_ROOT, 'contracts', 'out-abi', 'v3', `${V3_ABIS[name]}.json`)] : [];
-  for (const p of [...v3, path.join(REPO_ROOT, 'contracts', 'out-abi', `${name}.json`), path.join(AGENTS_ROOT, 'abi', `${name}.json`)]) {
-    if (fs.existsSync(p)) {
-      const j = JSON.parse(fs.readFileSync(p, 'utf8'));
-      return Array.isArray(j) ? j : j.abi;
-    }
+  const p = path.join(REPO_ROOT, 'contracts', 'out-abi', `${name}.json`);
+  if (fs.existsSync(p)) {
+    const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+    return Array.isArray(j) ? j : j.abi;
   }
-  throw new Error(`no ABI for ${name} in contracts/out-abi/ or agents/abi/`);
+  if (ABIS[name]) return ABIS[name];
+  throw new Error(`no ABI for ${name} in contracts/out-abi/ or lib/abis.mjs`);
 }
 
 export const txLink = (hash) => `https://sepolia.etherscan.io/tx/${hash}`;

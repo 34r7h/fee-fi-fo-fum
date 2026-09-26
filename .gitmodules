@@ -13,3 +13,6 @@
 [submodule "contracts/lib/swap-vm"]
 	path = contracts/lib/swap-vm
 	url = https://github.com/1inch/swap-vm
+[submodule "contracts/lib/v4-core"]
+	path = contracts/lib/v4-core
+	url = https://github.com/Uniswap/v4-core

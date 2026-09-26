@@ -107,10 +107,10 @@ Integers that can exceed 2^53 (amounts, Q96 prices, token ids) are **decimal str
 | type | data | on-chain source |
 |---|---|---|
 | `auction.opened` | `{ auction, kind: "shift-change" \| "dissolution", amount, floor: {q96, usdcPerWeth}, startBlock, endBlock, hook }` | CCA factory creation event, plus Castle `AuctionOpened` |
-| `auction.bid` | `{ auction, bidId, owner, ownerName, maxPrice: {q96, usdcPerWeth}, amount }` | CCA bid event |
+| `auction.bid` | `{ auction, bidId, owner, ownerName, maxPrice: {q96, usdcPerWeth}, amount }`: `amount` is the currency committed (USDC, 6 decimals), not WETH | CCA bid event |
 | `auction.rejected` | `{ auction, owner, reason: "JackHook" }`. A bidder without an unexpired ENSv2 name. | service (reverted tx, as with fills) |
 | `auction.checkpoint` | `{ auction, clearing: {q96, usdcPerWeth}, sold, raised }`. One per checkpoint. **This is the chart's data.** | CCA `checkpoint()` event, or the `clearingPrice()` view per block |
-| `auction.cleared` | `{ auction, clearing, sold, raised }` | final checkpoint at `endBlock` |
+| `auction.cleared` | `{ auction, clearing, sold, raised }`: `sold` (WETH) and `raised` (USDC) are `null` when not known, never 0 | final checkpoint at `endBlock`, or Castle `AuctionSettled` |
 | `auction.swept` | `{ auction, currency: "USDC", amount }` | CCA `sweepCurrency()` |
 | `price.written` | `{ key: "handoff-price", value: "0x…", price: {q96, usdcPerWeth} }`. The clearing price, written back to ENS. | PermissionedResolver `setData(castle, "handoff-price", …)` |
 

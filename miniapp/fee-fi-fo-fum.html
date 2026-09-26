@@ -397,6 +397,13 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   function dec(sym) { var d = S.config.decimals; return d && d[sym] != null ? d[sym] : (sym === 'USDC' ? 6 : 18); }
   function amt(raw, sym) { return units(raw, dec(sym), sym === 'USDC' ? 2 : 4); }
   function px(p) {
+    if (p && typeof p === 'object' && p.q96 && p.q96 !== '0') {
+      try {
+        var c = (BigInt(p.q96) * BigInt(10) ** BigInt(14) + BigInt(2) ** BigInt(95)) / BigInt(2) ** BigInt(96), cs = c.toString();
+        while (cs.length < 3) cs = '0' + cs;
+        return cs.slice(0, -2).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + cs.slice(-2);
+      } catch (e) { /* fall through to the decimal string */ }
+    }
     var n = Number(p && typeof p === 'object' ? p.usdcPerWeth : p);
     return isFinite(n) ? n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—';
   }
@@ -534,6 +541,12 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     var v; try { v = BigInt(e); } catch (x) { return String(e); }
     return v < BigInt(4294967296) ? v.toString() : 'v' + (v & BigInt(4294967295)).toString();
   }
+  function same(a, b) { return !!a && !!b && String(a).toLowerCase() === String(b).toLowerCase(); }
+  function known(addr) {
+    var n = S.config.names || {};
+    for (var k in n) if (same(k, addr)) return n[k];
+    return null;
+  }
   function fateEl(f) {
     var label = f === 'live' ? 'LIVE' : f === 'wind-down' ? 'WIND-DOWN' : f === 'fenced' ? 'FENCED' : '?';
     return h('span', { class: 'fate', 'data-f': f }, [stitch(f, ''), label]);
@@ -595,6 +608,11 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         if (a) { a.points.push({ block: ev.block, price: ev.clearing }); a.clearing = ev.clearing; a.sold = ev.sold; a.raised = ev.raised; a.block = ev.block; }
         break;
       case 'auction.cleared':
+        if (a && a.status === 'cleared' && (!ev.auction || !a.auction || same(ev.auction, a.auction))) {
+          if (ev.sold != null) a.sold = ev.sold;
+          if (ev.raised != null) a.raised = ev.raised;
+          return;
+        }
         if (a) { a.status = 'cleared'; a.clearing = ev.clearing; a.sold = ev.sold; a.raised = ev.raised; a.points.push({ block: ev.block, price: ev.clearing }); a.block = ev.block; }
         break;
       case 'auction.swept': if (a) { a.swept = ev.amount; a.status = 'swept'; } break;
@@ -655,6 +673,11 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     return { verb: buy ? 'bought' : 'sold', weth: amt(w, 'WETH'), usdc: amt(u, 'USDC'),
       price: px(Number(big(u)) / 10 ** dec('USDC') / (Number(big(w)) / 10 ** dec('WETH'))) };
   }
+  // What a clear sold and raised, only as far as it was reported: a missing figure is never printed as zero.
+  function sale(x) {
+    var s1 = x.sold != null ? amt(x.sold, 'WETH') + ' WETH sold' : '', s2 = x.raised != null ? amt(x.raised, 'USDC') + ' USDC raised' : '';
+    return s1 && s2 ? 'Sold ' + amt(x.sold, 'WETH') + ' WETH for ' + amt(x.raised, 'USDC') + ' USDC' : (s1 || s2 ? (s1 || s2).replace(/^./, function (c) { return c.toUpperCase(); }) : 'Cleared; the amounts were not reported');
+  }
   function scene(ev) {
     var A = up(ev.holderAgent || ev.id || ev.shippedBy || ev.dockedBy);
     switch (ev.type) {
@@ -672,14 +695,14 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       case 'strategy.shipped': return { ev: ev, icon: 'scroll', ti: 'HERE ' + A + ' SHIPS THE BOOK', gl: ['epoch ' + ep(ev.epoch) + ' · centred at ' + px(ev.center) + ' USDC/WETH', amt(ev.weth, 'WETH') + ' WETH · ' + amt(ev.usdc, 'USDC') + ' USDC'] };
       case 'strategy.docked': return { ev: ev, icon: 'broom', ti: 'HERE THE OLD BOOK IS DOCKED', gl: ['strategy ' + short(ev.hash), 'epoch ' + ep(ev.epoch)] };
       case 'fill':
-        var t = trade(ev), who = ev.takerName || short(ev.taker);
+        var t = trade(ev), who = ev.takerName || known(ev.taker) || short(ev.taker);
         if (ev.status === 'reverted' && ev.decision === 'wind-down') return { ev: ev, icon: 'shield', tone: 'woad', ti: 'HERE THE CASTLE ONLY SELLS', gl: [who + ' tried to ' + (t.verb === 'bought' ? 'buy ' : 'sell ') + t.weth + ' WETH', 'reverted ' + (ev.revert || '')] };
         if (ev.decision === 'fenced') return { ev: ev, icon: 'cross', tone: 'madder', ti: 'HERE THE GIANT SMELLS A STALE SHIFT', gl: [who + ' tried an epoch ' + ep(ev.programEpoch) + ' quote', 'reverted FeeFiFoFum()'] };
         return { ev: ev, icon: 'coin', tone: ev.decision === 'wind-down' ? 'woad' : 'gold', ti: ev.decision === 'wind-down' ? 'HERE A JACK PAYS THE WIDE SPREAD' : 'HERE A JACK TRADES WITH THE GIANT',
           gl: [who + ' ' + t.verb + ' ' + t.weth + ' WETH', 'for ' + t.usdc + ' USDC at ' + t.price + ' USDC/WETH'] };
       case 'auction.opened': return { ev: ev, icon: 'stalk', tone: 'gold', ti: ev.kind === 'dissolution' ? 'HERE THE GIANT’S GOLD GOES UP THE BEANSTALK' : 'HERE THE JACKS CLIMB THE BEANSTALK',
         gl: [amt(ev.amount, 'WETH') + ' WETH for sale', 'floor ' + px(ev.floor) + ' USDC/WETH' + ', blocks ' + ev.startBlock + '–' + ev.endBlock] };
-      case 'auction.cleared': return { ev: ev, icon: 'stack', tone: 'gold', ti: 'HERE THE AUCTION CLEARS', gl: ['at ' + px(ev.clearing) + ' USDC per WETH', amt(ev.sold, 'WETH') + ' WETH · ' + amt(ev.raised, 'USDC') + ' USDC'] };
+      case 'auction.cleared': return { ev: ev, icon: 'stack', tone: 'gold', ti: 'HERE THE AUCTION CLEARS', gl: ['at ' + px(ev.clearing) + ' USDC per WETH', sale(ev)] };
       case 'price.written': return { ev: ev, icon: 'quill', ti: 'HERE THE PRICE IS WRITTEN IN ENS', gl: ['handoff-price = ' + px(ev.price) + ' USDC/WETH', 'the next book centres here'] };
       case 'castle.dissolved': return { ev: ev, icon: 'fall', tone: 'madder', ti: 'HERE THE CASTLE FALLS', gl: ['dissolve() called by ' + (ev.callerName || short(ev.caller)), 'anyone may; nobody is live'] };
     }
@@ -932,7 +955,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     g.push(sv('path', { d: 'M' + L + ' ' + T + 'V' + (H - B) + 'H' + (W - Rr), fill: 'none', stroke: '#1F2433', 'stroke-width': 1.6 }));
     // the floor
     g.push(sv('path', { d: 'M' + L + ' ' + Y(fl).toFixed(1) + 'H' + (W - Rr), stroke: '#B0412A', 'stroke-width': 1.6, 'stroke-dasharray': '6 6' }));
-    g.push(sv('text', { x: W - Rr - 4, y: (Y(fl) - 6).toFixed(1), 'text-anchor': 'end', fill: '#B0412A' }, 'floor ' + px(fl) + ' USDC/WETH'));
+    g.push(sv('text', { x: W - Rr - 4, y: (Y(fl) - 6).toFixed(1), 'text-anchor': 'end', fill: '#B0412A' }, 'floor ' + px(a.floor) + ' USDC/WETH'));
     // each Jack's max price, a small flag at the right edge, one size for every Jack
     a.bids.forEach(function (b) {
       var y = Y(Number(b.maxPrice.usdcPerWeth)), sz = 7;
@@ -959,8 +982,8 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     var status = a.status === 'open' ? 'Open, block +' + (Number(a.block || b0) - b0) + ' of ' + (b1 - b0) : a.status === 'cleared' ? 'Cleared' : 'Cleared and swept to the castle';
     var bids = a.bids.slice().sort(function (x, y) { return Number(y.maxPrice.usdcPerWeth) - Number(x.maxPrice.usdcPerWeth); });
     var list = h('ul', { class: 'bids num' }, bids.map(function (b) {
-      return h('li', null, [h('span', { class: 'who' }, b.ownerName || short(b.owner)),
-        h('span', { class: 'amt' }, [amt(b.amount, 'WETH') + ' WETH', h('br'), h('span', { class: 'muted', text: 'up to ' + px(b.maxPrice) + ' USDC/WETH' })])]);
+      return h('li', null, [h('span', { class: 'who' }, b.ownerName || known(b.owner) || short(b.owner)),
+        h('span', { class: 'amt' }, [amt(b.amount, 'USDC') + ' USDC', h('br'), h('span', { class: 'muted', text: 'up to ' + px(b.maxPrice) + ' USDC/WETH' })])]);
     }).concat(a.rejected.map(function (r) {
       return h('li', { class: 'rej' }, [h('span', { class: 'who', text: r.ownerName || short(r.owner) }), h('span', { class: 'amt', text: 'no ENS name: JackHook said no' })]);
     })));
@@ -976,7 +999,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       h('div', null, [
         h('div', { class: 'au-head num' }, [h('span', null, [h('b', { text: String(a.bids.length) }), ' Jacks bidding, highest price first'])]),
         a.bids.length || a.rejected.length ? list : h('p', { class: 'empty', text: 'No bids yet.' }),
-        a.status !== 'open' ? h('p', { class: 'note num', text: 'Sold ' + amt(a.sold, 'WETH') + ' WETH for ' + amt(a.raised, 'USDC') + ' USDC.' + (a.swept ? ' Swept to the castle.' : '') }) : null,
+        a.status !== 'open' ? h('p', { class: 'note num', text: sale(a) + '.' + (a.swept ? ' Swept to the castle.' : '') }) : null,
         h('p', { class: 'note', text: 'The next shift gets no privilege: it bids like any Jack. JackHook admits only bidders who hold an unexpired name in handoff’s ENSv2 agent registry.' })
       ])
     ]);
@@ -992,8 +1015,9 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
 
   var drawnFor = null, drawnId = 0, sceneNodes = {};
   function sceneEl(sc) {
-    var ev = sc.last || sc.ev, gl = sc.gl.slice();
-    if (sc.n) gl[1] = (sc.ev.type === 'lease.claimed' ? 'then ' : '') + 'sealed by fo, ' + sc.n + (sc.n === 1 ? ' renewal' : ' renewals') + ', lease to ' + hhmmss(Number(ev.expiry) * 1000);
+    // A folded scene keeps its own moment and tx; only the renewal count and the lease end move on.
+    var ev = sc.ev, gl = sc.gl.slice();
+    if (sc.n) gl[1] = (ev.type === 'lease.claimed' ? 'then ' : '') + 'sealed by fo, ' + sc.n + (sc.n === 1 ? ' renewal' : ' renewals') + ', lease to ' + hhmmss(Number((sc.last || ev).expiry) * 1000);
     var gloss = gl.filter(Boolean).map(function (x, i) { return h('div', null, i === 0 ? h('b', { text: x }) : x); });
     var meta = h('div', { class: 'gl num' }, [hhmmss(ev.t || clock()), ev.block ? ' · block ' + ev.block : '', ' · ', txEl(ev.tx, ev)]);
     return h('div', { class: 'scene', 'data-tone': sc.tone || null }, [
@@ -1031,7 +1055,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       var t = trade(f);
       return h('tr', null, [
         h('td', { class: 'num', text: hhmmss(f.t) }),
-        h('td', { text: f.takerName || short(f.taker) }),
+        h('td', { text: f.takerName || known(f.taker) || short(f.taker) }),
         h('td', { class: 'num' }, f.status === 'reverted' ? h('span', { class: 'muted', text: 'tried to ' + (t.verb === 'bought' ? 'buy ' : 'sell ') + t.weth + ' WETH' }) : t.verb + ' ' + t.weth + ' WETH for ' + t.usdc + ' USDC'),
         h('td', { class: 'r num' }, f.status === 'reverted' ? '—' : [t.price, h('span', { class: 'u', text: ' USDC/WETH' })]),
         h('td', { class: 'num' }, [h('span', { class: 'u', text: 'epoch ' }), f.programEpoch === f.leaseEpoch ? ep(f.programEpoch) : ep(f.programEpoch) + ' vs ' + ep(f.leaseEpoch)]),
@@ -1059,7 +1083,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       var r = derive(f), ok = r.d === f.decision;
       return h('tr', null, [
         h('td', { class: 'num', text: hhmmss(f.t) + (f.block ? ' · ' + f.block : '') }),
-        h('td', { text: f.takerName || short(f.taker) }),
+        h('td', { text: f.takerName || known(f.taker) || short(f.taker) }),
         h('td', { class: 'num' }, [h('span', { class: 'u', text: 'book epoch ' }), ep(f.programEpoch)]),
         h('td', { class: 'num opt', text: r.L ? ep(r.L.epoch) : '?' }),
         h('td', { class: 'num opt', text: r.L ? (f.t / 1000 > r.L.expiry ? left(f.t / 1000 - r.L.expiry) + ' past' : left(r.L.expiry - f.t / 1000) + ' left') : '?' }),
@@ -1118,7 +1142,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         L ? h('span', { class: 'muted num ep', text: 'epoch ' + ep(L.epoch) }) : null]),
       h('div', { class: 'bar' }, h('i', { style: 'width:' + (frac * 100).toFixed(1) + '%' })),
       S.inventory ? h('div', { class: 'f3 num' }, ['Hoard ', h('b', { text: amt(S.inventory.weth, 'WETH') }), ' WETH · ', h('b', { text: amt(S.inventory.usdc, 'USDC') }), ' USDC']) : null,
-      last ? h('div', { class: 'f4 num', text: 'Last: ' + (last.takerName || short(last.taker)) + (last.decision === 'fenced' ? ' was fenced, FeeFiFoFum()' : ' ' + t.verb + ' ' + t.weth + ' WETH at ' + t.price + ' USDC/WETH') }) : null
+      last ? h('div', { class: 'f4 num', text: 'Last: ' + (last.takerName || known(last.taker) || short(last.taker)) + (last.decision === 'fenced' ? ' was fenced, FeeFiFoFum()' : ' ' + t.verb + ' ' + t.weth + ' WETH at ' + t.price + ' USDC/WETH') }) : null
     ]);
   }
 
@@ -1236,7 +1260,6 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     while (c.length < 3) c = '0' + c;
     return { q96: v.toString(), usdcPerWeth: c.slice(0, -2) + '.' + c.slice(-2) };
   }
-  function same(a, b) { return !!a && !!b && a.toLowerCase() === b.toLowerCase(); }
   function whoIs(addr) {
     var ag = CONFIG.agents || [];
     for (var i = 0; i < ag.length; i++) if (same(ag[i].addr, addr)) return ag[i].id;
@@ -1266,15 +1289,16 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         return;
       }
       if (!same(log.address, castle)) {
+        lapse(c.time(log) / 1000);
         if (n === 'BidSubmitted') feed(chainEv('auction.bid', { auction: log.address, bidId: String(hexN(tp[1])), owner: wAddr(tp[2]), ownerName: whoIs(wAddr(tp[2])) ? whoIs(wAddr(tp[2])) + '.' + parent : null, maxPrice: q96View(w[0]), amount: BigInt(w[1]).toString() }, log));
         else if (n === 'Checkpoint') feed(chainEv('auction.checkpoint', { auction: log.address, clearing: q96View(w[1]), sold: null, raised: null }, log));
         return;
       }
       var b = hexN(log.blockNumber), t = c.time(log);
       c.castleTx[log.transactionHash] = true;
+      lapse(t / 1000);
       if (n === 'Renewed' || n === 'Claimed') {
         var epoch = BigInt(tp[1]).toString(), holder = wAddr(tp[2]), exp = hexN(w[0]), prev = c.leases[c.leases.length - 1];
-        if (n === 'Claimed' && prev && t / 1000 > prev.expiry) feed(Object.assign(chainEv('lease.expired', { epoch: prev.epoch, holder: prev.holder, holderAgent: prev.agent, expiry: prev.expiry }, null), { t: prev.expiry * 1000, block: null, tx: null }));
         c.leases.push({ block: b, epoch: epoch, expiry: exp, holder: holder, agent: whoIs(holder) });
         if (n === 'Renewed') feed(chainEv('lease.renewed', { epoch: epoch, holder: holder, holderAgent: whoIs(holder), expiry: exp, attestor: 'fo', digest: w[1] }, log));
         else feed(chainEv('lease.claimed', { epoch: epoch, prevEpoch: BigInt(w[1]).toString(), holder: holder, holderAgent: whoIs(holder), expiry: exp, gapSeconds: prev ? Math.max(0, Math.round(t / 1000 - prev.expiry)) : null }, log));
@@ -1300,8 +1324,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       }
     }
     // One router.swap is one fill: Aqua pulls one token from the castle and pushes the other in. The taker is the tx sender.
-    function fills() {
-      var txs = Object.keys(c.fillTx);
+    function fills(txs) {
       return txs.reduce(function (p, h0) {
         return p.then(function () {
           var f = c.fillTx[h0]; delete c.fillTx[h0];
@@ -1309,6 +1332,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
           return rpc('eth_getTransactionByHash', [h0]).then(function (tx) {
             var out = f.legs.Pulled, inn = f.legs.Pushed, hash = (out || inn).hash, b = hexN(f.log.blockNumber), L = leaseAtBlock(b), pe = c.shipEpoch[hash] || null;
             var tIn = inn && same(inn.token, CONFIG.external.usdc) ? 'USDC' : 'WETH', tOut = tIn === 'USDC' ? 'WETH' : 'USDC';
+            lapse(c.time(f.log) / 1000);
             var d = pe != null && L && pe !== L.epoch ? 'fenced' : L && c.time(f.log) / 1000 > L.expiry ? 'wind-down' : 'live';
             feed(chainEv('fill', { id: h0 + ':0', taker: tx && tx.from, takerName: tx ? (whoIs(tx.from) ? whoIs(tx.from) + '.' + parent : null) : null, tokenIn: tIn, tokenOut: tOut,
               amountIn: inn ? inn.amount : '0', amountOut: out ? out.amount : '0', strategy: hash, programEpoch: pe, leaseEpoch: L ? L.epoch : null, expiry: L ? L.expiry : null,
@@ -1325,8 +1349,13 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         var known = c.auctions.slice();
         sorted(ls).forEach(function (l) { if (!same(l.address, castle) || TOPIC[l.topics[0]] !== 'AuctionOpened') return; var a = wAddr(l.topics[1]); if (known.indexOf(a) < 0) known.push(a); });
         return (known.length ? logs(known, from, hi) : Promise.resolve([])).then(function (more) {
-          sorted(ls.concat(more)).forEach(one);
-          return fills();
+          // In block order: a swap's fill is told once its tx is over, before the next event, so scenes stay chronological.
+          return sorted(ls.concat(more)).reduce(function (p, l) {
+            return p.then(function () {
+              var done = Object.keys(c.fillTx).filter(function (h0) { return h0 !== l.transactionHash; });
+              return (done.length ? fills(done) : null);
+            }).then(function () { one(l); });
+          }, Promise.resolve()).then(function () { return fills(Object.keys(c.fillTx)); });
         });
       }).then(function () { c.cursor = hi; if (hi < to) return scan(hi + 1, to); });
     }
@@ -1340,9 +1369,9 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       });
     }
     // The lease lapsing is no transaction: it is derived from block time, as the extruction derives it.
-    function lapse() {
+    function lapse(at) {
       var L = c.leases[c.leases.length - 1];
-      if (!L || nowS() <= L.expiry || c.expiredFor === L.epoch + ':' + L.expiry) return;
+      if (!L || (at == null ? nowS() : at) <= L.expiry || c.expiredFor === L.epoch + ':' + L.expiry) return;
       c.expiredFor = L.epoch + ':' + L.expiry;
       feed({ v: 1, type: 'lease.expired', t: L.expiry * 1000, block: null, tx: null, src: 'chain', epoch: L.epoch, holder: L.holder, holderAgent: L.agent, expiry: L.expiry });
     }
@@ -1442,7 +1471,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     at(76, { type: 'auction.opened', auction: hx(40), kind: 'shift-change', amount: W(1.5), floor: P(2350), startBlock: B0 + 76, endBlock: B0 + 96, hook: 'JackHook' });
     at(78, { type: 'lease.renewed', holder: hx(40), holderAgent: 'fi', epoch: '8', expiry: exp(78), attestor: 'fo' });
     [[79, Jacks.horner, 0.5, 2440], [81, Jacks.frost, 0.6, 2425], [83, 'fi, the next shift', 0.8, 2415], [85, Jacks.tar, 0.3, 2460]].forEach(function (b) {
-      at(b[0], { type: 'auction.bid', auction: '', bidId: hx(8), owner: hx(40), ownerName: b[1], maxPrice: P(b[3]), amount: W(b[2]) });
+      at(b[0], { type: 'auction.bid', auction: '', bidId: hx(8), owner: hx(40), ownerName: b[1], maxPrice: P(b[3]), amount: U(b[2] * b[3]) });
     });
     at(82, { type: 'auction.rejected', auction: '', owner: hx(40), ownerName: null, reason: 'JackHook' });
     [[80, 2350], [84, 2395], [88, 2410], [92, 2418], [95, 2421]].forEach(function (c) { at(c[0], { type: 'auction.checkpoint', clearing: P(c[1]), sold: W(1.5 * (c[0] - 76) / 20), raised: U(1.5 * (c[0] - 76) / 20 * c[1]) }); });
@@ -1462,7 +1491,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     at(138, { type: 'castle.dissolved', caller: hx(40), callerName: Jacks.horner });
     at(138, { type: 'auction.opened', auction: hx(40), kind: 'dissolution', amount: W(2.1), floor: P(2300), startBlock: B0 + 138, endBlock: B0 + 158, hook: 'JackHook' });
     [[140, Jacks.horner, 1.0, 2405], [142, Jacks.tar, 0.6, 2398], [144, Jacks.frost, 0.8, 2390]].forEach(function (b) {
-      at(b[0], { type: 'auction.bid', auction: '', bidId: hx(8), owner: hx(40), ownerName: b[1], maxPrice: P(b[3]), amount: W(b[2]) });
+      at(b[0], { type: 'auction.bid', auction: '', bidId: hx(8), owner: hx(40), ownerName: b[1], maxPrice: P(b[3]), amount: U(b[2] * b[3]) });
     });
     [[141, 2300], [145, 2360], [149, 2385], [153, 2394], [157, 2398]].forEach(function (c) { at(c[0], { type: 'auction.checkpoint', clearing: P(c[1]), sold: W(2.1 * (c[0] - 138) / 20), raised: U(2.1 * (c[0] - 138) / 20 * c[1]) }); });
     at(158, { type: 'auction.cleared', clearing: P(2398), sold: W(2.1), raised: U(5035.8) });

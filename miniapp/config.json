@@ -11,14 +11,59 @@
   "renewEverySeconds": 40,
   "graceSeconds": 0,
   "shifts": [
-    { "city": "Tokyo", "tz": "Asia/Tokyo", "startUtc": "00:00", "endUtc": "08:00", "agent": "fee" },
-    { "city": "London", "tz": "Europe/London", "startUtc": "08:00", "endUtc": "16:00", "agent": "fi" },
-    { "city": "New York", "tz": "America/New_York", "startUtc": "16:00", "endUtc": "24:00", "agent": "fee" }
+    {
+      "city": "Tokyo",
+      "tz": "Asia/Tokyo",
+      "startUtc": "00:00",
+      "endUtc": "08:00",
+      "agent": "fee"
+    },
+    {
+      "city": "London",
+      "tz": "Europe/London",
+      "startUtc": "08:00",
+      "endUtc": "16:00",
+      "agent": "fi"
+    },
+    {
+      "city": "New York",
+      "tz": "America/New_York",
+      "startUtc": "16:00",
+      "endUtc": "24:00",
+      "agent": "fee"
+    }
   ],
   "agents": [
-    { "id": "fee", "role": "shift trader", "addr": "0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538", "ens": "fee.feefifofum.eth", "handoffId": "fee" },
-    { "id": "fi", "role": "hot standby", "addr": "0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2", "ens": "fi.feefifofum.eth", "handoffId": "fi" },
-    { "id": "fo", "role": "fencer and witness", "addr": "0x8689a407A2488A5b2f2De05d2C6978a798f93D56", "ens": "fo.feefifofum.eth", "handoffId": "fo" },
-    { "id": "fum", "role": "auctioneer", "addr": "0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2", "ens": "fum.feefifofum.eth", "handoffId": "fum" }
-  ]
+    {
+      "id": "fee",
+      "role": "shift trader",
+      "addr": "0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538",
+      "ens": "fee.feefifofum.eth",
+      "handoffId": "fee"
+    },
+    {
+      "id": "fi",
+      "role": "hot standby",
+      "addr": "0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2",
+      "ens": "fi.feefifofum.eth",
+      "handoffId": "fi"
+    },
+    {
+      "id": "fo",
+      "role": "fencer and witness",
+      "addr": "0x8689a407A2488A5b2f2De05d2C6978a798f93D56",
+      "ens": "fo.feefifofum.eth",
+      "handoffId": "fo"
+    },
+    {
+      "id": "fum",
+      "role": "auctioneer",
+      "addr": "0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2",
+      "ens": "fum.feefifofum.eth",
+      "handoffId": "fum"
+    }
+  ],
+  "names": {
+    "0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c": "agy.feefifofum.eth"
+  }
 }

@@ -1,0 +1,5 @@
+{"t":"2026-09-26T12:24:31.418Z","agent":"fo","event":"start","role":"intent forwarder","address":"0x8689a407A2488A5b2f2De05d2C6978a798f93D56","link":"https://sepolia.etherscan.io/address/0x8689a407A2488A5b2f2De05d2C6978a798f93D56","chainId":11155111,"block":"11786203","balanceWei":"1000000000000000000","rpc":"127.0.0.1:18841"}
+{"t":"2026-09-26T12:24:31.436Z","agent":"fo","event":"service-beat","ok":true}
+{"t":"2026-09-26T12:24:31.444Z","agent":"fo","event":"listening","route":"http://127.0.0.1:18843/route"}
+{"t":"2026-09-26T12:25:25.905Z","agent":"fo","event":"routed","id":"i-1790425525-1","swapper":"0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c","tokenIn":"USDC","tokenOut":"WETH","amountIn":"500000","minOut":"1","route":"harp","amountOut":"185713462260794","harp":"185713462260794","v4":"160665879411209"}
+{"t":"2026-09-26T12:25:55.193Z","agent":"fo","event":"routed","id":"i-1790425555-2","swapper":"0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c","tokenIn":"USDC","tokenOut":"WETH","amountIn":"200000","minOut":"1","route":"harp","amountOut":"74285384904317","harp":"74285384904317","v4":"69845740609215"}

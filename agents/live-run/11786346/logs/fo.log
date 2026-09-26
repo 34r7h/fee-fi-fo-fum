@@ -1,0 +1,11 @@
+{"t":"2026-09-26T12:54:20.448Z","agent":"fo","event":"start","role":"intent forwarder","address":"0x8689a407A2488A5b2f2De05d2C6978a798f93D56","link":"https://sepolia.etherscan.io/address/0x8689a407A2488A5b2f2De05d2C6978a798f93D56","chainId":11155111,"block":"11786345","balanceWei":"2001572056283000","rpc":"ethereum-sepolia-rpc.publicnode.com"}
+{"t":"2026-09-26T12:54:20.874Z","agent":"fo","event":"heartbeat","ok":true}
+{"t":"2026-09-26T12:54:21.103Z","agent":"fo","event":"service-beat","ok":true}
+{"t":"2026-09-26T12:54:21.131Z","agent":"fo","event":"listener-started","pid":75143,"script":"/Users/34r7h/.handoff/bin/handoff-realtime.mjs"}
+{"t":"2026-09-26T12:54:21.131Z","agent":"fo","event":"polling","service":"https://handoff.lol/t/castle"}
+{"t":"2026-09-26T12:54:21.134Z","agent":"fo","event":"listening","route":"http://127.0.0.1:8731/route"}
+{"t":"2026-09-26T12:54:21.250Z","agent":"fo","event":"listener","line":"REALTIME: minted a delegation cert for local-coordinator (scope inbox.read, 240s, refreshed every 120s) — the coordinator's polls for you are now SIGNED, not bearer. It lapses within one window if this listener stops, which is the point."}
+{"t":"2026-09-26T12:54:21.773Z","agent":"fo","event":"listener","line":"THIS PROCESS IS \"handoff-realtime fo\" in the process table. Find it: pgrep -fl \"handoff-realtime fo\". Stop ONLY yours: pkill -f \"handoff-realtime fo\". A bare pkill -f handoff-realtime kills EVERY agent's listener on this machine — that has happened four times tonight, twice to me. Start it as: node handoff-realtime.mjs --agent fo (the flag gives the title room for your full id; AGENT_ID alone gets truncated)."}
+{"t":"2026-09-26T12:54:21.773Z","agent":"fo","event":"listener","line":"REALTIME ARMED for fo at cursor=0 — mode=persistent, topology=own-poll, stdout=pipe, backoff=exponential(base=1500ms x2 max=60000ms jitter=0.2) (SIGNED polls — no key on the wire)"}
+{"t":"2026-09-26T12:54:31.713Z","agent":"fo","event":"poll","ok":true}
+{"t":"2026-09-26T13:02:58.402Z","agent":"fo","event":"routed","id":"i-1790427777-1","swapper":"0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c","tokenIn":"USDC","tokenOut":"WETH","amountIn":"500000","minOut":"1","route":"harp","amountOut":"185924989671030","harp":"185924989671030","v4":"160819112822369"}

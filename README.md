@@ -28,8 +28,9 @@ New, in this repo: Castle, the ENSv2 parent `feefifofum.eth` and its subregistry
 | WETH | `0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14` | `contracts/deployments/sepolia.json` |
 | Circle USDC | `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238` | `contracts/deployments/sepolia.json` |
 | CCA factory | `0x000000001F26a0044BaA66024e7b6599c61963F8` | `contracts/deployments/sepolia.json` |
-
-Castle itself is not in that deployment file yet.
+| Castle | `0x6bF53228d8c5c3b0192B2028bD52fc4E9d1be8Ec` | `contracts/deployments/sepolia.json` (block 11784308) |
+| FeeFiFoFumExtruction | `0xfA0455bca2B521664021A883aA78fBEAa470f271` | deploy tx `0x14ac049eeac5f13512c99c67942a4eb88e56f04910b3bc0a5e760fe3ab03629f` |
+| JackHook | `0x50919ddaaf8294865652D53b45f210019AB2fcAd` | deploy tx `0x94cdb321f6279e83bd718dd20ac613a525d45ebf15ac0714b90c2356827dc539` |
 
 ## The loop
 

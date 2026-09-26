@@ -7,7 +7,9 @@
   "main": "src/server.mjs",
   "scripts": {
     "start": "node src/server.mjs",
-    "check": "node --check src/*.mjs"
+    "check": "node --check src/*.mjs",
+    "test": "node --test test/*.test.mjs",
+    "quote-fork": "node test/quote-fork.mjs"
   },
   "engines": { "node": ">=20" },
   "dependencies": {

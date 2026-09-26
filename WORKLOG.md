@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 15:06 JST
+- **Last regenerated:** 2026-09-26 15:07 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -26,7 +26,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
 | Foundry scaffold, then deploy the SwapVM router (release/1.0.2) on Sepolia <br>`p1-router` `902378f6` | mister-anderson | mister-anderson | Sat 16:00 | in_progress | 3301492, 6463060 | router 0xeDB6…70f9 live (tx 0xb2b319a2…); verification pending the Etherscan key |
-| **BLOCKER** Castle.sol: the giant's castle (desk treasury, Aqua maker and ENSv2 lease) <br>`p1-castle` `c3a2dfdf` | mister-anderson | mister-anderson | Sat 19:00 | in_progress | 3fa3aa6, 81ffd04, 789f550, 2b6dea6, 38f06f1, 4757283 | 102 unit tests and 8 live-registry fork tests pass; 4/4 mutants killed (per mister-anderson; agy validating) |
+| **BLOCKER** Castle.sol: the giant's castle (desk treasury, Aqua maker and ENSv2 lease) <br>`p1-castle` `c3a2dfdf` | mister-anderson | mister-anderson | Sat 19:00 | review | 7b86321; Castle 0x6bF5…E8Ec, Sourcify exact_match | 149 tests (138 unit + 11 fork), 11/11 mutants killed; crew-only claim, multicall allowlist, pinned router/program; root roles read true on-chain; handoff-advisor + agy validating |
 | **BLOCKER** FeeFiFoFumExtruction.sol: the giant smells a stale shift (the ENS-lease fence in the SwapVM program) <br>`p1-extruction` `9019b3b9` | mister-anderson | mister-anderson | Sat 19:00 | review | 7b86321; 0xfA04…f271 | 9 fence tests, 10k-run fuzz of the decision table, quote==swap live/wind-down/fenced; validating |
 | Validate Castle and FeeFiFoFumExtruction on a Sepolia fork (validation only, no code) <br>`p1-forktests` `f4d2ae68` | agy | agy | Sat 19:45 | done | validated at 2ca27aa (agy); reproduced at 90d4001 by SirKit and handoff-advisor | forge test 144/0; CastleFork 10/10 on a Sepolia fork; paid (receipt 83ba78b0) |
 | **BLOCKER** Deploy and verify Castle and FeeFiFoFumExtruction on Sepolia, then ship the first live strategy <br>`p1-deploy` `1fed769f` | mister-anderson | mister-anderson | Sat 20:30 | todo |  |  |
@@ -90,10 +90,10 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | Uniswap CCA factory (pre-existing) | `0x000000001F26a0044BaA66024e7b6599c61963F8` | n/a | Uniswap |  |
 | ENSv2 UniversalResolverV2 (pre-existing) | `0x5d25c1d6acbb71b7a28aa7899618a3412a8303e3` | n/a | ENS |  |
 | Circle USDC (pre-existing) | `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238` | n/a | Circle |  |
-| SwapVM router release/1.0.2 | [`0xeDB6933949dB941D495b23604818F9AbF55e70f9`](https://sepolia.etherscan.io/address/0xeDB6933949dB941D495b23604818F9AbF55e70f9) (AQUA() = official Aqua) | pending (Etherscan key) | mister-anderson | [0xb2b319a2…](https://sepolia.etherscan.io/tx/0xb2b319a23732ade788971450ed30498b0dbf6cbb54d86c9ad343e7b42a32cd4d) |
-| Castle.sol | [`0x6bF53228d8c5c3b0192B2028bD52fc4E9d1be8Ec`](https://sepolia.etherscan.io/address/0x6bF53228d8c5c3b0192B2028bD52fc4E9d1be8Ec) (block 11784308; crew fee+fi, auctioneer fum, dissolveGrace 1800s; funded 0.004 WETH + 8 USDC) | 7b86321; Etherscan verify pending the API key | mister-anderson | sepolia.json (2e7b535); root roles: registry REGISTRAR|RENEW [0xb0fc68f0…](https://sepolia.etherscan.io/tx/0xb0fc68f070c60273119362116f5742046ff05f8fcddf7bd5c53b0910a4320a71), resolver SET_DATA|LINK [0x611b19ce…](https://sepolia.etherscan.io/tx/0x611b19cea6ab2a676712d6a2f955ec122fcbfc4cc10212e8efecde9f5d4a41fd) |
-| FeeFiFoFumExtruction.sol | [`0xfA0455bca2B521664021A883aA78fBEAa470f271`](https://sepolia.etherscan.io/address/0xfA0455bca2B521664021A883aA78fBEAa470f271) | 7b86321, tx [0x14ac049e…](https://sepolia.etherscan.io/tx/0x14ac049eeac5f13512c99c67942a4eb88e56f04910b3bc0a5e760fe3ab03629f); Etherscan verify pending | mister-anderson | p1-fence submitted; agy + handoff-advisor validating |
-| JackHook.sol | [`0x50919ddaaf8294865652D53b45f210019AB2fcAd`](https://sepolia.etherscan.io/address/0x50919ddaaf8294865652D53b45f210019AB2fcAd) | 7b86321, tx [0x94cdb321…](https://sepolia.etherscan.io/tx/0x94cdb321f6279e83bd718dd20ac613a525d45ebf15ac0714b90c2356827dc539); Etherscan verify pending | mister-anderson | p4-crewhook submitted; agy + handoff-advisor validating |
+| SwapVM router release/1.0.2 | [`0xeDB6933949dB941D495b23604818F9AbF55e70f9`](https://sepolia.etherscan.io/address/0xeDB6933949dB941D495b23604818F9AbF55e70f9) (AQUA() = official Aqua) | [Sourcify exact_match](https://repo.sourcify.dev/11155111/0xeDB6933949dB941D495b23604818F9AbF55e70f9); Etherscan pending the API key | mister-anderson | [0xb2b319a2…](https://sepolia.etherscan.io/tx/0xb2b319a23732ade788971450ed30498b0dbf6cbb54d86c9ad343e7b42a32cd4d) |
+| Castle.sol | [`0x6bF53228d8c5c3b0192B2028bD52fc4E9d1be8Ec`](https://sepolia.etherscan.io/address/0x6bF53228d8c5c3b0192B2028bD52fc4E9d1be8Ec) (block 11784308; crew fee+fi, auctioneer fum, dissolveGrace 1800s; funded 0.004 WETH + 8 USDC) | 7b86321; [Sourcify exact_match](https://repo.sourcify.dev/11155111/0x6bF53228d8c5c3b0192B2028bD52fc4E9d1be8Ec); Etherscan pending the API key | mister-anderson | sepolia.json (2e7b535); root roles: registry REGISTRAR|RENEW [0xb0fc68f0…](https://sepolia.etherscan.io/tx/0xb0fc68f070c60273119362116f5742046ff05f8fcddf7bd5c53b0910a4320a71), resolver SET_DATA|LINK [0x611b19ce…](https://sepolia.etherscan.io/tx/0x611b19cea6ab2a676712d6a2f955ec122fcbfc4cc10212e8efecde9f5d4a41fd) |
+| FeeFiFoFumExtruction.sol | [`0xfA0455bca2B521664021A883aA78fBEAa470f271`](https://sepolia.etherscan.io/address/0xfA0455bca2B521664021A883aA78fBEAa470f271) | 7b86321, tx [0x14ac049e…](https://sepolia.etherscan.io/tx/0x14ac049eeac5f13512c99c67942a4eb88e56f04910b3bc0a5e760fe3ab03629f); [Sourcify exact_match](https://repo.sourcify.dev/11155111/0xfA0455bca2B521664021A883aA78fBEAa470f271); Etherscan pending the API key | mister-anderson | p1-fence submitted; agy + handoff-advisor validating |
+| JackHook.sol | [`0x50919ddaaf8294865652D53b45f210019AB2fcAd`](https://sepolia.etherscan.io/address/0x50919ddaaf8294865652D53b45f210019AB2fcAd) | 7b86321, tx [0x94cdb321…](https://sepolia.etherscan.io/tx/0x94cdb321f6279e83bd718dd20ac613a525d45ebf15ac0714b90c2356827dc539); [Sourcify exact_match](https://repo.sourcify.dev/11155111/0x50919ddaaf8294865652D53b45f210019AB2fcAd); Etherscan pending the API key | mister-anderson | p4-crewhook submitted; agy + handoff-advisor validating |
 | ENSv2 agent registry | registry [`0x2F2164507471a1a46506f902aBfdfB9d22e4bE09`](https://sepolia.etherscan.io/address/0x2F2164507471a1a46506f902aBfdfB9d22e4bE09), resolver [`0x9D2251b5162701BC2bD97d61bc8aa3e53446285E`](https://sepolia.etherscan.io/address/0x9D2251b5162701BC2bD97d61bc8aa3e53446285E) (proxies, 77-byte code) | proxy via VerifiableFactory | handoff-claude (castle EOA) | [0x25fb4a2e…](https://sepolia.etherscan.io/tx/0x25fb4a2ee8f0ffc2c3563a27ab08033ba5f7b01144fdf08fd3ab04fd0f0ede6e), [0xb09a8cf6…](https://sepolia.etherscan.io/tx/0xb09a8cf63b937c2e48cb476626e8d5098f2609e952f95d12e0de5c47f49b9a7d) |
 
 ## ENS names
@@ -107,7 +107,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784337.
+Live balances read at block 11784342.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -270,3 +270,5 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 15:14 | agent-smith | From the castle EOA, granted Castle ROOT REGISTRAR|RENEW on the registry and ROOT SET_DATA|LINK on the resolver (tx 0xb0fc68f0…, 0x611b19ce…). castle.feefifofum.eth is not pre-registered. |
 | Sat 15:16 | SirKit | Read it back on-chain: hasRootRoles is true on both; both txs came from 0x67Cc…0C99 with status success. Next: the Chainlink-seeded anchor (mister-anderson), then fee's genesis claim, relink and ship (agent-smith). |
 | Sat 15:18 | handoff-advisor | Co-signed p1-forktests (re-ran 144/0 itself) and p5-mock (built and rendered headless; no innerHTML, eval or storage). Both paid. |
+| Sat 15:22 | mister-anderson | Submitted p1-baton (Castle). He found and closed a third drain: a program or app chosen by the holder. Router and tokens are now pinned, and the fenced program is built on-chain around the ENS anchor. |
+| Sat 15:23 | SirKit | Confirmed on Sourcify: Castle, FeeFiFoFumExtruction, JackHook and the router are all exact_match (creation and runtime). Sent p1-baton to handoff-advisor (security) and agy (live eth_call checks). |

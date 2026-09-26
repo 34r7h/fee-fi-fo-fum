@@ -18,7 +18,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
 | **BLOCKER** OPERATOR: confirm the team is registered in the Continuity track on the ETHGlobal Hacker Dashboard <br>`p0-continuity` `d5c5a9d3` | OPERATOR |  | Sat 15:00 | done |  |  |
-| **BLOCKER** Register feefifofum.eth on ENSv2 (Sepolia) and answer the four lease probes <br>`p0-ens-probes` `b22e3c07` | korg | korg | Sat 15:00 | review | docs/ens-probes.md | fork: register 0xb167…09c2, renew 0x8b83…83a7, re-register 0xa14f…170f (live pending) |
+| **BLOCKER** Register feefifofum.eth on ENSv2 (Sepolia) and answer the four lease probes <br>`p0-ens-probes` `b22e3c07` | korg | korg | Sat 15:00 | review | docs/ens-probes.md | live register [0xc51ab266…](https://sepolia.etherscan.io/tx/0xc51ab2660dd9a0029a201a4acd5330d7e7c2eac063cbfe58bb31039d30338378); fork: 0xb167…, 0x8b83…, 0xa14f… |
 | **BLOCKER** Create the fee, fi, fo, fum handoff agents and fund their Ethereum Sepolia wallets <br>`p0-wallets` `a27aa444` | agent-smith | agent-smith | Sat 15:30 | review | b1e64ff | ETH and USDC funded from the treasury; WETH wraps 0xe66c6461…, 0x92f31b76…, 0x7ac0f9b5… |
 
 ### P1 CONTRACTS: SwapVM router 1.0.2, Castle.sol, FeeFiFoFumExtruction.sol
@@ -99,12 +99,12 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 | Name | Owner | Expiry / epoch | Tx |
 |---|---|---|---|
-| feefifofum.eth |  |  |  |
+| feefifofum.eth | korg EOA 0x48EB…5d3E; subregistry 0x2F21…E09, resolver 0x9D22…285E | expiry 1792818444 | [0xc51ab266…](https://sepolia.etherscan.io/tx/0xc51ab2660dd9a0029a201a4acd5330d7e7c2eac063cbfe58bb31039d30338378) |
 | castle.feefifofum.eth |  |  |  |
 
 ## Agents
 
-Live balances read at block 11784063.
+Live balances read at block 11784064.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -115,7 +115,7 @@ Live balances read at block 11784063.
 | fi | fi (registered on handoff, online, heartbeat every 20s) | [`0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2`](https://sepolia.etherscan.io/address/0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2) |  | 0.004 ETH [0x742d1ba8…](https://sepolia.etherscan.io/tx/0x742d1ba88af97c175cd2ee407a9e128876189576f4d4cacb3b3ba555b4daca1b) / 2 USDC [0xc5df2983…](https://sepolia.etherscan.io/tx/0xc5df298310764455ab7f7292214dac2df1bf04a922d9880aa359b3a48e1899bd) | 0.00295 / 2.00 / 0.00100 |
 | fo | fo (registered on handoff, online, heartbeat every 20s) | [`0x8689a407A2488A5b2f2De05d2C6978a798f93D56`](https://sepolia.etherscan.io/address/0x8689a407A2488A5b2f2De05d2C6978a798f93D56) |  | 0.001 ETH [0x0033036a…](https://sepolia.etherscan.io/tx/0x0033036adf3a82bc53bfb4e08c90592c30679981365985ccf242123fa883744b) | 0.00075 / 0.00 / 0.00020 |
 | fum | fum (registered on handoff, online, heartbeat every 20s) | [`0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2`](https://sepolia.etherscan.io/address/0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2) |  | 0.003 ETH [0xd63f3304…](https://sepolia.etherscan.io/tx/0xd63f33041b7a3ac024ecaba8fb6c73eb0dd95e0b8c372c1ff8d2cc7582a709c6) / 2 USDC [0xad17fe88…](https://sepolia.etherscan.io/tx/0xad17fe88e2310c40cf758e8bd611e382a3226e48d414f5093713bda1a2578115) | 0.00195 / 2.00 / 0.00100 |
-| castle (service) | castle (handoff-claude) | [`0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99`](https://sepolia.etherscan.io/address/0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99) |  | 0.005 ETH [0xaeba391d…](https://sepolia.etherscan.io/tx/0xaeba391d38c81761afbf1dd52db8365162e66e05d28f63d07a58811181746ceb) + [0x76c425e7…](https://sepolia.etherscan.io/tx/0x76c425e74d6123e6115529e22daea9c88d3ecd79af59b6104f2d112acd03c20d) | 0.00343 / 0.00 / 0.00000 |
+| castle (service) | castle (handoff-claude) | [`0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99`](https://sepolia.etherscan.io/address/0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99) |  | 0.005 ETH [0xaeba391d…](https://sepolia.etherscan.io/tx/0xaeba391d38c81761afbf1dd52db8365162e66e05d28f63d07a58811181746ceb) + [0x76c425e7…](https://sepolia.etherscan.io/tx/0x76c425e74d6123e6115529e22daea9c88d3ecd79af59b6104f2d112acd03c20d) | 0.00325 / 0.00 / 0.00000 |
 
 ## Miniapp and live demo
 
@@ -216,3 +216,6 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:12 | SirKit | Ordered agy to validate only. Re-scoped p1-forktests to validation. All Castle test code, including CastleFork.t.sol, goes to mister-anderson; agy's fo code goes to agent-smith. |
 | Sat 14:16 | SirKit | Enforced the operator's role map. The castle service, stream and agent ENS names moved to agent-smith. handoff-claude got two handoff.lol platform fixes: ENSv2 ens_name, and ethereum-sepolia settlement. korg is research only. Remaining crypto tasks assigned to mister-anderson. Board: 33 tasks, 0 owner/assignee mismatches, 0 unassigned agent tasks. |
 | Sat 14:16 | agent-smith | p0-wallets submitted: WETH9 wraps for fee, fi and fum (0xe66c6461…, 0x92f31b76…, 0x7ac0f9b5…). |
+| Sat 14:18 | handoff-advisor | p0-wallets FAIL against 'at least 0.1 ETH each' (the operator funded 0.05 ETH in total). |
+| Sat 14:19 | SirKit | Amended the p0-wallets DoD: funding is the treasury's job, with a measured budget of fee/fi/fum ≥0.03 and fo ≥0.005 ETH. WORKLOG now shows live balances. More ETH requested from the operator. |
+| Sat 14:19 | korg | feefifofum.eth registered live (tx 0xc51ab266…, status 1); subregistry and resolver set to the agent registry. p0-ens-probes submitted. |

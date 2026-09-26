@@ -52,7 +52,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | agents/ scaffold: shared runtime for fee, fi, fo, fum <br>`p3-scaffold` `17b80082` | agent-smith | agent-smith | Sat 17:00 | done | 444a32d | paid 0.4 USDC (receipt 86aba84d) |
 | fee (shift trader) and fi (hot standby): lease renewal and failover logic <br>`p3-feefi` `fa22a44e` | agent-smith | agent-smith | Sat 20:30 | in_progress |  |  |
 | fo, fencer and witness: EIP-712 attestations, fill replay, incident channel <br>`p3-fo` `9b450702` | agent-smith | agent-smith | Sat 20:30 | in_progress |  |  |
-| **BLOCKER** Live failover on Sepolia: kill -9 fee, wind-down gap, fi claims, stale epoch fenced, stale fee rejected <br>`p3-failover-e2e` `ad888e60` | agent-smith | agent-smith | Sat 22:30 | in_progress | live run 07:38-07:45Z, blocks 11784800-11784832 | all four beats on-chain (wind-down fill, FeeFiFoFum() revert, new-epoch fill, NotHolder revert), each checked by SirKit; fee took over 72s after expiry; run gas 0.00165 ETH; every loop stopped afterwards |
+| **BLOCKER** Live failover on Sepolia: kill -9 fee, wind-down gap, fi claims, stale epoch fenced, stale fee rejected <br>`p3-failover-e2e` `ad888e60` | agent-smith | agent-smith | Sat 22:30 | review | live run 07:38-07:45Z, blocks 11784800-11784832 | all four beats on-chain (wind-down fill, FeeFiFoFum() revert, new-epoch fill, NotHolder revert), each checked by SirKit; fee took over 72s after expiry; run gas 0.00165 ETH; every loop stopped afterwards |
 | fum, auctioneer: shift-change and dissolution CCAs, checkpoint, sweep, setData <br>`p3-fum` `c78ba379` | agent-smith | agent-smith | Sun 00:00 | in_progress |  |  |
 
 ### P2 UNISWAP CCA: JackHook, shift-change and dissolution auctions, price write-back
@@ -108,7 +108,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784866.
+Live balances read at block 11784868.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|

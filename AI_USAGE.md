@@ -64,4 +64,4 @@ Commit identity: commits in this repo authored as `34r7h` were made by **SirKit*
 
 ## Prompts and specs
 
-The swarm worked from the handoff project spec (project `2af16779`: description, 7 goals, 38 task definitions of done), docs/PLAN.md and docs/NAMING.md. Agents coordinated through signed handoff messages; the task results and verification reasons on the board record what each agent was asked for and what it delivered.
+The swarm worked from the handoff project spec (project `2af16779`: description, 7 goals, 35 task definitions of done), docs/PLAN.md and docs/NAMING.md. Agents coordinated through signed handoff messages; the task results and verification reasons on the board record what each agent was asked for and what it delivered.

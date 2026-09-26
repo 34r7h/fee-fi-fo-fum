@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 15:32 JST
+- **Last regenerated:** 2026-09-26 15:34 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -67,7 +67,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
 | fee-fi-fo-fum.html against a mock castle stream <br>`p5-mock` `198a1550` | impecc | impecc | Sat 21:00 | done | ccb9ae0 | agy PASS 5/5; SirKit re-check; handoff-advisor built it (73,730 B, 100/100) and rendered it headless through the full sequence; paid (receipt 4255b156) |
-| Wire fee-fi-fo-fum.html to the live castle stream and publish it on handoff.lol <br>`p5-live` `fd20d4c5` | impecc | impecc | Sun 02:00 | done | c928cdc, 458ddf8, 5a8ff2a, 30d6be5, e55cda5 | handoff-advisor PASS from two clean headless Chrome profiles (live and ?chain=1, 0 errors); verified by SirKit, co-sign pending |
+| Wire fee-fi-fo-fum.html to the live castle stream and publish it on handoff.lol <br>`p5-live` `fd20d4c5` | impecc | impecc | Sun 02:00 | done | c928cdc, 458ddf8, 5a8ff2a, 30d6be5, e55cda5 | handoff-advisor PASS from two clean headless Chrome profiles (live and ?chain=1, 0 errors); co-signed, paid (receipt 2fc3b6c0) |
 | Durable hosting for the castle service, so the live demo survives past the event <br>`p5-durable` `7ab03bab` | handoff-claude | handoff-claude | Sun 02:00 | done | service/ (c015774, 5a654bf) | https://handoff.lol/t/castle/ live; paid 0.15 USDC (receipt 80f9d048) |
 
 ### P3 SUBMISSION: write-ups, feedback, deck/video, rehearsal, submit
@@ -76,7 +76,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 |---|---|---|---|---|---|---|
 | README before/after, the three sponsor integration write-ups, and the contract address table <br>`p6-writeups` `3fb7f7a3` | korg | korg | Sun 07:00 | in_progress |  |  |
 | FEEDBACK.md for Uniswap and the developers.uniswap.org/hackathon-feedback form <br>`p6-feedback` `d0587b18` | korg | korg | Sun 07:00 | in_progress |  |  |
-| Pitch deck, plus the script and shot list for a 2-4 min demo video <br>`p6-deck` `005db56f` | impecc | impecc | Sun 07:00 | done | deck artifact 8emvtymY…; docs/video-script.md 99b43c7 | 11 slides with real Sepolia txs; script with 7 tx links; verified by SirKit, co-sign pending |
+| Pitch deck, plus the script and shot list for a 2-4 min demo video <br>`p6-deck` `005db56f` | impecc | impecc | Sun 07:00 | done | deck artifact 8emvtymY…; docs/video-script.md 99b43c7 | 11 slides with real Sepolia txs (all status 1, captions match); script with 7 tx links; co-signed |
 | **BLOCKER** Two full rehearsals of the five-beat demo on Sepolia from a clean browser <br>`p6-rehearsal` `3eb4aa41` | agy | agy | Sun 05:00 | in_progress |  |  |
 | AI_USAGE.md and the final WORKLOG.md pass <br>`p6-ai-usage` `8abb390e` | SirKit | SirKit | Sun 08:00 | in_progress |  |  |
 | **BLOCKER** OPERATOR: record the video, submit on ETHGlobal and select 1inch, Uniswap and ENS <br>`p6-submit` `6aa606a5` | OPERATOR |  | Sun 08:45 | todo |  |  |
@@ -107,7 +107,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784467.
+Live balances read at block 11784476.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -313,3 +313,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 15:37 | SirKit | Read the deck's slides (real txs, live URL, 0 'baton') and the script; verified p6-deck. |
 | Sat 15:40 | handoff-advisor | Validated p5-live from clean browsers: live and chain-only modes both show the real Sepolia tale, with 0 errors. Nit: the service stamps lease.expired when it notices the expiry, not at the expiry itself. |
 | Sat 15:41 | SirKit | Verified p5-live and sent the lease.expired timestamp fix to agent-smith. |
+| Sat 15:44 | handoff-advisor | Co-signed p5-live (paid) and p6-deck, after checking every proof-slide tx against Sepolia. |

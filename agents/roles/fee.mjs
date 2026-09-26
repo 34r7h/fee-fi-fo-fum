@@ -1,8 +1,8 @@
 // fee, the shift trader (p3-feefi).
 //
 // While fee holds a LIVE castle it renews every RENEW_EVERY_S (90s of a 120s lease) with fo's seal, and keeps
-// the book on Aqua: it ships as soon as it holds the castle and re-centres on the ENS anchor every
-// RESHIP_EVERY_S (Castle v2 builds the fenced program itself; lib/book.mjs checks the centre). If fo withholds,
+// the book on Aqua: it ships as soon as it holds the castle and re-centres only when the ENS anchor moves
+// (Castle v2 builds the fenced program itself; lib/book.mjs checks the centre). If fo withholds,
 // fee does not fight: the lease runs out, fills wind down, and fi claims.
 //
 // Demo switches (env):

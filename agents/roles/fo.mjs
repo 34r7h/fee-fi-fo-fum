@@ -6,8 +6,9 @@
 //   either signs Attestation(epoch, expiry, deadline) under the Castle's EIP-712 domain or withholds with a
 //   reason (lib/fo-policy.mjs). Castle.renew reverts without fo's signature, so a withheld seal ends the shift
 //   at expiry.
-// - Smells a hang. Every tick it checks the holder: heartbeat present but nothing shipped for staleQuotesS
-//   means the trader is hung. fo posts an incident to the handoff channel and withholds from then on. A staged
+// - Smells a hang. Every tick it checks the holder: heartbeat present but nothing shipped in the live epoch
+//   staleQuotesS after it began means the trader is hung (a shipped book is re-centred only when the ENS anchor
+//   moves, and the off-market rule catches one the anchor has left). fo posts an incident to the handoff channel and withholds from then on. A staged
 //   hang is a real one: the trader stops shipping (roles/fee.mjs honours FEE_STAGE_HANG), and fo is never told.
 // - Replays fills. Every Aqua fill against the Castle is re-judged against the lease timeline (lib/replay.mjs).
 //   A fill from a stale epoch is a fence breach, and fo reports it.
@@ -64,9 +65,11 @@ async function observe(ctx) {
   }
   const since = await epochStartBlock(ctx, lease);
   const ship = since === null ? null : await lastShipAge(ctx.pc, { castle: lease.castle, epoch: lease.epoch, sinceBlock: since, now: lease.now });
-  let quotesAgeS = ship?.ageS ?? null;
-  if (quotesAgeS === null && REQUIRE_SHIPS && since !== null) {
-    // Nothing shipped yet in this epoch, so the clock runs from the epoch's first block: a shift that never ships is also hung.
+  // The hang clock: how long the live epoch has gone without its first ship, counted from the epoch's first block.
+  // Once a book of this epoch is on Aqua it stays current until the ENS anchor moves (then the off-market rule
+  // applies), so its age alone is not a hang.
+  let quotesAgeS = null;
+  if (!ship && REQUIRE_SHIPS && since !== null) {
     const b = await ctx.pc.getBlock({ blockNumber: since });
     quotesAgeS = lease.now - Number(b.timestamp);
   }
@@ -80,7 +83,7 @@ async function observe(ctx) {
     if (now && then && then !== now) market = { centre: String(ship.anchorQ96), reference: String(now), deviationBps: null, recentring: { anchorMovedWithinBlocks: Number(RECENTRE_GRACE_BLOCKS) } };
     else if (now) market = { centre: String(ship.anchorQ96), reference: String(now), deviationBps: deviationBps(ship.anchorQ96, now) };
   }
-  return { lease, trader: { id: traderId, heartbeatAgeS }, quotes: { ageS: quotesAgeS, lastShipTx: ship?.tx ?? null }, market };
+  return { lease, trader: { id: traderId, heartbeatAgeS }, quotes: { ageS: quotesAgeS, lastShipAgeS: ship?.ageS ?? null, lastShipTx: ship?.tx ?? null }, market };
 }
 
 async function attest(ctx, request) {

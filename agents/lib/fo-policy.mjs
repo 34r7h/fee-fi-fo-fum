@@ -4,7 +4,7 @@
 export const DEFAULT_LIMITS = {
   deadlineS: 30,         // an unused attestation dies this fast
   heartbeatFreshS: 60,   // the trader counts as present if handoff saw its heartbeat this recently
-  staleQuotesS: 300,     // ...but hung if its book hasn't been (re)shipped for this long in the live epoch (> RESHIP_EVERY_S)
+  staleQuotesS: 300,     // ...but hung if the live epoch has gone this long without its first ship
   maxDeviationBps: 300,  // off-market: the live book's anchor sits more than 3% from the ENS anchor now
 };
 

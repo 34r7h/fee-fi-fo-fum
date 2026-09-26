@@ -16,7 +16,6 @@ import { readLease } from './lease.mjs';
 
 export const FO_URL = env('FO_URL', `http://127.0.0.1:${env('FO_PORT', 8711)}`);
 export const RENEW_EVERY_S = Number(env('RENEW_EVERY_S', 90));
-export const RESHIP_EVERY_S = Number(env('RESHIP_EVERY_S', 240));
 // What the holder chooses when shipping (Castle clamps amounts to its balance and bounds fee and band).
 export const SHIP_PARAMS = () => ({
   maxWeth: BigInt(env('SHIP_MAX_WETH', maxUint256)),
@@ -100,9 +99,9 @@ export async function shipBook(ctx, { dock = [] } = {}) {
   return { ...r, book };
 }
 
-// The holder's book upkeep: ship if nothing of this epoch is on Aqua, re-centre every RESHIP_EVERY_S, and re-centre
-// at once when the ENS anchor has moved off the live book (a CCA settled and wrote a new price; fo withholds the
-// seal from an off-market book).
+// The holder's book upkeep: ship when nothing of this epoch is on Aqua, and re-centre only when the ENS anchor has
+// moved off the live book (a CCA settled and wrote a new price; fo withholds the seal from an off-market book).
+// There is no timer: a book centred on the current anchor is current, and every re-ship costs gas.
 export async function shipIfDue(ctx, lease) {
   if (!lease.deployed || !mine(ctx, lease) || lease.state !== 'LIVE') return { due: false };
   const open = await openStrategies(ctx, lease);
@@ -114,10 +113,8 @@ export async function shipIfDue(ctx, lease) {
   if (ours.length) {
     const last = ours.at(-1);
     const anchor = await ctx.pc.readContract({ address: lease.castle, abi: castleAbi(), functionName: 'anchorPriceQ96' });
-    if (anchor === last.anchorQ96) {
-      const b = await ctx.pc.getBlock({ blockNumber: last.block });
-      if (lease.now - Number(b.timestamp) < RESHIP_EVERY_S) return { due: false };
-    } else ctx.log('anchor-moved', { bookAnchorQ96: last.anchorQ96, ensAnchorQ96: anchor, strategy: last.strategyHash });
+    if (anchor === last.anchorQ96) return { due: false };
+    ctx.log('anchor-moved', { bookAnchorQ96: last.anchorQ96, ensAnchorQ96: anchor, strategy: last.strategyHash });
   }
   return { due: true, ...(await shipBook(ctx, { dock: open })) };
 }

@@ -47,8 +47,9 @@ checks the deployed castle read-only (roles, crew, anchor, book, gas) and exits 
 `SHIP_RANGE_BPS`), read back from Aqua's Shipped event (band centre against the ENS anchor, fence epoch).
 
 Demo switches for fee: `FEE_STAGE_HANG=1` (heartbeat on, no ships), `FEE_STALE=1` (one unsimulated renew
-from stale state), `FEE_FORCE_RENEW=1` (forge its own seal after fo withholds). Pacing: `RENEW_EVERY_S` (40),
-`RESHIP_EVERY_S` (240), and fo's `FO_STALE_QUOTES_S` (300), which must stay above the reship period. For fi,
+from stale state), `FEE_FORCE_RENEW=1` (forge its own seal after fo withholds). Pacing: `RENEW_EVERY_S` (90 of
+the 120s lease). There is no re-ship timer: the holder ships once per epoch and re-centres only when the ENS anchor
+moves. fo's `FO_STALE_QUOTES_S` (300) is how long an epoch may go without its first ship before fo calls it a hang. For fi,
 `FI_CLAIM_DELAY_S` holds the wind-down gap open so a taker can fill reduce-only before the claim.
 
 ## Layout

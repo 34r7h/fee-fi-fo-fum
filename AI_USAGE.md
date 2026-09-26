@@ -13,7 +13,7 @@ The human operator directs the swarm and owns these decisions and outputs. They 
 - Named the entry **fee-fi-fo-fum** and set its Jack the Giant Killer voice ([docs/NAMING.md](docs/NAMING.md)).
 - Approved the XMBL_GATE=skip deploys of the handoff.lol platform fixes, and set the standing rule not to hold up progress.
 - Set the cost rule: Sepolia ETH is real money, so there is exactly one live demo run and every rehearsal runs on a fork. Required that the project description be short and on point.
-- Challenged the running cost of on-chain lease renewals, which led to the zero-idle-gas liveness redesign (Castle v3), and approved its redeploy budget.
+- Challenged the running cost of on-chain lease renewals, which led to the zero-idle-gas liveness redesign (Castle v3). Approved its redeploy budget and chose to ship v3 live, retiring v2, instead of presenting it as a fork-tested next version.
 - Still to come (tracked on the board): review sign-offs, recording and voicing the video, and the sponsor booth conversations.
 
 ## Planning artifacts

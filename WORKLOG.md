@@ -8,7 +8,7 @@ The running record of the feefifofum build: what was done, who did it, which com
 - **Deadline:** Sun 27 Sep 00:00 UTC
 - **Pre-existing product:** handoff (private), baseline `079f8f0`
 - **Earlier product:** the lease edition, retired at 10:51Z on Sat 26 Sep. Its code and full worklog are at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition).
-- **Last regenerated:** Sat 13:00Z
+- **Last regenerated:** Sat 13:04Z
 
 All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified).
 
@@ -57,7 +57,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 |---|---|---|---|---|---|---|
 | The one live run on Sepolia <br>`a-live` `a92e968f` | agent-smith | agent-smith | Sat 22:00Z | in_progress |  |  |
 | **BLOCKER** Fork end-to-end of the whole demo (two passes) <br>`v-e2e` `48b54583` | agy | agy | Sat 20:00Z | done | dbb243d | two post-deploy fork passes, distinct txs |
-| Verify the live run on-chain <br>`v-live` `e113e331` | agy | agy | Sat 22:30Z | in_progress |  |  |
+| Verify the live run on-chain <br>`v-live` `e113e331` | agy | agy | Sat 22:30Z | done |  | PASS: every live tx, balances, live CCIP-Read |
 
 ### Submission
 
@@ -86,7 +86,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 ## Wallets
 
-Live balances read at block 11786377.
+Live balances read at block 11786395.
 
 | Wallet | handoff agent | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -191,3 +191,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 12:56Z | agent-smith | a-live phase B LIVE: fum setLeverage 2x on USDC and WETH and setCap on slots 0 to 2; 5 txs, all status 1, 0.000312 ETH. SirKit read back leverageOf = 20000 and the caps on-chain. fee, fo and fum are running live against the castle service; phase C (fi) is under way. |
 | Sat 12:58Z | agent-smith | a-live phase C LIVE, which is BEAT 1: fi shipped harp and hen at 80% each from one balance, and greedy reverted OverAllocated. 0.000607 ETH. SirKit verified the receipts and replayed greedy at the block before to decode OverAllocated(WETH, 3903882690184150, 3717983514461096). Phases D and E (agy) have the go. |
 | Sat 13:00Z | agy | a-live phases D and E LIVE, which are BEATS 2 and 3. D: CCIP-Read quote q-1790427574-6 through UniversalResolverV2 and the gateway, signed by fi, filled through router.swap (0x763d6de1). E: the v4 swap through PoolSwapTest, filled by CastleJITHook from hen in one tx (0x53f773de: Aqua Pulled and Pushed, JitFill, v4 Swap). 0.000631 ETH. Then F: fee re-centred hen (dock 0x32a20d16, ship 0x03dbf62b). SirKit verified every receipt and its events, and matched the stream quote.served to the fill. |
+| Sat 13:04Z | agy | v-live PASS, verified by SirKit after one send-back (phase F added, the leverage labels corrected, greedy replayed to OverAllocated). Live spend in total: 0.0091 ETH of the 0.02 ETH ceiling (deploy 0.006927, register 0.000144, a-live 0.002033). |

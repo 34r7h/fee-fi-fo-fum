@@ -1,6 +1,6 @@
 ---
 name: fee-fi-fo-fum
-description: The giant's castle, live. A stitched storybook monitor for one castle's lease, fence, hoard and auction.
+description: Visual system of the feefifofum miniapps, the dapp (fee-fi-fo-fum 2.0.2) and the live-run replay (fee-fi-fo-fum-tale). Flat colours on a white ground, ink outlines, lettered headings and plain rounded figures.
 colors:
   ground: "#FFFFFF"
   linen: "#F6EFDF"
@@ -18,19 +18,14 @@ colors:
   skin: "#EDC49B"
   beard: "#7A4B2A"
 typography:
-  display:
+  wordmark:
     fontFamily: "Almendra Bold (inline SVG outlines via letters(), no @font-face)"
-    fontSize: "clamp(40px, 8.5cqw, 96px)"
+    fontSize: "44px"
     fontWeight: 700
     lineHeight: 1
   headline:
     fontFamily: "Almendra Bold (inline SVG outlines via letters(), no @font-face)"
     fontSize: "26px"
-    fontWeight: 700
-    lineHeight: 1
-  title:
-    fontFamily: "Almendra Bold (inline SVG outlines via letters(), no @font-face)"
-    fontSize: "17px"
     fontWeight: 700
     lineHeight: 1
   figure:
@@ -39,20 +34,31 @@ typography:
     fontWeight: 800
     lineHeight: 1.45
     fontFeature: '"tnum", "lnum"'
+  deal:
+    fontFamily: 'ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+    fontSize: "21px"
+    fontWeight: 800
+    lineHeight: 1.45
+    fontFeature: '"tnum", "lnum"'
   body:
     fontFamily: 'ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
     fontSize: "15px"
     fontWeight: 400
     lineHeight: 1.45
+  lede:
+    fontFamily: 'ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+    fontSize: "16px"
+    fontWeight: 400
+    lineHeight: 1.45
   control:
     fontFamily: 'ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
-    fontSize: "14px"
-    fontWeight: 700
+    fontSize: "14.5px"
+    fontWeight: 800
     lineHeight: 1.45
   control-small:
     fontFamily: 'ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
     fontSize: "13px"
-    fontWeight: 700
+    fontWeight: 800
     lineHeight: 1.45
   note:
     fontFamily: 'ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
@@ -69,103 +75,88 @@ typography:
     fontSize: "12.5px"
     fontWeight: 800
     letterSpacing: "0.07em"
-  caption:
-    fontFamily: 'ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
-    fontSize: "11.5px"
-    fontWeight: 400
 rounded:
   pill: "999px"
+  card: "18px"
   panel: "16px"
+  input: "12px"
+  meter: "9px"
   focus: "8px"
-  swatch: "5px"
-  bar: "3px"
   coin: "50%"
 spacing:
   page-top: "18px"
   page-x: "22px"
   page-bottom: "28px"
   band: "22px"
-  register-row: "26px"
-  register-column: "30px"
-  stack: "10px"
-  inline: "6px"
+  column-gap: "34px"
+  card-gap: "26px"
+  stack: "9px"
   row: "7px"
   cell: "8px"
 components:
-  tabs:
-    backgroundColor: "{colors.ground}"
-    rounded: "{rounded.pill}"
-    padding: "3px"
-  tab:
-    textColor: "{colors.ink2}"
-    typography: "{typography.control}"
-    rounded: "{rounded.pill}"
-    padding: "6px 14px"
-  tab-hover:
-    backgroundColor: "{colors.linen}"
-    textColor: "{colors.ink}"
-    typography: "{typography.control}"
-    rounded: "{rounded.pill}"
-    padding: "6px 14px"
-  tab-selected:
+  button:
     backgroundColor: "{colors.ink}"
     textColor: "{colors.ground}"
     typography: "{typography.control}"
     rounded: "{rounded.pill}"
-    padding: "6px 14px"
-  button-pill:
+    padding: "8px 18px"
+  button-primary:
+    backgroundColor: "{colors.gold}"
+    textColor: "{colors.ink}"
+    typography: "{typography.control}"
+    rounded: "{rounded.pill}"
+    padding: "8px 18px"
+  button-primary-hover:
+    backgroundColor: "{colors.goldhi}"
+    textColor: "{colors.ink}"
+    typography: "{typography.control}"
+    rounded: "{rounded.pill}"
+    padding: "8px 18px"
+  button-secondary:
     backgroundColor: "{colors.ground}"
     textColor: "{colors.ink}"
     typography: "{typography.control-small}"
     rounded: "{rounded.pill}"
-    padding: "5px 13px"
-  button-pill-hover:
+    padding: "4px 12px"
+  button-secondary-hover:
     backgroundColor: "{colors.linen}"
     textColor: "{colors.ink}"
     typography: "{typography.control-small}"
     rounded: "{rounded.pill}"
-    padding: "5px 13px"
-  button-pill-current:
-    backgroundColor: "{colors.ink}"
-    textColor: "{colors.ground}"
-    typography: "{typography.control-small}"
-    rounded: "{rounded.pill}"
-    padding: "4px 11px"
-  fence-state:
-    textColor: "{colors.ink2}"
-    typography: "{typography.note}"
-    rounded: "{rounded.panel}"
-    padding: "9px 12px 10px"
-  fence-state-on:
+    padding: "4px 12px"
+  amount-input:
+    backgroundColor: "{colors.ground}"
+    textColor: "{colors.ink}"
+    typography: "{typography.deal}"
+    rounded: "{rounded.input}"
+    padding: "6px 10px"
+  tradebar:
     backgroundColor: "{colors.linen}"
-    textColor: "{colors.ink2}"
-    typography: "{typography.note}"
-    rounded: "{rounded.panel}"
-    padding: "9px 12px 10px"
-  hoard-value:
+    textColor: "{colors.ink}"
+    typography: "{typography.body}"
+    rounded: "{rounded.card}"
+    padding: "14px 16px"
+  strategy-card:
+    backgroundColor: "{colors.linen}"
+    textColor: "{colors.ink}"
+    typography: "{typography.body}"
+    rounded: "{rounded.card}"
+    padding: "14px 16px"
+  balance-row:
     textColor: "{colors.ink}"
     typography: "{typography.figure}"
     padding: "7px 0"
-  scene:
-    backgroundColor: "{colors.ground}"
-    textColor: "{colors.ink2}"
-    typography: "{typography.small}"
-    padding: "12px 18px 10px"
-    height: "234px"
-  card-face:
-    backgroundColor: "{colors.ground}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body}"
-    padding: "10px 12px"
-  lease-bar:
-    backgroundColor: "{colors.thread}"
-    rounded: "{rounded.bar}"
-    height: "6px"
-  lease-bar-fill:
+  meter-track:
+    backgroundColor: "{colors.linen}"
+    rounded: "{rounded.meter}"
+    height: "16px"
+  meter-rfq:
     backgroundColor: "{colors.gold}"
-    rounded: "{rounded.bar}"
-    height: "6px"
-  mock-bar:
+    height: "16px"
+  meter-hook:
+    backgroundColor: "{colors.woad}"
+    height: "16px"
+  test-tokens-box:
     backgroundColor: "{colors.ground}"
     textColor: "{colors.ink2}"
     typography: "{typography.note}"
@@ -177,210 +168,130 @@ components:
 
 ## Overview
 
-**Creative North Star: "The Castle Tapestry"**
+The visual style is called Castle Tapestry. Both miniapps draw on a white ground with linen panels, and every shape has an indigo-black ink outline with a flat fill. There are no gradients, no drop shadows and no dark mode. Headings are set in Almendra Bold, which ships as inline SVG glyph outlines, and every figure is set in a rounded system sans with tabular lining numerals.
 
-The page is one embroidered cloth: a Bayeux-style frieze with couched gold. Everything is drawn. The castle, the giant, the beanstalk and the Jacks are smooth, rounded figures outlined in indigo-black thread. They sit on a white ground and linen panels, filled with flat wool colours. There are no gradients, no drop shadows and no dark mode.
+The dapp (`fee-fi-fo-fum`, version 2.0.2) is a trading page. Its header holds the wordmark fee·fi·fo·fum, a one-line description of the product, the network and wallet state, and a link to the replay. A paragraph under the header explains what the page does. The page then has four sections in order: YOUR WALLET (the connected wallet's balances and the test-token faucets), THE VAULT (the vault balance, the reference price, the committed allocations against fum's leverage limit, and the live strategies), SWAP (the amount input, the router agent fo's comparison of the two quotes, and one card for each strategy), and YOUR TRADES (a table of the wallet's trades with the vault). The replay (`fee-fi-fo-fum-tale`) uses the same tokens, lettering and drawings to show the vault's event stream and to replay the live run of 2026-09-26.
 
-The tale leads, and the money is exact. Four big lettered syllables, FEE FI FO FUM, head the page, one per agent. The lease holder's syllable is lit gold. Three registers follow: the shifts (a 24-hour roundel with the lease thread at its centre), the fence (the giant and three stitched states) and the hoard (a castle spilling coins over a ledger). Then come the beanstalk auction, the tapestry of scenes and the ledger of fills. Words of the tale are lettered. Facts are set in a plain rounded sans with tabular numerals, and they are never lettered or stitched.
+The pages avoid the trading-terminal look. They use no KPI tiles, no dark terminal and no neon line charts. State is shown with a coloured word, a filled dot or a bar, and each page sizes itself by its host's box and touches nothing outside it.
 
-The system refuses the trading-dashboard look: no KPI tiles, no status pills, no dark terminal and no neon line chart. State is a stitch and a coloured word. Gold means the holder or the hoard. The page is a guest in someone else's box, so it sizes itself by that box and touches nothing outside it.
+Key characteristics:
+- The ground is white, panels are linen, outlines are ink, and fills are flat.
+- Headings are Almendra Bold, shipped as inline SVG glyph outlines.
+- Every figure uses the rounded sans with tabular lining numerals, and every amount carries its unit.
+- Depth comes from an ink outline around a linen fill. The only box-shadow marks the best quote.
+- Each miniapp is one file, embedded in a shadow root and sized by its own width.
 
-**Key Characteristics:**
-- White ground, linen panels, indigo-black outlines, flat wool fills.
-- Display lettering is Almendra Bold, shipped as inline SVG glyph outlines.
-- Figures use a rounded system sans with tabular lining numerals, and every amount carries its unit.
-- Three state stitches: satin for LIVE, running stitch for WIND-DOWN, cross-stitch for FENCED.
-- Depth is outline and fill. There are no drop shadows.
-- One ease for all motion. The fence trip is the one loud moment.
-- One file, embedded in a shadow root, laid out by its own width and height.
+## Writing
+
+All text follows the operator's writing rule of 2026-09-26 14:35Z, which PRODUCT.md states in full. Text on the pages is plain technical prose in complete sentences. It names the vault, the RFQ strategy, the v4 pool and its hook, the signer fi and the router agent fo, and it gives numbers, addresses and transaction hashes in the order things happen. The identifiers harp and hen appear next to their plain names, for example "RFQ strategy (harp)" and "v4 pool (hen)". Headings are short nouns (YOUR WALLET, THE VAULT, SWAP, HARP, HEN, YOUR TRADES), and buttons are verbs that say what the transaction does ("Connect a wallet", "Fill this quote", "Swap through the v4 pool", "Get a new quote", "Wrap"). Error text says what failed and what to do next, for example "The quote expired. RFQ quotes are valid for 30 s; get a new quote."
 
 ## Colors
 
-Dyed wool on linen: one indigo-black thread, three state wools, couched gold, and two flesh tones for the figures.
+The palette is one ink colour, three signal colours, a gold group for the RFQ strategy and the wallet's token balances, neutrals for the ground and panels, and two tones used only inside the drawings.
 
 ### Primary
-- **Couched Gold** (`--gold`, #C8961E): the lease holder and the hoard. It fills the holder's syllable in the chant, the holder's letters in the roundel, the lease thread, the card-face lease bar, the coins, the castle's flag, the 3.5px underline under the two hoard amounts, the current clearing-price knot on the beanstalk, and live fill dots on the replay timeline. At 2.68:1 on white it is never text.
-- **Gold Highlight** (`--goldhi`, #E9BC45): the heap of coins in the castle gate.
-- **Gold Ink** (`--goldink`, #83600F): gold's text form, 5.76:1 on white. It sets the "holds the castle" line and the titles of gold-toned scenes (a claim, a fill, an auction).
+- Gold (`--gold`, #C8961E) marks the vault's and the wallet's token balances and the RFQ strategy. It fills the primary buttons, the RFQ strategy's share of each allocation bar, the coin dots beside token rows, the 3.5px underline under balance figures, and the quote's validity bar. At 2.68:1 on white it is never used for text.
+- Gold highlight (`--goldhi`, #E9BC45) is the hover fill of primary buttons and the pulsing dot of a transaction step that is waiting for a signature or being mined.
+- Gold ink (`--goldink`, #83600F) is gold's text form at 5.76:1 on white. It sets the BEST QUOTE chip.
 
 ### Secondary
-- **Madder** (`--madder`, #B0412A): FENCED, refusal and warning. It colours cross-stitches, the FEE-FI-FO-FUM! shout, the giant's roaring mouth, the auction floor line, struck-through rejected bidders, the "asleep" line, and the MOCK source label.
-- **Woad** (`--woad`, #2F4A7A): WIND-DOWN. It colours the running stitch, the dashed lease track, bid flags on the beanstalk, links, the focus ring and the chain-replay source label.
-- **Sage** (`--sage`, #4C7743): LIVE. It colours the satin stitch, the live source label, held-lease bars on the replay timeline, and the beanstalk's stem and leaves.
+- Woad (`--woad`, #2F4A7A) marks the hook strategy, links and focus. It fills the hook strategy's share of each allocation bar and its dot in the strategy list, and it colours links, the ENS name, fo's dashed comparison box and the 2.5px focus outline.
+- Sage (`--sage`, #4C7743) marks success. It colours "Sepolia" when the wallet is on the right network, a completed transaction step, and the "Filled." and "Swapped." lines.
+- Madder (`--madder`, #B0412A) marks errors. It colours error text, a wrong-network label and a failed transaction step.
 
-### Tertiary
-- **Skin** (`--skin`, #EDC49B): faces of the giant and the Jacks. Figures only.
-- **Beard** (`--beard`, #7A4B2A): the giant's hair and beard, the castle door, the broom. Figures only.
+### Drawing tones
+- Skin (#EDC49B) and beard (#7A4B2A) appear only inside the line drawings.
 
 ### Neutral
-- **Ground** (`--ground`, #FFFFFF): the page. `html`, `body` and the root are white.
-- **Linen** (`--linen`, #F6EFDF): panels and fills. The lit fence card, the roundel face, castle walls, scrolls, and the hover fill on every control.
-- **Thread** (`--thread`, #E6DAC0): quiet structure. The 1.4px ledger rules, the roundel's inner ring and idle shift arcs, the lease-thread track, the beanstalk's woven grid, the asleep syllable's fill, the card-face bar track and the mock-bar border.
-- **Band Rule** (#D9C9A6): the couched line in the embroidered band and the ground line under every vignette. It is a literal in the build, not a custom property.
-- **Ink** (`--ink`, #1F2433): text, every outline, 1.6px structural rules and the selected tab. 15.46:1 on white.
-- **Ink 2** (`--ink2`, #474C5A): secondary text. Glosses, roles, ledger keys, state copy.
-- **Ink 3** (`--ink3`, #6A6E79): muted text. Table heads, hour ticks, the lapsed holder's letters, the asleep outline, the MOCK tag on a tx.
+- Ground (`--ground`, #FFFFFF) is the page background of `html`, `body` and the root.
+- Linen (`--linen`, #F6EFDF) fills the trade bar, the strategy cards, meter tracks and the hover state of secondary buttons.
+- Thread (`--thread`, #E6DAC0) draws quiet structure: 1.4px row rules, the test-token box border, and the quote validity track.
+- Band rule (#D9C9A6) is the horizontal line of the section divider and the ground line under each drawing. It is a literal in the build, not a custom property.
+- Ink (`--ink`, #1F2433) is text, every outline and every 1.6px structural border, at 15.46:1 on white.
+- Ink 2 (`--ink2`, #474C5A) is secondary text: notes, row keys and units.
+- Ink 3 (`--ink3`, #6A6E79) is muted text: table heads, sub-lines, the footer and empty states.
 
-The direction contract named madder #B5452B, sage #5E7F4F and a weld yellow. The build shipped a darker madder and sage (above) and no weld.
-
-Drift: the build also lights the roundel's active shift arc and text selection in goldhi. Neither is the holder or the hoard, so both break the Couched Gold Rule. They are recorded here as drift, not as roles.
-
-### Named Rules
-**The Couched Gold Rule.** Gold marks only the lease holder and the hoard: who holds the castle, and the gold the castle holds or trades. Nothing else is gold.
-
-**The Gold Ink Rule.** Gold is never text. Gold-family text is goldink. Gold lettering always carries an ink outline painted under the fill.
-
-**The State Wool Rule.** Each fence state owns one wool: sage is LIVE, woad is WIND-DOWN, madder is FENCED. A state wool always travels with its stitch or its word.
-
-**The Mirrored Literal Rule.** The SVG art (figures, vignettes, roundel, beanstalk, timeline) writes token hexes as literals in script. A change to a token on `:root,:host` must change those literals too.
+### Colour rules
+Gold is used only for token balances, the RFQ strategy and the primary action, and woad only for the hook strategy, links and focus, so the two strategies are always told apart by colour as well as by name. Gold is never text; gold-family text uses goldink. The drawings write token hex values as literals in script (the `VC` table), so a change to a token on `:root,:host` must change those literals too.
 
 ## Typography
 
-**Display Font:** Almendra Bold by Ana Sanfelippo (SIL OFL 1.1), shipped as glyph outlines drawn by `letters()`
-**Body Font:** ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif (`--sans`)
-**Label/Mono Font:** the same sans, with `font-variant-numeric: tabular-nums lining-nums` on every figure
-
-**Character:** A calligraphic storybook face for the words of the tale. A soft rounded sans for the facts, so the money reads plainly.
+The display font is Almendra Bold by Ana Sanfelippo (SIL OFL 1.1), shipped as glyph outlines drawn by `letters()`. The body font is `ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`, and every figure adds `font-variant-numeric: tabular-nums lining-nums`.
 
 ### Hierarchy
-- **Display** (Almendra Bold, clamp(40px, 8.5cqw, 96px), line-height 1): the four chant syllables only.
-- **Headline** (Almendra Bold, 26px): register heads: THE SHIFTS, THE FENCE, THE HOARD, THE BEANSTALK, THE TAPESTRY, THE FILLS, THE REPLAY. The lowercase wordmark fee·fi·fo·fum is 44px (34px compact, 24px on the card face).
-- **Title** (Almendra Bold, 17px): fence state names and tapestry scene titles. The FEE-FI-FO-FUM! shout is 30px.
-- **Figure** (sans 800, 20px, tabular): hoard amounts. The clearing price is 19px. Bidder names are 16px/800.
-- **Body** (sans 400, 15px/1.45): the base. The tagline is 15px italic in ink2. Tables, ledger keys and tabs are 14px.
-- **Note** (sans 400, 13.5px): roles, state copy, notes (max 62ch), the ENS name and the mock bar.
-- **Small** (sans 400, 12.5px/1.4): scene glosses, ledger sub-lines, the roundel countdown, the footer.
-- **Label** (sans 800, 12.5px, 0.07em, uppercase): the source label only. Table heads are 12px/700, 0.05em, uppercase, ink3. The MOCK tag is 11px/700, 0.04em, uppercase, ink3.
-- **Caption** (sans 400, 11.5px): beanstalk and timeline axis text. Roundel hour marks are 10.5px.
+- The wordmark fee·fi·fo·fum is lettered at 44px (34px in the compact layout).
+- Section headings and card headings are lettered at 26px (21px compact).
+- Balance figures are 20px/800 and quote figures are 21px/800, with the unit in 13px/700 ink2.
+- The body is 15px/1.45 and the lede paragraph under the header is 16px in ink2.
+- Buttons are 14.5px/800, and secondary buttons are 13px/800.
+- Notes, row keys and transaction steps are 13.5px, and sub-lines and the footer are 12.5px.
+- Labels (the network state, the ENS name's detail line, table heads) are uppercase sans at 12 to 12.5px with 0.05 to 0.07em tracking.
 
-### Named Rules
-**The Lettered Word Rule.** Lettering is for words of the tale: the chant, register heads, state names, scene titles, the shout and the wordmark. The glyph set is closed: A to Z, lowercase f e i o m u, the marks · - ! ’ and the space. Any other character draws as a blank. So lettered strings are capitals (the wordmark is the one lowercase string) and never hold digits.
-
-**The Plain Figures Rule.** Numbers are never lettered or stitched. Every figure is the sans with tabular lining numerals, so columns align and ticking values stay still.
-
-**The Outline Not Font Rule.** Lettering ships as glyph outlines in script (em 200, cap height 133). `letters(str, true)` crops each word to the cap height, plus 12 units above and below. Nothing loads a font.
+### Lettering rules
+Lettering is used only for the wordmark and headings. The glyph set is closed: capitals A to Y without Q and X, the lowercase letters e, f, i, m, o and u, the marks `·`, `-`, `!` and `’`, and the space. Any other character draws as a blank, so lettered strings are capitals (the wordmark is the one lowercase string), never contain Q, X, Z or digits, and are checked by `miniapp/build.mjs` before minifying. Numbers are never lettered. `letters(str, true)` crops each heading to the cap height plus 12 units above and below, and nothing loads a web font.
 
 ## Layout
 
-The root sizes itself by its own box, never the viewport. It is an inline-size container, and a ResizeObserver sets one of four layouts. A box is "short" when it is under 420px tall.
+The root sizes itself by its own box, never the viewport. A ResizeObserver sets one of two layouts on the root's `data-size` attribute.
 
-- **watch** (short and under 268px wide): the card face only. Wordmark, holder syllable, state and countdown, lease bar, hoard line. The live source label is hidden here to save room, but the mock label always shows.
-- **mini** (short and under 420px wide): the card face, with the source label, the epoch and the last fill.
-- **compact** (under 620px wide, and not watch or mini): one column. The chant becomes a 2×2 grid. The beanstalk stacks. Ledger tables turn into two-column row cards, optional columns drop, and units show inline. The wordmark drops to 34px. A phone gets this layout, not the card face.
-- **full** (620px and wider): content up to 1320px, centred, padded 18px 22px 28px. The three registers sit in an auto-fit grid (minmax(290px, 1fr), 26px row gap, 30px column gap), three across at 1440px. The beanstalk splits 1.7fr to minmax(240px, 1fr).
+- The full layout applies at 720px and wider. Content is centred at up to 1320px with 18px 22px 28px padding. The wallet and vault sections sit side by side in a 1 : 1.45 grid with a 34px column gap, and the two strategy cards sit side by side with a 26px gap.
+- The compact layout applies under 720px. Every grid becomes one column, headings drop to 21px, the strategy list moves the allocation under the name, and the trades table becomes stacked two-column rows without a header.
 
-The embroidered band separates registers: 14px tall, 22px above and below. The beanstalk chart is redrawn at its display size (640×250 full, 340×230 narrower), so its 11.5px axis type stays 11.5px on a phone.
+A 14px divider separates sections, with 22px above and below. It is a 5px band-rule line with a 1.6px ink tick every 36px. Text wraps (`overflow-wrap: anywhere` on the root), while money figures stay on one line and their row wraps around them.
 
-The tapestry is a one-row frieze between two 1.6px ink rules. Scenes are at least 200px wide and 234px tall, with the newest on the right. The row is clipped to one scene's height. "Unroll the whole tapestry" opens it to full height. The page keeps 40 scenes.
+### Host rules
+The page runs inside the host's shadow root. Tokens live on `:root,:host`, the root holds `contain: layout paint`, and nothing is `position: fixed`. There is no `@font-face`, no JSON script tag, no `innerHTML` and no browser storage. Config is inlined as a JS literal at the `/*@CONFIG*/` slot, and the dapp's browser module is inlined at `/*@DAPPLIB*/`.
 
-There is no spacing scale. Spacing is set per part. The recurring values are 6px inline gaps, 10px stacks, 18px and 22px page rhythm, 7px ledger rows and 8px table cells.
+## Depth and shape
 
-### Named Rules
-**The Short Box Rule.** Width picks the layout. Only a box under 420px tall and under 420px wide gets the card face, so a narrow, tall phone gets the whole app.
+Surfaces are flat. A surface that needs to stand out gets a linen fill and a 1.6px ink border. The one box-shadow in the dapp is a 3px gold ring on the strategy card that fo picks as the best quote, and the coin dots use a 2px inset ink ring as an outline.
 
-**The Guest Rule.** The page runs inside a host's shadow root. Tokens live on `:root,:host`. The root holds `contain: layout paint`. Nothing is `position: fixed`. There is no `@font-face`, no JSON script tag and no `innerHTML`. Config is inlined as a JS literal at the `/*@CONFIG*/` slot.
-
-## Elevation & Depth
-
-Flat. There are no drop shadows, no gradients and no blur. Depth comes from outline and fill, like appliqué on cloth: an ink outline around a linen or wool fill. A lit state card is linen with a 1.6px ink border. The build's only box-shadow is an inset ink ring (2px on the ledger coin, 1.6px on the legend coin) that outlines a coin dot. It is a stroke, not elevation.
-
-### Named Rules
-**The Appliqué Rule.** Things come forward by outline and fill, never by shadow. A surface that needs to stand out gets linen and an ink border.
-
-## Shapes
-
-Round and continuous. Every stroke has round caps and round joins. Figures are smooth curves in outline.
-
-- **Pills** (999px): controls only. The tab set, the unroll button, the mock beat buttons.
-- **Soft panels** (16px): the fence state cards and the mock bar.
-- **Small radii**: 8px on the focus outline, 5px on legend swatches, 3px on the card-face bar. Coins are circles.
-- **Structural rules**: 1.6px ink. The tab ring, the lit card border, the frieze edges, the table-head rule, the chart axis.
-- **Quiet rules**: 1.4px thread for ledger rows and scene dividers; 1.4px ink on pill buttons.
-- **The embroidered band**: a 5px band-rule line with a 1.6px ink tick every 36px.
-
-Stroke weights, by drawing:
-- Line icons: 24-unit box, 1.8 stroke, `currentColor`, no fill.
-- Fence stitches: 34-unit box. Satin is five 3.2 strokes. Running stitch is a 3.4 stroke dashed 4 5. Cross-stitch is two 3.6 strokes.
-- Vignettes: 120×64 box, 1.8 ink stroke, flat fills.
-- The giant: 3. The castle: 2.4. Coins: 1.5 to 2.
-- Gold lettering outline: 5 units (6 in the roundel), painted under the fill.
-
-### Named Rules
-**The One Thread Rule.** Line icons, stitches, vignettes and figures share one stroke system: ink outline, round caps and joins, flat fill. Icons and stitches draw in `currentColor`, so they take their state's wool.
+- Pills (999px) are used for buttons, the direction toggle, the replay link and the BEST QUOTE chip.
+- Cards and the trade bar use an 18px radius, the test-token box and fo's comparison box use 16px, the amount input uses 12px, and meter tracks use 9px.
+- Structural borders are 1.6px ink, and row rules are 1.4px thread. fo's comparison box has a 1.6px dashed woad border.
+- Strokes in the drawings have round caps and joins. The small drawings sit in a 120×64 box at 1.8 ink stroke with flat fills, and they show a castle, a small figure, stacks of coins, a harp, a hen and a bell.
 
 ## Components
 
 ### Buttons
-Tactile, stitched pills.
-- **Shape:** full pill (999px).
-- **Tabs:** a 1.6px ink ring with 3px padding holds "The castle" and "The replay" (6px 14px, 14px/700, ink2). The selected tab is ink with white text. Hover is linen with ink text. These tabs are the page's only action.
-- **Pill buttons:** white, 1.4px ink border, 13px/700. Unroll is 5px 13px. Mock beats are 4px 11px. Hover fills linen. The current mock beat is ink with white text.
-- **Focus:** a 2.5px woad outline, 3px offset, 8px radius, on every focusable element.
-- **Transitions:** background and colour over .2s on the shared ease.
+- Primary buttons are gold pills with ink text, 8px 18px padding and a 1.6px ink border, and they turn goldhi on hover. They carry the one action a section asks for: "Connect a wallet", "Fill this quote", "Swap through the v4 pool".
+- Secondary buttons are white pills with a 1.6px ink border at 4px 12px, filled linen on hover: "Get a new quote", "Wrap".
+- A disabled button drops to 42% opacity and shows a not-allowed cursor. A strategy card's action is disabled while another transaction flow is running or when the wallet balance is below the amount.
+- Every focusable element gets a 2.5px woad outline with a 3px offset and an 8px radius.
+- Transitions run over .2s on `cubic-bezier(.16,1,.3,1)`, and a hover lifts a button by 1px.
 
-### The chant
-- Four syllables, one per agent, spread across the width. Under each: the role (13.5px ink2) and a status line (13.5px/700 with an 18px line icon).
-- **Holder:** gold fill with a 5-unit ink outline. Status in goldink with the key icon: "holds the castle".
-- **Asleep:** thread fill with a 2.5-unit ink3 outline. Status in madder with the zzz icon.
-- **Lapsed holder:** the glass icon and "lease lapsed".
-- Colour and fill change over .4s.
+### Balance rows
+Rows split key and value on a shared baseline, with 7px vertical padding and a 1.4px thread rule between rows. The key is 14px ink2 with a 12.5px ink3 sub-line naming the source. The value is 20px/800 tabular on one line, followed by its unit in 13px/700 ink2. Token rows lead with a 13px gold coin dot and carry a 3.5px gold underline; the ETH row uses a linen dot and no underline.
 
-### Fence states (signature)
-- Three rows: LIVE, WIND-DOWN and FENCED. Each has a 34px stitch, the lettered name at 17px, one line of 13.5px copy, and the books in that state (18px stitch plus a 13px/700 line).
-- **At rest:** no fill, a transparent border, the name in ink3.
-- **Lit:** linen fill, 1.6px ink border, 16px radius, the name in its state wool. The change runs over .35s.
-- **The giant** beside it has three faces: calm for LIVE, one eye open for WIND-DOWN, and eyes wide with a madder mouth for FENCED. They crossfade over .3s.
+### Allocation meters
+Each token has one meter. The heading line gives the committed amount in bold and the limit, for example "7.60 committed of a 13.00 limit (2× the balance, set by fum)". The 16px bar has a linen track and a 1.6px ink border. The RFQ strategy's allocation fills from the left in gold, the hook strategy's follows in woad, and a 2.2px ink tick marks the vault balance. The line under the bar gives the vault balance on the left and the uncommitted amount on the right.
 
-### The fence trip (signature motion)
-When a stale quote is fenced, the root carries `data-shout` for 3.6s. The four syllables lift (translateY(-6px), scale 1.06, .5s), each .08s after the last. FEE-FI-FO-FUM! appears in madder lettering under the fence, fading in over .35s and growing from .9 scale over .5s. The giant wakes and roars. The FENCED card lights.
+### Trade bar and fo's comparison
+The trade bar is a linen panel holding "You pay", the amount input, the input token, a direction toggle (⇄) and the output token. A hint line under it shows the wallet's balance of the input token with a "Use all" link, or says what is wrong with the amount. Under the bar, fo's comparison sits in a dashed woad box with a bell drawing and one sentence, for example "The router agent fo would send this order to the RFQ strategy (harp), which pays 0.000093 WETH, 9.0% more than the v4 pool (hen) at 0.000085 WETH."
 
-### Fate mark
-State in a ledger row: an 18px stitch and the uppercase word, 13px/800, 0.03em, in the state wool. A reverted fill adds a 12px muted line with the revert reason. There is no background and no border.
+### Strategy cards
+There is one card for the RFQ strategy (HARP) and one for the v4 pool (HEN). Each card has a lettered heading, a woad name line (`quote.feefifofum.eth`, or "USDC/WETH Uniswap v4 pool") with an uppercase detail line, and either a drawing or the BEST QUOTE chip. The quote reads "Pay 0.25 USDC, get 0.000093 WETH" with the figures at 21px/800, followed by the effective price in USDC per WETH. The RFQ card adds a 7px validity bar that empties over the quote's 30 s and a line with the ENS text-record key, fi's signer address and the quote id. The v4 card adds the minimum output below which the swap reverts. While a transaction flow runs, the card lists its steps (approve, then fill or swap), each with a dot, a label and its state ("waiting", "sign in your wallet", "being mined", "done" with the tx link, or "failed").
 
-### Hoard ledger
-- Rows split key and value on a shared baseline, with 7px vertical padding and a 1.4px thread rule between rows.
-- **Key:** 14px ink2. The two hoard rows lead with a 13px gold coin dot. A 12.5px ink3 sub-line names the source.
-- **Value:** 20px/800 tabular, on one line. The unit follows in 13px/700 ink2.
-- The two hoard rows (WETH and USDC) carry a 3.5px gold underline.
+### Trades table
+The table has the columns Time, Where, Paid, Got, USDC / WETH and Tx. Heads are 12px/700 uppercase ink3 over a 1.6px ink rule, rows have 8px cells and 1.4px thread rules, and figures are right-aligned. It lists the trades this page sent in the session and the vault service's record of fills where the connected wallet was the taker.
 
-### The roundel
-A 320-unit disc with a linen face and a 2px ink rim. It has 24 hour ticks, longer every six hours, labelled 0h UTC, 6h, 12h and 18h. Shift arcs (30 units, thread) carry the city and its local time. (The build lights the current shift's arc in goldhi. That breaks the Couched Gold Rule and is drift, not a role.) Inside runs the lease thread: a 9-unit gold arc that shortens as the lease runs down, on a thread track. In wind-down the track becomes a 4-unit woad dash (7 7). A clock hand with an ink knot marks UTC now. The holder's syllable sits in the centre, gold when live and ink3 when lapsed, with the countdown and epoch under it. The hand and thread move every frame.
+### Test-token box
+A 16px-radius box with a 1.6px thread border lists where to get Sepolia ETH (Google's and Alchemy's faucets) and test USDC (Circle's faucet), and it has an input and a Wrap button that sends `WETH.deposit()` from the wallet.
 
-### The beanstalk
-The CCA clearing price, drawn as a vine. A woven grid of 1.2-unit thread rules. A 1.6-unit ink axis. A dashed madder floor (6 6). The stem is a 5-unit sage curve through every checkpoint, with a sage leaf at each one. The current price is a gold knot. Each Jack's top price is a small woad flag at the right edge, one size for every Jack. Bids list beside the chart, highest price first. A bidder refused for having no ENS name is struck through in madder.
+## Do and don't
 
-### Tapestry scene
-- **Title:** lettered words at 17px that wrap word by word. The tone sets the colour: ink, goldink, madder or woad.
-- **Vignette:** a small scene, 168×90 on a 120×64 box, standing on a band-rule ground line. There are 19 kinds: begin, renew, expired, claim, relink, fall, wake, fill, wide, fenced, refused, ship, dock, climb, cleared, quill, ruin, bell and sprout.
-- **Gloss:** 12.5px ink2; the first line is 800 ink. A meta line gives time, block and tx.
-- **Motion:** a new scene slides in from 18px right while fading up, over .6s. A lease renewal folds into its epoch's scene as a count and never adds a scene.
+Do:
+- Keep every token on `:root,:host` so it reaches the page inside the host's shadow root.
+- Build every node with `createElement`, `createElementNS` and `textContent`, and replace content with `replaceChildren`.
+- Write every amount and price with its unit, for example 0.25 USDC, 0.000093 WETH and 2,686.27 USDC per WETH. USDC shows 2 decimals and WETH and ETH show 4, and any amount under 0.01 gets more decimals so that it never rounds to zero.
+- Link every transaction and address to Sepolia Etherscan.
+- Show state as a coloured word or dot together with its text.
+- Use `cubic-bezier(.16,1,.3,1)` for every transition, and drop all animation and transitions under `prefers-reduced-motion: reduce`.
 
-### Card face
-The miniapp in a 280×200 card. The 24px wordmark and the source label (which the build drops at watch size; see Layout). The holder's syllable at 30px, gold with an ink outline. The state and countdown in 15px/800, sage for LIVE and woad for WIND-DOWN. The epoch in ink3. A 6px lease bar, gold on thread. The hoard in 13px with bold figures. The last fill.
-
-### Mock bar
-A 16px-radius box with a 1.6px thread border and 13.5px ink2 text. "Mock stream." leads in bold madder, then the six beat buttons and "Start over". In chain replay the same box leads with "Chain replay." and has no buttons.
-
-## Do's and Don'ts
-
-### Do:
-- **Do** keep every token on `:root,:host` so it reaches the page inside the host's shadow root.
-- **Do** build every node with `createElement`, `createElementNS` and `textContent`, and swap content with `replaceChildren`.
-- **Do** write every amount and price with its unit: 2.2500 WETH, 14,905.20 USDC, 2,412.50 USDC / WETH. WETH shows 4 decimals; USDC and prices show 2.
-- **Do** let text wrap. The root sets `overflow-wrap: anywhere`. Money values stay on one line and the row wraps around them.
-- **Do** show state as a stitch plus a word in the state's wool.
-- **Do** label mock data wherever it shows: the source label reads "Mock stream · synthetic" in madder, every mock tx carries a MOCK tag, and a mock tx is never a link.
-- **Do** outline gold lettering in ink, and set gold-family text in goldink.
-- **Do** use `cubic-bezier(.16,1,.3,1)` for every transition, and drop all animation and transition under `prefers-reduced-motion: reduce`.
-- **Do** keep the Castle / Replay tabs as the only action, with unroll and, in mock only, the beat buttons.
-
-### Don't:
-- **Don't** use gold for anything but the lease holder and the hoard.
-- **Don't** print an amount or a price without its unit.
-- **Don't** ellipsize or clamp text: no `text-overflow`, no line clamps, no cut names, amounts or prose. The only shortened strings are hex hashes and addresses (first 6, last 4) where no name is known.
-- **Don't** use status pills, badges or filled capsules for state. Pills are for controls.
-- **Don't** add a kill button or any control that stops an agent.
-- **Don't** use `position: fixed`, `@font-face`, JSON script tags or `innerHTML`.
-- **Don't** use browser storage, cookies, `eval` or ES modules.
-- **Don't** use gradients, drop shadows, dark grounds, KPI tiles or neon line charts.
-- **Don't** letter digits, or any mark outside · - ! ’.
+Don't:
+- Don't use gold for text, or for anything other than token balances, the RFQ strategy and the primary action.
+- Don't print an amount or a price without its unit.
+- Don't ellipsize or clamp text. The only shortened strings are hex hashes and addresses (first 6 and last 4 characters) where no ENS name is known.
+- Don't use `position: fixed`, `@font-face`, JSON script tags, `innerHTML`, browser storage, cookies, `eval` or ES modules.
+- Don't use gradients, dark grounds, KPI tiles or neon line charts.
+- Don't letter digits, Q, X or Z, or any mark outside `·`, `-`, `!` and `’`.

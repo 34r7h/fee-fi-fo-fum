@@ -58,10 +58,11 @@ Integers that can exceed 2^53 (amounts, Q96 prices, token ids) are **decimal str
   "inventory": { "weth": "5000000000000000000", "usdc": "12000000000" },
   "price": { "q96": "…", "usdcPerWeth": "2412.50", "block": 9312000, "tx": "0x…" },
   "auction": null,
+  "leases": [ { "kind": "renew", "epoch": "3", "holder": "0x…", "holderAgent": "fee", "expiry": 1790400120, "t": 1790400000000, "block": 9312345, "tx": "0x…" } ],
   "fills": [ /* the last 50 `fill` events, oldest first */ ] }
 ```
 
-`lease.state` is `LIVE`, `WIND-DOWN` or `FENCED`, derived the same way the extruction derives it (see *Fence rule*). `shifts` is operator config, not chain state. The ring draws it, and the holder shown in the ring always comes from `lease`, never from the shift table.
+`leases` is the renew and claim history reaching back at least to the oldest fill in `fills`; the replay tab needs it to re-derive those fills. `lease.state` is `LIVE`, `WIND-DOWN` or `FENCED`, derived the same way the extruction derives it (see *Fence rule*). `shifts` is operator config, not chain state. The ring draws it, and the holder shown in the ring always comes from `lease`, never from the shift table.
 
 ### Agents and liveness
 
@@ -78,10 +79,12 @@ Integers that can exceed 2^53 (amounts, Q96 prices, token ids) are **decimal str
 | `lease.renewed` | `{ epoch, holder, holderAgent, expiry, attestor: "fo", digest }` | Castle `Renewed` event (requested below) |
 | `lease.expired` | `{ epoch, expiry }`. Emitted once, the first block whose timestamp is past `expiry` with no claim. `block` is that block and `tx` is `null`. | derived: `block.timestamp > Castle.expiry()` |
 | `lease.claimed` | `{ epoch, prevEpoch, holder, holderAgent, expiry, gapSeconds }`. `gapSeconds` = claim block time minus the old expiry: the length of the wind-down window. | Castle `Claimed` event |
+| `lease.rejected` | `{ epoch, holderAgent, call: "renew" \| "ship" \| "multicall", reason }`. A stale holder (for example, fee restarted from old state) was refused on-chain. `tx` is the reverted tx. | service (reverted tx) |
 | `castle.relinked` | `{ node, holderNode, holderName, mcpEndpoint }`. `castle.*` now resolves to this shift. | Castle `Relinked` event, or the resolver's link event |
 | `strategy.shipped` | `{ hash, epoch, shippedBy, center: {q96, usdcPerWeth}, weth, usdc }` | Aqua ship event (maker = Castle) plus Castle `Shipped` |
 | `strategy.docked` | `{ hash, epoch, dockedBy }` | Aqua dock event (maker = Castle) |
 | `shift.changed` | `{ from, to, city, auction }`. `auction` is the shift-change CCA address, or `null`. | service (config plus claim) |
+| `inventory` | `{ weth, usdc }`: Castle's balances after the tx in `tx`. Send it after every fill, sweep and ship. | `balanceOf(castle)` at that block |
 | `castle.dissolved` | `{ caller, auction }`. Anyone called the permissionless `dissolve()`. | Castle `Dissolved` event |
 
 ### Fills (1inch Aqua through our SwapVM router)
@@ -125,18 +128,34 @@ The epoch check comes first. After a claim, an old strategy is fenced whatever t
 
 The page rebuilds the same events from the chain: Castle logs from the Castle deploy block, Aqua pull/push logs filtered by maker = Castle, CCA logs for each auction Castle opened, and the three views `holder()`, `epoch()` and `expiry()` for the current state. It polls the RPC list from config in order. `agent` and `attestation.withheld` events simply don't appear, and the page shows the agents as unknown, not dead.
 
-## Asks for the contracts (mister-anderson, korg)
+## Castle v2 events, as shipped (contracts/out-abi/Castle.json)
 
-Replaying from `eth_getLogs` is far cheaper and more honest than polling views block by block. Please have Castle emit:
+These are the logs the chain-only replay reads. mister-anderson confirmed them on 2026-09-26.
 
 ```solidity
 event Renewed(uint256 indexed epoch, address indexed holder, uint64 expiry, bytes32 attestationDigest);
 event Claimed(uint256 indexed epoch, address indexed holder, uint64 expiry, uint256 prevEpoch);
-event Relinked(bytes32 indexed node, bytes32 holderNode);
-event Shipped(bytes32 indexed strategyHash, uint256 indexed epoch, uint256 centerQ96, uint256 weth, uint256 usdc);
-event AuctionOpened(address indexed auction, uint8 kind, uint256 amount, uint256 floorQ96, uint64 startBlock, uint64 endBlock);
+event Relinked(bytes32 indexed node, bytes32 indexed holderNode, string holderLabel);
+event Shipped(bytes32 indexed strategyHash, uint256 indexed epoch, uint256 anchorQ96, uint256 weth, uint256 usdc);
+event Docked(bytes32 indexed strategyHash, uint256 indexed epoch, address indexed dockedBy);
 event PriceWritten(uint256 priceQ96);
-event Dissolved(address indexed caller, address indexed auction);
+event CrewSet(address indexed account, string crewLabel);
 ```
 
-The exact names are yours. What matters is that each state change the demo shows lands as one log with the epoch in it.
+| Stream event | From |
+|---|---|
+| `lease.renewed` | `Renewed` |
+| `lease.claimed` | `Claimed` (`gapSeconds` = the claim block's time minus the previous `expiry`) |
+| `castle.relinked` | `Relinked` (`holderName` = `holderLabel` + `.feefifofum.eth`) |
+| `strategy.shipped` | `Shipped` (`center.q96` = `anchorQ96`) |
+| `strategy.docked` | `Docked` |
+| `price.written` | `PriceWritten` |
+
+**Reverts worth showing** (send them as `fill` with `status: "reverted"` and the error in `revert`):
+
+- `FeeFiFoFum()`: a stale epoch's quote, with `decision: "fenced"`.
+- `WindDownReduceOnly(address tokenIn)`: the wrong direction during wind-down, with `decision: "wind-down"`.
+
+For `lease.rejected`, set `reason` to the Castle error: `NotHolder(caller, holder)`, `StaleAttestation(attestedEpoch, epoch)` or `LeaseExpired(expiry)`.
+
+The auction events (`AuctionOpened`, `Dissolved` or their equivalents) are still open with p4-cca. Until they land, the service derives `auction.*` from the CCA factory and the auction's own logs.

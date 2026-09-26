@@ -1,21 +1,22 @@
 # feefifofum: demo video
 
-This file describes the demo video for the ETHGlobal Tokyo 2026 submission in the Continuity track (1inch Aqua, Uniswap and ENS). SirKit recorded it on 26 September 2026 as take 2. It runs 3:38 at 1920×1080 and was recorded in real time with no speed-up. The files are feefifofum-demo.mp4 (captions burned in), feefifofum-demo-nocaptions.mp4, feefifofum-demo.srt (the captions) and script.md (the voiceover by shot, with start times). The operator will redub the voiceover from the captions, so the voiceover below is identical to script.md.
+This file describes the demo video for the ETHGlobal Tokyo 2026 submission in the Continuity track (1inch Aqua, Uniswap and ENS). SirKit recorded it on 26 September 2026, and the final cut is take 5. It runs 3:38 at 1920×1080 and was recorded in real time with no speed-up. Take 2 was dropped because its re-centre shot still showed the hook strategy docked. The files are feefifofum-demo.mp4 (captions burned in), feefifofum-demo-nocaptions.mp4, feefifofum-demo.srt (the captions) and script.md (the voiceover by shot, with start times). The operator will redub the voiceover from the captions, so the voiceover below is identical to script.md.
 
-The video has 13 shots taken from five sources: the dapp 2.0.2 at https://handoff.lol/app/impecc/fee-fi-fo-fum, Sepolia Etherscan, the live-run replay at https://handoff.lol/app/impecc/fee-fi-fo-fum-tale, the feefifofum project page on handoff.lol, and the GitHub README. The trades in the video were made on camera from a new test wallet, `0xf8071d67dDceE3732cd9afd6AFDc047D9b4F3309`, that held only Sepolia ETH when the recording started. Each approval is for the exact amount traded. The one transaction that does not come from this wallet is the reverted greedy ship, which comes from the live run recorded in [agents/live-run/11786346](../agents/live-run/11786346/README.md).
+The video has 13 shots taken from five sources: the dapp 2.0.2 at https://handoff.lol/app/impecc/fee-fi-fo-fum, Sepolia Etherscan, the live-run replay at https://handoff.lol/app/impecc/fee-fi-fo-fum-tale, the feefifofum project page on handoff.lol, and the GitHub README. The trades in the video were made on camera from a new test wallet, `0x2cFffC9DdCDE0419e8bB73695c16Bb8f7400a199`, that held only Sepolia ETH when the recording started. Each approval is for the exact amount traded. The one transaction that does not come from this wallet or from the re-centre that followed its swap is the reverted greedy ship, which comes from the live run recorded in [agents/live-run/11786346](../agents/live-run/11786346/README.md).
 
 ## Transactions in the video
 
-All times are UTC on 26 September 2026, taken from the block timestamps.
+All times are UTC on 26 September 2026, taken from the block timestamps. The dock and the ship are taken from the vault service's stream, where the dock carries the reason `re-centre`.
 
 | Time | Block | What happens | Tx |
 |---|---|---|---|
-| 16:30:36 | 11787378 | The test wallet wraps 0.0002 ETH into WETH. | [`0x63c7…bd0f`](https://sepolia.etherscan.io/tx/0x63c720b6fc80a8d82a5005cb35ae24bc9082c866746b0995d8687940eeffbd0f) |
-| 16:31:24 | 11787382 | The wallet approves the SwapVM router (`0xeDB6…70f9`) for exactly 0.0001 WETH. | [`0x0e16…b778`](https://sepolia.etherscan.io/tx/0x0e16aa02085e9f094532b97a3d624ad97bb9b0c5709e2700f9fa6229f568b778) |
-| 16:31:36 | 11787383 | The wallet fills the RFQ quote from `harp`, paying 0.0001 WETH and receiving 0.268768 USDC from the vault (2,687.68 USDC per WETH). | [`0x186b…6f95`](https://sepolia.etherscan.io/tx/0x186b88a70bb068b016b5eeefcc3bcf5052096b091c7b1fe5cb4f12a173bf6f95) |
-| 16:32:24 | 11787387 | The wallet approves PoolSwapTest (`0x9B6b…6eEe`) for exactly 0.0001 WETH. | [`0x8fb9…fe15`](https://sepolia.etherscan.io/tx/0x8fb9c21d0abe39f34de503b528479ad4e2eb86fabb125fe1baa188c02fc1fe15) |
-| 16:32:36 | 11787388 | The wallet swaps 0.0001 WETH in the v4 pool and receives 0.244613 USDC (2,446.13 USDC per WETH). The hook, CastleJITHook, fills the swap from `hen` in the same transaction. | [`0x4749…d0ad`](https://sepolia.etherscan.io/tx/0x4749dfc222b00fb3d3c6793c31394cfc352b03cf3ad0bc5a9883b10e4defd0ad) |
-| 16:33 | 11787390–11787391 | fi docks the `hen` strategy that filled the swap and ships it again at fee's current price. | dock [`0x0e66…7522`](https://sepolia.etherscan.io/tx/0x0e6673512092739bbe0cd4e5c3e12fec2c88011228e9d783a84fe4fb9dc47522), ship [`0xf27b…4b78`](https://sepolia.etherscan.io/tx/0xf27bbc9603079004f5dbfc7193b66cbae4bb20a6a151190a05e403e9e3b64b78) |
+| 17:00:48 | 11787525 | The test wallet wraps 0.0003 ETH into WETH. | [`0xa6ab…4e83`](https://sepolia.etherscan.io/tx/0xa6ab764fe06d4f4630a6e510ae475c51c1a817df5aa06f759baf46c4f82d4e83) |
+| 17:01:36 | 11787529 | The wallet approves the SwapVM router (`0xeDB6…70f9`) for exactly 0.0001 WETH. | [`0x5f3d…81c8`](https://sepolia.etherscan.io/tx/0x5f3d3c03219db9d1769898eed46dc32ca4c56be10c673824a7f6a4f27a1581c8) |
+| 17:01:48 | 11787530 | The wallet fills the RFQ quote from `harp`, paying 0.0001 WETH and receiving 0.268943 USDC from the vault (2,689.43 USDC per WETH). | [`0xd563…8bd0`](https://sepolia.etherscan.io/tx/0xd563f576b37c2b8225e16381f3487991996bf551a70457913ac94d4c8ef68bd0) |
+| 17:02:36 | 11787534 | The wallet approves PoolSwapTest (`0x9B6b…6eEe`) for exactly 0.0001 WETH. | [`0x6aef…d1c6`](https://sepolia.etherscan.io/tx/0x6aef51b468c56c76213fb56f21bba985aefb97b5b8af8196e2ac2c93cb8dd1c6) |
+| 17:02:48 | 11787535 | The wallet swaps 0.0001 WETH in the v4 pool and receives 0.251282 USDC (2,512.82 USDC per WETH). The hook, CastleJITHook, fills the swap from `hen` (strategy `0x4db7…67b1`) in the same transaction, and the PoolManager's Swap log shows amount0 and amount1 of 0. | [`0x3489…9246`](https://sepolia.etherscan.io/tx/0x3489324ef67e5824e8356754758b55bbe83b78ae21be129cd0adb67f28979246) |
+| 17:03:00 | 11787536 | fi docks that `hen` strategy for a re-centre after the swap moved its price. | [`0xfca5…6758`](https://sepolia.etherscan.io/tx/0xfca50f53688544b47e54893e1bb0b2c276105499e06db20791ba933acb826758) |
+| 17:03:12 | 11787537 | fi ships `hen` again at fee's current price (strategy `0x5b0d…26ea`, 3.528501 USDC and 0.001311 WETH). | [`0x468b…8f9b`](https://sepolia.etherscan.io/tx/0x468b4e9618e3a5b7949777755aad9d33cf2431bda623f33ea835638941848f9b) |
 | 12:56:24 | 11786356 | From the live run: fi's ship of a third strategy, `greedy`, reverts with `OverAllocated(WETH, 0.003904, 0.003718)` because it would take the WETH allocations past fum's 2× limit. | [`0x647a…d0ba`](https://sepolia.etherscan.io/tx/0x647aba61fbb7442ccd986346c6acb8de2dae42eab5e5160ed950277dc7a9d0ba) (failed) |
 
 ## Shot list
@@ -25,16 +26,16 @@ The start time and length of each shot are those in script.md.
 | # | Start | Length | Picture | Transactions on screen |
 |---|---|---|---|---|
 | 1 | 0:00 | 22 s | The title card: a drawing of the vault, the fee·fi·fo·fum lettering, the line "1inch Aqua vault · ENS quotes · Uniswap v4 hook", the handoff logo and "ETHGlobal Tokyo 2026 · Sepolia". | – |
-| 2 | 0:21 | 22 s | The dapp 2.0.2 at https://handoff.lol/app/impecc/fee-fi-fo-fum before a wallet is connected. The page shows its introduction, YOUR WALLET, and THE VAULT with the vault balance (6.23 USDC and 0.001429 WETH) and the USDC and WETH allocation meters against fum's 2× limit. | – |
-| 3 | 0:43 | 17 s | The new test wallet 0xf807…3309 connects with 0.0024 Sepolia ETH and no tokens. It wraps 0.0002 ETH into WETH from the test-tokens box under the wallet balances. | wrap [`0x63c7…bd0f`](https://sepolia.etherscan.io/tx/0x63c720b6fc80a8d82a5005cb35ae24bc9082c866746b0995d8687940eeffbd0f) |
-| 4 | 1:01 | 23 s | SWAP is set to pay 0.0001 WETH for USDC. The HARP card reads the text record of quote.feefifofum.eth through CCIP-Read and then shows fi's signed quote with its 30 s validity bar, and fo's line compares it with the v4 pool's quote. | none (the quote is served off-chain) |
-| 5 | 1:23 | 19 s | "Fill this quote" runs two steps. The wallet approves exactly 0.0001 WETH for the SwapVM router, then sends the fill, and each step shows "done" with its Etherscan link. | approve [`0x0e16…b778`](https://sepolia.etherscan.io/tx/0x0e16aa02085e9f094532b97a3d624ad97bb9b0c5709e2700f9fa6229f568b778), fill [`0x186b…6f95`](https://sepolia.etherscan.io/tx/0x186b88a70bb068b016b5eeefcc3bcf5052096b091c7b1fe5cb4f12a173bf6f95) |
-| 6 | 1:42 | 10 s | Sepolia Etherscan shows the fill as one successful transaction: 0.0001 WETH goes from the wallet through the router into the vault, and 0.268768 USDC goes from the vault to the wallet. | [`0x186b…6f95`](https://sepolia.etherscan.io/tx/0x186b88a70bb068b016b5eeefcc3bcf5052096b091c7b1fe5cb4f12a173bf6f95) |
-| 7 | 1:53 | 26 s | Back on the dapp, the HARP card reads "Filled." and the HEN card shows the V4Quoter's price for the same 0.0001 WETH (about 0.24 USDC) next to the RFQ price. "Swap through the v4 pool" runs the approval of exactly 0.0001 WETH for PoolSwapTest and then the swap. | approve [`0x8fb9…fe15`](https://sepolia.etherscan.io/tx/0x8fb9c21d0abe39f34de503b528479ad4e2eb86fabb125fe1baa188c02fc1fe15), swap [`0x4749…d0ad`](https://sepolia.etherscan.io/tx/0x4749dfc222b00fb3d3c6793c31394cfc352b03cf3ad0bc5a9883b10e4defd0ad) |
-| 8 | 2:19 | 10 s | The Logs tab of the swap transaction on Etherscan (13 logs) scrolls through the WETH and USDC transfers, Aqua's Pulled and Pushed events for the vault, and the SwapVM router's Swapped event for the hook's fill of 0.0001 WETH for 244613 USDC units. | [`0x4749…d0ad`](https://sepolia.etherscan.io/tx/0x4749dfc222b00fb3d3c6793c31394cfc352b03cf3ad0bc5a9883b10e4defd0ad) |
-| 9 | 2:29 | 12 s | The dapp after the swap. The wallet holds 0.51 USDC and no WETH. THE VAULT lists only harp while fi docks the hook strategy and ships it again at the current price. The HEN card reads "Swapped." with both steps done, and YOUR TRADES lists the wrap, the RFQ fill and the v4 swap with their transaction links. | dock [`0x0e66…7522`](https://sepolia.etherscan.io/tx/0x0e6673512092739bbe0cd4e5c3e12fec2c88011228e9d783a84fe4fb9dc47522), ship [`0xf27b…4b78`](https://sepolia.etherscan.io/tx/0xf27bbc9603079004f5dbfc7193b66cbae4bb20a6a151190a05e403e9e3b64b78) |
+| 2 | 0:21 | 22 s | The dapp 2.0.2 at https://handoff.lol/app/impecc/fee-fi-fo-fum before a wallet is connected. The page shows its introduction, YOUR WALLET, and THE VAULT with the vault balance (4.93 USDC and 0.001929 WETH), the USDC and WETH allocation meters against fum's 2× limit, and the two live strategies, harp and hen. | – |
+| 3 | 0:43 | 18 s | The new test wallet 0x2cFf…a199 connects with 0.00134 Sepolia ETH and no tokens. It wraps 0.0003 ETH into WETH from the test-tokens box under the wallet balances, and the wrap step shows "done" with its link. | wrap [`0xa6ab…4e83`](https://sepolia.etherscan.io/tx/0xa6ab764fe06d4f4630a6e510ae475c51c1a817df5aa06f759baf46c4f82d4e83) |
+| 4 | 1:01 | 23 s | SWAP is set to pay 0.0001 WETH for USDC. The HARP card reads the text record of quote.feefifofum.eth through CCIP-Read and shows fi's signed quote of 0.27 USDC (2,689.43 USDC per WETH) with its 30 s validity bar. The HEN card shows the v4 pool's 0.25 USDC, and fo's line says the RFQ strategy pays 7.0% more. | none (the quote is served off-chain) |
+| 5 | 1:24 | 19 s | "Fill this quote" runs two steps. The wallet approves exactly 0.0001 WETH for the SwapVM router, then sends the fill, and each step shows its state and Etherscan link. | approve [`0x5f3d…81c8`](https://sepolia.etherscan.io/tx/0x5f3d3c03219db9d1769898eed46dc32ca4c56be10c673824a7f6a4f27a1581c8), fill [`0xd563…8bd0`](https://sepolia.etherscan.io/tx/0xd563f576b37c2b8225e16381f3487991996bf551a70457913ac94d4c8ef68bd0) |
+| 6 | 1:43 | 10 s | Sepolia Etherscan shows the fill as one successful transaction in block 11787530: 0.0001 WETH goes from the wallet through the router into the vault, and 0.268943 USDC goes from the vault to the wallet. | [`0xd563…8bd0`](https://sepolia.etherscan.io/tx/0xd563f576b37c2b8225e16381f3487991996bf551a70457913ac94d4c8ef68bd0) |
+| 7 | 1:53 | 26 s | Back on the dapp, YOUR TRADES lists the RFQ fill and the wrap. The HEN card shows the V4Quoter's price for the same 0.0001 WETH next to the RFQ price, and "Swap through the v4 pool" runs the approval of exactly 0.0001 WETH for PoolSwapTest and then the swap. | approve [`0x6aef…d1c6`](https://sepolia.etherscan.io/tx/0x6aef51b468c56c76213fb56f21bba985aefb97b5b8af8196e2ac2c93cb8dd1c6), swap [`0x3489…9246`](https://sepolia.etherscan.io/tx/0x3489324ef67e5824e8356754758b55bbe83b78ae21be129cd0adb67f28979246) |
+| 8 | 2:19 | 10 s | The Logs tab of the swap transaction on Etherscan (13 logs) scrolls past Aqua's Pulled and Pushed events and the token transfers to the hook's JitFill log (0.0001 WETH in, 251282 USDC units out, from the hen strategy 0x4db7…67b1) and the PoolManager's Swap log, whose amount0 and amount1 are both 0 because the hook filled the swap. | [`0x3489…9246`](https://sepolia.etherscan.io/tx/0x3489324ef67e5824e8356754758b55bbe83b78ae21be129cd0adb67f28979246) |
+| 9 | 2:29 | 12 s | The dapp, recorded again a few minutes after the swap from the same wallet and with no transactions. The wallet holds 0.52 USDC and 0.0001 WETH, THE VAULT lists harp and the re-centred hen, and the HEN card shows its quote after the re-centre (0.25 USDC for 0.0001 WETH) next to the RFQ quote. | dock [`0xfca5…6758`](https://sepolia.etherscan.io/tx/0xfca50f53688544b47e54893e1bb0b2c276105499e06db20791ba933acb826758) and ship [`0x468b…8f9b`](https://sepolia.etherscan.io/tx/0x468b4e9618e3a5b7949777755aad9d33cf2431bda623f33ea835638941848f9b) happened before this shot |
 | 10 | 2:41 | 11 s | Etherscan shows the live run's failed transaction in which fi tried to ship a third strategy, greedy, into CastleVault. The error is OverAllocated(WETH, 0.003904, 0.003718). | [`0x647a…d0ba`](https://sepolia.etherscan.io/tx/0x647aba61fbb7442ccd986346c6acb8de2dae42eab5e5160ed950277dc7a9d0ba) (failed) |
-| 11 | 2:52 | 7 s | The replay at https://handoff.lol/app/impecc/fee-fi-fo-fum-tale, reading the vault service's stream. It shows the ALLOCATIONS section with the reverted greedy ship, the list of strategies, and the HARP and HEN panels. | – |
+| 11 | 2:52 | 7 s | The replay at https://handoff.lol/app/impecc/fee-fi-fo-fum-tale, reading the vault service's stream. It shows THE VAULT, the ALLOCATIONS meters with the reverted greedy ship, and the list of strategies, in which every earlier hen is docked and the newest one is live with 3.53 USDC and 0.001311 WETH. | – |
 | 12 | 2:59 | 28 s | The feefifofum project page on handoff.lol, showing the goals and tasks, the agent each was assigned to, and their verified status. | – |
 | 13 | 3:27 | 11 s | The README of the GitHub repository https://github.com/34r7h/fee-fi-fo-fum. | – |
 
@@ -50,7 +51,7 @@ This is feefifofum, our Continuity entry for ETHGlobal Tokyo, built on handoff b
 
 The vault is a 1inch Aqua maker. Its tokens stay in the vault while Aqua records how much each strategy may use, so two strategies can draw on the same balance. Together they are committed to more than the vault holds, which is safe because each token can only be traded out once. The agent fum caps the total at two times the balance, and the contract enforces that limit.
 
-**00:43** (17 s)
+**00:43** (18 s)
 
 I'll use the page the way a user would, with a new test wallet that holds only Sepolia ETH. I connect it and wrap a little ETH into WETH.
 
@@ -58,11 +59,11 @@ I'll use the page the way a user would, with a new test wallet that holds only S
 
 First, the RFQ strategy, which we call harp. The page asks the ENS name quote.feefifofum.eth for a quote to sell 0.0001 WETH. The resolver reverts with an OffchainLookup, our gateway returns a quote signed by the vault's signer, and the resolver checks that signature. Getting the quote costs no gas, and it is valid for 30 seconds.
 
-**01:23** (19 s)
+**01:24** (19 s)
 
 I fill it. The wallet approves exactly 0.0001 WETH, and the trade goes through the 1inch SwapVM router, where our pricing instruction checks the signature and the expiry again.
 
-**01:42** (10 s)
+**01:43** (10 s)
 
 On Etherscan, the fill is a single transaction. WETH goes into the vault, Aqua records the pull and the push, and USDC comes back at the quoted price.
 
@@ -97,7 +98,7 @@ The contracts are verified on Sourcify. The code, the tests, a record of every t
 ## Rules for the edit
 
 - The video is recorded in real time, with no speed-up. Waits for blocks are cut rather than sped up.
-- Every transaction on screen is a real Sepolia transaction: the five from the test wallet and the dock and ship that followed them, plus the live run's reverted greedy ship.
+- Every transaction on screen is a real Sepolia transaction: the five from the test wallet, the dock and ship that followed them, and the live run's reverted greedy ship.
 - Money figures on screen must be readable at 1080p.
 - The redubbed voiceover follows the captions in feefifofum-demo.srt word for word, so the burned-in captions still match.
 

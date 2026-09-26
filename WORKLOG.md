@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 14:04 JST
+- **Last regenerated:** 2026-09-26 14:05 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -26,7 +26,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
 | Foundry scaffold, then deploy the SwapVM router (release/1.0.2) on Sepolia <br>`p1-router` `902378f6` | mister-anderson | mister-anderson | Sat 16:00 | in_progress | 3301492 (scaffold) |  |
-| **BLOCKER** Castle.sol: the giant's castle (desk treasury, Aqua maker and ENSv2 lease) <br>`p1-castle` `c3a2dfdf` | mister-anderson |  | Sat 19:00 | todo | 3fa3aa6, 81ffd04, 789f550 |  |
+| **BLOCKER** Castle.sol: the giant's castle (desk treasury, Aqua maker and ENSv2 lease) <br>`p1-castle` `c3a2dfdf` | mister-anderson | mister-anderson | Sat 19:00 | in_progress | 3fa3aa6, 81ffd04, 789f550 |  |
 | **BLOCKER** FeeFiFoFumExtruction.sol: the giant smells a stale shift (the ENS-lease fence in the SwapVM program) <br>`p1-extruction` `9019b3b9` | mister-anderson | mister-anderson | Sat 19:00 | todo |  |  |
 | Independent Sepolia-fork test suite for Castle and FeeFiFoFumExtruction <br>`p1-forktests` `f4d2ae68` | agy | agy | Sat 19:45 | in_progress | 8cc9a7f (CastleFork.t.sol, 257 lines) | fork |
 | **BLOCKER** Deploy and verify Castle and FeeFiFoFumExtruction on Sepolia, then ship the first live strategy <br>`p1-deploy` `1fed769f` | mister-anderson |  | Sat 20:30 | todo |  |  |
@@ -45,7 +45,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
-| agents/ scaffold: shared runtime for fee, fi, fo, fum <br>`p3-scaffold` `17b80082` | agent-smith | agent-smith | Sat 17:00 | review | 444a32d | n/a (off-chain runtime) |
+| agents/ scaffold: shared runtime for fee, fi, fo, fum <br>`p3-scaffold` `17b80082` | agent-smith | agent-smith | Sat 17:00 | done | 444a32d | n/a (off-chain runtime) |
 | fee (shift trader) and fi (hot standby): lease renewal and failover logic <br>`p3-feefi` `fa22a44e` | agent-smith | agent-smith | Sat 20:30 | in_progress |  |  |
 | fo, fencer and witness: EIP-712 attestations, fill replay, incident channel <br>`p3-fo` `9b450702` | agent-smith | agent-smith | Sat 20:30 | in_progress |  |  |
 | **BLOCKER** Live failover on Sepolia: kill -9 fee, wind-down gap, fi claims, stale epoch fenced, stale fee rejected <br>`p3-failover-e2e` `ad888e60` | agent-smith | agent-smith | Sat 22:30 | in_progress |  |  |
@@ -65,7 +65,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 |---|---|---|---|---|---|---|
 | fee-fi-fo-fum.html against a mock castle stream <br>`p5-mock` `198a1550` | impecc | impecc | Sat 21:00 | in_progress |  |  |
 | Wire fee-fi-fo-fum.html to the live castle stream and publish it on handoff.lol <br>`p5-live` `fd20d4c5` | impecc | impecc | Sun 02:00 | in_progress |  |  |
-| Durable hosting for the castle service, so the live demo survives past the event <br>`p5-durable` `7ab03bab` | handoff-claude | handoff-claude | Sun 02:00 | review | service/ | https://handoff.lol/t/castle/ live (state, tools, stream, MCP tools/list verified) |
+| Durable hosting for the castle service, so the live demo survives past the event <br>`p5-durable` `7ab03bab` | handoff-claude | handoff-claude | Sun 02:00 | done | service/ | https://handoff.lol/t/castle/ live (state, tools, stream, MCP tools/list verified) |
 
 ### P3 SUBMISSION: write-ups, feedback, deck/video, rehearsal, submit
 
@@ -202,3 +202,5 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:03 | handoff-claude | The castle service is live and durable at https://handoff.lol/t/castle/ (p5-durable submitted). ENSv2 agent-registry script works on a fork, 5/5 names. Flagged Castle.sol resolver selectors that are absent from the deployed PermissionedResolver. |
 | Sat 14:04 | handoff-claude | ENSv2 agent registry and resolver deployed live on Sepolia (a2b1ceb); both txs succeeded, code verified on-chain. |
 | Sat 14:04 | agy | Fork suite CastleFork.t.sol (8cc9a7f): live Aqua pull/push, renew without a fo signature reverts, withheld attestation, replay (within and across epochs), epoch fencing. Now also writing the independent non-crew claim and multicall-drain tests. |
+| Sat 14:08 | handoff-advisor | PASS on p5-durable (live Sepolia reads at head; runs on helen, not the laptop) and on p3-scaffold. |
+| Sat 14:09 | SirKit | Verified p5-durable and p3-scaffold; co-sign requested. |

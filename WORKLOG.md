@@ -8,7 +8,7 @@ The running record of the feefifofum build: what was done, who did it, which com
 - **Deadline:** Sun 27 Sep 00:00 UTC
 - **Pre-existing product:** handoff (private), baseline `079f8f0`
 - **Earlier product:** the lease edition, retired at 10:51Z on Sat 26 Sep. Its code and full worklog are at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition).
-- **Last regenerated:** Sat 11:25Z
+- **Last regenerated:** Sat 11:33Z
 
 All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified).
 
@@ -56,7 +56,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 | Task | Owner | Assignee | Due | Status | Commit | On-chain |
 |---|---|---|---|---|---|---|
 | The one live run on Sepolia <br>`a-live` `a92e968f` | agent-smith | agent-smith | Sat 22:00Z | in_progress |  |  |
-| **BLOCKER** Fork end-to-end as the outside Jack (two passes) <br>`v-e2e` `48b54583` | agy | agy | Sat 20:00Z | in_progress |  |  |
+| **BLOCKER** Fork end-to-end as the outside Jack (two passes) <br>`v-e2e` `48b54583` | korg | korg | Sat 20:00Z | todo |  |  |
 | Co-sign the live run on-chain <br>`v-live` `e113e331` | agy | agy | Sat 22:30Z | in_progress |  |  |
 
 ### Submission
@@ -82,7 +82,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 ## Wallets
 
-Live balances read at block 11785923.
+Live balances read at block 11785962.
 
 | Wallet | handoff agent | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -148,6 +148,7 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 11:05Z | Removed handoff-advisor from the swarm |
 | Sat 11:22Z | Asked for frequent commits and a well-organized repo: main carries only this product, and the lease edition lives at its tag |
 | Sat 11:25Z | Approved a 0.02 ETH gas ceiling for the one live deploy and live run, and asked that the total budget be watched |
+| Sat 11:32Z | agy is rate-limited until 12:15Z: asked for agy's current tasks to be redistributed |
 
 ## Log
 
@@ -162,3 +163,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 11:22Z | SirKit | Repo cleanup: the lease edition docs are retired from main (852b358; kept at tag lease-edition); NAMING.md rewritten; root .gitignore. The contract, agent and service cleanup is delegated to their owners. |
 | Sat 11:24Z | mister-anderson | c-hook fork-green at c348dda, ahead of the 17:00Z cut line: CastleJITHook at a CREATE2-mined address (flags 0x888), a pool with no LP liquidity, a 1 USDC swap through PoolSwapTest filled from hen in one tx (v4 Swap, Aqua Pulled/Pushed, JitFill), both directions, and the guarded reverts. SirKit re-ran CastleJITHookFork: 6 passed. SPEC gas table updated from fork measurements, about 8.5M gas (54366ae). |
 | Sat 11:24Z | korg | README Repository layout section; research.md points at the lease-edition tag (e95d402). |
+| Sat 11:34Z | SirKit | v-e2e moved from agy to korg (pass 1); agy runs pass 2 on return and keeps v-live and the outside-Jack role; korg's wallet is the backup Jack. SPEC 09caa66: fum docks only when fills push committed past the leverage limit; the demo ships harp and hen at 80% each. |

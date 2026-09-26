@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 13:45 JST
+- **Last regenerated:** 2026-09-26 13:46 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -28,7 +28,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | Foundry scaffold, then deploy the SwapVM router (release/1.0.2) on Sepolia <br>`p1-router` `902378f6` | mister-anderson | mister-anderson | Sat 16:00 | in_progress | 3301492 (scaffold) |  |
 | **BLOCKER** Castle.sol: the giant's castle (desk treasury, Aqua maker and ENSv2 lease) <br>`p1-castle` `c3a2dfdf` | mister-anderson |  | Sat 19:00 | todo |  |  |
 | **BLOCKER** FeeFiFoFumExtruction.sol: the giant smells a stale shift (the ENS-lease fence in the SwapVM program) <br>`p1-extruction` `9019b3b9` | korg |  | Sat 19:00 | todo |  |  |
-| Independent Sepolia-fork test suite for Castle and FeeFiFoFumExtruction <br>`p1-forktests` `f4d2ae68` | agy |  | Sat 19:45 | todo |  |  |
+| Independent Sepolia-fork test suite for Castle and FeeFiFoFumExtruction <br>`p1-forktests` `f4d2ae68` | agy | agy | Sat 19:45 | in_progress |  |  |
 | **BLOCKER** Deploy and verify Castle and FeeFiFoFumExtruction on Sepolia, then ship the first live strategy <br>`p1-deploy` `1fed769f` | mister-anderson |  | Sat 20:30 | todo |  |  |
 | **BLOCKER** ICastleLease interface, published before 15:30 JST so the fence and fo can build in parallel <br>`p1-iface` `17a2de4c` | mister-anderson | mister-anderson | Sat 15:30 | review | 3301492, 980fd97, f0c7d65, e11f755 |  |
 
@@ -47,7 +47,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 |---|---|---|---|---|---|---|
 | agents/ scaffold: shared runtime for fee, fi, fo, fum <br>`p3-scaffold` `17b80082` | agent-smith | agent-smith | Sat 17:00 | in_progress |  |  |
 | fee (shift trader) and fi (hot standby): lease renewal and failover logic <br>`p3-feefi` `fa22a44e` | agent-smith | agent-smith | Sat 20:30 | in_progress |  |  |
-| fo, fencer and witness: EIP-712 attestations, fill replay, incident channel <br>`p3-fo` `9b450702` | agy |  | Sat 20:30 | todo |  |  |
+| fo, fencer and witness: EIP-712 attestations, fill replay, incident channel <br>`p3-fo` `9b450702` | agy | agy | Sat 20:30 | in_progress |  |  |
 | **BLOCKER** Live failover on Sepolia: kill -9 fee, wind-down gap, fi claims, stale epoch fenced, stale fee rejected <br>`p3-failover-e2e` `ad888e60` | agent-smith | agent-smith | Sat 22:30 | in_progress |  |  |
 | fum, auctioneer: shift-change and dissolution CCAs, checkpoint, sweep, setData <br>`p3-fum` `c78ba379` | agent-smith | agent-smith | Sun 00:00 | in_progress |  |  |
 
@@ -57,7 +57,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 |---|---|---|---|---|---|---|
 | JackHook.sol: any Jack with an ENSv2 name can climb and bid (CCA validation hook) <br>`p4-jackhook` `67f5a962` | korg |  | Sat 20:00 | todo |  |  |
 | **BLOCKER** Castle and CCA: shift-change and dissolution auctions, with the clearing price written back to ENS <br>`p4-cca` `d4a7c73a` | mister-anderson |  | Sat 23:30 | todo |  |  |
-| **BLOCKER** Live: an outside agent bids via MCP, a shift-change CCA clears on Sepolia, and the next curve moves <br>`p4-cca-e2e` `3becce17` | agy |  | Sun 01:30 | todo |  |  |
+| **BLOCKER** Live: an outside agent bids via MCP, a shift-change CCA clears on Sepolia, and the next curve moves <br>`p4-cca-e2e` `3becce17` | agy | agy | Sun 01:30 | in_progress |  |  |
 
 ### P1 MINIAPP + LIVE DEMO: fee-fi-fo-fum.html, durable hosting
 
@@ -74,7 +74,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | README before/after, the three sponsor integration write-ups, and the contract address table <br>`p6-writeups` `3fb7f7a3` | korg |  | Sun 07:00 | todo |  |  |
 | FEEDBACK.md for Uniswap and the developers.uniswap.org/hackathon-feedback form <br>`p6-feedback` `d0587b18` | korg |  | Sun 07:00 | todo |  |  |
 | Pitch deck, plus the script and shot list for a 2-4 min demo video <br>`p6-deck` `005db56f` | impecc | impecc | Sun 07:00 | in_progress |  |  |
-| **BLOCKER** Two full rehearsals of the five-beat demo on Sepolia from a clean browser <br>`p6-rehearsal` `3eb4aa41` | agy |  | Sun 05:00 | todo |  |  |
+| **BLOCKER** Two full rehearsals of the five-beat demo on Sepolia from a clean browser <br>`p6-rehearsal` `3eb4aa41` | agy | agy | Sun 05:00 | in_progress |  |  |
 | AI_USAGE.md and the final WORKLOG.md pass <br>`p6-ai-usage` `8abb390e` | SirKit | SirKit | Sun 08:00 | in_progress |  |  |
 | **BLOCKER** OPERATOR: record the video, submit on ETHGlobal and select 1inch, Uniswap and ENS <br>`p6-submit` `6aa606a5` | OPERATOR |  | Sun 08:45 | todo |  |  |
 | **BLOCKER** OPERATOR: owned contributions on the record (design calls, review sign-offs, the video, booth conversations) <br>`p6-operator` `0b628549` | OPERATOR |  | Sun 08:00 | todo |  |  |
@@ -111,6 +111,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | fi | fi (agent-smith) | `0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2` |  |  |
 | fo | fo (agent-smith) | `0x8689a407A2488A5b2f2De05d2C6978a798f93D56` |  |  |
 | fum | fum (agent-smith) | `0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2` |  |  |
+| castle (service) | castle (handoff-claude) | `0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99` |  |  |
 
 ## Miniapp and live demo
 
@@ -178,3 +179,5 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 13:55 | impecc | miniapp/STREAM.md is on main (6a50934); building fee-fi-fo-fum.html against the mock. |
 | Sat 13:57 | mister-anderson | Foundry scaffold pinned to swap-vm v1.0.2 (3301492); ICastleLease (980fd97) and MockCastleLease (f0c7d65); p1-iface submitted. |
 | Sat 13:58 | handoff-claude | ens_name cannot take an ENSv2 name without a platform change (escalated to the operator). Durable host approved: the existing sandbox host. castle agent approved. |
+| Sat 13:59 | handoff-claude | Registered the castle agent on handoff.lol with a self-custodied EOA, 0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99. |
+| Sat 14:00 | agy | Accepted the tester/witness role; claimed p3-fo, p1-forktests, p4-cca-e2e and p6-rehearsal. All 7 swarm members are now accepted. |

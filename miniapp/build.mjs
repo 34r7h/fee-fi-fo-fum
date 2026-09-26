@@ -33,24 +33,37 @@ if (LIVE) {
     const d = JSON.parse(readFileSync(dep, 'utf8')), c = d.contracts || {}, x = d.external || {};
     const addr = (k) => (c[k] && (c[k].address || c[k])) || undefined;
     Object.assign(config, { chainId: d.chainId, castle: addr('castleVault'), hook: addr('castleJITHook'), resolver: addr('offchainQuoteResolver'),
-      castleTx: c.castleVault && c.castleVault.tx, poolId: c.poolId, aqua: x.aqua, router: x.aquaSwapVMRouter, poolManager: x.poolManager, usdc: x.usdc, weth: x.weth });
-    const miss = ['castle', 'hook', 'resolver', 'poolId', 'aqua', 'router', 'poolManager', 'usdc', 'weth'].filter((k) => !/^0x[0-9a-fA-F]{40}([0-9a-fA-F]{24})?$/.test(config[k] || ''));
+      priceExtruction: addr('priceExtruction'), castleTx: c.castleVault && c.castleVault.tx, poolId: c.poolId, aqua: x.aqua, router: x.aquaSwapVMRouter,
+      poolManager: x.poolManager, poolSwapTest: x.poolSwapTest, v4Quoter: x.v4Quoter, universalResolver: x.universalResolverV2, usdc: x.usdc, weth: x.weth });
+    const miss = ['castle', 'hook', 'resolver', 'priceExtruction', 'poolId', 'aqua', 'router', 'poolManager', 'poolSwapTest', 'v4Quoter', 'universalResolver', 'usdc', 'weth'].filter((k) => !/^0x[0-9a-fA-F]{40}([0-9a-fA-F]{24})?$/.test(config[k] || ''));
     if (miss.length) { console.error(`--live: ${dep} lacks ${miss.join(', ')}`); process.exit(1); }
   }
   config.agents = (config.agents || []).map(({ id, role, addr, ens }) => ({ id, role, addr, ens }));
   // Test builds only: STREAM points the page at a local castle service (a fork-backed one, or a fake that replays events).
   if (process.env.STREAM) config.stream = process.env.STREAM;
+  // Test builds only: RPCS (comma-separated) points the dapp's reads at an anvil fork of Sepolia.
+  if (process.env.RPCS) config.rpcs = process.env.RPCS.split(',');
   if (!html.includes('/*@CONFIG*/null')) { console.error('config slot missing from the page'); process.exit(1); }
   html = html.replace('/*@CONFIG*/null', JSON.stringify(config));
+}
+
+// The dapp carries agent-smith's browser module (miniapp/lib/dapplib.js, one classic script defining FFFLIB), inlined
+// where the page asks for it. A live build without it fails: the dapp cannot ask the harp or build a tx.
+if (html.includes('/*@DAPPLIB*/')) {
+  const lib = join(HERE, 'lib', 'dapplib.js');
+  if (existsSync(lib)) html = html.replace('/*@DAPPLIB*/', () => readFileSync(lib, 'utf8'));
+  else if (LIVE && !process.env.ALLOW_NO_LIB) { console.error(`the dapp needs ${lib}`); process.exit(1); }
+  else console.error(`warning: ${lib} is missing; the dapp will say so`);
 }
 
 // Every lettered title must be set from glyphs the page carries (Almendra outlines: no Q, X, Z or digits). Checked on
 // the static titles (data-lt) and on every all-caps literal in scene(), before minifying.
 {
   const gl = JSON.parse(html.match(/var GL = (\{.*\});/)[1]).g;
-  const sc = html.slice(html.indexOf('function scene('), html.indexOf('// ---', html.indexOf('function scene(')));
+  const at = html.indexOf('function scene('), sc = at < 0 ? '' : html.slice(at, html.indexOf('// ---', at));
   const titles = [...html.matchAll(/data-lt="([^"]*)"/g)].map((m) => m[1])
-    .concat([...sc.matchAll(/'([^'a-z]{2,})'/g)].map((m) => m[1]).filter((t) => /[A-Z]/.test(t)));
+    .concat([...sc.matchAll(/'([^'a-z]{2,})'/g)].map((m) => m[1]).filter((t) => /[A-Z]/.test(t)))
+    .concat([...html.matchAll(/letters\('([^']+)', true\)/g)].map((m) => m[1]));
   const bad = titles.filter((t) => [...t].some((ch) => !gl[ch]));
   if (bad.length) { console.error('no glyph for: ' + bad.map((t) => JSON.stringify(t)).join(', ')); process.exit(1); }
   console.error(`lettering: ${titles.length} titles, every glyph present`);

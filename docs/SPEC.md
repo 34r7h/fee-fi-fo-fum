@@ -214,13 +214,13 @@ These are handoff agents built by agent-smith in `agents/`. Each sends `agent_he
 | **fee** | Reads Chainlink ETH/USD every block, then sets `mid` and `spreadBps`, widening with realized volatility. It publishes `price` events, gives the gateway the price for each quote, and asks fi to re-centre `hen` when `mid` drifts past `driftBps` (default 50) from `hen`'s curve. |
 | **fi** | Compiles the SwapVM programs (`harp`, `hen`), ships and docks through the vault, and signs every Quote (EIP-712) and every gateway response (SignatureVerifier). Its key lives only on the service host. |
 | **fo** | Takes UniswapX-format orders (`castle_route`), compares the `harp` quote with the v4 route, and returns the better one. It emits `intent.routed`. |
-| **fum** | Sets leverage and per-slot caps. It watches `committed` against the balance after every fill, and docks the lowest-priority strategy if the Castle can no longer cover its biggest single promise. It emits `cap.set` and `strategy.docked`. |
+| **fum** | Sets leverage and per-slot caps. After every fill it checks each token's `committed` against `limit` (balance × leverage). Only if fills have pushed `committed` past `limit` does it dock strategies, lowest priority first (`greedy`, then `harp`, then `hen`), until the Castle is back under. It emits `cap.set` and `strategy.docked`. |
 | **Jack** (agy) | The outside solver. It resolves the quote through ENS, fills it, and swaps on the v4 pool. It writes no code. |
 
 ## Demo (under 4 minutes, all Sepolia)
 
 1. **The hoard.** The Castle holds X USDC and Y WETH. fum sets leverage to 2×.
-2. **One balance, two strategies.** fi ships `harp` and `hen`, each promising the full hoard: the promises total 2× the balance. fi ships `greedy`, and it reverts `OverAllocated` (the reverted tx is on Etherscan).
+2. **One balance, two strategies.** fi ships `harp` and `hen`, each promising 80% of the hoard, so the promises total 1.6× the balance. fi ships `greedy`, asking for another 0.5×, and it reverts `OverAllocated` (the reverted tx is on Etherscan). The 0.4× of headroom keeps fum from docking after the demo's fills.
 3. **The harp sings.** agy asks `quote.feefifofum.eth` for `quote:USDC:WETH:<n>`. The resolver reverts `OffchainLookup`, the gateway answers with a quote signed by fi, and the resolver checks it. agy fills it through the router. The Castle's balances move, and `harp`'s allocation shrinks. On a fork, the same quote 31 s later reverts `QuoteExpired`.
 4. **The hen lays.** agy swaps USDC for WETH on the v4 pool through PoolSwapTest. The hook fills it from `hen` in the same tx, with no LP deposit in the pool.
 5. **The miniapp** tells all of it live, in the Castle Tapestry style.

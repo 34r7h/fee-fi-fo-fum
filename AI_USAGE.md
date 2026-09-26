@@ -7,6 +7,7 @@ ETHGlobal's AI rules ask entries to disclose which files, and which parts of the
 The human operator directs the swarm and owns these decisions and outputs. They are logged with timestamps in [WORKLOG.md](WORKLOG.md#operator-owned-contributions).
 
 - Chose Option A from handoff-advisor's research, appointed the orchestrator and picked the swarm.
+- Set the binding role map for the swarm, and ruled that validators never build.
 - Ruled that all entry work lives in this public repo and none goes in the handoff repo.
 - Confirmed Continuity-track registration, linked the GitHub repo to the handoff project, and funded the Sepolia treasury.
 - Named the entry **fee-fi-fo-fum** and set its Jack the Giant Killer voice ([docs/NAMING.md](docs/NAMING.md)).
@@ -24,16 +25,16 @@ The human operator directs the swarm and owns these decisions and outputs. They 
 
 These are AI agents on handoff.lol, directed by the human operator.
 
-| Agent | Role on this entry |
+| Agent | Role (operator's binding role map) |
 |---|---|
 | SirKit | Orchestrator: planning, assignment, tracking, AI_USAGE.md, WORKLOG.md |
-| handoff-advisor | Research (PLAN.md), plan review, final on-chain verification |
-| korg | Research: ENSv2 probes (the registry-read snippet and test vectors for the contracts), write-ups, FEEDBACK.md |
-| mister-anderson | Solidity: ICastleLease, router deploy, Castle.sol, FeeFiFoFumExtruction, JackHook, CCA integration |
-| agent-smith | The fee, fi, fo and fum agents and their wallets, plus the failover run |
-| agy | Independent validation: fork tests, the live CCA run as the outside Jack, rehearsals |
-| impecc | fee-fi-fo-fum.html, deck, video script, forward-facing copy |
-| handoff-claude | The castle service (MCP tools, stream, durable hosting) and ENSv2 names on handoff.lol |
+| agent-smith | Makes the agents: fee, fi, fo, fum and the castle agent (code, service, stream, wallets, ENSv2 names) |
+| mister-anderson | Crypto: ICastleLease, router deploy, Castle.sol, FeeFiFoFumExtruction, JackHook, the CCA integration, and all their tests |
+| handoff-advisor | Validator: research (PLAN.md), plan review, on-chain verification and co-signing payouts |
+| agy | Validator: runs the suites, checks on-chain outcomes, the live CCA run as the outside Jack, rehearsals (no building) |
+| impecc | Presentation and miniapps: fee-fi-fo-fum.html, the deck, the video script, forward-facing copy |
+| handoff-claude | Fixes handoff properly: platform fixes on handoff.lol (ENSv2 ens_name, ethereum-sepolia settlement) |
+| korg | Researcher: ENSv2 probes, write-ups, FEEDBACK.md |
 
 ## Files
 

@@ -24,7 +24,7 @@ The hook's address ends in `0888`. Its low 14 bits are exactly the three permiss
 1. It checks that the pair is USDC/WETH (`NotCastlePool`), that the swap is exact-in (`ExactOutNotSupported`), and that a `hen` strategy is live in the vault's slot 1 (`NoHen`). It reads slot 1 on every swap, so when fi ships a new `hen`, the hook uses it without a redeploy.
 2. It calls `take` for `amountIn` of the input token from the PoolManager.
 3. It calls `AquaSwapVMRouter.swap(henOrder, tokenIn, tokenOut, amountIn, takerData)` as the SwapVM taker. Aqua pushes the input into the vault and pulls the output out of it.
-4. If `hookData` carries `abi.encode(uint256 minAmountOut)`, it reverts with `TooLittleOut` when the output is lower. This is the swap's slippage guard. The pool's own swap step has an amount of 0, so v4 never checks `sqrtPriceLimitX96` on this pool ([FEEDBACK.md](../FEEDBACK.md#sqrtpricelimitx96-does-nothing-on-a-pool-like-this)).
+4. If `hookData` carries `abi.encode(uint256 minAmountOut)`, it reverts with `TooLittleOut` when the output is lower. This is the swap's slippage guard. The pool's own swap step has an amount of 0, so v4 never checks `sqrtPriceLimitX96` on this pool ([FEEDBACK.md](../FEEDBACK.md#sqrtpricelimitx96-is-not-enforced-when-the-hook-takes-the-whole-amount)).
 5. It calls `sync`, transfers `amountOut` to the PoolManager, and calls `settle`.
 6. It emits `JitFill(poolId, strategyHash, sender, tokenIn, amountIn, amountOut)`.
 7. It returns `toBeforeSwapDelta(+amountIn, -amountOut)`. The pool's own swap step then runs with an amount of 0 and needs no liquidity.

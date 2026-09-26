@@ -16,6 +16,7 @@ export const env = {
   deploymentsPath: fromRoot(process.env.CASTLE_DEPLOYMENTS || '../contracts/deployments/sepolia.json'),
   abiDir: fromRoot(process.env.CASTLE_ABI_DIR || '../contracts/out-abi'),
   miniappConfigPath: fromRoot(process.env.CASTLE_MINIAPP_CONFIG || '../miniapp/config.json'),
+  crewPath: fromRoot(process.env.CASTLE_CREW || '../agents/crew.json'),
   dataDir: fromRoot(process.env.CASTLE_DATA_DIR || './data'),
   handoffApi: (process.env.HANDOFF_API || 'https://handoff.lol/api/v1').replace(/\/$/, ''),
   pollMs: Math.max(1, Number(process.env.CASTLE_POLL_SECONDS || 4)) * 1000,
@@ -29,11 +30,12 @@ function readJson(p) {
 
 const isAddr = (v) => typeof v === 'string' && /^0x[0-9a-fA-F]{40}$/.test(v);
 
-// deployments/sepolia.json is owned by the contracts lane. Accept either a flat {name: "0x…"} map or
-// {contracts: {name: {address, block}}}, and normalise to {name: {address, block}}.
+// deployments/sepolia.json is owned by the contracts lane: {external: {name: "0x…"}, contracts: {name: "0x…" |
+// {address, block}}}. A flat {name: "0x…"} map works too. Normalised to {name: {address, block}}; ours win.
 export function deployments() {
   const raw = readJson(env.deploymentsPath) || {};
-  const src = raw.contracts && typeof raw.contracts === 'object' ? { ...raw, ...raw.contracts } : raw;
+  const obj = (v) => (v && typeof v === 'object' ? v : {});
+  const src = { ...raw, ...obj(raw.external), ...obj(raw.contracts) };
   const out = {};
   for (const [k, v] of Object.entries(src)) {
     if (isAddr(v)) out[k] = { address: v, block: null };
@@ -52,7 +54,7 @@ const ALIASES = {
   ccaFactory: ['ccaFactory', 'CCAFactory', 'ContinuousClearingAuctionFactory'],
   registry: ['registry', 'ensRegistry', 'ETHRegistry', 'castleRegistry', 'agentRegistry'],
   resolver: ['resolver', 'PermissionedResolver', 'ensResolver'],
-  universalResolver: ['universalResolver', 'UniversalResolverV2'],
+  universalResolver: ['universalResolver', 'universalResolverV2', 'UniversalResolverV2'],
   usdc: ['usdc', 'USDC'],
   weth: ['weth', 'WETH'],
 };
@@ -75,6 +77,11 @@ export function addressBook() {
 // miniapp/config.json: the shift table, the lease name and the agents. Operator config, not chain state.
 export function miniappConfig() {
   return readJson(env.miniappConfigPath) || {};
+}
+
+// agents/crew.json (the agents lane): fee/fi/fo/fum roles and their Sepolia addresses.
+export function crewConfig() {
+  return readJson(env.crewPath)?.agents || {};
 }
 
 export function dataFile(name) {

@@ -4,7 +4,7 @@
 // for the agents' agent_heartbeat liveness. Every event goes through one reducer that keeps the snapshot.
 import fs from 'node:fs';
 import { EventEmitter } from 'node:events';
-import { env, addr, addressBook, deployBlock, miniappConfig, dataFile } from './config.mjs';
+import { env, addr, addressBook, deployBlock, miniappConfig, crewConfig, dataFile } from './config.mjs';
 import { client, head, blockTime, readLease, inventory, auctionView, priceView, fenceDecision, leaseState, tryDecode, sameAddr } from './chain.mjs';
 import { keccak256, toHex, getAddress } from 'viem';
 
@@ -257,8 +257,9 @@ export function watchAuction(a) { auctions.add(getAddress(a)); }
 function agentList() {
   const cfg = miniappConfig();
   const roles = { fee: 'shift trader', fi: 'hot standby', fo: 'fencer and witness', fum: 'auctioneer', castle: 'castle service' };
-  const rows = cfg.agents?.length ? cfg.agents : ['fee', 'fi', 'fo', 'fum'].map((id) => ({ id }));
-  return rows.map((r) => ({ id: r.id, role: r.role || roles[r.id] || null, addr: r.addr || null, ens: r.ens || `${r.id}.feefifofum.eth`, handoffId: r.handoffId || r.id }));
+  const crewCfg = crewConfig();
+  const rows = cfg.agents?.length ? cfg.agents : (Object.keys(crewCfg).length ? Object.keys(crewCfg) : ['fee', 'fi', 'fo', 'fum']).map((id) => ({ id }));
+  return rows.map((r) => ({ id: r.id, role: r.role || crewCfg[r.id]?.role || roles[r.id] || null, addr: r.addr || crewCfg[r.id]?.address || null, ens: r.ens || `${r.id}.feefifofum.eth`, handoffId: r.handoffId || r.id }));
 }
 async function pollAgents(renewEvery) {
   for (const a of agentList()) {

@@ -4,3 +4,4 @@
 !.env.example
 *.key
 node_modules/
+logs/

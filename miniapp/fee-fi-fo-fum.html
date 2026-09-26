@@ -228,7 +228,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
 .face .bar i{display:block;height:100%;background:var(--gold);border-radius:3px}
 .face .f3,.face .f4{font-size:13px;color:var(--ink2)}
 .face .f3 b{color:var(--ink)}
-.fff[data-size=watch] .face .f4,.fff[data-size=watch] .face .ep,.fff[data-size=watch] .face .src span{display:none}
+.fff[data-size=watch] .face .f4,.fff[data-size=watch] .face .ep,.fff[data-size=watch] .face .src:not([data-m=mock]) span{display:none}
 
 .fff[data-size=compact] .chant{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
 .fff[data-size=compact] .stalk{grid-template-columns:1fr}
@@ -669,18 +669,18 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         return ev.alive ? { ev: ev, icon: 'sun', ti: 'HERE ' + A + ' WAKES', gl: [agent(ev.id).role || ''] }
           : { ev: ev, icon: 'zzz', tone: 'madder', ti: 'HERE ' + A + ' FALLS ASLEEP', gl: ['no heartbeat', agent(ev.id).role || ''] };
       case 'castle.relinked': return { ev: ev, icon: 'chain', ti: 'HERE THE CASTLE POINTS TO ' + up((ev.holderName || '').split('.')[0]), gl: [ev.holderName || '', 'castle.* resolves here now'] };
-      case 'strategy.shipped': return { ev: ev, icon: 'scroll', ti: 'HERE ' + A + ' SHIPS THE BOOK', gl: ['epoch ' + ep(ev.epoch) + ' · centred at ' + px(ev.center), amt(ev.weth, 'WETH') + ' WETH · ' + amt(ev.usdc, 'USDC') + ' USDC'] };
+      case 'strategy.shipped': return { ev: ev, icon: 'scroll', ti: 'HERE ' + A + ' SHIPS THE BOOK', gl: ['epoch ' + ep(ev.epoch) + ' · centred at ' + px(ev.center) + ' USDC/WETH', amt(ev.weth, 'WETH') + ' WETH · ' + amt(ev.usdc, 'USDC') + ' USDC'] };
       case 'strategy.docked': return { ev: ev, icon: 'broom', ti: 'HERE THE OLD BOOK IS DOCKED', gl: ['strategy ' + short(ev.hash), 'epoch ' + ep(ev.epoch)] };
       case 'fill':
         var t = trade(ev), who = ev.takerName || short(ev.taker);
         if (ev.status === 'reverted' && ev.decision === 'wind-down') return { ev: ev, icon: 'shield', tone: 'woad', ti: 'HERE THE CASTLE ONLY SELLS', gl: [who + ' tried to ' + (t.verb === 'bought' ? 'buy ' : 'sell ') + t.weth + ' WETH', 'reverted ' + (ev.revert || '')] };
         if (ev.decision === 'fenced') return { ev: ev, icon: 'cross', tone: 'madder', ti: 'HERE THE GIANT SMELLS A STALE SHIFT', gl: [who + ' tried an epoch ' + ep(ev.programEpoch) + ' quote', 'reverted FeeFiFoFum()'] };
         return { ev: ev, icon: 'coin', tone: ev.decision === 'wind-down' ? 'woad' : 'gold', ti: ev.decision === 'wind-down' ? 'HERE A JACK PAYS THE WIDE SPREAD' : 'HERE A JACK TRADES WITH THE GIANT',
-          gl: [who + ' ' + t.verb + ' ' + t.weth + ' WETH', 'for ' + t.usdc + ' USDC at ' + t.price] };
+          gl: [who + ' ' + t.verb + ' ' + t.weth + ' WETH', 'for ' + t.usdc + ' USDC at ' + t.price + ' USDC/WETH'] };
       case 'auction.opened': return { ev: ev, icon: 'stalk', tone: 'gold', ti: ev.kind === 'dissolution' ? 'HERE THE GIANT’S GOLD GOES UP THE BEANSTALK' : 'HERE THE JACKS CLIMB THE BEANSTALK',
-        gl: [amt(ev.amount, 'WETH') + ' WETH for sale', 'floor ' + px(ev.floor) + ' · blocks ' + ev.startBlock + '–' + ev.endBlock] };
+        gl: [amt(ev.amount, 'WETH') + ' WETH for sale', 'floor ' + px(ev.floor) + ' USDC/WETH' + ', blocks ' + ev.startBlock + '–' + ev.endBlock] };
       case 'auction.cleared': return { ev: ev, icon: 'stack', tone: 'gold', ti: 'HERE THE AUCTION CLEARS', gl: ['at ' + px(ev.clearing) + ' USDC per WETH', amt(ev.sold, 'WETH') + ' WETH · ' + amt(ev.raised, 'USDC') + ' USDC'] };
-      case 'price.written': return { ev: ev, icon: 'quill', ti: 'HERE THE PRICE IS WRITTEN IN ENS', gl: ['handoff-price = ' + px(ev.price), 'the next book centres here'] };
+      case 'price.written': return { ev: ev, icon: 'quill', ti: 'HERE THE PRICE IS WRITTEN IN ENS', gl: ['handoff-price = ' + px(ev.price) + ' USDC/WETH', 'the next book centres here'] };
       case 'castle.dissolved': return { ev: ev, icon: 'fall', tone: 'madder', ti: 'HERE THE CASTLE FALLS', gl: ['dissolve() called by ' + (ev.callerName || short(ev.caller)), 'anyone may; nobody is live'] };
     }
     return null;
@@ -848,7 +848,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       var s = stratState(st);
       if (s === 'DOCKED' && S.lease && st.epoch === S.lease.epoch) return;
       var k = s === 'LIVE' ? 'live' : s === 'WIND-DOWN' ? 'wind' : 'fenced';
-      buckets[k].push(h('div', { class: 'bk num', 'data-s': s, title: 'strategy ' + st.hash }, [stitch(k === 'wind' ? 'wind-down' : k, ''), 'epoch ' + ep(st.epoch) + ' book, centred at ' + px(st.center) + (s === 'DOCKED' ? ', docked' : '')]));
+      buckets[k].push(h('div', { class: 'bk num', 'data-s': s, title: 'strategy ' + st.hash }, [stitch(k === 'wind' ? 'wind-down' : k, ''), 'epoch ' + ep(st.epoch) + ' book, centred at ' + px(st.center) + ' USDC/WETH' + (s === 'DOCKED' ? ', docked' : '')]));
     });
     var lis = R('states').children;
     for (var i = 0; i < lis.length; i++) {
@@ -891,7 +891,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         h('span', { class: 'v' }, [px(p), h('small', { text: 'USDC / WETH' })])]),
       h('div', { class: 'row' }, [h('span', { class: 'k' }, ['Hoard value', h('span', { class: 'sub', text: 'WETH at the anchor, plus USDC' })]),
         h('span', { class: 'v' }, [isFinite(val) ? val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—', h('small', { text: 'USDC' })])]),
-      h('div', { class: 'row' }, [h('span', { class: 'k' }, ['Live books', h('span', { class: 'sub', text: live.length ? 'centred at ' + px(live[live.length - 1].center) : 'no book is live' })]),
+      h('div', { class: 'row' }, [h('span', { class: 'k' }, ['Live books', h('span', { class: 'sub', text: live.length ? 'centred at ' + px(live[live.length - 1].center) + ' USDC/WETH' : 'no book is live' })]),
         h('span', { class: 'v', text: String(live.length) })])
     ]);
   }
@@ -905,7 +905,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     }
     // drawn at the size it shows, so the axis type stays at 11.5px on a phone
     var narrow = root.getAttribute('data-size') !== 'full';
-    var W = narrow ? 340 : 640, H = narrow ? 230 : 250, L = 58, Rr = 16, T = 14, B = 34;
+    var W = narrow ? 340 : 640, H = narrow ? 238 : 258, L = 58, Rr = 16, T = 22, B = 34;
     var pts = a.points.map(function (p) { return { b: Number(p.block), p: Number(p.price.usdcPerWeth) }; });
     var bidsP = a.bids.map(function (b) { return Number(b.maxPrice.usdcPerWeth); });
     var fl = Number(a.floor.usdcPerWeth);
@@ -927,11 +927,12 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       g.push(sv('text', { x: X(bb).toFixed(1), y: H - B + 18, 'text-anchor': 'middle', class: 'num' }, '+' + (bb - b0)));
     }
     g.push(sv('text', { x: W - Rr, y: H - 4, 'text-anchor': 'end' }, 'blocks since the auction opened'));
+    g.push(sv('text', { x: 2, y: T - 2, 'text-anchor': 'start' }, 'USDC/WETH'));
     if (a.bids.length) g.push(sv('text', { x: W - Rr - 26, y: T + 4, 'text-anchor': 'end', fill: '#2F4A7A' }, 'flags: each Jack\u2019s top price'));
     g.push(sv('path', { d: 'M' + L + ' ' + T + 'V' + (H - B) + 'H' + (W - Rr), fill: 'none', stroke: '#1F2433', 'stroke-width': 1.6 }));
     // the floor
     g.push(sv('path', { d: 'M' + L + ' ' + Y(fl).toFixed(1) + 'H' + (W - Rr), stroke: '#B0412A', 'stroke-width': 1.6, 'stroke-dasharray': '6 6' }));
-    g.push(sv('text', { x: W - Rr - 4, y: (Y(fl) - 6).toFixed(1), 'text-anchor': 'end', fill: '#B0412A' }, 'floor ' + px(fl)));
+    g.push(sv('text', { x: W - Rr - 4, y: (Y(fl) - 6).toFixed(1), 'text-anchor': 'end', fill: '#B0412A' }, 'floor ' + px(fl) + ' USDC/WETH'));
     // each Jack's max price, a small flag at the right edge, one size for every Jack
     a.bids.forEach(function (b) {
       var y = Y(Number(b.maxPrice.usdcPerWeth)), sz = 7;
@@ -959,7 +960,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     var bids = a.bids.slice().sort(function (x, y) { return Number(y.maxPrice.usdcPerWeth) - Number(x.maxPrice.usdcPerWeth); });
     var list = h('ul', { class: 'bids num' }, bids.map(function (b) {
       return h('li', null, [h('span', { class: 'who' }, b.ownerName || short(b.owner)),
-        h('span', { class: 'amt' }, [amt(b.amount, 'WETH') + ' WETH', h('br'), h('span', { class: 'muted', text: 'up to ' + px(b.maxPrice) })])]);
+        h('span', { class: 'amt' }, [amt(b.amount, 'WETH') + ' WETH', h('br'), h('span', { class: 'muted', text: 'up to ' + px(b.maxPrice) + ' USDC/WETH' })])]);
     }).concat(a.rejected.map(function (r) {
       return h('li', { class: 'rej' }, [h('span', { class: 'who', text: r.ownerName || short(r.owner) }), h('span', { class: 'amt', text: 'no ENS name: JackHook said no' })]);
     })));
@@ -1117,7 +1118,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         L ? h('span', { class: 'muted num ep', text: 'epoch ' + ep(L.epoch) }) : null]),
       h('div', { class: 'bar' }, h('i', { style: 'width:' + (frac * 100).toFixed(1) + '%' })),
       S.inventory ? h('div', { class: 'f3 num' }, ['Hoard ', h('b', { text: amt(S.inventory.weth, 'WETH') }), ' WETH · ', h('b', { text: amt(S.inventory.usdc, 'USDC') }), ' USDC']) : null,
-      last ? h('div', { class: 'f4 num', text: 'Last: ' + (last.takerName || short(last.taker)) + (last.decision === 'fenced' ? ' was fenced, FeeFiFoFum()' : ' ' + t.verb + ' ' + t.weth + ' WETH at ' + t.price) }) : null
+      last ? h('div', { class: 'f4 num', text: 'Last: ' + (last.takerName || short(last.taker)) + (last.decision === 'fenced' ? ' was fenced, FeeFiFoFum()' : ' ' + t.verb + ' ' + t.weth + ' WETH at ' + t.price + ' USDC/WETH') }) : null
     ]);
   }
 

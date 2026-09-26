@@ -1,0 +1,530 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-26T06:26:08Z",
+  "title": "Design System: fee-fi-fo-fum",
+  "extensions": {
+    "colorMeta": {
+      "ground": {
+        "role": "neutral",
+        "displayName": "Ground",
+        "canonical": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#242424",
+          "#404040",
+          "#5D5D5D",
+          "#808080",
+          "#A4A4A4",
+          "#CACACA",
+          "#EEEEEE"
+        ]
+      },
+      "linen": {
+        "role": "neutral",
+        "displayName": "Linen",
+        "canonical": "oklch(95.3% 0.022 87.2)",
+        "tonalRamp": [
+          "#0F0A02",
+          "#292317",
+          "#453F32",
+          "#635D4F",
+          "#868071",
+          "#ABA495",
+          "#D1CABA",
+          "#F5EEDE"
+        ]
+      },
+      "thread": {
+        "role": "neutral",
+        "displayName": "Thread",
+        "canonical": "oklch(89.1% 0.037 86.2)",
+        "tonalRamp": [
+          "#110A00",
+          "#2C230D",
+          "#483F29",
+          "#675C46",
+          "#8A7F67",
+          "#AFA38B",
+          "#D5C9B0",
+          "#FAEDD3"
+        ]
+      },
+      "band-rule": {
+        "role": "neutral",
+        "displayName": "Band Rule",
+        "canonical": "oklch(84.0% 0.050 86.3)",
+        "tonalRamp": [
+          "#110A00",
+          "#2F2202",
+          "#4B3E1F",
+          "#6A5C3C",
+          "#8D7F5E",
+          "#B2A381",
+          "#D9C9A6",
+          "#FDEDC9"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(26.2% 0.029 270.1)",
+        "tonalRamp": [
+          "#070A17",
+          "#1E2332",
+          "#3A3F50",
+          "#575D6F",
+          "#798092",
+          "#9DA4B8",
+          "#C3CADE",
+          "#E8EEFF"
+        ]
+      },
+      "ink2": {
+        "role": "neutral",
+        "displayName": "Ink 2",
+        "canonical": "oklch(41.7% 0.024 269.8)",
+        "tonalRamp": [
+          "#070B15",
+          "#1F2430",
+          "#3B3F4D",
+          "#585D6C",
+          "#7A808F",
+          "#9EA4B4",
+          "#C4CADB",
+          "#E8EEFE"
+        ]
+      },
+      "ink3": {
+        "role": "neutral",
+        "displayName": "Ink 3",
+        "canonical": "oklch(53.9% 0.018 269.8)",
+        "tonalRamp": [
+          "#080B13",
+          "#21242D",
+          "#3C3F49",
+          "#595D68",
+          "#7C808B",
+          "#A0A4B0",
+          "#C6CAD7",
+          "#EAEEFB"
+        ]
+      },
+      "gold": {
+        "role": "primary",
+        "displayName": "Couched Gold",
+        "canonical": "oklch(70.2% 0.137 83.1)",
+        "tonalRamp": [
+          "#110A00",
+          "#302100",
+          "#533B02",
+          "#785805",
+          "#A37802",
+          "#CE9C27",
+          "#F6C256",
+          "#FFECCA"
+        ]
+      },
+      "goldhi": {
+        "role": "primary",
+        "displayName": "Gold Highlight",
+        "canonical": "oklch(81.5% 0.142 87.6)",
+        "tonalRamp": [
+          "#110A00",
+          "#2F2201",
+          "#503D03",
+          "#755901",
+          "#9F7B03",
+          "#CA9E19",
+          "#F1C44F",
+          "#FFEDC3"
+        ]
+      },
+      "goldink": {
+        "role": "primary",
+        "displayName": "Gold Ink",
+        "canonical": "oklch(51.2% 0.100 82.1)",
+        "tonalRamp": [
+          "#110A00",
+          "#302101",
+          "#543B00",
+          "#795702",
+          "#9E7A31",
+          "#C49E57",
+          "#EBC57D",
+          "#FFECCB"
+        ]
+      },
+      "madder": {
+        "role": "secondary",
+        "displayName": "Madder",
+        "canonical": "oklch(52.6% 0.150 33.5)",
+        "tonalRamp": [
+          "#1D0100",
+          "#470900",
+          "#761601",
+          "#A1321B",
+          "#C95840",
+          "#F37E64",
+          "#FEB6A5",
+          "#FEE9E4"
+        ]
+      },
+      "woad": {
+        "role": "secondary",
+        "displayName": "Woad",
+        "canonical": "oklch(41.2% 0.087 261.2)",
+        "tonalRamp": [
+          "#000827",
+          "#09214D",
+          "#243E6D",
+          "#415D8F",
+          "#6280B5",
+          "#86A5DC",
+          "#AECCFF",
+          "#E6EFFF"
+        ]
+      },
+      "sage": {
+        "role": "secondary",
+        "displayName": "Sage",
+        "canonical": "oklch(52.4% 0.092 140.2)",
+        "tonalRamp": [
+          "#011000",
+          "#072D00",
+          "#214B18",
+          "#406A37",
+          "#628E59",
+          "#86B37C",
+          "#ABDAA1",
+          "#CEFEC4"
+        ]
+      },
+      "skin": {
+        "role": "tertiary",
+        "displayName": "Skin",
+        "canonical": "oklch(84.6% 0.072 66.6)",
+        "tonalRamp": [
+          "#140800",
+          "#361D00",
+          "#59370F",
+          "#79552F",
+          "#9D7851",
+          "#C49C74",
+          "#EBC299",
+          "#FFEBD7"
+        ]
+      },
+      "beard": {
+        "role": "tertiary",
+        "displayName": "Beard",
+        "canonical": "oklch(46.0% 0.079 54.4)",
+        "tonalRamp": [
+          "#170600",
+          "#3B1A01",
+          "#5F3310",
+          "#805130",
+          "#A57352",
+          "#CC9775",
+          "#F4BD9A",
+          "#FEEADE"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display lettering",
+        "purpose": "The four chant syllables only. Almendra Bold glyph outlines drawn by letters(str, true); cropped to cap height. Holder: gold fill with a 5-unit ink outline (paint-order: stroke)."
+      },
+      "headline": {
+        "displayName": "Register head",
+        "purpose": "THE SHIFTS, THE FENCE, THE HOARD, THE BEANSTALK, THE TAPESTRY, THE FILLS, THE REPLAY. Set from data-lt. The lowercase wordmark uses the same outlines at 44px (34px compact, 24px card face)."
+      },
+      "title": {
+        "displayName": "Lettered title",
+        "purpose": "Fence state names and tapestry scene titles; scene titles are one SVG per word so they wrap. The shout is 30px."
+      },
+      "figure": {
+        "displayName": "Figure",
+        "purpose": "Hoard amounts, 20px/800 tabular lining numerals, never wrapped, unit in 13px/700 ink2 after the value."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "The root font: 15px/1.45 on --sans. Tagline 15px italic ink2."
+      },
+      "control": {
+        "displayName": "Tab",
+        "purpose": "Castle / Replay tabs."
+      },
+      "control-small": {
+        "displayName": "Pill button",
+        "purpose": "Unroll and mock beat buttons; fate words use 13px/800 with 0.03em."
+      },
+      "note": {
+        "displayName": "Note",
+        "purpose": "Roles, state copy, notes (max 62ch), the ENS name, the mock bar."
+      },
+      "small": {
+        "displayName": "Gloss",
+        "purpose": "Scene glosses, ledger sub-lines, roundel countdown and epoch, footer."
+      },
+      "label": {
+        "displayName": "Source label",
+        "purpose": "The live / mock / chain source label only, uppercase. Table heads are 12px/700/0.05em uppercase ink3; the MOCK tag is 11px/700/0.04em uppercase ink3."
+      },
+      "caption": {
+        "displayName": "Axis",
+        "purpose": "Beanstalk and timeline axis text. Roundel hour marks are 10.5px."
+      }
+    },
+    "shadows": [
+      {
+        "name": "coin-ring",
+        "value": "inset 0 0 0 2px var(--ink)",
+        "purpose": "Outlines the 13px gold coin dot on a hoard ledger row. A stroke, not elevation."
+      },
+      {
+        "name": "coin-ring-legend",
+        "value": "inset 0 0 0 1.6px var(--ink)",
+        "purpose": "Outlines the 11px coin swatch in the replay legend. A stroke, not elevation."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(.16,1,.3,1)",
+        "purpose": "--ease. The one easing for every transition and animation."
+      },
+      {
+        "name": "control",
+        "value": ".2s",
+        "purpose": "Tab and pill-button background and colour."
+      },
+      {
+        "name": "giant-face",
+        "value": ".3s",
+        "purpose": "Crossfade between the giant's calm, one-eye and roaring faces."
+      },
+      {
+        "name": "state-card",
+        "value": ".35s",
+        "purpose": "Fence state card background and border when it lights; shout opacity."
+      },
+      {
+        "name": "syllable-colour",
+        "value": ".4s",
+        "purpose": "Chant syllable colour, glyph fill and outline width."
+      },
+      {
+        "name": "syllable-lift",
+        "value": ".5s",
+        "purpose": "Chant syllable lift during the shout (translateY(-6px) scale(1.06)); shout scale from .9."
+      },
+      {
+        "name": "shout-stagger",
+        "value": ".08s",
+        "purpose": "Delay between successive syllables in the shout (0, .08s, .16s, .24s)."
+      },
+      {
+        "name": "shout-window",
+        "value": "3600ms",
+        "purpose": "How long data-shout stays on the root after a fenced fill."
+      },
+      {
+        "name": "scene-unroll",
+        "value": ".6s",
+        "purpose": "A new tapestry scene: opacity 0 and translateX(18px) to rest."
+      },
+      {
+        "name": "render-cadence",
+        "value": "200ms",
+        "purpose": "Full redraw cadence; the roundel hand and lease thread tick every animation frame. Paused off-screen."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "none",
+        "purpose": "Under prefers-reduced-motion: reduce, every animation and transition is removed."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "short-height",
+        "value": "420px"
+      },
+      {
+        "name": "watch",
+        "value": "268px"
+      },
+      {
+        "name": "mini",
+        "value": "420px"
+      },
+      {
+        "name": "compact",
+        "value": "620px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "View Tabs",
+      "kind": "nav",
+      "refersTo": "tabs",
+      "description": "The page's only action: The castle / The replay. An ink ring holding two pill tabs.",
+      "html": "<nav class=\"ds-tabs\" role=\"tablist\" aria-label=\"View\"><button class=\"ds-tab\" role=\"tab\" aria-selected=\"true\">The castle</button><button class=\"ds-tab\" role=\"tab\" aria-selected=\"false\">The replay</button></nav>",
+      "css": ".ds-tabs{display:inline-flex;gap:3px;padding:3px;border:1.6px solid var(--ink);border-radius:999px;background:var(--ground)} .ds-tab{border:0;background:none;padding:6px 14px;border-radius:999px;font:700 14px/1.45 var(--sans);color:var(--ink2);cursor:pointer;transition:background .2s var(--ease),color .2s var(--ease)} .ds-tab[aria-selected=true]{background:var(--ink);color:var(--ground)} .ds-tab:hover:not([aria-selected=true]){background:var(--linen);color:var(--ink)} .ds-tab:focus-visible{outline:2.5px solid var(--woad);outline-offset:3px;border-radius:8px}"
+    },
+    {
+      "name": "Pill Button",
+      "kind": "button",
+      "refersTo": "button-pill",
+      "description": "Unroll the tapestry, and the mock beat buttons. The current beat is filled ink.",
+      "html": "<div class=\"ds-pills\"><button class=\"ds-pill\" type=\"button\">Unroll the whole tapestry (20 scenes)</button><button class=\"ds-pill ds-beat\" type=\"button\">4. fee returns stale and is refused</button><button class=\"ds-pill ds-beat\" type=\"button\" data-now>5. the Jacks climb the beanstalk</button></div>",
+      "css": ".ds-pills{display:flex;flex-wrap:wrap;gap:8px 10px} .ds-pill{border:1.4px solid var(--ink);background:var(--ground);color:var(--ink);border-radius:999px;padding:5px 13px;font:700 13px/1.45 var(--sans);cursor:pointer;transition:background .2s var(--ease)} .ds-beat{padding:4px 11px} .ds-pill:hover{background:var(--linen)} .ds-pill[data-now]{background:var(--ink);color:var(--ground)} .ds-pill:focus-visible{outline:2.5px solid var(--woad);outline-offset:3px;border-radius:8px}"
+    },
+    {
+      "name": "Chant Syllable",
+      "kind": "custom",
+      "description": "One agent's syllable in the chant. The holder is gold with an ink outline; an asleep agent is thread with an ink3 outline.",
+      "html": "<div class=\"ds-chant\"><div class=\"ds-syl\" data-asleep><div class=\"ds-word\"><svg viewBox=\"0 -145 310 157\" role=\"img\" aria-label=\"FEE\" class=\"ds-lt\"><path d=\"M9 -132Q24 -130 54 -130Q83 -130 102 -133L103 -129Q95 -118 95 -96H89Q87 -105 87 -113Q81 -117 71 -117Q60 -117 57 -115Q55 -95 55 -72Q59 -72 63 -72Q79 -72 85 -79L90 -78Q87 -70 87 -62Q87 -53 89 -44L84 -43Q81 -50 80 -58Q74 -59 66 -59Q58 -59 55 -58Q55 -22 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -64Q22 -101 19 -123Q13 -124 8 -127Z\"></path><path d=\"M68 -17Q77 -17 84 -20Q90 -23 99 -29L102 -26Q85 -5 62 3Q35 3 20 -11Q6 -26 6 -54Q6 -81 23 -102Q40 -124 68 -133Q89 -133 110 -129L109 -125Q104 -125 100 -123Q94 -107 94 -91H88Q86 -99 86 -108Q77 -116 63 -116Q53 -116 49 -113Q44 -101 42 -77Q50 -75 63 -75Q76 -75 82 -82L87 -81Q84 -73 84 -65Q84 -57 86 -47L81 -46Q78 -54 77 -61Q71 -62 60 -62Q50 -62 42 -61Q42 -42 46 -30Q51 -17 68 -17Z\" transform=\"translate(100)\"></path><path d=\"M68 -17Q77 -17 84 -20Q90 -23 99 -29L102 -26Q85 -5 62 3Q35 3 20 -11Q6 -26 6 -54Q6 -81 23 -102Q40 -124 68 -133Q89 -133 110 -129L109 -125Q104 -125 100 -123Q94 -107 94 -91H88Q86 -99 86 -108Q77 -116 63 -116Q53 -116 49 -113Q44 -101 42 -77Q50 -75 63 -75Q76 -75 82 -82L87 -81Q84 -73 84 -65Q84 -57 86 -47L81 -46Q78 -54 77 -61Q71 -62 60 -62Q50 -62 42 -61Q42 -42 46 -30Q51 -17 68 -17Z\" transform=\"translate(205)\"></path></svg></div><div class=\"ds-role\">shift trader</div><div class=\"ds-who\"><svg class=\"ds-ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 7h5l-5 6h5M12 12h4l-4 5h4M18 4h3l-3 4h3\"></path></svg>asleep</div></div><div class=\"ds-syl\" data-hold><div class=\"ds-word\"><svg viewBox=\"0 -145 177 157\" role=\"img\" aria-label=\"FI\" class=\"ds-lt\"><path d=\"M9 -132Q24 -130 54 -130Q83 -130 102 -133L103 -129Q95 -118 95 -96H89Q87 -105 87 -113Q81 -117 71 -117Q60 -117 57 -115Q55 -95 55 -72Q59 -72 63 -72Q79 -72 85 -79L90 -78Q87 -70 87 -62Q87 -53 89 -44L84 -43Q81 -50 80 -58Q74 -59 66 -59Q58 -59 55 -58Q55 -22 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -64Q22 -101 19 -123Q13 -124 8 -127Z\"></path><path d=\"M57 -123Q55 -108 55 -67Q55 -26 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -64Q22 -101 19 -123Q12 -124 8 -127L9 -132Q21 -130 38 -130Q54 -130 69 -132L69 -127Q65 -125 57 -123Z\" transform=\"translate(100)\"></path></svg></div><div class=\"ds-role\">hot standby</div><div class=\"ds-who\"><svg class=\"ds-ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M7.5 12a3.5 3.5 0 107 0 3.5 3.5 0 10-7 0M14.5 12H21M18.5 12v3M21 12v2\"></path></svg>holds the castle</div></div></div>",
+      "css": ".ds-lt{display:block;height:1em;width:auto;fill:currentColor;overflow:visible} .ds-chant{display:flex;gap:10px 28px;align-items:flex-end;font-family:var(--sans)} .ds-word{height:64px;color:var(--ink);transition:color .4s var(--ease),transform .5s var(--ease)} .ds-word .ds-lt{height:100%} .ds-word path{stroke:var(--ink);stroke-width:0;transition:fill .4s var(--ease),stroke-width .4s var(--ease)} .ds-syl[data-hold] .ds-word{color:var(--gold)} .ds-syl[data-hold] .ds-word path{stroke-width:5;paint-order:stroke} .ds-syl[data-asleep] .ds-word{color:var(--thread)} .ds-syl[data-asleep] .ds-word path{stroke:var(--ink3);stroke-width:2.5;paint-order:stroke} .ds-role{font-size:13.5px;color:var(--ink2);margin-top:6px} .ds-who{font-size:13.5px;font-weight:700;margin-top:2px;display:flex;align-items:center;gap:6px;min-height:20px;color:var(--ink)} .ds-who .ds-ic{width:18px;height:18px;flex:none} .ds-syl[data-hold] .ds-who{color:var(--goldink)} .ds-syl[data-asleep] .ds-who{color:var(--madder)}"
+    },
+    {
+      "name": "Fence State Card",
+      "kind": "card",
+      "refersTo": "fence-state-on",
+      "description": "A fence state row. Lit: linen, 1.6px ink border, 16px radius, the lettered name in its wool. At rest: no fill, name in ink3.",
+      "html": "<ul class=\"ds-states\"><li class=\"ds-st\" data-k=\"live\" data-on><svg class=\"ds-stitch\" viewBox=\"0 0 34 34\" aria-hidden=\"true\"><path d=\"M7 26L12 8\" stroke=\"currentColor\" stroke-width=\"3.2\" stroke-linecap=\"round\"></path><path d=\"M11.5 26L16.5 8\" stroke=\"currentColor\" stroke-width=\"3.2\" stroke-linecap=\"round\"></path><path d=\"M16 26L21 8\" stroke=\"currentColor\" stroke-width=\"3.2\" stroke-linecap=\"round\"></path><path d=\"M20.5 26L25.5 8\" stroke=\"currentColor\" stroke-width=\"3.2\" stroke-linecap=\"round\"></path><path d=\"M25 26L30 8\" stroke=\"currentColor\" stroke-width=\"3.2\" stroke-linecap=\"round\"></path></svg><div class=\"ds-nm\"><svg viewBox=\"0 -145 399 157\" role=\"img\" aria-label=\"LIVE\" class=\"ds-lt\"><path d=\"M100 3Q81 0 53 0Q24 0 9 2L8 -3Q13 -6 19 -7Q22 -30 22 -65Q22 -101 19 -123Q12 -124 8 -127L9 -132Q21 -130 38 -130Q54 -130 69 -132L69 -127Q65 -125 57 -123Q55 -108 55 -69Q55 -30 57 -14Q60 -13 69 -13Q78 -13 84 -15Q86 -22 87 -33H93Q93 -11 101 -2Z\"></path><path d=\"M57 -123Q55 -108 55 -67Q55 -26 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -64Q22 -101 19 -123Q12 -124 8 -127L9 -132Q21 -130 38 -130Q54 -130 69 -132L69 -127Q65 -125 57 -123Z\" transform=\"translate(96)\"></path><path d=\"M89 2Q77 0 59 0Q40 0 29 1L28 -2Q35 -4 35 -8Q35 -22 13 -106Q10 -117 7 -123Q0 -125 -4 -127L-3 -132Q9 -130 27 -130Q44 -130 59 -132L59 -127Q54 -125 47 -123Q51 -81 69 -16Q84 -76 84 -104Q84 -122 73 -128L73 -132Q87 -130 100 -130Q112 -130 124 -132L125 -127Q121 -125 114 -123Q117 -116 117 -103Q117 -90 109 -69Q100 -48 77 -6Q86 -4 90 -3Z\" transform=\"translate(173)\"></path><path d=\"M68 -17Q77 -17 84 -20Q90 -23 99 -29L102 -26Q85 -5 62 3Q35 3 20 -11Q6 -26 6 -54Q6 -81 23 -102Q40 -124 68 -133Q89 -133 110 -129L109 -125Q104 -125 100 -123Q94 -107 94 -91H88Q86 -99 86 -108Q77 -116 63 -116Q53 -116 49 -113Q44 -101 42 -77Q50 -75 63 -75Q76 -75 82 -82L87 -81Q84 -73 84 -65Q84 -57 86 -47L81 -46Q78 -54 77 -61Q71 -62 60 -62Q50 -62 42 -61Q42 -42 46 -30Q51 -17 68 -17Z\" transform=\"translate(294)\"></path></svg></div><p>The shift holds the lease, so every quote fills on the curve.</p></li><li class=\"ds-st\" data-k=\"fenced\"><svg class=\"ds-stitch\" viewBox=\"0 0 34 34\" aria-hidden=\"true\"><path d=\"M9 9l16 16M25 9L9 25\" stroke=\"currentColor\" stroke-width=\"3.6\" stroke-linecap=\"round\"></path></svg><div class=\"ds-nm\"><svg viewBox=\"0 -145 686 157\" role=\"img\" aria-label=\"FENCED\" class=\"ds-lt\"><path d=\"M9 -132Q24 -130 54 -130Q83 -130 102 -133L103 -129Q95 -118 95 -96H89Q87 -105 87 -113Q81 -117 71 -117Q60 -117 57 -115Q55 -95 55 -72Q59 -72 63 -72Q79 -72 85 -79L90 -78Q87 -70 87 -62Q87 -53 89 -44L84 -43Q81 -50 80 -58Q74 -59 66 -59Q58 -59 55 -58Q55 -22 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -64Q22 -101 19 -123Q13 -124 8 -127Z\"></path><path d=\"M68 -17Q77 -17 84 -20Q90 -23 99 -29L102 -26Q85 -5 62 3Q35 3 20 -11Q6 -26 6 -54Q6 -81 23 -102Q40 -124 68 -133Q89 -133 110 -129L109 -125Q104 -125 100 -123Q94 -107 94 -91H88Q86 -99 86 -108Q77 -116 63 -116Q53 -116 49 -113Q44 -101 42 -77Q50 -75 63 -75Q76 -75 82 -82L87 -81Q84 -73 84 -65Q84 -57 86 -47L81 -46Q78 -54 77 -61Q71 -62 60 -62Q50 -62 42 -61Q42 -42 46 -30Q51 -17 68 -17Z\" transform=\"translate(100)\"></path><path d=\"M9 -132Q20 -130 38 -130Q57 -130 67 -132L68 -128Q66 -127 64 -126Q63 -124 63 -121Q63 -118 64 -114Q65 -110 74 -93Q84 -76 102 -45L103 -46V-65Q103 -99 100 -112Q96 -125 84 -128L85 -132Q97 -130 110 -130Q123 -130 135 -132L136 -127Q131 -125 122 -123Q121 -118 120 -100Q119 -83 119 -53Q119 -24 122 -7Q130 -6 136 -3L135 2Q123 0 110 0Q97 0 87 1Q87 -7 78 -24Q70 -41 39 -92L38 -92V-76Q38 -45 40 -29Q43 -13 50 -7Q58 -5 62 -3L61 2Q45 0 33 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -53Q22 -99 19 -123Q12 -124 8 -127Z\" transform=\"translate(205)\"></path><path d=\"M99 -29 102 -26Q85 -5 62 3Q35 3 20 -11Q6 -26 6 -54Q6 -81 23 -102Q40 -124 68 -133Q89 -133 110 -129L109 -125Q104 -125 100 -123Q94 -107 94 -91H88Q86 -99 86 -108Q77 -116 63 -116Q53 -116 49 -113Q46 -105 44 -92Q42 -78 42 -69Q42 -60 42 -55Q42 -50 43 -43Q44 -36 45 -32Q47 -28 50 -24Q53 -20 57 -18Q62 -17 69 -17Q77 -17 84 -20Q90 -23 99 -29Z\" transform=\"translate(346)\"></path><path d=\"M68 -17Q77 -17 84 -20Q90 -23 99 -29L102 -26Q85 -5 62 3Q35 3 20 -11Q6 -26 6 -54Q6 -81 23 -102Q40 -124 68 -133Q89 -133 110 -129L109 -125Q104 -125 100 -123Q94 -107 94 -91H88Q86 -99 86 -108Q77 -116 63 -116Q53 -116 49 -113Q44 -101 42 -77Q50 -75 63 -75Q76 -75 82 -82L87 -81Q84 -73 84 -65Q84 -57 86 -47L81 -46Q78 -54 77 -61Q71 -62 60 -62Q50 -62 42 -61Q42 -42 46 -30Q51 -17 68 -17Z\" transform=\"translate(449)\"></path><path d=\"M4 -130 68 -132Q97 -132 112 -118Q126 -105 126 -76Q126 -47 108 -25Q90 -2 61 3Q46 3 23 -5Q20 -2 18 5L13 3Q18 -23 18 -63Q18 -104 16 -121Q11 -124 4 -124ZM60 -122Q56 -122 53 -121Q51 -101 51 -72Q51 -43 53 -19Q60 -14 69 -14Q78 -14 83 -17Q90 -35 90 -64Q90 -122 60 -122Z\" transform=\"translate(554)\"></path></svg></div><p>A quote from a stale shift. The giant smells it, and the fill reverts FeeFiFoFum().</p></li></ul>",
+      "css": ".ds-states{list-style:none;margin:0;padding:0;display:grid;gap:10px;max-width:300px;font-family:var(--sans)} .ds-st{display:grid;grid-template-columns:34px minmax(0,1fr);gap:2px 10px;padding:9px 12px 10px;border-radius:16px;border:1.6px solid transparent;color:var(--ink);transition:background .35s var(--ease),border-color .35s var(--ease)} .ds-st .ds-stitch{width:34px;height:34px;grid-row:span 2} .ds-nm{height:17px;color:var(--ink3)} .ds-nm .ds-lt{height:17px} .ds-st p{margin:0;font-size:13.5px;line-height:1.45;color:var(--ink2)} .ds-st[data-on]{background:var(--linen);border-color:var(--ink)} .ds-st[data-k=live][data-on] .ds-nm{color:var(--sage)} .ds-st[data-k=wind][data-on] .ds-nm{color:var(--woad)} .ds-st[data-k=fenced][data-on] .ds-nm{color:var(--madder)} .ds-lt{display:block;height:1em;width:auto;fill:currentColor;overflow:visible}"
+    },
+    {
+      "name": "Fate Mark",
+      "kind": "custom",
+      "description": "State in a ledger row: a stitch and an uppercase word in the state wool. Never a filled pill.",
+      "html": "<div class=\"ds-fates\"><span class=\"ds-fate\" data-f=\"live\"><svg class=\"ds-stitch\" viewBox=\"0 0 34 34\" aria-hidden=\"true\"><path d=\"M7 26L12 8\" stroke=\"currentColor\" stroke-width=\"3.2\" stroke-linecap=\"round\"></path><path d=\"M11.5 26L16.5 8\" stroke=\"currentColor\" stroke-width=\"3.2\" stroke-linecap=\"round\"></path><path d=\"M16 26L21 8\" stroke=\"currentColor\" stroke-width=\"3.2\" stroke-linecap=\"round\"></path><path d=\"M20.5 26L25.5 8\" stroke=\"currentColor\" stroke-width=\"3.2\" stroke-linecap=\"round\"></path><path d=\"M25 26L30 8\" stroke=\"currentColor\" stroke-width=\"3.2\" stroke-linecap=\"round\"></path></svg>LIVE</span><span class=\"ds-fate\" data-f=\"wind-down\"><svg class=\"ds-stitch\" viewBox=\"0 0 34 34\" aria-hidden=\"true\"><path d=\"M6 17h22\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-dasharray=\"4 5\"></path></svg>WIND-DOWN</span><span class=\"ds-fate\" data-f=\"fenced\"><svg class=\"ds-stitch\" viewBox=\"0 0 34 34\" aria-hidden=\"true\"><path d=\"M9 9l16 16M25 9L9 25\" stroke=\"currentColor\" stroke-width=\"3.6\" stroke-linecap=\"round\"></path></svg>FENCED</span></div>",
+      "css": ".ds-fates{display:flex;flex-wrap:wrap;gap:8px 18px} .ds-fate{display:inline-flex;align-items:center;gap:6px;font:800 13px/1.45 var(--sans);letter-spacing:.03em;white-space:nowrap} .ds-fate .ds-stitch{width:18px;height:18px} .ds-fate[data-f=live]{color:var(--sage)} .ds-fate[data-f=wind-down]{color:var(--woad)} .ds-fate[data-f=fenced]{color:var(--madder)}"
+    },
+    {
+      "name": "Hoard Ledger",
+      "kind": "custom",
+      "refersTo": "hoard-value",
+      "description": "Money on a baseline: key left, tabular value right with its unit. The two hoard rows carry a gold underline.",
+      "html": "<div class=\"ds-hoard\"><div class=\"ds-row ds-gold\"><span class=\"ds-k\"><i class=\"ds-cn\"></i>WETH in the castle</span><span class=\"ds-v\">2.2500<small>WETH</small></span></div><div class=\"ds-row ds-gold\"><span class=\"ds-k\"><i class=\"ds-cn\"></i>USDC in the castle</span><span class=\"ds-v\">14,905.20<small>USDC</small></span></div><div class=\"ds-row\"><span class=\"ds-k\">Anchor price<span class=\"ds-sub\">handoff-price in ENS</span></span><span class=\"ds-v\">2,412.50<small>USDC / WETH</small></span></div></div>",
+      "css": ".ds-hoard{display:grid;gap:4px;max-width:420px;font-family:var(--sans);font-variant-numeric:tabular-nums lining-nums;color:var(--ink)} .ds-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1.4px solid var(--thread)} .ds-row:last-child{border-bottom:0} .ds-k{color:var(--ink2);font-size:14px} .ds-sub{display:block;font-size:12.5px;font-weight:500;color:var(--ink3)} .ds-v{font-weight:800;font-size:20px;text-align:right;white-space:nowrap} .ds-gold .ds-v{border-bottom:3.5px solid var(--gold);padding-bottom:1px} .ds-v small{font-size:13px;font-weight:700;color:var(--ink2);margin-left:5px} .ds-cn{display:inline-block;width:13px;height:13px;border-radius:50%;background:var(--gold);box-shadow:inset 0 0 0 2px var(--ink);margin-right:8px;vertical-align:-1px}"
+    },
+    {
+      "name": "Tapestry Scene",
+      "kind": "card",
+      "refersTo": "scene",
+      "description": "One event as a scene: lettered title in its tone, a vignette on a ground line, a gloss with units, and the time, block and tx (MOCK-tagged in the mock).",
+      "html": "<div class=\"ds-scene\" data-tone=\"gold\"><div class=\"ds-ti\" role=\"img\" aria-label=\"HERE THE AUCTION CLEARS\"><svg viewBox=\"0 -145 490 157\" role=\"img\" aria-label=\"HERE\" class=\"ds-lt\"><path d=\"M83 -132Q95 -130 113 -130Q130 -130 143 -132L144 -127Q139 -125 130 -123Q127 -106 127 -65Q127 -24 130 -7Q139 -5 144 -3L143 2Q130 0 113 0Q95 0 83 2L82 -4Q86 -6 92 -7Q94 -28 94 -63Q85 -64 74 -64Q64 -64 55 -63Q55 -23 58 -7Q65 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -64Q22 -101 19 -123Q12 -124 8 -127L9 -132Q21 -130 37 -130Q54 -130 69 -132L69 -127Q65 -125 57 -123Q55 -111 55 -79Q63 -77 75 -77Q87 -77 94 -79Q94 -103 92 -123Q86 -124 82 -127Z\"></path><path d=\"M68 -17Q77 -17 84 -20Q90 -23 99 -29L102 -26Q85 -5 62 3Q35 3 20 -11Q6 -26 6 -54Q6 -81 23 -102Q40 -124 68 -133Q89 -133 110 -129L109 -125Q104 -125 100 -123Q94 -107 94 -91H88Q86 -99 86 -108Q77 -116 63 -116Q53 -116 49 -113Q44 -101 42 -77Q50 -75 63 -75Q76 -75 82 -82L87 -81Q84 -73 84 -65Q84 -57 86 -47L81 -46Q78 -54 77 -61Q71 -62 60 -62Q50 -62 42 -61Q42 -42 46 -30Q51 -17 68 -17Z\" transform=\"translate(149)\"></path><path d=\"M8 -130 70 -132Q92 -132 104 -126Q118 -119 118 -99Q118 -88 112 -80Q106 -71 96 -66L125 -7Q132 -6 136 -4L135 2Q125 0 109 0Q93 0 82 1L81 -3Q85 -6 85 -15Q85 -29 73 -61Q68 -62 63 -62L63 -70H66Q74 -70 78 -77Q82 -85 82 -96Q82 -122 64 -122Q61 -122 57 -121Q55 -103 55 -64Q55 -26 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -62Q22 -97 19 -121Q14 -124 8 -124Z\" transform=\"translate(254)\"></path><path d=\"M68 -17Q77 -17 84 -20Q90 -23 99 -29L102 -26Q85 -5 62 3Q35 3 20 -11Q6 -26 6 -54Q6 -81 23 -102Q40 -124 68 -133Q89 -133 110 -129L109 -125Q104 -125 100 -123Q94 -107 94 -91H88Q86 -99 86 -108Q77 -116 63 -116Q53 -116 49 -113Q44 -101 42 -77Q50 -75 63 -75Q76 -75 82 -82L87 -81Q84 -73 84 -65Q84 -57 86 -47L81 -46Q78 -54 77 -61Q71 -62 60 -62Q50 -62 42 -61Q42 -42 46 -30Q51 -17 68 -17Z\" transform=\"translate(385)\"></path></svg><svg viewBox=\"0 -145 365 157\" role=\"img\" aria-label=\"THE\" class=\"ds-lt\"><path d=\"M-3 -133Q20 -130 57 -130Q94 -130 114 -133L115 -129Q108 -118 107 -97H102Q100 -106 100 -114Q93 -118 86 -118Q79 -118 75 -117Q73 -95 73 -60Q73 -26 76 -7Q84 -5 88 -3L87 2Q73 0 56 0Q39 0 27 2L26 -4Q31 -6 37 -7Q40 -27 40 -59Q40 -91 38 -116Q34 -118 26 -118Q18 -118 13 -115Q11 -107 10 -97H4Q4 -118 -5 -129Z\"></path><path d=\"M83 -132Q95 -130 113 -130Q130 -130 143 -132L144 -127Q139 -125 130 -123Q127 -106 127 -65Q127 -24 130 -7Q139 -5 144 -3L143 2Q130 0 113 0Q95 0 83 2L82 -4Q86 -6 92 -7Q94 -28 94 -63Q85 -64 74 -64Q64 -64 55 -63Q55 -23 58 -7Q65 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -64Q22 -101 19 -123Q12 -124 8 -127L9 -132Q21 -130 37 -130Q54 -130 69 -132L69 -127Q65 -125 57 -123Q55 -111 55 -79Q63 -77 75 -77Q87 -77 94 -79Q94 -103 92 -123Q86 -124 82 -127Z\" transform=\"translate(111)\"></path><path d=\"M68 -17Q77 -17 84 -20Q90 -23 99 -29L102 -26Q85 -5 62 3Q35 3 20 -11Q6 -26 6 -54Q6 -81 23 -102Q40 -124 68 -133Q89 -133 110 -129L109 -125Q104 -125 100 -123Q94 -107 94 -91H88Q86 -99 86 -108Q77 -116 63 -116Q53 -116 49 -113Q44 -101 42 -77Q50 -75 63 -75Q76 -75 82 -82L87 -81Q84 -73 84 -65Q84 -57 86 -47L81 -46Q78 -54 77 -61Q71 -62 60 -62Q50 -62 42 -61Q42 -42 46 -30Q51 -17 68 -17Z\" transform=\"translate(260)\"></path></svg><svg viewBox=\"0 -145 833 157\" role=\"img\" aria-label=\"AUCTION\" class=\"ds-lt\"><path d=\"M26 -132Q43 -130 70 -130Q98 -130 119 -132L119 -127Q115 -125 109 -124Q107 -107 107 -66Q107 -26 110 -7Q117 -5 122 -3L121 2Q107 0 90 0Q73 0 61 2L60 -4Q64 -6 71 -7Q73 -20 74 -46Q68 -47 59 -47Q49 -47 43 -46Q40 -26 40 -19Q40 -12 41 -8Q43 -4 48 -2L47 1Q37 0 22 0Q7 0 -4 2L-5 -4Q-1 -6 6 -7L37 -123Q31 -124 25 -127ZM74 -65Q74 -100 72 -119Q69 -120 64 -120Q58 -120 55 -119L45 -60Q52 -59 60 -59Q68 -59 74 -60Z\"></path><path d=\"M122 -123Q120 -108 120 -67Q120 -26 122 -7Q130 -5 134 -3L134 2Q119 0 108 0Q96 0 84 2L83 -2Q85 -5 85 -13Q75 -3 59 3Q35 3 25 -9Q16 -21 16 -48Q16 -60 17 -84Q19 -109 19 -114Q19 -119 17 -123Q10 -125 7 -127L8 -132Q22 -130 37 -130Q51 -130 60 -132L61 -128Q56 -126 54 -122Q53 -118 51 -100Q50 -83 50 -66Q50 -48 50 -45Q50 -42 50 -36Q51 -31 52 -28Q53 -25 55 -22Q59 -17 68 -17Q77 -17 86 -23Q87 -32 87 -66Q87 -101 84 -123Q77 -124 72 -127L73 -132Q85 -130 102 -130Q119 -130 133 -132L134 -127Q130 -125 122 -123Z\" transform=\"translate(129)\"></path><path d=\"M99 -29 102 -26Q85 -5 62 3Q35 3 20 -11Q6 -26 6 -54Q6 -81 23 -102Q40 -124 68 -133Q89 -133 110 -129L109 -125Q104 -125 100 -123Q94 -107 94 -91H88Q86 -99 86 -108Q77 -116 63 -116Q53 -116 49 -113Q46 -105 44 -92Q42 -78 42 -69Q42 -60 42 -55Q42 -50 43 -43Q44 -36 45 -32Q47 -28 50 -24Q53 -20 57 -18Q62 -17 69 -17Q77 -17 84 -20Q90 -23 99 -29Z\" transform=\"translate(271)\"></path><path d=\"M-3 -133Q20 -130 57 -130Q94 -130 114 -133L115 -129Q108 -118 107 -97H102Q100 -106 100 -114Q93 -118 86 -118Q79 -118 75 -117Q73 -95 73 -60Q73 -26 76 -7Q84 -5 88 -3L87 2Q73 0 56 0Q39 0 27 2L26 -4Q31 -6 37 -7Q40 -27 40 -59Q40 -91 38 -116Q34 -118 26 -118Q18 -118 13 -115Q11 -107 10 -97H4Q4 -118 -5 -129Z\" transform=\"translate(374)\"></path><path d=\"M57 -123Q55 -108 55 -67Q55 -26 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -64Q22 -101 19 -123Q12 -124 8 -127L9 -132Q21 -130 38 -130Q54 -130 69 -132L69 -127Q65 -125 57 -123Z\" transform=\"translate(485)\"></path><path d=\"M68 -133Q95 -133 109 -119Q124 -105 124 -77Q124 -49 108 -28Q92 -7 65 3Q37 3 22 -12Q6 -28 6 -55Q6 -81 23 -102Q39 -124 68 -133ZM71 -114Q67 -116 60 -116Q54 -116 49 -113Q42 -96 42 -68Q42 -48 47 -32Q50 -24 55 -19Q61 -14 68 -14Q75 -14 80 -17Q88 -34 88 -62Q88 -88 84 -99Q79 -111 71 -114Z\" transform=\"translate(562)\"></path><path d=\"M9 -132Q20 -130 38 -130Q57 -130 67 -132L68 -128Q66 -127 64 -126Q63 -124 63 -121Q63 -118 64 -114Q65 -110 74 -93Q84 -76 102 -45L103 -46V-65Q103 -99 100 -112Q96 -125 84 -128L85 -132Q97 -130 110 -130Q123 -130 135 -132L136 -127Q131 -125 122 -123Q121 -118 120 -100Q119 -83 119 -53Q119 -24 122 -7Q130 -6 136 -3L135 2Q123 0 110 0Q97 0 87 1Q87 -7 78 -24Q70 -41 39 -92L38 -92V-76Q38 -45 40 -29Q43 -13 50 -7Q58 -5 62 -3L61 2Q45 0 33 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -53Q22 -99 19 -123Q12 -124 8 -127Z\" transform=\"translate(692)\"></path></svg><svg viewBox=\"0 -145 657 157\" role=\"img\" aria-label=\"CLEARS\" class=\"ds-lt\"><path d=\"M99 -29 102 -26Q85 -5 62 3Q35 3 20 -11Q6 -26 6 -54Q6 -81 23 -102Q40 -124 68 -133Q89 -133 110 -129L109 -125Q104 -125 100 -123Q94 -107 94 -91H88Q86 -99 86 -108Q77 -116 63 -116Q53 -116 49 -113Q46 -105 44 -92Q42 -78 42 -69Q42 -60 42 -55Q42 -50 43 -43Q44 -36 45 -32Q47 -28 50 -24Q53 -20 57 -18Q62 -17 69 -17Q77 -17 84 -20Q90 -23 99 -29Z\"></path><path d=\"M100 3Q81 0 53 0Q24 0 9 2L8 -3Q13 -6 19 -7Q22 -30 22 -65Q22 -101 19 -123Q12 -124 8 -127L9 -132Q21 -130 38 -130Q54 -130 69 -132L69 -127Q65 -125 57 -123Q55 -108 55 -69Q55 -30 57 -14Q60 -13 69 -13Q78 -13 84 -15Q86 -22 87 -33H93Q93 -11 101 -2Z\" transform=\"translate(103)\"></path><path d=\"M68 -17Q77 -17 84 -20Q90 -23 99 -29L102 -26Q85 -5 62 3Q35 3 20 -11Q6 -26 6 -54Q6 -81 23 -102Q40 -124 68 -133Q89 -133 110 -129L109 -125Q104 -125 100 -123Q94 -107 94 -91H88Q86 -99 86 -108Q77 -116 63 -116Q53 -116 49 -113Q44 -101 42 -77Q50 -75 63 -75Q76 -75 82 -82L87 -81Q84 -73 84 -65Q84 -57 86 -47L81 -46Q78 -54 77 -61Q71 -62 60 -62Q50 -62 42 -61Q42 -42 46 -30Q51 -17 68 -17Z\" transform=\"translate(199)\"></path><path d=\"M26 -132Q43 -130 70 -130Q98 -130 119 -132L119 -127Q115 -125 109 -124Q107 -107 107 -66Q107 -26 110 -7Q117 -5 122 -3L121 2Q107 0 90 0Q73 0 61 2L60 -4Q64 -6 71 -7Q73 -20 74 -46Q68 -47 59 -47Q49 -47 43 -46Q40 -26 40 -19Q40 -12 41 -8Q43 -4 48 -2L47 1Q37 0 22 0Q7 0 -4 2L-5 -4Q-1 -6 6 -7L37 -123Q31 -124 25 -127ZM74 -65Q74 -100 72 -119Q69 -120 64 -120Q58 -120 55 -119L45 -60Q52 -59 60 -59Q68 -59 74 -60Z\" transform=\"translate(304)\"></path><path d=\"M8 -130 70 -132Q92 -132 104 -126Q118 -119 118 -99Q118 -88 112 -80Q106 -71 96 -66L125 -7Q132 -6 136 -4L135 2Q125 0 109 0Q93 0 82 1L81 -3Q85 -6 85 -15Q85 -29 73 -61Q68 -62 63 -62L63 -70H66Q74 -70 78 -77Q82 -85 82 -96Q82 -122 64 -122Q61 -122 57 -121Q55 -103 55 -64Q55 -26 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -62Q22 -97 19 -121Q14 -124 8 -124Z\" transform=\"translate(433)\"></path><path d=\"M46 -15Q63 -15 63 -30Q63 -34 54 -41Q46 -48 36 -54Q26 -60 18 -67Q10 -75 10 -80Q10 -97 24 -112Q38 -127 57 -133Q76 -133 91 -129V-125Q86 -120 83 -111Q80 -101 80 -92H74Q74 -102 73 -108Q64 -116 52 -116Q45 -116 40 -113Q35 -110 35 -104Q35 -99 44 -92Q52 -86 62 -80Q73 -74 81 -67Q90 -59 90 -54Q90 -39 74 -21Q59 -3 43 3Q27 3 11 -2Q8 0 3 6L-1 2Q11 -11 13 -40H19L20 -26Q32 -15 46 -15Z\" transform=\"translate(564)\"></path></svg></div><svg class=\"ds-vg\" viewBox=\"0 0 120 64\" aria-hidden=\"true\"><path d=\"M4 58h112\" fill=\"none\" stroke=\"#D9C9A6\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"></path><g transform=\"translate(36 58)\"><path d=\"M0 0c0-10 6-14 6-24S0 -38 0 -50\" fill=\"none\" stroke=\"#4C7743\" stroke-width=\"3.2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"></path><path d=\"M4 -12c4-4 10-4 12-1-3 3-9 4-12 1z\" fill=\"#4C7743\" stroke=\"#1F2433\" stroke-width=\"1.8\" stroke-linejoin=\"round\" stroke-linecap=\"round\"></path><path d=\"M3 -32c-4-4-10-4-12-1 3 3 9 4 12 1z\" fill=\"#4C7743\" stroke=\"#1F2433\" stroke-width=\"1.8\" stroke-linejoin=\"round\" stroke-linecap=\"round\"></path><path d=\"M1 -46c3-4 8-4 10-1-3 3-7 3-10 1z\" fill=\"#4C7743\" stroke=\"#1F2433\" stroke-width=\"1.8\" stroke-linejoin=\"round\" stroke-linecap=\"round\"></path></g><g transform=\"translate(76 58)\"><ellipse cx=\"0\" cy=\"-2.5\" rx=\"7\" ry=\"2.8\" fill=\"#C8961E\" stroke=\"#1F2433\" stroke-width=\"1.5\"></ellipse><ellipse cx=\"0\" cy=\"-6.1\" rx=\"7\" ry=\"2.8\" fill=\"#C8961E\" stroke=\"#1F2433\" stroke-width=\"1.5\"></ellipse><ellipse cx=\"0\" cy=\"-9.7\" rx=\"7\" ry=\"2.8\" fill=\"#C8961E\" stroke=\"#1F2433\" stroke-width=\"1.5\"></ellipse><ellipse cx=\"0\" cy=\"-13.3\" rx=\"7\" ry=\"2.8\" fill=\"#C8961E\" stroke=\"#1F2433\" stroke-width=\"1.5\"></ellipse><ellipse cx=\"0\" cy=\"-16.9\" rx=\"7\" ry=\"2.8\" fill=\"#C8961E\" stroke=\"#1F2433\" stroke-width=\"1.5\"></ellipse></g><g transform=\"translate(94 58)\"><ellipse cx=\"0\" cy=\"-2.5\" rx=\"7\" ry=\"2.8\" fill=\"#C8961E\" stroke=\"#1F2433\" stroke-width=\"1.5\"></ellipse><ellipse cx=\"0\" cy=\"-6.1\" rx=\"7\" ry=\"2.8\" fill=\"#C8961E\" stroke=\"#1F2433\" stroke-width=\"1.5\"></ellipse><ellipse cx=\"0\" cy=\"-9.7\" rx=\"7\" ry=\"2.8\" fill=\"#C8961E\" stroke=\"#1F2433\" stroke-width=\"1.5\"></ellipse></g></svg><div class=\"ds-gl\"><div><b>at 2,421.00 USDC per WETH</b></div><div>1.5000 WETH · 3,631.50 USDC</div></div><div class=\"ds-gl\">15:09:38 · block 9312096 · <span class=\"ds-tx\" title=\"Mock data: not a real transaction\">0xec76…0baf<em>mock</em></span></div></div>",
+      "css": ".ds-scene{width:max-content;min-width:200px;max-width:100%;height:234px;padding:12px 18px 10px;border-left:1.4px solid var(--thread);background:var(--ground);font-family:var(--sans);animation:ds-unroll .6s var(--ease) both} .ds-ti{display:flex;flex-wrap:wrap;gap:4px 5px;color:var(--ink);margin-bottom:10px} .ds-ti .ds-lt{height:17px} .ds-scene[data-tone=gold] .ds-ti{color:var(--goldink)} .ds-scene[data-tone=madder] .ds-ti{color:var(--madder)} .ds-scene[data-tone=woad] .ds-ti{color:var(--woad)} .ds-vg{display:block;width:168px;height:90px;margin:4px 0 10px} .ds-gl{font-size:12.5px;line-height:1.4;color:var(--ink2);font-variant-numeric:tabular-nums lining-nums} .ds-gl b{color:var(--ink);font-weight:800} .ds-tx{font-size:13px;white-space:nowrap} .ds-tx em{font-style:normal;font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.04em;text-transform:uppercase;margin-left:4px} .ds-lt{display:block;height:1em;width:auto;fill:currentColor;overflow:visible} @keyframes ds-unroll{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}} @media (prefers-reduced-motion:reduce){.ds-scene{animation:none}}"
+    },
+    {
+      "name": "Card Face",
+      "kind": "custom",
+      "refersTo": "card-face",
+      "description": "The whole castle in a 280x200 market card: wordmark and source label, holder syllable, state and countdown, epoch, lease bar, hoard.",
+      "html": "<div class=\"ds-face\"><div class=\"ds-f1\"><svg viewBox=\"0 -190 1099 259\" role=\"img\" aria-label=\"fee·fi·fo·fum\" class=\"ds-lt\"><path d=\"M48 -54Q48 -22 52 12Q39 11 26 10Q20 21 17 40L12 40Q12 35 15 0Q18 -35 18 -54L18 -88H5L4 -88Q4 -92 5 -94Q7 -95 19 -98Q24 -112 37 -124Q49 -136 64 -142Q80 -142 93 -138V-135Q83 -126 80 -114L78 -114Q71 -120 65 -122Q60 -125 52 -126Q49 -112 48 -98L74 -99L75 -98Q72 -91 72 -86Q59 -87 48 -87Z\"></path><path d=\"M59 -18Q66 -18 74 -22Q81 -27 87 -33L89 -31Q77 -9 51 3Q30 3 17 -9Q5 -20 5 -40Q5 -59 19 -76Q33 -93 52 -101Q88 -101 88 -76Q88 -69 87 -62Q92 -60 97 -59L96 -55Q95 -55 94 -55Q68 -55 37 -48Q37 -33 42 -26Q46 -18 59 -18ZM47 -86Q43 -86 40 -85Q37 -70 37 -54Q47 -58 57 -60Q57 -76 55 -81Q53 -86 47 -86Z\" transform=\"translate(73)\"></path><path d=\"M59 -18Q66 -18 74 -22Q81 -27 87 -33L89 -31Q77 -9 51 3Q30 3 17 -9Q5 -20 5 -40Q5 -59 19 -76Q33 -93 52 -101Q88 -101 88 -76Q88 -69 87 -62Q92 -60 97 -59L96 -55Q95 -55 94 -55Q68 -55 37 -48Q37 -33 42 -26Q46 -18 59 -18ZM47 -86Q43 -86 40 -85Q37 -70 37 -54Q47 -58 57 -60Q57 -76 55 -81Q53 -86 47 -86Z\" transform=\"translate(169)\"></path><path d=\"M45 -57Q42 -53 36 -46Q30 -40 26 -37Q21 -40 15 -46Q9 -53 7 -57Q9 -61 15 -66Q20 -71 26 -73Q31 -71 36 -66Q42 -61 45 -57Z\" transform=\"translate(265)\"></path><path d=\"M48 -54Q48 -22 52 12Q39 11 26 10Q20 21 17 40L12 40Q12 35 15 0Q18 -35 18 -54L18 -88H5L4 -88Q4 -92 5 -94Q7 -95 19 -98Q24 -112 37 -124Q49 -136 64 -142Q80 -142 93 -138V-135Q83 -126 80 -114L78 -114Q71 -120 65 -122Q60 -125 52 -126Q49 -112 48 -98L74 -99L75 -98Q72 -91 72 -86Q59 -87 48 -87Z\" transform=\"translate(316)\"></path><path d=\"M53 -128Q51 -124 45 -118Q39 -111 34 -108Q29 -111 23 -118Q17 -124 15 -128Q18 -132 23 -137Q29 -142 34 -144Q39 -142 44 -137Q50 -132 53 -128ZM19 -64Q19 -77 17 -90Q12 -92 6 -93V-97Q30 -97 52 -101L53 -100Q49 -82 49 -49Q49 -16 51 -7Q58 -5 64 -2L64 2Q50 0 32 0Q14 0 4 1L3 -3Q7 -4 16 -8Q19 -22 19 -64Z\" transform=\"translate(389)\"></path><path d=\"M45 -57Q42 -53 36 -46Q30 -40 26 -37Q21 -40 15 -46Q9 -53 7 -57Q9 -61 15 -66Q20 -71 26 -73Q31 -71 36 -66Q42 -61 45 -57Z\" transform=\"translate(455)\"></path><path d=\"M48 -54Q48 -22 52 12Q39 11 26 10Q20 21 17 40L12 40Q12 35 15 0Q18 -35 18 -54L18 -88H5L4 -88Q4 -92 5 -94Q7 -95 19 -98Q24 -112 37 -124Q49 -136 64 -142Q80 -142 93 -138V-135Q83 -126 80 -114L78 -114Q71 -120 65 -122Q60 -125 52 -126Q49 -112 48 -98L74 -99L75 -98Q72 -91 72 -86Q59 -87 48 -87Z\" transform=\"translate(506)\"></path><path d=\"M53 -101Q75 -101 86 -90Q98 -79 98 -59Q98 -39 84 -22Q71 -5 51 3Q30 3 17 -8Q5 -20 5 -40Q5 -59 19 -76Q33 -93 53 -101ZM49 -86Q45 -86 41 -85Q38 -70 38 -51Q38 -32 41 -22Q44 -12 53 -12Q59 -12 61 -13Q65 -28 65 -47Q65 -66 62 -76Q58 -86 49 -86Z\" transform=\"translate(579)\"></path><path d=\"M45 -57Q42 -53 36 -46Q30 -40 26 -37Q21 -40 15 -46Q9 -53 7 -57Q9 -61 15 -66Q20 -71 26 -73Q31 -71 36 -66Q42 -61 45 -57Z\" transform=\"translate(681)\"></path><path d=\"M48 -54Q48 -22 52 12Q39 11 26 10Q20 21 17 40L12 40Q12 35 15 0Q18 -35 18 -54L18 -88H5L4 -88Q4 -92 5 -94Q7 -95 19 -98Q24 -112 37 -124Q49 -136 64 -142Q80 -142 93 -138V-135Q83 -126 80 -114L78 -114Q71 -120 65 -122Q60 -125 52 -126Q49 -112 48 -98L74 -99L75 -98Q72 -91 72 -86Q59 -87 48 -87Z\" transform=\"translate(732)\"></path><path d=\"M46 -46Q46 -32 47 -26Q48 -20 52 -20Q56 -20 62 -27Q67 -34 71 -45Q71 -82 69 -91Q62 -93 56 -96L57 -100Q70 -98 88 -98Q106 -98 116 -99L117 -95Q114 -94 105 -90Q102 -76 102 -34Q102 -18 103 -8Q108 -6 115 -5V-1Q93 -1 70 3L69 2Q73 -15 73 -32L71 -32Q67 -22 60 -12Q53 -2 45 3Q27 3 20 -7Q14 -17 14 -37Q14 -38 14 -39L15 -64Q15 -67 15 -74Q15 -80 14 -90Q9 -92 2 -93V-97Q26 -97 49 -101L50 -100Q46 -82 46 -46Z\" transform=\"translate(805)\"></path><path d=\"M18 -64Q18 -77 16 -90Q11 -92 5 -93V-97Q26 -97 49 -101L50 -100Q47 -83 47 -66L49 -66Q58 -91 74 -101Q90 -101 97 -92Q103 -84 103 -66L105 -66Q115 -91 130 -101Q147 -101 154 -91Q161 -80 161 -62Q161 -61 161 -59L159 -8Q166 -5 171 -2L170 1Q159 0 146 0Q132 0 125 1V-4Q129 -22 129 -44Q129 -66 127 -72Q126 -78 123 -78Q118 -78 114 -72Q109 -65 105 -54L103 -8Q110 -5 115 -2L115 1Q103 0 90 0Q76 0 69 1V-4Q73 -22 73 -44Q73 -66 72 -72Q71 -78 67 -78Q63 -78 57 -71Q52 -64 48 -53Q48 -16 50 -7Q57 -5 63 -2L63 2Q49 0 31 0Q13 0 3 1L2 -3Q6 -4 15 -8Q18 -22 18 -64Z\" transform=\"translate(925)\"></path></svg><span class=\"ds-src\" data-m=\"mock\">Mock stream · synthetic</span></div><div class=\"ds-f2\"><span class=\"ds-hold\"><svg viewBox=\"0 -145 310 157\" role=\"img\" aria-label=\"FEE\" class=\"ds-lt\"><path d=\"M9 -132Q24 -130 54 -130Q83 -130 102 -133L103 -129Q95 -118 95 -96H89Q87 -105 87 -113Q81 -117 71 -117Q60 -117 57 -115Q55 -95 55 -72Q59 -72 63 -72Q79 -72 85 -79L90 -78Q87 -70 87 -62Q87 -53 89 -44L84 -43Q81 -50 80 -58Q74 -59 66 -59Q58 -59 55 -58Q55 -22 58 -7Q66 -5 70 -3L69 2Q55 0 38 0Q21 0 9 2L8 -4Q13 -6 19 -7Q22 -27 22 -64Q22 -101 19 -123Q13 -124 8 -127Z\"></path><path d=\"M68 -17Q77 -17 84 -20Q90 -23 99 -29L102 -26Q85 -5 62 3Q35 3 20 -11Q6 -26 6 -54Q6 -81 23 -102Q40 -124 68 -133Q89 -133 110 -129L109 -125Q104 -125 100 -123Q94 -107 94 -91H88Q86 -99 86 -108Q77 -116 63 -116Q53 -116 49 -113Q44 -101 42 -77Q50 -75 63 -75Q76 -75 82 -82L87 -81Q84 -73 84 -65Q84 -57 86 -47L81 -46Q78 -54 77 -61Q71 -62 60 -62Q50 -62 42 -61Q42 -42 46 -30Q51 -17 68 -17Z\" transform=\"translate(100)\"></path><path d=\"M68 -17Q77 -17 84 -20Q90 -23 99 -29L102 -26Q85 -5 62 3Q35 3 20 -11Q6 -26 6 -54Q6 -81 23 -102Q40 -124 68 -133Q89 -133 110 -129L109 -125Q104 -125 100 -123Q94 -107 94 -91H88Q86 -99 86 -108Q77 -116 63 -116Q53 -116 49 -113Q44 -101 42 -77Q50 -75 63 -75Q76 -75 82 -82L87 -81Q84 -73 84 -65Q84 -57 86 -47L81 -46Q78 -54 77 -61Q71 -62 60 -62Q50 -62 42 -61Q42 -42 46 -30Q51 -17 68 -17Z\" transform=\"translate(205)\"></path></svg></span><span class=\"ds-stt\">LIVE · 0:23</span><span class=\"ds-ep\">epoch 7</span></div><div class=\"ds-bar\"><i style=\"width:78%\"></i></div><div class=\"ds-f3\">Hoard <b>4.3500</b> WETH · <b>9,790.90</b> USDC</div></div>",
+      "css": ".ds-face{display:grid;gap:5px;width:280px;padding:10px 12px;background:var(--ground);color:var(--ink);font:15px/1.45 var(--sans)} .ds-f1{display:flex;align-items:center;gap:8px;justify-content:space-between} .ds-f1 .ds-lt{height:24px} .ds-src{font-size:10.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--ink2)} .ds-src[data-m=mock]{color:var(--madder)} .ds-src[data-m=live]{color:var(--sage)} .ds-src[data-m=chain]{color:var(--woad)} .ds-f2{display:flex;align-items:center;gap:10px} .ds-hold{height:30px;color:var(--gold)} .ds-hold .ds-lt{height:30px} .ds-hold path{stroke:var(--ink);stroke-width:5;paint-order:stroke} .ds-stt{font-weight:800;font-size:15px;color:var(--sage)} .ds-ep{color:var(--ink3);font-variant-numeric:tabular-nums lining-nums} .ds-bar{height:6px;border-radius:3px;background:var(--thread);overflow:hidden} .ds-bar i{display:block;height:100%;background:var(--gold);border-radius:3px} .ds-f3{font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums lining-nums} .ds-f3 b{color:var(--ink)} .ds-lt{display:block;height:1em;width:auto;fill:currentColor;overflow:visible}"
+    },
+    {
+      "name": "Embroidered Band",
+      "kind": "custom",
+      "description": "The divider between registers: a couched band-rule line with an ink tick every 36px.",
+      "html": "<div class=\"ds-band\" aria-hidden=\"true\"></div>",
+      "css": ".ds-band{height:14px;margin:22px 0;background:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='14'%3E%3Cpath d='M0 7h36' stroke='%23D9C9A6' stroke-width='5'/%3E%3Cpath d='M18 3.2v7.6' stroke='%231F2433' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E\") repeat-x left center}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Castle Tapestry",
+    "overview": "The page is one embroidered cloth: a Bayeux-style frieze with couched gold. Everything is drawn. The castle, the giant, the beanstalk and the Jacks are smooth, rounded figures outlined in indigo-black thread. They sit on a white ground and linen panels, filled with flat wool colours. There are no gradients, no drop shadows and no dark mode.\n\nThe tale leads, and the money is exact. Four big lettered syllables, FEE FI FO FUM, head the page, one per agent. The lease holder's syllable is lit gold. Three registers follow: the shifts (a 24-hour roundel with the lease thread at its centre), the fence (the giant and three stitched states) and the hoard (a castle spilling coins over a ledger). Then come the beanstalk auction, the tapestry of scenes and the ledger of fills. Words of the tale are lettered. Facts are set in a plain rounded sans with tabular numerals, and they are never lettered or stitched.\n\nThe system refuses the trading-dashboard look: no KPI tiles, no status pills, no dark terminal and no neon line chart. State is a stitch and a coloured word. Gold means the holder or the hoard. The page is a guest in someone else's box, so it sizes itself by that box and touches nothing outside it.",
+    "keyCharacteristics": [
+      "White ground, linen panels, indigo-black outlines, flat wool fills.",
+      "Display lettering is Almendra Bold, shipped as inline SVG glyph outlines.",
+      "Figures use a rounded system sans with tabular lining numerals, and every amount carries its unit.",
+      "Three state stitches: satin for LIVE, running stitch for WIND-DOWN, cross-stitch for FENCED.",
+      "Depth is outline and fill. There are no drop shadows.",
+      "One ease for all motion. The fence trip is the one loud moment.",
+      "One file, embedded in a shadow root, laid out by its own width and height."
+    ],
+    "rules": [
+      {
+        "name": "The Couched Gold Rule",
+        "body": "Gold marks only the lease holder and the hoard: who holds the castle, and the gold the castle holds or trades. Nothing else is gold.",
+        "section": "colors"
+      },
+      {
+        "name": "The Gold Ink Rule",
+        "body": "Gold is never text. Gold-family text is goldink. Gold lettering always carries an ink outline painted under the fill.",
+        "section": "colors"
+      },
+      {
+        "name": "The State Wool Rule",
+        "body": "Each fence state owns one wool: sage is LIVE, woad is WIND-DOWN, madder is FENCED. A state wool always travels with its stitch or its word.",
+        "section": "colors"
+      },
+      {
+        "name": "The Mirrored Literal Rule",
+        "body": "The SVG art (figures, vignettes, roundel, beanstalk, timeline) writes token hexes as literals in script. A change to a token on `:root,:host` must change those literals too.",
+        "section": "colors"
+      },
+      {
+        "name": "The Lettered Word Rule",
+        "body": "Lettering is for words of the tale: the chant, register heads, state names, scene titles, the shout and the wordmark. The glyph set is closed: A to Z, lowercase f e i o m u, the marks · - ! ’ and the space. Any other character draws as a blank. So lettered strings are capitals (the wordmark is the one lowercase string) and never hold digits.",
+        "section": "typography"
+      },
+      {
+        "name": "The Plain Figures Rule",
+        "body": "Numbers are never lettered or stitched. Every figure is the sans with tabular lining numerals, so columns align and ticking values stay still.",
+        "section": "typography"
+      },
+      {
+        "name": "The Outline Not Font Rule",
+        "body": "Lettering ships as glyph outlines in script (em 200, cap height 133). `letters(str, true)` crops each word to the cap height, plus 12 units above and below. Nothing loads a font.",
+        "section": "typography"
+      },
+      {
+        "name": "The Short Box Rule",
+        "body": "Width picks the layout. Only a box under 420px tall and under 420px wide gets the card face, so a narrow, tall phone gets the whole app.",
+        "section": "layout"
+      },
+      {
+        "name": "The Guest Rule",
+        "body": "The page runs inside a host's shadow root. Tokens live on `:root,:host`. The root holds `contain: layout paint`. Nothing is `position: fixed`. There is no `@font-face`, no JSON script tag and no `innerHTML`. Config is inlined as a JS literal at the `/*@CONFIG*/` slot.",
+        "section": "layout"
+      },
+      {
+        "name": "The Appliqué Rule",
+        "body": "Things come forward by outline and fill, never by shadow. A surface that needs to stand out gets linen and an ink border.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One Thread Rule",
+        "body": "Line icons, stitches, vignettes and figures share one stroke system: ink outline, round caps and joins, flat fill. Icons and stitches draw in `currentColor`, so they take their state's wool.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "**Do** keep every token on `:root,:host` so it reaches the page inside the host's shadow root.",
+      "**Do** build every node with `createElement`, `createElementNS` and `textContent`, and swap content with `replaceChildren`.",
+      "**Do** write every amount and price with its unit: 2.2500 WETH, 14,905.20 USDC, 2,412.50 USDC / WETH. WETH shows 4 decimals; USDC and prices show 2.",
+      "**Do** let text wrap. The root sets `overflow-wrap: anywhere`. Money values stay on one line and the row wraps around them.",
+      "**Do** show state as a stitch plus a word in the state's wool.",
+      "**Do** label mock data wherever it shows: the source label reads \"Mock stream · synthetic\" in madder, every mock tx carries a MOCK tag, and a mock tx is never a link.",
+      "**Do** outline gold lettering in ink, and set gold-family text in goldink.",
+      "**Do** use `cubic-bezier(.16,1,.3,1)` for every transition, and drop all animation and transition under `prefers-reduced-motion: reduce`.",
+      "**Do** keep the Castle / Replay tabs as the only action, with unroll and, in mock only, the beat buttons."
+    ],
+    "donts": [
+      "**Don't** use gold for anything but the lease holder and the hoard.",
+      "**Don't** print an amount or a price without its unit.",
+      "**Don't** ellipsize or clamp text: no `text-overflow`, no line clamps, no cut names, amounts or prose. The only shortened strings are hex hashes and addresses (first 6, last 4) where no name is known.",
+      "**Don't** use status pills, badges or filled capsules for state. Pills are for controls.",
+      "**Don't** add a kill button or any control that stops an agent.",
+      "**Don't** use `position: fixed`, `@font-face`, JSON script tags or `innerHTML`.",
+      "**Don't** use browser storage, cookies, `eval` or ES modules.",
+      "**Don't** use gradients, drop shadows, dark grounds, KPI tiles or neon line charts.",
+      "**Don't** letter digits, or any mark outside · - ! ’."
+    ]
+  }
+}

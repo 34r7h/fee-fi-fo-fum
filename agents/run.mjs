@@ -49,14 +49,18 @@ const role = (await import(`./roles/${id}.mjs`)).default;
 const ctx = { id, crew, log, logChange, h, pc, wallet: walletClient(account), account, deployments, abi };
 
 let stopping = false;
+// CREW_OFFLINE=1 (fork rehearsals while the live crew runs): no agent_heartbeat and no listener, so the rehearsal
+// never shows as the live agent's liveness and never touches its inbox or its listener.
+const OFFLINE = env('CREW_OFFLINE') === '1';
 const heartbeat = async () => {
+  if (OFFLINE) return;
   try { await h.heartbeat(); logChange('hb', 'heartbeat', { ok: true }); }
   catch (e) { logChange('hb', 'heartbeat', { ok: false, error: e.message }); }
 };
 await heartbeat();
 const hbTimer = setInterval(heartbeat, Number(env('HEARTBEAT_MS', 20_000)));
 
-const listener = startListener(id, (msg) => {
+const listener = OFFLINE ? { stop() {} } : startListener(id, (msg) => {
   if (msg.raw !== undefined) { log('listener', { line: msg.raw }); return; }
   log('message', { from: msg.from, kind: msg.kind, envelope: msg.envelope });
   Promise.resolve(role.onMessage?.(ctx, msg)).catch((e) => log('message-error', { error: e.message }));

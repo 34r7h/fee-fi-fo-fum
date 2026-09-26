@@ -32,6 +32,9 @@ export function takerData({ taker, isExactIn = true, threshold, to, deadline = 0
   return concat([encodePacked(['uint160', 'uint16'], [idx, flags]), th, toSlice, dl, instructionsArgs]);
 }
 
+// The castle trades one pair: the other side of USDC is WETH and vice versa.
+const otherToken = (t) => (sameAddr(t, addr('usdc')) ? addr('weth') : sameAddr(t, addr('weth')) ? addr('usdc') : (() => { throw new Error('tokenOut is required for a token that is not USDC or WETH'); })());
+
 function pickStrategy(hash) {
   const live = liveStrategies();
   const s = hash ? live.find((x) => x.hash === hash) : live.filter((x) => x.strategy).at(-1);
@@ -82,12 +85,12 @@ export const tools = {
   },
 
   castle_quote: {
-    description: 'Quote a swap against the castle book through the SwapVM router: the view path runs the same FeeFiFoFumExtruction fence the swap will, so a stale epoch quotes as a FeeFiFoFum() revert. tokenIn/tokenOut are "USDC", "WETH" or addresses; amount is atomic units (exact in by default).',
-    input: { tokenIn: z.string(), tokenOut: z.string(), amount: z.string(), exactIn: z.boolean().optional(), strategy: z.string().optional(), taker: z.string().optional() },
+    description: 'Quote a swap against the castle book through the SwapVM router: the view path runs the same FeeFiFoFumExtruction fence the swap will, so a stale epoch quotes as a FeeFiFoFum() revert. tokenIn/tokenOut are "USDC", "WETH" or addresses (tokenOut defaults to the other one); amount is atomic units (exact in by default).',
+    input: { tokenIn: z.string(), tokenOut: z.string().optional(), amount: z.string(), exactIn: z.boolean().optional(), strategy: z.string().optional(), taker: z.string().optional() },
     run: async ({ tokenIn, tokenOut, amount, exactIn = true, strategy, taker }) => {
       const router = need(addr('router'), 'the SwapVM router');
       const { s, order } = pickStrategy(strategy);
-      const tIn = token(tokenIn), tOut = token(tokenOut);
+      const tIn = token(tokenIn), tOut = tokenOut ? token(tokenOut) : otherToken(tIn);
       const h = await head();
       const lease = currentLease();
       const decision = fenceDecision(s.epoch, lease?.epoch, lease?.expiry, h.timestamp);
@@ -130,9 +133,9 @@ export const tools = {
         return { recorded: true, ...entry, etherscan: `https://sepolia.etherscan.io/tx/${tx_hash}` };
       }
       const router = need(addr('router'), 'the SwapVM router');
-      if (!tokenIn || !tokenOut || !amount) throw new Error('tokenIn, tokenOut and amount are required to build a fill');
+      if (!tokenIn || !amount) throw new Error('tokenIn and amount are required to build a fill (tokenOut defaults to the other token)');
       const { s, order } = pickStrategy(strategy);
-      const tIn = token(tokenIn), tOut = token(tokenOut);
+      const tIn = token(tokenIn), tOut = tokenOut ? token(tokenOut) : otherToken(tIn);
       const data = encodeFunctionData({ abi: abi('SwapVM'), functionName: 'swap', args: [order, tIn, tOut, BigInt(amount), takerData({ taker, isExactIn: true, threshold: minOut ?? 1n, deadline })] });
       const approve = encodeFunctionData({ abi: [{ type: 'function', name: 'approve', stateMutability: 'nonpayable', inputs: [{ type: 'address' }, { type: 'uint256' }], outputs: [{ type: 'bool' }] }], functionName: 'approve', args: [router, BigInt(amount)] });
       return {

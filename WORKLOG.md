@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 14:16 JST
+- **Last regenerated:** 2026-09-26 14:19 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -73,7 +73,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
-| README before/after, the three sponsor integration write-ups, and the contract address table <br>`p6-writeups` `3fb7f7a3` | korg | korg | Sun 07:00 | todo |  |  |
+| README before/after, the three sponsor integration write-ups, and the contract address table <br>`p6-writeups` `3fb7f7a3` | korg | korg | Sun 07:00 | in_progress |  |  |
 | FEEDBACK.md for Uniswap and the developers.uniswap.org/hackathon-feedback form <br>`p6-feedback` `d0587b18` | korg | korg | Sun 07:00 | todo |  |  |
 | Pitch deck, plus the script and shot list for a 2-4 min demo video <br>`p6-deck` `005db56f` | impecc | impecc | Sun 07:00 | in_progress |  |  |
 | **BLOCKER** Two full rehearsals of the five-beat demo on Sepolia from a clean browser <br>`p6-rehearsal` `3eb4aa41` | agy | agy | Sun 05:00 | in_progress |  |  |
@@ -105,7 +105,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784091.
+Live balances read at block 11784102.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -135,7 +135,7 @@ Live balances read at block 11784091.
 | README.md (pitch, before/after, addresses) | impecc (voice) + korg (technical) | draft by SirKit (00d5ccf) |
 | docs/PLAN.md | handoff-advisor | done (research 3cb55b7; identifier rename 4d5afc0) |
 | docs/NAMING.md | SirKit, per operator | done (c0f0241) |
-| docs/ens-probes.md | korg | done: live and fork evidence, verified by handoff-advisor (subregistry note pending) |
+| docs/ens-probes.md | korg | done: live and fork evidence, verified by handoff-advisor, plus the subregistry design note (bde95fc) |
 | docs/1inch.md, docs/uniswap.md, docs/ens.md | korg | todo |
 | FEEDBACK.md | korg | todo |
 | docs/video-script.md + deck | impecc | todo |
@@ -230,3 +230,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:29 | handoff-advisor | p0-ens-probes PASS: every DoD clause met. |
 | Sat 14:29 | SirKit | Verified p0-ens-probes; co-sign requested. korg to add the subregistry design consequence to docs/ens-probes.md. |
 | Sat 14:30 | handoff-advisor | Co-signed p0-ens-probes (paid, receipt 07ea6eab). Goal P0 is complete: every blocker verified. |
+| Sat 14:31 | korg | Added the subregistry design consequence to docs/ens-probes.md (bde95fc), with live eth_call evidence (MIN_REGISTER_DURATION = 2419200; owner holds no ROLE_RENEW or ROLE_REGISTRAR). |

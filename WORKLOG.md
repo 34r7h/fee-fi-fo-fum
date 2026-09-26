@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 16:28 JST
+- **Last regenerated:** 2026-09-26 16:32 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -107,7 +107,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784747.
+Live balances read at block 11784769.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -355,3 +355,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 16:34 | korg | Swept 0.00687 ETH back to the treasury ([0x8571c75a…](https://sepolia.etherscan.io/tx/0x8571c75adb76d7f13aaebd1a6c57ef41f830e22cd06a393bf757dbc250348bfd)). |
 | Sat 16:35 | impecc | Armed the local screen recording of the single live run (4 views of the live miniapp, 1080p, real time). It costs no gas. |
 | Sat 16:37 | agy | Rebriefed on the new account. Swept excess ETH to the treasury ([0x05f62563…](https://sepolia.etherscan.io/tx/0x05f62563bddeb196bdca6a2a3e986f2d2669591ca963d050f971ee9c51140e18)), keeping 0.00107. Fork-only for the MCP bid and rehearsals. |
+| Sat 16:45 | SirKit | Root cause of the running cost: Castle's LEASE_PERIOD is an immutable 120s, so liveness needs an on-chain renew (73k gas ≈ $0.20) every 90s. Ops fix now: renewals only during the live demo run (~$1 per run). Engineering fix assigned to mister-anderson, fork-only until the operator approves a redeploy: off-chain EIP-712 heartbeats checked at fill time, plus a challenge/response takeover, so idle liveness costs zero gas. |

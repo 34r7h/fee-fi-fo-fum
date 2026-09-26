@@ -1,0 +1,29 @@
+{
+ "wallet": "0x2cFffC9DdCDE0419e8bB73695c16Bb8f7400a199",
+ "sent": [
+  {
+   "what": "Wrap 0.0003 ETH into WETH",
+   "hash": "0xa6ab764fe06d4f4630a6e510ae475c51c1a817df5aa06f759baf46c4f82d4e83"
+  },
+  {
+   "what": "Approve 0.0001 WETH for the 1inch SwapVM router",
+   "hash": "0x5f3d3c03219db9d1769898eed46dc32ca4c56be10c673824a7f6a4f27a1581c8"
+  },
+  {
+   "what": "Fill the signed quote through the 1inch SwapVM router",
+   "hash": "0xd563f576b37c2b8225e16381f3487991996bf551a70457913ac94d4c8ef68bd0"
+  },
+  {
+   "what": "Approve 0.0001 WETH for Uniswap's PoolSwapTest",
+   "hash": "0x6aef51b468c56c76213fb56f21bba985aefb97b5b8af8196e2ac2c93cb8dd1c6"
+  },
+  {
+   "what": "Swap on the Uniswap v4 pool",
+   "hash": "0x3489324ef67e5824e8356754758b55bbe83b78ae21be129cd0adb67f28979246"
+  }
+ ],
+ "fillHash": "0xd563f576b37c2b8225e16381f3487991996bf551a70457913ac94d4c8ef68bd0",
+ "swapHash": "0x3489324ef67e5824e8356754758b55bbe83b78ae21be129cd0adb67f28979246",
+ "errors": [],
+ "fork": false
+}

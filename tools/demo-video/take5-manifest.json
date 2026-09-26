@@ -1,0 +1,92 @@
+[
+ {
+  "seg": "s01",
+  "file": "clips/s01_1.webm",
+  "dur": 18.244
+ },
+ {
+  "seg": "s02",
+  "file": "clips/s02_1.webm",
+  "dur": 23.816
+ },
+ {
+  "seg": "s03",
+  "file": "clips/s03_1.webm",
+  "dur": 14.246
+ },
+ {
+  "seg": "s03",
+  "file": "clips/s03_2.webm",
+  "dur": 5.393
+ },
+ {
+  "seg": "s04",
+  "file": "clips/s04_1.webm",
+  "dur": 22.6
+ },
+ {
+  "seg": "s05",
+  "file": "clips/s05_1.webm",
+  "dur": 11.849
+ },
+ {
+  "seg": "s05",
+  "file": "clips/s05_2.webm",
+  "dur": 4.493
+ },
+ {
+  "seg": "s05",
+  "file": "clips/s05_3.webm",
+  "dur": 3.901
+ },
+ {
+  "seg": "s06",
+  "file": "clips/s06_1.webm",
+  "dur": 11.113
+ },
+ {
+  "seg": "s07",
+  "file": "clips/s07_1.webm",
+  "dur": 18.572
+ },
+ {
+  "seg": "s07",
+  "file": "clips/s07_2.webm",
+  "dur": 4.508
+ },
+ {
+  "seg": "s07",
+  "file": "clips/s07_3.webm",
+  "dur": 3.84
+ },
+ {
+  "seg": "s08",
+  "file": "clips/s08_1.webm",
+  "dur": 10.847
+ },
+ {
+  "seg": "s09",
+  "file": "clips/s09_1.webm",
+  "dur": 12.637
+ },
+ {
+  "seg": "s10",
+  "file": "clips/s10_1.webm",
+  "dur": 14.191
+ },
+ {
+  "seg": "s11",
+  "file": "clips/s11_1.webm",
+  "dur": 7.536
+ },
+ {
+  "seg": "s12",
+  "file": "clips/s12_1.webm",
+  "dur": 28.3
+ },
+ {
+  "seg": "s13",
+  "file": "clips/s13_1.webm",
+  "dur": 12.006
+ }
+]

@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 16:52 JST
+- **Last regenerated:** 2026-09-26 16:53 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -50,9 +50,9 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
 | agents/ scaffold: shared runtime for fee, fi, fo, fum <br>`p3-scaffold` `17b80082` | agent-smith | agent-smith | Sat 17:00 | done | 444a32d | paid 0.4 USDC (receipt 86aba84d) |
-| fee (shift trader) and fi (hot standby): lease renewal and failover logic <br>`p3-feefi` `fa22a44e` | agent-smith | agent-smith | Sat 20:30 | in_progress |  |  |
+| fee (shift trader) and fi (hot standby): lease renewal and failover logic <br>`p3-feefi` `fa22a44e` | agent-smith | agent-smith | Sat 20:30 | done | agents/roles/fee.mjs, fi.mjs, lib/shift.mjs (45f596e, b74e90f, 5f41052, 95f2d4a) | fork dry-runs passed; every live ship centred on ENS at 0 bps; verified by SirKit, co-sign pending |
 | fo, fencer and witness: EIP-712 attestations, fill replay, incident channel <br>`p3-fo` `9b450702` | agent-smith | agent-smith | Sat 20:30 | in_progress |  |  |
-| **BLOCKER** Live failover on Sepolia: kill -9 fee, wind-down gap, fi claims, stale epoch fenced, stale fee rejected <br>`p3-failover-e2e` `ad888e60` | agent-smith | agent-smith | Sat 22:30 | review | live run 07:38-07:45Z, blocks 11784800-11784832 | all four beats on-chain (wind-down fill, FeeFiFoFum() revert, new-epoch fill, NotHolder revert), each checked by SirKit; fee took over 72s after expiry; run gas 0.00165 ETH; every loop stopped afterwards |
+| **BLOCKER** Live failover on Sepolia: kill -9 fee, wind-down gap, fi claims, stale epoch fenced, stale fee rejected <br>`p3-failover-e2e` `ad888e60` | agent-smith | agent-smith | Sat 22:30 | done | live run 07:38-07:45Z, blocks 11784800-11784832 | all four beats on-chain (wind-down fill, FeeFiFoFum() revert, new-epoch fill, NotHolder revert), each checked by SirKit; fee took over 72s after expiry; run gas 0.00165 ETH; every loop stopped afterwards; verified by SirKit, co-sign pending |
 | fum, auctioneer: shift-change and dissolution CCAs, checkpoint, sweep, setData <br>`p3-fum` `c78ba379` | agent-smith | agent-smith | Sun 00:00 | in_progress |  |  |
 
 ### P2 UNISWAP CCA: JackHook, shift-change and dissolution auctions, price write-back
@@ -79,7 +79,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | FEEDBACK.md for Uniswap and the developers.uniswap.org/hackathon-feedback form <br>`p6-feedback` `d0587b18` | korg | korg | Sun 07:00 | in_progress |  |  |
 | Pitch deck, plus the script and shot list for a 2-4 min demo video <br>`p6-deck` `005db56f` | impecc | impecc | Sun 07:00 | done | deck artifact 8emvtymY…; docs/video-script.md 99b43c7 | 11 slides with real Sepolia txs (all status 1, captions match); script with 7 tx links; co-signed |
 | **BLOCKER** Two full rehearsals of the five-beat demo on Sepolia from a clean browser <br>`p6-rehearsal` `3eb4aa41` | agy | agy | Sun 05:00 | in_progress |  |  |
-| AI_USAGE.md and the final WORKLOG.md pass <br>`p6-ai-usage` `8abb390e` | SirKit | SirKit | Sun 08:00 | in_progress |  |  |
+| AI_USAGE.md and the final WORKLOG.md pass <br>`p6-ai-usage` `8abb390e` | SirKit | SirKit | Sun 08:00 | review | AI_USAGE.md bf999b9, de24ce3 | reconciled against git log: every path attributed, the '34r7h' commit identity disclosed as SirKit, operator decisions listed; submitted to handoff-advisor |
 | **BLOCKER** OPERATOR: record the video, submit on ETHGlobal and select 1inch, Uniswap and ENS <br>`p6-submit` `6aa606a5` | OPERATOR |  | Sun 08:45 | todo |  |  |
 | **BLOCKER** OPERATOR: owned contributions on the record (design calls, review sign-offs, the video, booth conversations) <br>`p6-operator` `0b628549` | OPERATOR |  | Sun 08:00 | todo |  |  |
 
@@ -108,7 +108,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784868.
+Live balances read at block 11784874.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -363,3 +363,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 16:47 | SirKit | Checked all 9 txs on-chain (7 succeeded; the 2 intended reverts replay as FeeFiFoFum() and NotHolder(address,address)). The whole run cost 0.00165 ETH (~$4.40). Crew nonces were flat for 60s after the window. |
 | Sat 16:50 | agent-smith | Swept 0.0827 ETH from fee, fi, fo, fum and the castle EOA back to the treasury (5 txs), leaving the budgeted minimums. |
 | Sat 16:51 | SirKit | Treasury read on-chain at 0.2201 ETH. Every crew nonce stayed flat for 60s after the run. |
+| Sat 16:55 | SirKit | Board at 23/35 verified: finished work hadn't been submitted. Verified p3-failover-e2e and p3-feefi; reconciled AI_USAGE.md against git log and submitted p6-ai-usage to handoff-advisor. Updated the p3-fo, p3-fum and p2-capabilities DoDs to the cost rule (existing live txs plus fork runs). Found another cost leak: fi re-centred on a 240s timer (7 extra ships), now re-centres only when the anchor moves. |

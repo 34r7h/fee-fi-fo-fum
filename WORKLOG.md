@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 14:38 JST
+- **Last regenerated:** 2026-09-26 14:42 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -105,7 +105,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784198.
+Live balances read at block 11784216.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -169,6 +169,7 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:12 | Ruled that validators (agy) validate only and never build or edit other agents' work |
 | Sat 14:15 | Set the binding role map: agent-smith builds agents; mister-anderson does crypto; handoff-advisor and agy validate; impecc does presentation and miniapps; handoff-claude fixes handoff; korg researches |
 | Sat 14:35 | Mined 0.0186 Sepolia ETH on the PoW faucet for the treasury |
+| Sat 14:40 | Approved XMBL_GATE=skip for the handoff.lol deploy of the platform fixes; standing instruction: don't hold up progress |
 
 ## Log
 
@@ -240,3 +241,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:37 | agent-smith | Corrected the deploy sequence: castle.feefifofum.eth is NOT pre-registered. Castle receives ROOT REGISTRAR and RENEW from the registry admin (castle EOA), and fee's genesis claim() mints the name. Rehearsed on a fork. |
 | Sat 14:35 | operator | +0.0186 ETH to the treasury (0x5d37b019…). |
 | Sat 14:38 | SirKit | Distributed it: deployer +0.01 (now 0.0253), fee +0.004 (0.0080), fi +0.004 (0.0070), fum +0.002 (0.0040), all verified on-chain. The treasury keeps 0.0021. |
+| Sat 14:40 | SirKit | Ordered handoff-claude to deploy p2-ensname-fix now with the operator-approved XMBL_GATE=skip, with p2-sepolia-settle to follow in a second deploy. |

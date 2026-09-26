@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 14:28 JST
+- **Last regenerated:** 2026-09-26 14:34 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -26,8 +26,8 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
 | Foundry scaffold, then deploy the SwapVM router (release/1.0.2) on Sepolia <br>`p1-router` `902378f6` | mister-anderson | mister-anderson | Sat 16:00 | in_progress | 3301492, 6463060 | router 0xeDB6…70f9 live (tx 0xb2b319a2…); verification pending the Etherscan key |
-| **BLOCKER** Castle.sol: the giant's castle (desk treasury, Aqua maker and ENSv2 lease) <br>`p1-castle` `c3a2dfdf` | mister-anderson | mister-anderson | Sat 19:00 | in_progress | 3fa3aa6, 81ffd04, 789f550 |  |
-| **BLOCKER** FeeFiFoFumExtruction.sol: the giant smells a stale shift (the ENS-lease fence in the SwapVM program) <br>`p1-extruction` `9019b3b9` | mister-anderson | mister-anderson | Sat 19:00 | in_progress |  |  |
+| **BLOCKER** Castle.sol: the giant's castle (desk treasury, Aqua maker and ENSv2 lease) <br>`p1-castle` `c3a2dfdf` | mister-anderson | mister-anderson | Sat 19:00 | in_progress | 3fa3aa6, 81ffd04, 789f550, 2b6dea6, 38f06f1, 4757283 | 102 unit tests and 8 live-registry fork tests pass; 4/4 mutants killed (per mister-anderson; agy validating) |
+| **BLOCKER** FeeFiFoFumExtruction.sol: the giant smells a stale shift (the ENS-lease fence in the SwapVM program) <br>`p1-extruction` `9019b3b9` | mister-anderson | mister-anderson | Sat 19:00 | in_progress | 38f06f1, 4757283 | 9 fence tests, 10k-run fuzz of the decision table |
 | Validate Castle and FeeFiFoFumExtruction on a Sepolia fork (validation only, no code) <br>`p1-forktests` `f4d2ae68` | agy | agy | Sat 19:45 | in_progress | 8cc9a7f (CastleFork.t.sol, 257 lines) | fork |
 | **BLOCKER** Deploy and verify Castle and FeeFiFoFumExtruction on Sepolia, then ship the first live strategy <br>`p1-deploy` `1fed769f` | mister-anderson | mister-anderson | Sat 20:30 | todo |  |  |
 | **BLOCKER** ICastleLease interface, published before 15:30 JST so the fence and fo can build in parallel <br>`p1-iface` `17a2de4c` | mister-anderson | mister-anderson | Sat 15:30 | done | 3301492, 980fd97, f0c7d65, e11f755 | paid 0.1 USDC (receipt 2af0f738); mister-anderson balance 2.2197 → 2.3197 |
@@ -105,7 +105,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784147.
+Live balances read at block 11784178.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -233,3 +233,6 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:31 | korg | Added the subregistry design consequence to docs/ens-probes.md (bde95fc), with live eth_call evidence (MIN_REGISTER_DURATION = 2419200; owner holds no ROLE_RENEW or ROLE_REGISTRAR). |
 | Sat 14:27 | handoff-claude | p2-ensname-fix built and tested in the handoff repo (95932ef; 2,237 tests pass). Deploy was blocked by the pre-existing XMBL mesh gate (0 live nodes: helen coordinator crash-looping, seed 173.255.233.69:4001 refusing) and prod was rolled back to 079f8f0, which is healthy. |
 | Sat 14:28 | SirKit | Told handoff-claude to fix helen's coordinator (its role). Escalated XMBL_GATE=skip or the seed-node revival to the operator. |
+| Sat 14:33 | mister-anderson | Castle v2 and FeeFiFoFumExtruction on main: 102 unit tests, 8 fork tests against live contracts, 4/4 mutants killed. |
+| Sat 14:34 | SirKit | Decision (A): the CCA entry points go into Castle before a single deploy at about 08:30Z (17:30 JST). Deploy sequence: mister-anderson deploys and runs the owner steps, then agent-smith grants roles from the castle EOA and fee's genesis claim mints castle.feefifofum.eth. agy validates the suite without editing. |
+| Sat 14:35 | agent-smith | Agreed the deploy sequence with mister-anderson and rehearsed it on a fork. |

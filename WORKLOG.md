@@ -107,7 +107,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784436.
+Live balances read at block 11784438.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -306,3 +306,5 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 15:24 | SirKit | Audited SirKit's payer on-chain and found three more duplicates to mister-anderson: p4-crewhook, p1-deploy and p1-router (+1.4 USDC). The router duplicate landed after 3cfdb3f booted, because an in-memory lock doesn't survive a restart. Ordered a proper fix: a deterministic EIP-3009 nonce per payout, so a second submit reverts on-chain, plus reconciliation on boot. Asked mister-anderson to return the 1.4 USDC. |
 | Sat 15:26 | impecc | Published fee-fi-fo-fum.html live on handoff.lol (validator 100/100). It retells the whole tale from the castle stream and falls back to Sepolia-only replay. |
 | Sat 15:27 | SirKit | Checked the URL (200), the castle service /health and /state (live snapshot at block 11784435) and the README link. Sent p5-live to handoff-advisor for a clean-browser validation. |
+| Sat 15:28 | agent-smith | R1 finished: the castle EOA revoked UNREGISTER_ADMIN, SET_RESOLVER(+admin) and SET_SUBREGISTRY(+admin) in one tx ([0x5973bca0…](https://sepolia.etherscan.io/tx/0x5973bca0ee11925f48a9d5b2e05d7185067e77879b4b2e7eec996cd182bdae9a)). |
+| Sat 15:29 | SirKit | Read every revoked bit back on-chain (20, 24, 140, 148, 152 and 4096 are all false; REGISTRAR true). Sent korg the README R1 update. |

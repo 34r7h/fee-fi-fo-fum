@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 14:35 JST
+- **Last regenerated:** 2026-09-26 14:38 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -105,17 +105,17 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784184.
+Live balances read at block 11784198.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
-| treasury (SirKit) | SirKit | [`0xc3Af4CCa3ba691C74F18fa8D3a7ad6816eC65dF2`](https://sepolia.etherscan.io/address/0xc3Af4CCa3ba691C74F18fa8D3a7ad6816eC65dF2) |  | 0.0036 ETH / 26 USDC left (0.05 ETH in: [0x56611a5a…](https://sepolia.etherscan.io/tx/0x56611a5aa6825a47ca91c85081bb0cb59e743b7079adcab8381ed3924e75cdea)) | 0.02218 / 26.00 / 0.00000 |
-| deployer (mister-anderson) | mister-anderson | [`0x89a7d90F6bCAF2FFd5c1519Fa7F3D9DB84e9AA73`](https://sepolia.etherscan.io/address/0x89a7d90F6bCAF2FFd5c1519Fa7F3D9DB84e9AA73) |  | 0.02 ETH [0x6d65d570…](https://sepolia.etherscan.io/tx/0x6d65d570d5f7eac8b00e741388c062d1f9e92ebb034b007563aa5facd94332cb) / 8 USDC [0x4422def9…](https://sepolia.etherscan.io/tx/0x4422def903a2962bfdec6af118c2244138772061deaaf91c7bff588cccc358db) | 0.01534 / 8.00 / 0.00000 |
+| treasury (SirKit) | SirKit | [`0xc3Af4CCa3ba691C74F18fa8D3a7ad6816eC65dF2`](https://sepolia.etherscan.io/address/0xc3Af4CCa3ba691C74F18fa8D3a7ad6816eC65dF2) |  | 0.0036 ETH / 26 USDC left (0.05 ETH in: [0x56611a5a…](https://sepolia.etherscan.io/tx/0x56611a5aa6825a47ca91c85081bb0cb59e743b7079adcab8381ed3924e75cdea)); +0.0186 ETH in: [0x5d37b019…](https://sepolia.etherscan.io/tx/0x5d37b01946d996dd8c456bc59ec0775f1378d21be5d65f7b9c1d9962b7494eac) (PoW faucet) | 0.00209 / 26.00 / 0.00000 |
+| deployer (mister-anderson) | mister-anderson | [`0x89a7d90F6bCAF2FFd5c1519Fa7F3D9DB84e9AA73`](https://sepolia.etherscan.io/address/0x89a7d90F6bCAF2FFd5c1519Fa7F3D9DB84e9AA73) |  | 0.02 ETH [0x6d65d570…](https://sepolia.etherscan.io/tx/0x6d65d570d5f7eac8b00e741388c062d1f9e92ebb034b007563aa5facd94332cb) / 8 USDC [0x4422def9…](https://sepolia.etherscan.io/tx/0x4422def903a2962bfdec6af118c2244138772061deaaf91c7bff588cccc358db); +0.01 [0xdce622c4…](https://sepolia.etherscan.io/tx/0xdce622c4a601be72cd8ade8ac93b5be61bd2b0604eaefedccb236a582ce217cc) | 0.02534 / 8.00 / 0.00000 |
 | korg | korg | [`0x48EB8a8c5dC69Dc578f861dAf987882206aF5d3E`](https://sepolia.etherscan.io/address/0x48EB8a8c5dC69Dc578f861dAf987882206aF5d3E) (self-custodied) |  | 0.008 ETH [0x13d35fd1…](https://sepolia.etherscan.io/tx/0x13d35fd1cbbfa60bd1ce50f9f0bf6737729124598529281366ad98df6d081881) | 0.00719 / 0.00 / 0.00000 |
-| fee | fee (registered on handoff, online, heartbeat every 20s) | [`0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538`](https://sepolia.etherscan.io/address/0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538) | fee.feefifofum.eth (live; resolves via UniversalResolverV2 to this EOA) | 0.005 ETH [0xb4a1bb3b…](https://sepolia.etherscan.io/tx/0xb4a1bb3b10ec04fc210e8f9ee4f3506571d30fde48f83daa771677bdf30b29e4) / 2 USDC [0x4a5bb82a…](https://sepolia.etherscan.io/tx/0x4a5bb82a1d606a90d154108a816bd73e02d86ba0ba1db1bffcf65f274843945e) | 0.00396 / 2.00 / 0.00100 |
-| fi | fi (registered on handoff, online, heartbeat every 20s) | [`0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2`](https://sepolia.etherscan.io/address/0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2) | fi.feefifofum.eth (live; resolves via UniversalResolverV2 to this EOA) | 0.004 ETH [0x742d1ba8…](https://sepolia.etherscan.io/tx/0x742d1ba88af97c175cd2ee407a9e128876189576f4d4cacb3b3ba555b4daca1b) / 2 USDC [0xc5df2983…](https://sepolia.etherscan.io/tx/0xc5df298310764455ab7f7292214dac2df1bf04a922d9880aa359b3a48e1899bd) | 0.00295 / 2.00 / 0.00100 |
+| fee | fee (registered on handoff, online, heartbeat every 20s) | [`0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538`](https://sepolia.etherscan.io/address/0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538) | fee.feefifofum.eth (live; resolves via UniversalResolverV2 to this EOA) | 0.005 ETH [0xb4a1bb3b…](https://sepolia.etherscan.io/tx/0xb4a1bb3b10ec04fc210e8f9ee4f3506571d30fde48f83daa771677bdf30b29e4) / 2 USDC [0x4a5bb82a…](https://sepolia.etherscan.io/tx/0x4a5bb82a1d606a90d154108a816bd73e02d86ba0ba1db1bffcf65f274843945e); +0.004 [0x8f71cc1f…](https://sepolia.etherscan.io/tx/0x8f71cc1f8d366688bfe900200c9009e125c61c951be579bedbd8ccf187dfa37c) | 0.00796 / 2.00 / 0.00100 |
+| fi | fi (registered on handoff, online, heartbeat every 20s) | [`0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2`](https://sepolia.etherscan.io/address/0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2) | fi.feefifofum.eth (live; resolves via UniversalResolverV2 to this EOA) | 0.004 ETH [0x742d1ba8…](https://sepolia.etherscan.io/tx/0x742d1ba88af97c175cd2ee407a9e128876189576f4d4cacb3b3ba555b4daca1b) / 2 USDC [0xc5df2983…](https://sepolia.etherscan.io/tx/0xc5df298310764455ab7f7292214dac2df1bf04a922d9880aa359b3a48e1899bd); +0.004 [0x5e0c7655…](https://sepolia.etherscan.io/tx/0x5e0c7655b6ccb82a572dd9ca5978cdd1b11bec06e18a3e8c7b511c45d6ead3a9) | 0.00695 / 2.00 / 0.00100 |
 | fo | fo (registered on handoff, online, heartbeat every 20s) | [`0x8689a407A2488A5b2f2De05d2C6978a798f93D56`](https://sepolia.etherscan.io/address/0x8689a407A2488A5b2f2De05d2C6978a798f93D56) | fo.feefifofum.eth (live; resolves via UniversalResolverV2 to this EOA) | 0.001 ETH [0x0033036a…](https://sepolia.etherscan.io/tx/0x0033036adf3a82bc53bfb4e08c90592c30679981365985ccf242123fa883744b) | 0.00075 / 0.00 / 0.00020 |
-| fum | fum (registered on handoff, online, heartbeat every 20s) | [`0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2`](https://sepolia.etherscan.io/address/0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2) | fum.feefifofum.eth (live; resolves via UniversalResolverV2 to this EOA) | 0.003 ETH [0xd63f3304…](https://sepolia.etherscan.io/tx/0xd63f33041b7a3ac024ecaba8fb6c73eb0dd95e0b8c372c1ff8d2cc7582a709c6) / 2 USDC [0xad17fe88…](https://sepolia.etherscan.io/tx/0xad17fe88e2310c40cf758e8bd611e382a3226e48d414f5093713bda1a2578115) | 0.00195 / 2.00 / 0.00100 |
+| fum | fum (registered on handoff, online, heartbeat every 20s) | [`0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2`](https://sepolia.etherscan.io/address/0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2) | fum.feefifofum.eth (live; resolves via UniversalResolverV2 to this EOA) | 0.003 ETH [0xd63f3304…](https://sepolia.etherscan.io/tx/0xd63f33041b7a3ac024ecaba8fb6c73eb0dd95e0b8c372c1ff8d2cc7582a709c6) / 2 USDC [0xad17fe88…](https://sepolia.etherscan.io/tx/0xad17fe88e2310c40cf758e8bd611e382a3226e48d414f5093713bda1a2578115); +0.002 [0xdc880c47…](https://sepolia.etherscan.io/tx/0xdc880c4714ce6eb5881934e72cd8063e47a981391fce53b7191bcc8835e3ef62) | 0.00395 / 2.00 / 0.00100 |
 | castle (service) | castle (handoff-claude) | [`0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99`](https://sepolia.etherscan.io/address/0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99) |  | 0.005 ETH [0xaeba391d…](https://sepolia.etherscan.io/tx/0xaeba391d38c81761afbf1dd52db8365162e66e05d28f63d07a58811181746ceb) + [0x76c425e7…](https://sepolia.etherscan.io/tx/0x76c425e74d6123e6115529e22daea9c88d3ecd79af59b6104f2d112acd03c20d) | 0.00296 / 0.00 / 0.00000 |
 
 ## Miniapp and live demo
@@ -168,6 +168,7 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:00 | Funded the treasury with 0.05 Sepolia ETH and a further 20 USDC |
 | Sat 14:12 | Ruled that validators (agy) validate only and never build or edit other agents' work |
 | Sat 14:15 | Set the binding role map: agent-smith builds agents; mister-anderson does crypto; handoff-advisor and agy validate; impecc does presentation and miniapps; handoff-claude fixes handoff; korg researches |
+| Sat 14:35 | Mined 0.0186 Sepolia ETH on the PoW faucet for the treasury |
 
 ## Log
 
@@ -237,3 +238,5 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:34 | SirKit | Decision (A): the CCA entry points go into Castle before a single deploy at about 08:30Z (17:30 JST). Deploy sequence: mister-anderson deploys and runs the owner steps, then agent-smith grants roles from the castle EOA and fee's genesis claim mints castle.feefifofum.eth. agy validates the suite without editing. |
 | Sat 14:35 | agent-smith | Agreed the deploy sequence with mister-anderson and rehearsed it on a fork. |
 | Sat 14:37 | agent-smith | Corrected the deploy sequence: castle.feefifofum.eth is NOT pre-registered. Castle receives ROOT REGISTRAR and RENEW from the registry admin (castle EOA), and fee's genesis claim() mints the name. Rehearsed on a fork. |
+| Sat 14:35 | operator | +0.0186 ETH to the treasury (0x5d37b019…). |
+| Sat 14:38 | SirKit | Distributed it: deployer +0.01 (now 0.0253), fee +0.004 (0.0080), fi +0.004 (0.0070), fum +0.002 (0.0040), all verified on-chain. The treasury keeps 0.0021. |

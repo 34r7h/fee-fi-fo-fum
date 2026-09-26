@@ -13,7 +13,7 @@ Everything below is live on Ethereum Sepolia (chain 11155111), with a tx link fo
 | 1 | One Castle balance backs two SwapVM strategies (`harp` and `hen`) whose promises add up to more than the balance. A third ship past fum's leverage cap reverts `OverAllocated`. | 1inch Aqua | two `Shipped` txs, one reverted ship |
 | 2 | A solver resolves `quote.feefifofum.eth` through CCIP-Read, gets a firm quote signed by fi, and fills it. | ENS | the gateway log line and the fill tx |
 | 3 | A Uniswap v4 swap on the Castle's pool is filled just in time from the Castle. | Uniswap | one tx that contains both v4 `Swap` and Aqua `Pulled`/`Pushed` |
-| 4 | The miniapp shows all three from a clean browser. | all | the published URL |
+| 4 | The miniapp is the web3 interface: from a clean browser, a user connects a wallet on Sepolia, asks the harp through ENS, fills the quote, and swaps on the hen, each as a live tx from their own wallet. | all | the published URL and the txs it sent |
 
 ## Existing addresses
 
@@ -205,6 +205,29 @@ Owner: agent-smith. It runs at `https://handoff.lol/t/castle/`. It is a systemd 
 
 STREAM.md follows this file for contract names and errors. In particular, `allocation.refused.error` is `OverAllocated(address token, uint256 committedAfter, uint256 limit)` under the leverage rule above.
 
+## The miniapps
+
+The operator ruled (Sat 26 Sep) that the main miniapp's job is to be the product's web3 interface. The storytelling moves to a second miniapp. Both keep the Castle Tapestry style: a medieval storybook, gold and treasure, smooth lines, money always clear.
+
+**1. The dapp** (`miniapp/fee-fi-fo-fum.html`, published at `https://handoff.lol/app/impecc/fee-fi-fo-fum`). Everything in it reads the chain or sends a tx; nothing is mocked.
+
+| Panel | What the user does | Chain calls |
+|---|---|---|
+| Wallet | Connect an injected EIP-1193 wallet; switch to or add Sepolia; see the address (and its ENS name), ETH, USDC and WETH | `eth_requestAccounts`, `wallet_switchEthereumChain`, balanceOf |
+| The castle | See the hoard, fee's price, fum's leverage, committed, limit and headroom per token, and the live strategies with their allocations | CastleVault views, plus the service's `/state` for labels and price |
+| Ask the harp | Enter an amount and a direction; the quote comes from `quote.feefifofum.eth` through UniversalResolverV2 and CCIP-Read in the browser, and shows fi's signature, the price and a 30 s countdown | viem `getEnsText` with the UR override, straight from the browser (the gateway sends CORS) |
+| Fill | Approve the router if needed, then fill the quote | `USDC/WETH.approve(router)`, `router.swap(order, tokenIn, tokenOut, amountIn, takerTraitsAndData)` |
+| Swap on the hen | Enter an amount; see the V4Quoter's expected output; approve PoolSwapTest if needed; swap | `V4Quoter.quoteExactInputSingle`, `approve(PoolSwapTest)`, `PoolSwapTest.swap(key, params, {takeClaims:false, settleUsingBurn:false}, hookData)` |
+| fo's route | For the amount entered, compare the harp's quote with the hen's and mark the better one | the two reads above |
+| Your trades | The user's own fills and swaps, each linked to Etherscan, plus the tx the page just sent | receipts; the stream filtered by taker |
+| Get test tokens | Links to the Sepolia ETH and Circle USDC faucets, and a Wrap ETH button | `WETH.deposit` |
+
+- Addresses come only from `contracts/deployments/sepolia.json`, as they do now.
+- The harp and hen tx building reuses `agents/scripts/jack.mjs` and `service/lib/ccip-sign.mjs` (buildTakerTraitsAndData, the PoolSwapTest params), which are already proven live. agent-smith ships it as one browser module.
+- Errors are shown in plain words: `QuoteExpired`, a wallet on the wrong chain, not enough allowance or balance, a user rejection.
+
+**2. The tale** (the current page, republished as a second miniapp at `https://handoff.lol/app/impecc/fee-fi-fo-fum-tale`). It is the storybook retelling from the stream. The dapp links to it and it links back.
+
 ## The crew
 
 These are handoff agents built by agent-smith in `agents/`. Each sends `agent_heartbeat`.
@@ -223,7 +246,7 @@ These are handoff agents built by agent-smith in `agents/`. Each sends `agent_he
 2. **One balance, two strategies.** fi ships `harp` and `hen`, each promising 80% of the hoard, so the promises total 1.6× the balance. fi ships `greedy`, asking for another 0.5×, and it reverts `OverAllocated` (the reverted tx is on Etherscan). The 0.4× of headroom keeps fum from docking after the demo's fills.
 3. **The harp sings.** agy asks `quote.feefifofum.eth` for `quote:USDC:WETH:<n>`. The resolver reverts `OffchainLookup`, the gateway answers with a quote signed by fi, and the resolver checks it. agy fills it through the router. The Castle's balances move, and `harp`'s allocation shrinks. On a fork, the same quote 31 s later reverts `QuoteExpired`.
 4. **The hen lays.** agy swaps USDC for WETH on the v4 pool through PoolSwapTest. The hook fills it from `hen` in the same tx, with no LP deposit in the pool.
-5. **The miniapp** tells all of it live, in the Castle Tapestry style.
+5. **The dapp.** A judge opens the miniapp, connects a wallet, asks the harp for a quote through ENS, fills it, and swaps on the hen. Every tx goes out from their own wallet and links to Etherscan. **The tale**, a second miniapp, retells the whole run as a tapestry.
 
 ## Live run, gas and approval
 

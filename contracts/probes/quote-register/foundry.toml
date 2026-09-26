@@ -1,0 +1,12 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+solc_version = "0.8.24"
+optimizer = false
+via_ir = false
+remappings = ["forge-std/=../../lib/forge-std/src/"]
+allow_paths = ["../../lib/forge-std"]
+
+[rpc_endpoints]
+sepolia = "https://ethereum-sepolia-rpc.publicnode.com"

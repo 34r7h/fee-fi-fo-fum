@@ -229,19 +229,20 @@ These are handoff agents built by agent-smith in `agents/`. Each sends `agent_he
 
 The rule: everything is fork-tested first (v-e2e, two clean passes), then there is exactly one live deploy (c-deploy) and one live run (a-live). No live tx goes out without SirKit's approval, and SirKit gets the operator's gas number first.
 
-| Step | Txs | Gas (estimate) |
+| Step | Txs | Gas (fork-measured unless marked) |
 |---|---|---|
-| Deploy CastleVault, PriceExtruction, OffchainQuoteResolver | 3 | 4.1 M |
-| Deploy CastleJITHook (CREATE2), initialize the pool | 2 | 1.7 M |
-| Register `quote` with the resolver | 1 | 0.2 M |
-| Fund the hoard (USDC transfer, wrap, WETH transfer) | 3 | 0.15 M |
-| setLeverage ×2, setCap ×3 | 5 | 0.25 M |
-| Ship `harp` and `hen`; ship `greedy` (reverts) | 3 | 0.6 M |
-| Jack: approve and fill a `harp` quote | 2 | 0.3 M |
-| Jack: approve and swap on the v4 pool | 2 | 0.4 M |
-| **Total** | **21** | **≈ 7.7 M gas: 0.008 ETH at 1 gwei, 0.02 ETH at 2.5 gwei** |
+| Deploy CastleVault, PriceExtruction | 2 | 2.86 M + 0.90 M |
+| Deploy OffchainQuoteResolver | 1 | 1.0 M (estimate) |
+| Deploy CastleJITHook (CREATE2), initialize the pool | 2 | 1.66 M + 0.08 M |
+| Register `quote` with the resolver | 1 | 0.2 M (estimate) |
+| Fund the hoard (USDC transfer, wrap, WETH transfer) | 3 | 0.15 M (estimate) |
+| setLeverage ×2, setCap ×3 | 5 | 0.40 M |
+| Ship `harp` and `hen`; ship `greedy` (reverts, manual gas limit) | 3 | 0.61 M |
+| Jack: approve and fill a `harp` quote | 2 | 0.27 M |
+| Jack: approve and swap on the v4 pool (PoolSwapTest) | 2 | 0.43 M |
+| **Total** | **21** | **≈ 8.5 M gas: 0.0085 ETH at 1 gwei, 0.02 ETH at 2.35 gwei** |
 
-mister-anderson replaces these estimates with fork-measured numbers before c-deploy. The approval asked of the operator is a **0.02 ETH gas ceiling** for c-deploy plus a-live. The hoard is small: about 10 USDC and 0.004 WETH.
+Measured per tx on a Sepolia fork (execution plus 21k and calldata): c-vault 98b48b8, c-hook c348dda. mister-anderson replaces the three estimates before c-deploy. The approval asked of the operator is a **0.02 ETH gas ceiling** for c-deploy plus a-live. The hoard is small: about 10 USDC and 0.004 WETH.
 
 ## Research gates
 

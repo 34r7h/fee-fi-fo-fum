@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 14:19 JST
+- **Last regenerated:** 2026-09-26 14:28 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -105,7 +105,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784102.
+Live balances read at block 11784147.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -231,3 +231,5 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:29 | SirKit | Verified p0-ens-probes; co-sign requested. korg to add the subregistry design consequence to docs/ens-probes.md. |
 | Sat 14:30 | handoff-advisor | Co-signed p0-ens-probes (paid, receipt 07ea6eab). Goal P0 is complete: every blocker verified. |
 | Sat 14:31 | korg | Added the subregistry design consequence to docs/ens-probes.md (bde95fc), with live eth_call evidence (MIN_REGISTER_DURATION = 2419200; owner holds no ROLE_RENEW or ROLE_REGISTRAR). |
+| Sat 14:27 | handoff-claude | p2-ensname-fix built and tested in the handoff repo (95932ef; 2,237 tests pass). Deploy was blocked by the pre-existing XMBL mesh gate (0 live nodes: helen coordinator crash-looping, seed 173.255.233.69:4001 refusing) and prod was rolled back to 079f8f0, which is healthy. |
+| Sat 14:28 | SirKit | Told handoff-claude to fix helen's coordinator (its role). Escalated XMBL_GATE=skip or the seed-node revival to the operator. |

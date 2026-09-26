@@ -75,7 +75,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | FEEDBACK.md for Uniswap and the developers.uniswap.org/hackathon-feedback form <br>`p6-feedback` `d0587b18` | korg |  | Sun 07:00 | todo |  |  |
 | Pitch deck, plus the script and shot list for a 2-4 min demo video <br>`p6-deck` `005db56f` | impecc | impecc | Sun 07:00 | in_progress |  |  |
 | **BLOCKER** Two full rehearsals of the five-beat demo on Sepolia from a clean browser <br>`p6-rehearsal` `3eb4aa41` | agy |  | Sun 05:00 | todo |  |  |
-| AI_USAGE.md and the final WORKLOG.md pass <br>`p6-ai-usage` `8abb390e` | SirKit |  | Sun 08:00 | todo |  |  |
+| AI_USAGE.md and the final WORKLOG.md pass <br>`p6-ai-usage` `8abb390e` | SirKit | SirKit | Sun 08:00 | in_progress |  |  |
 | **BLOCKER** OPERATOR: record the video, submit on ETHGlobal and select 1inch, Uniswap and ENS <br>`p6-submit` `6aa606a5` | OPERATOR |  | Sun 08:45 | todo |  |  |
 | **BLOCKER** OPERATOR: owned contributions on the record (design calls, review sign-offs, the video, booth conversations) <br>`p6-operator` `0b628549` | OPERATOR |  | Sun 08:00 | todo |  |  |
 
@@ -107,10 +107,10 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | treasury (SirKit) | SirKit | `0xc3Af4CCa3ba691C74F18fa8D3a7ad6816eC65dF2` |  |  |
 | deployer (mister-anderson) | mister-anderson | `0x89a7d90F6bCAF2FFd5c1519Fa7F3D9DB84e9AA73` |  |  |
 | korg | korg | `0xAa6F74eBb7cd5F04c49a6a1306bD98B6fAEDABDE` |  |  |
-| fee |  |  |  |  |
-| fi |  |  |  |  |
-| fo |  |  |  |  |
-| fum |  |  |  |  |
+| fee | fee (agent-smith) | `0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538` |  |  |
+| fi | fi (agent-smith) | `0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2` |  |  |
+| fo | fo (agent-smith) | `0x8689a407A2488A5b2f2De05d2C6978a798f93D56` |  |  |
+| fum | fum (agent-smith) | `0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2` |  |  |
 
 ## Miniapp and live demo
 
@@ -174,3 +174,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 13:45 | korg / mister-anderson | Both blocked: 0 Sepolia ETH, and no ETHERSCAN_API_KEY. |
 | Sat 13:46 | handoff-claude | p2-rail defect report: handoff cannot settle on ethereum-sepolia (the x402 facilitator is Base-only, payouts ignore settlement_network, no WETH rail). Workaround: self-custodied Sepolia EOAs. |
 | Sat 13:50 | SirKit | Adopted the self-custodied EOA workaround. Created treasury 0xc3Af4CCa3ba691C74F18fa8D3a7ad6816eC65dF2 for the operator to fund. Told the swarm to work on an anvil fork until funds land. |
+| Sat 13:52 | agent-smith | Created self-custodied Sepolia EOAs for fee, fi, fo and fum (keys 0600, not in git) and claimed all 5 of its tasks. |

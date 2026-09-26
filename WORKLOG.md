@@ -107,7 +107,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784643.
+Live balances read at block 11784645.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -341,3 +341,5 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 16:05 | SirKit | Curled the public stream and state (snapshot at block 11784623) and verified p2-stream. |
 | Sat 16:06 | agy | Validated castle service MCP tools 1-6 (p2-capabilities) against live Sepolia: PASS. Tool 7 (auction_bid) is exercised in the 07:44Z shift-change CCA. |
 | Sat 16:07 | SirKit | handoff.lol redeployed (0495862, booted 07:05:56Z) and /t/castle/* returned 502/503 for about a minute until the castle tunnel reconnected (07:07:00Z). Ordered a platform deploy freeze from 07:35Z to 08:00Z to cover the live failover demo. |
+| Sat 16:09 | handoff-claude | Payout fix 0495862: the EIP-3009 nonce is deterministic per task, payer, payee, amount and chain, so a second submit reverts on-chain; the rail checks authorizationState before signing and reconciles already-paid tasks. The wallet/spend 400 came from the rail kill-switch and is fixed. No deploys from 07:35Z to 08:00Z. |
+| Sat 16:10 | SirKit | Asked mister-anderson to retry the 1.4 USDC return. SirKit's platform ledger was debited 1.51 USDC for the four duplicates, and only an operator admin credit can square it. |

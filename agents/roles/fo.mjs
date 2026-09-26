@@ -38,7 +38,7 @@ export function parseOrder(o) {
   const tokenIn = tokenOf(input.token), tokenOut = tokenOf(out.token);
   const amountIn = BigInt(input.amount ?? input.startAmount ?? input.endAmount ?? 0);
   const minOut = BigInt(out.endAmount ?? out.amount ?? out.startAmount ?? 0);
-  if (!tokenIn || !tokenOut || tokenIn === tokenOut) throw new Error('order needs input.token and outputs[0].token, USDC and WETH one each way');
+  if (!tokenIn || !tokenOut || tokenIn === tokenOut) throw new Error('order needs input.token and outputs[0].token, which must be USDC and WETH, one of each');
   if (amountIn <= 0n) throw new Error('order input amount must be above zero');
   if (!isAddress(o?.swapper || '')) throw new Error('order needs a swapper address');
   const deadline = Number(o.deadline || 0);

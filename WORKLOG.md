@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 18:10 JST
+- **Last regenerated:** 2026-09-26 18:25 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -110,7 +110,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11785257.
+Live balances read at block 11785330.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -379,3 +379,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 18:05 | SirKit | korg fixed handoff-advisor's three content findings (the ENSv2 agent names in ens.md; owner+sender and the live floor clear in FEEDBACK.md). Both are co-signed and paid. mister-anderson asked agy and handoff-advisor to pass Castle v3 at acf30e4 before its one live deploy. |
 | Sat 18:05 | SirKit | Both validators passed the Castle v3 contracts at acf30e4 (175 unit, 18 fork tests). handoff-advisor pointed out that cutover retires v2. The operator chose to ship v3 live. The v3 deployer is funded with 0.007 ETH (0xce3ee83e). The order is: deploy v3; recover v2's WETH by fills; port the agents, service and miniapp; agy fork rehearsals gate genesis; then one live v3 proof run. agy's p6-rehearsal was sent back (a wrong hash, pass 2 reusing pass 1's hashes, and failover-only mode) and is re-scoped to v3. |
 | Sat 18:40 | mister-anderson | Castle v3 deployed and Sourcify exact_match: Castle 0xADB3…8936 (0xb7fc618b), FeeFiFoFumExtruction 0xe546…73CC (0x47751f5e), plus setCrew x2 and setAuctioneer. Total 0.00702 ETH, under the 0.012 cap. JackHook is reused, and the anchor is read from the resolver (2150.21), so there was no setAnchorPrice. The label is not registered until genesis, so v2 stays fillable for WETH recovery. |
+| Sat 18:25 | agent-smith | Agents ported to Castle v3 (4d945b3, e1f12ed, f2eede6). One fork run against the deployed v3 covered genesis, live and wind-down fills, kill -9 fee, fi's challenge and early claim, fee's stale book reverting FeeFiFoFum, a challenge answered in 1s, and a shift-change CCA settled with priceWritten. Heartbeat digest matches the deployed Castle. The live service is pinned to v2 (7314bdf) until the service port lands with genesis. |

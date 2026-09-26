@@ -8,7 +8,7 @@ The running record of the feefifofum build: what was done, who did it, which com
 - **Deadline:** Sun 27 Sep 00:00 UTC
 - **Pre-existing product:** handoff (private), baseline `079f8f0`
 - **Earlier product:** the lease edition, retired at 10:51Z on Sat 26 Sep. Its code and full worklog are at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition).
-- **Last regenerated:** Sat 13:34Z
+- **Last regenerated:** Sat 13:54Z
 
 All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified).
 
@@ -37,7 +37,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 |---|---|---|---|---|---|---|
 | **BLOCKER** Crew agents: fee prices, fi compiles, fo routes, fum guards <br>`a-crew` `29e2bfea` | agent-smith | agent-smith | Sat 18:00Z | done | 006698a..1aa208a | fork-run agents/fork-run/11786199 |
 | **BLOCKER** Castle service: CCIP-Read gateway, MCP tools for solvers, and the stream <br>`a-gateway` `93785681` | agent-smith | agent-smith | Sat 18:30Z | done | 2d44311..bab6080 | live: CCIP-Read through UR resolves |
-| **BLOCKER** Browser module for the dapp: the harp quote, the fill and the hen swap <br>`a-dapplib` `a276992b` | agent-smith | agent-smith | Sat 15:30Z | in_progress |  |  |
+| **BLOCKER** Browser module for the dapp: the harp quote, the fill and the hen swap <br>`a-dapplib` `a276992b` | agent-smith | agent-smith | Sat 15:30Z | done |  |  |
 
 ### handoff.lol platform support
 
@@ -90,7 +90,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 ## Wallets
 
-Live balances read at block 11786538.
+Live balances read at block 11786635.
 
 | Wallet | handoff agent | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -207,3 +207,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 13:23Z | SirKit | Operator ruling applied: SPEC fc85b67 adds 'The miniapps' (the dapp's panels and chain calls, and the tale as a second miniapp). New tasks: a-dapplib (agent-smith, browser module, 15:30Z), m-dapp (impecc, blocker, 18:00Z), m-tale (impecc, 16:30Z) and v-dapp (agy, live UI validation from a clean browser, 19:30Z). Goal budgets raised: miniapp 1.2 to 1.6, validation 1.1 to 1.3 USDC. |
 | Sat 13:30Z | SirKit | m-tale verified: https://handoff.lol/app/impecc/fee-fi-fo-fum-tale is live from the castle stream in a fresh Chrome profile, with 0 console errors and a link to the dapp. |
 | Sat 13:34Z | SirKit | Funded impecc's self-custodied Sepolia test wallet 0x23E5…FC32 for the dapp's live test: 0.0015 ETH (0x8a8458e1…b104) and 0.5 USDC (0x8863b8c7…cc15), 0.000091 ETH gas. Spend so far: 0.0092 ETH gas plus 0.0015 ETH to the test wallet, 0.0107 of the 0.02 ceiling. |
+| Sat 13:54Z | SirKit | a-dapplib verified: agent-smith's dependency-free browser module (miniapp/lib/dapplib.js, 5c7a520) passes 16/16 when SirKit re-runs it: keccak and the ABI coder fuzzed against viem, a harp fill and a hen swap in both directions on a Sepolia fork, and live dry runs (fill ~198,913 gas, swap ~358,940). |

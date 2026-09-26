@@ -41,7 +41,7 @@ interface IAquaApp {
 ///      - the anchor is written only by Castle: the owner's genesis seed, then each settled auction's clearing price.
 ///      The only exit for inventory is a Uniswap CCA (JackHook-gated, floor tied to the anchor, proceeds and unsold
 ///      WETH returned to Castle): a shift-change auction of WETH no live strategy claims, or, if nobody claims the
-///      castle within DISSOLVE_GRACE of expiry, a permissionless dissolution that docks the book and auctions it all.
+///      castle within dissolveGrace of expiry, a permissionless dissolution that docks the book and auctions it all.
 contract Castle is ICastleLease, EIP712, Ownable2Step {
     using SafeERC20 for IERC20;
 
@@ -64,6 +64,13 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     /// @notice CCA floor = 80% of the anchor; tick spacing = floor / 100 (1% of the floor), so the floor is a tick.
     uint256 public constant FLOOR_PCT = 80;
     uint256 public constant TICKS_PER_FLOOR = 100;
+    /// @notice An auction graduates (and may move the anchor) only if it raises at least this share of the lot's
+    ///         value at the floor; otherwise every bid is refunded, all the WETH returns, and the anchor stays. Without
+    ///         it, a 1-USDC bid one tick above the floor would clear at the floor and cut the anchor by 20% per round.
+    uint256 public constant GRADUATION_PCT = 50;
+    /// @notice Bounds for the owner-tunable dissolution grace.
+    uint64 public constant MIN_DISSOLVE_GRACE = 120;
+    uint64 public constant MAX_DISSOLVE_GRACE = 1 days;
 
     /// @dev AquaOpcodes indices of swap-vm 1.0.2; the program test checks them against the router's table.
     uint8 internal constant OP_JUMP = 10;
@@ -104,8 +111,6 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     /// @notice Uniswap CCA factory (v2.1.0) and the bid validation hook every Castle auction uses.
     ICCAFactory public immutable CCA_FACTORY;
     address public immutable JACK_HOOK;
-    /// @notice Seconds after expiry with no claim before anyone may dissolve the book.
-    uint64 public immutable DISSOLVE_GRACE;
 
     string public label;
     /// @notice DNS-encoded castle.<parent>.
@@ -127,6 +132,8 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     /// @notice The auction Castle opened and has not settled yet; address(0) if none.
     address public auction;
     uint64 public auctionNonce;
+    /// @notice Seconds after an unclaimed expiry before anyone may dissolve the book (owner-tunable within bounds).
+    uint64 public dissolveGrace;
 
     /// @notice What the holder chooses when shipping; everything else is fixed by Castle.
     /// @param maxWeth  most WETH to commit (clamped to what no active strategy claims)
@@ -147,6 +154,7 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     event CrewSet(address indexed account, string crewLabel);
     event FoSet(address indexed fo);
     event AuctioneerSet(address indexed auctioneer);
+    event DissolveGraceSet(uint64 grace);
     event AuctionOpened(
         address indexed auction,
         uint256 indexed epoch,
@@ -223,7 +231,7 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
         DECAY_PERIOD = c.decayPeriod;
         CCA_FACTORY = ICCAFactory(c.ccaFactory);
         JACK_HOOK = c.jackHook;
-        DISSOLVE_GRACE = c.dissolveGrace;
+        _setDissolveGrace(c.dissolveGrace);
         label = c.label;
         dnsName = c.dnsName;
         fo = c.fo;
@@ -437,11 +445,11 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
         return _openAuction(amount, false);
     }
 
-    /// @notice Dissolution: if nobody has claimed the castle DISSOLVE_GRACE after the lease lapsed, ANYONE may dock the
+    /// @notice Dissolution: if nobody has claimed the castle dissolveGrace after the lease lapsed, ANYONE may dock the
     ///         whole book and auction all the WETH. fum is only the default caller.
     function dissolve() external returns (address a) {
         uint64 exp = expiry();
-        uint256 at = uint256(exp) + DISSOLVE_GRACE;
+        uint256 at = uint256(exp) + dissolveGrace;
         if (exp == 0 || block.timestamp < at) revert NotDissolvable(at);
         uint256 n = _active.length;
         while (_active.length != 0) {
@@ -455,7 +463,7 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     }
 
     /// @notice Once the auction has ended, anyone settles it: Castle sweeps the USDC raised and the unsold WETH home
-    ///         and, if anything sold, writes the clearing price to ENS as the next shift's anchor.
+    ///         and, if the auction graduated, writes the clearing price to ENS as the next shift's anchor.
     function settleAuction() external returns (uint256 clearingQ96) {
         address a = auction;
         if (a == address(0)) revert NoAuction();
@@ -464,9 +472,10 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
         auction = address(0);
         ICCA(a).sweepCurrency();
         ICCA(a).sweepUnsoldTokens();
-        uint256 raised = ICCA(a).currencyRaised();
+        bool graduated = ICCA(a).isGraduated();
+        uint256 raised = graduated ? ICCA(a).currencyRaised() : 0;
         clearingQ96 = ICCA(a).clearingPrice();
-        bool written = raised != 0 && clearingQ96 != 0;
+        bool written = graduated && raised != 0 && clearingQ96 != 0;
         if (written) _writePrice(clearingQ96);
         emit AuctionSettled(a, clearingQ96, raised, written);
     }
@@ -474,6 +483,16 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     // ------------------------------------------------------------------------------------------------
     // Admin (the operator): crew, fo, the auctioneer and the genesis anchor
     // ------------------------------------------------------------------------------------------------
+
+    function setDissolveGrace(uint64 grace) external onlyOwner {
+        _setDissolveGrace(grace);
+    }
+
+    function _setDissolveGrace(uint64 grace) internal {
+        if (grace < MIN_DISSOLVE_GRACE || grace > MAX_DISSOLVE_GRACE) revert BadConfig();
+        dissolveGrace = grace;
+        emit DissolveGraceSet(grace);
+    }
 
     function setAuctioneer(address auctioneer_) external onlyOwner {
         auctioneer = auctioneer_;
@@ -503,12 +522,13 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     // ------------------------------------------------------------------------------------------------
 
     /// @dev Auction params are all Castle's: USDC for WETH, 25 blocks, floor 80% of the anchor on a 1%-of-floor tick,
-    ///      JackHook-gated, no graduation threshold, tokens and funds back to Castle.
+    ///      JackHook-gated, graduating at GRADUATION_PCT of the lot's value at the floor, tokens and funds to Castle.
     function _openAuction(uint128 amount, bool dissolution) internal returns (address a) {
         if (auction != address(0)) revert AuctionRunning(auction);
         uint256 anchor = anchorPriceQ96();
         if (anchor == 0) revert NoAnchor();
         uint256 tick = anchor * FLOOR_PCT / 100 / TICKS_PER_FLOOR;
+        uint256 floor = tick * TICKS_PER_FLOOR;
         uint64 start = uint64(block.number);
         AuctionParameters memory p = AuctionParameters({
             currency: address(USDC),
@@ -519,8 +539,8 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
             claimBlock: start + AUCTION_BLOCKS,
             tickSpacing: tick,
             validationHook: JACK_HOOK,
-            floorPrice: tick * TICKS_PER_FLOOR,
-            requiredCurrencyRaised: 0,
+            floorPrice: floor,
+            requiredCurrencyRaised: SafeCast.toUint128(Math.mulDiv(amount, floor, Q96) * GRADUATION_PCT / 100),
             auctionStepsData: abi.encodePacked(AUCTION_MPS, uint40(AUCTION_BLOCKS))
         });
         a = CCA_FACTORY.create(address(WETH), amount, abi.encode(p), bytes32(uint256(++auctionNonce)));

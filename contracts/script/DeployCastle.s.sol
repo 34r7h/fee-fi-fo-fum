@@ -17,7 +17,7 @@ contract DeployCastle is Script {
     uint64 internal constant LEASE_PERIOD = 120;
     uint32 internal constant WIND_DOWN_FEE_BPS = 5e7; // 5%
     uint16 internal constant DECAY_PERIOD = 60;
-    uint64 internal constant DISSOLVE_GRACE = 600;
+    uint64 internal constant DISSOLVE_GRACE = 1800; // owner-tunable later within [120s, 1 day]
 
     function run() external returns (FeeFiFoFumExtruction fence, JackHook jackHook, Castle castle) {
         string memory network = vm.envOr("NETWORK", string("sepolia"));

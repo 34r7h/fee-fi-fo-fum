@@ -22,6 +22,10 @@ interface ICCABids {
         returns (uint256 bidId);
 }
 
+interface ICCAExit {
+    function exitBid(uint256 bidId) external;
+}
+
 interface IPermit2 {
     function approve(address token, address spender, uint160 amount, uint48 expiration) external;
 }
@@ -373,6 +377,7 @@ contract CastleForkTest is CastleHelpers {
         vm.prank(anon); // anyone settles
         uint256 clearing = castle.settleAuction();
         uint256 raised = ICCA(a).currencyRaised();
+        assertTrue(ICCA(a).isGraduated());
         assertGt(raised, 0);
         assertGe(clearing, floor);
         assertLe(clearing, floor + 30 * tick);
@@ -385,6 +390,26 @@ contract CastleForkTest is CastleHelpers {
         (, ISwapVM.Order memory order) = castle.ship(_params());
         uint256 out = _quote(order, WETH, 0.001 ether);
         assertApproxEqRel(out, Math.mulDiv(0.001 ether, clearing, Q96) * uint256(1e9 - 3e6) / 1e9, 1e15);
+    }
+
+    function test_fork_dustBidCannotMoveTheAnchor() public {
+        vm.prank(ADMIN);
+        IENSv2Registry(REGISTRY).register("jack", jack, address(0), RESOLVER, 0, uint64(block.timestamp + 30 days));
+        vm.prank(FEE);
+        castle.claim();
+        vm.prank(FEE);
+        address a = castle.openAuction(0.5 ether);
+        uint256 tick = ANCHOR_Q96 * 80 / 100 / 100;
+        // 1 USDC one tick above the floor: it clears at the floor, far below half the lot's value
+        uint256 bidId = _bid(a, jack, "jack", tick * 101, 1e6);
+        vm.roll(ICCA(a).endBlock());
+        castle.settleAuction();
+        assertFalse(ICCA(a).isGraduated());
+        assertEq(castle.anchorPriceQ96(), ANCHOR_Q96, "the anchor did not move");
+        assertEq(IERC20(WETH).balanceOf(address(castle)), 1 ether, "all the WETH came home");
+        vm.prank(jack);
+        ICCAExit(a).exitBid(bidId);
+        assertEq(IERC20(USDC).balanceOf(jack), 1e6, "the dust bid was refunded");
     }
 
     function test_fork_dissolveOnTheLiveCCA() public {

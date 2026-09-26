@@ -3,6 +3,7 @@ pragma solidity 0.8.30;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Aqua } from "@1inch/aqua/src/Aqua.sol";
 import { TokenMock } from "@1inch/solidity-utils/contracts/mocks/TokenMock.sol";
 import { AquaSwapVMRouter } from "@1inch/swap-vm/src/routers/AquaSwapVMRouter.sol";
@@ -742,7 +743,9 @@ abstract contract CastleUnitBase is CastleHelpers {
         assertEq(p.floorPrice, ANCHOR_Q96 * 80 / 100 / 100 * 100);
         assertEq(p.endBlock - p.startBlock, 25);
         assertEq(p.claimBlock, p.endBlock);
-        assertEq(p.requiredCurrencyRaised, 0);
+        assertEq(
+            p.requiredCurrencyRaised, Math.mulDiv(2 ether, p.floorPrice, Q96) / 2, "graduates at half the lot at floor"
+        );
         assertEq(p.auctionStepsData, abi.encodePacked(uint24(400_000), uint40(25)));
     }
 
@@ -840,6 +843,40 @@ abstract contract CastleUnitBase is CastleHelpers {
         assertEq(castle.auction(), address(0));
         vm.expectRevert(Castle.NoAuction.selector);
         castle.settleAuction();
+    }
+
+    function test_dustBidCannotMoveTheAnchor() public {
+        _fund();
+        vm.prank(fee);
+        castle.claim();
+        vm.prank(fee);
+        castle.openAuction(2 ether);
+        MockCCA a = _auction();
+        uint256 floor = a.params().floorPrice;
+        usdc.mint(address(a), 1e6);
+        vm.prank(jack);
+        a.fill(1e6, 0.0004 ether, floor); // 1 USDC one tick up: clears at the floor, far below graduation
+        vm.roll(a.endBlock());
+        assertEq(castle.settleAuction(), floor);
+        assertEq(castle.anchorPriceQ96(), ANCHOR_Q96, "a failed auction leaves the anchor alone");
+        assertEq(weth.balanceOf(address(castle)), 10 ether, "all the WETH comes home");
+    }
+
+    function test_dissolveGraceIsOwnerTunableWithinBounds() public {
+        assertEq(castle.dissolveGrace(), GRACE);
+        vm.prank(jack);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, jack));
+        castle.setDissolveGrace(3600);
+        vm.startPrank(operator);
+        uint64 tooShort = castle.MIN_DISSOLVE_GRACE() - 1;
+        vm.expectRevert(Castle.BadConfig.selector);
+        castle.setDissolveGrace(tooShort);
+        uint64 tooLong = castle.MAX_DISSOLVE_GRACE() + 1;
+        vm.expectRevert(Castle.BadConfig.selector);
+        castle.setDissolveGrace(tooLong);
+        castle.setDissolveGrace(3600);
+        vm.stopPrank();
+        assertEq(castle.dissolveGrace(), 3600);
     }
 
     function test_settleWithNoSalesKeepsTheAnchor() public {

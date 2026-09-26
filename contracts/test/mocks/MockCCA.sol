@@ -45,24 +45,27 @@ contract MockCCA {
         tokensReceived = true;
     }
 
-    /// @dev Test hook: a bidder paid `raised` currency for `sold` tokens at `price`.
+    /// @dev Test hook: bidders paid `raised` currency for `sold` tokens at `price` (claimed only if it graduates).
     function fill(uint256 raised, uint256 sold, uint256 price) external {
         (currencyRaised, unsold, clearingPrice) = (raised, totalSupply - sold, price);
-        IERC20(token).transfer(msg.sender, sold); // the winning bidder claims
+        if (raised >= _p.requiredCurrencyRaised) IERC20(token).transfer(msg.sender, sold);
     }
 
     function sweepCurrency() external {
         if (block.number < _p.endBlock) revert AuctionIsNotOver();
         if (msg.sender != _p.fundsRecipient) revert NotAuthorized(_p.fundsRecipient, msg.sender);
         currencySwept = true;
-        IERC20(_p.currency).transfer(_p.fundsRecipient, IERC20(_p.currency).balanceOf(address(this)));
+        // not graduated: nothing to sweep, every bid is refunded to its bidder
+        if (currencyRaised >= _p.requiredCurrencyRaised) {
+            IERC20(_p.currency).transfer(_p.fundsRecipient, IERC20(_p.currency).balanceOf(address(this)));
+        }
     }
 
     function sweepUnsoldTokens() external {
         if (block.number < _p.endBlock) revert AuctionIsNotOver();
         if (msg.sender != _p.tokensRecipient) revert NotAuthorized(_p.tokensRecipient, msg.sender);
         tokensSwept = true;
-        IERC20(token).transfer(_p.tokensRecipient, unsold);
+        IERC20(token).transfer(_p.tokensRecipient, currencyRaised >= _p.requiredCurrencyRaised ? unsold : totalSupply);
     }
 }
 

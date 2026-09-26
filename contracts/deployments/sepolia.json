@@ -171,6 +171,51 @@
             "tx": null
           }
         ]
+      },
+      "dissolution": {
+        "note": "Live p4 proof: fee lease lapsed at 1790402988, dissolveGrace 1800, so dissolve() opened at 1790404788. Called once by mister-anderson after a fork rehearsal at the live state.",
+        "dissolve": {
+          "tx": "0x273f808c1741688f63a8a5c28f3d0859b229a9e1d4c65242f2a1f9a51044a5b5",
+          "block": 11784506,
+          "gasUsed": 4007020,
+          "caller": "0x89a7d90F6bCAF2FFd5c1519Fa7F3D9DB84e9AA73"
+        },
+        "auction": {
+          "address": "0x2aCb0006D096956457d2F113930aE7928945902C",
+          "startBlock": 11784506,
+          "endBlock": 11784531,
+          "lotWei": "4142995085311611",
+          "floorPriceQ96": "170356870810259155100",
+          "tickSpacingQ96": "1703568708102591551",
+          "requiredCurrencyRaised": "4454146"
+        },
+        "graceRaise": {
+          "tx": "0x52dde98a03c47fabd7b5fa9d26c7b29442ebf29c70833daf6dfd7f3765e92fce",
+          "dissolveGrace": 86400,
+          "why": "no re-dissolve of the unsold remainder after settle (R4)"
+        },
+        "bids": [
+          {
+            "bidder": "agy",
+            "owner": "0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c",
+            "hookData": "0x616779",
+            "amount": "6000000",
+            "maxPriceQ96": "425892177025647887750",
+            "bidId": 0,
+            "tx": "0x9b88863540d107223c1f472a90cea2fde3210171326d2dc6e80dc537569cf1d7",
+            "block": 11784508
+          }
+        ],
+        "settle": {
+          "tx": "0x9a813eb505f08ad54cc20583ba00bec9f75ee0319d6d789b5cae6d58a6c981cf",
+          "block": 11784532,
+          "graduated": true,
+          "currencyRaised": "5999999",
+          "clearingPriceQ96": "170356870810259155100",
+          "clearingUsdcPerWeth": "2150.206005",
+          "anchorWritten": true,
+          "unsoldWethReturned": "1352564779656110"
+        }
       }
     }
   }

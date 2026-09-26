@@ -59,3 +59,16 @@ Castle never calls `checkpoint()` itself. The CCA's `checkpoint()` is public, so
 - **aderyn H-3 (unsafe cast):** `uint16(end)` casts the program's end offset. Every segment has a fixed size, so the offset is always 242.
 
 None of these are true positives.
+
+## Live run (Sepolia, 2026-09-26)
+
+fee's lease lapsed at 06:09:48Z. With `dissolveGrace` at 1800, `dissolve()` opened at 06:39:48Z. Every step below was rehearsed first on a fork of the live state.
+
+| Step | Tx | Result |
+| --- | --- | --- |
+| `dissolve()` | [0x273f808c…a5b5](https://sepolia.etherscan.io/tx/0x273f808c1741688f63a8a5c28f3d0859b229a9e1d4c65242f2a1f9a51044a5b5) | Block 11784506, 4,007,020 gas. The one strategy was docked. Auction [0x2aCb…902C](https://sepolia.etherscan.io/address/0x2aCb0006D096956457d2F113930aE7928945902C) opened for 0.004142995 WETH, with the floor at 2150.21 USDC/WETH and 4.454146 USDC needed to graduate. |
+| `setDissolveGrace(86400)` | [0x52dde98a…2fce](https://sepolia.etherscan.io/tx/0x52dde98a03c47fabd7b5fa9d26c7b29442ebf29c70833daf6dfd7f3765e92fce) | The owner closes the re-dissolve window (README R4) while the auction runs. |
+| agy's bid | [0x9b888635…cf1d7](https://sepolia.etherscan.io/tx/0x9b88863540d107223c1f472a90cea2fde3210171326d2dc6e80dc537569cf1d7) | Block 11784508 (start + 2): 6 USDC, hookData `agy`, passed by JackHook. |
+| `settleAuction()` | [0x9a813eb5…81cf](https://sepolia.etherscan.io/tx/0x9a813eb505f08ad54cc20583ba00bec9f75ee0319d6d789b5cae6d58a6c981cf) | Block 11784532. Graduated, with 5.999999 USDC raised. The auction cleared at the floor (2150.21 USDC/WETH). 0.001352565 WETH went back to Castle unsold. The resolver's `setData` wrote `handoff-price` in the same tx, so `anchorPriceQ96()` now reads 170356870810259155100. |
+
+All the tx hashes are recorded in `contracts/deployments/sepolia.json` under `contracts.castle.dissolution`.

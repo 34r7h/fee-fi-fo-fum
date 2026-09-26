@@ -22,7 +22,10 @@ interface IEnhancedAccessControl {
 ///         fee/fi/fo/fum already hold names and records) and its PermissionedResolver (tag
 ///         sepolia-deployment-2026-09-15), WETH9 and Circle USDC. Only Castle and the fence are new; the registry
 ///         admin is impersonated to grant Castle exactly the roles handoff-claude grants live.
-/// @dev forge test --match-path test/fork/CastleFork.t.sol  (SEPOLIA_RPC_URL overrides the public RPC)
+/// @dev forge test --match-path test/fork/CastleFork.t.sol
+///      The block is pinned, so the RPC must serve historical state (an archive endpoint). The default, Tenderly's
+///      public gateway, does; publicnode keeps only ~128 blocks and fails with "historical state is not available".
+///      SEPOLIA_ARCHIVE_RPC_URL overrides it.
 contract CastleForkTest is CastleHelpers {
     uint256 internal constant FORK_BLOCK = 11_784_073;
     uint64 internal constant LEASE = 120;
@@ -47,7 +50,7 @@ contract CastleForkTest is CastleHelpers {
 
     function setUp() public {
         vm.createSelectFork(
-            vm.envOr("SEPOLIA_RPC_URL", string("https://ethereum-sepolia-rpc.publicnode.com")), FORK_BLOCK
+            vm.envOr("SEPOLIA_ARCHIVE_RPC_URL", string("https://sepolia.gateway.tenderly.co")), FORK_BLOCK
         );
         assertGt(ROUTER.code.length, 0, "router live");
         assertEq(address(AquaSwapVMRouter(payable(ROUTER)).AQUA()), AQUA);

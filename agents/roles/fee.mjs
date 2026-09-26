@@ -1,9 +1,10 @@
 // fee, the shift trader (p3-feefi).
 //
-// While fee holds a LIVE castle it renews every RENEW_EVERY_S (90s of a 120s lease) with fo's seal, and keeps
+// While fee holds a LIVE castle it renews with fo's seal (v2: every 90s of a 120s lease; v3: once a day), and keeps
 // the book on Aqua: it ships as soon as it holds the castle and re-centres only when the ENS anchor moves
-// (Castle v2 builds the fenced program itself; lib/book.mjs checks the centre). If fo withholds,
-// fee does not fight: the lease runs out, fills wind down, and fi claims.
+// (Castle builds the fenced program itself; lib/book.mjs checks the centre). On v3 it also keeps a heartbeat
+// co-signed by fo current (fills run the live curve only with one) and answers a challenge() with respond().
+// If fo withholds, fee does not fight: fills wind down, and fi takes over.
 //
 // Demo switches (env):
 //   FEE_STAGE_HANG=1   fee keeps its heartbeat and keeps asking for seals but stops shipping: a real hang, for
@@ -12,10 +13,12 @@
 //                      without simulating it, so the chain rejects it with a mined, reverted tx;
 //   FEE_FORCE_RENEW=1  when fo withholds the seal, fee signs the attestation itself and sends the renew anyway
 //                      (once per epoch): Castle takes only fo's signature, so it reverts BadAttestation(fee);
-//   FEE_STANDBY=1      fee is the standby for this shift (fi holds): it claims the castle once it has lapsed,
-//                      FEE_CLAIM_DELAY_S after expiry, exactly as fi would.
+//   FEE_STANDBY=1      fee is the standby for this shift (fi holds): it challenges a silent holder (v3) and claims
+//                      the castle once it is claimable, FEE_CLAIM_DELAY_S after, exactly as fi would;
+//   FEE_GENESIS=1      fee claims an unclaimed castle (expiry 0). Without it fee waits: genesis is gated (v3's
+//                      waits on a fork rehearsal), so starting the crew never claims by accident.
 import { readLease } from '../lib/lease.mjs';
-import { renewIfDue, send, claimCastle, shipIfDue, standbyClaim, staleRenew } from '../lib/shift.mjs';
+import { renewIfDue, send, claimCastle, shipIfDue, standbyClaim, staleRenew, heartbeatIfDue, respondIfChallenged, challengeIfSilent } from '../lib/shift.mjs';
 import { signAttestation } from '../lib/attest.mjs';
 import { env } from '../lib/env.mjs';
 
@@ -23,6 +26,7 @@ const STALE = env('FEE_STALE') === '1';
 const FORCE = env('FEE_FORCE_RENEW') === '1';
 const HANG = env('FEE_STAGE_HANG') === '1';
 const STANDBY = env('FEE_STANDBY') === '1';
+const GENESIS = env('FEE_GENESIS') === '1';
 const CLAIM_DELAY_S = Number(env('FEE_CLAIM_DELAY_S', 0));
 let staleShot = false;
 let forcedEpoch = null;
@@ -55,10 +59,14 @@ export default {
     }
     if (lease.expiry === 0) {
       // Genesis: the castle has never been claimed. The first shift is fee's (fi only claims after a real expiry).
+      if (!GENESIS) return ctx.logChange('genesis', 'awaiting-genesis', { note: 'unclaimed castle: FEE_GENESIS=1 (or scripts/genesis.mjs) claims it' });
       const r = await claimCastle(ctx);
       return ctx.log('genesis-claim', { ok: r.ok, tx: r.hash || null, reason: r.reason || null });
     }
-    if (STANDBY && !mine) { await standbyClaim(ctx, lease, { delayS: CLAIM_DELAY_S }); return; }
+    if (STANDBY && !mine) { await challengeIfSilent(ctx, lease); await standbyClaim(ctx, lease, { delayS: CLAIM_DELAY_S }); return; }
+    // v3: a challenge has a 60s window, so it comes first; then the heartbeat, which keeps fills on the live curve.
+    await respondIfChallenged(ctx, lease);
+    await heartbeatIfDue(ctx, lease);
     // Re-centre before renewing: fo withholds the seal from a book the ENS anchor has moved off.
     if (!HANG) await shipIfDue(ctx, lease);
     const r = await renewIfDue(ctx, lease);

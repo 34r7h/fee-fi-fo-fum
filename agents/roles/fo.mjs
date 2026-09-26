@@ -12,10 +12,15 @@
 //   hang is a real one: the trader stops shipping (roles/fee.mjs honours FEE_STAGE_HANG), and fo is never told.
 // - Replays fills. Every Aqua fill against the Castle is re-judged against the lease timeline (lib/replay.mjs).
 //   A fill from a stale epoch is a fence breach, and fo reports it.
+// - Castle v3: co-signs heartbeats. POST /heartbeat {epoch, validUntil, holderSig} from the holder: fo checks the
+//   signature is the live holder's, the lease is live and unchallenged, and the book is neither hung nor off-market
+//   (lib/fo-policy.mjs decideHeartbeat), then signs the same Heartbeat(epoch, validUntil). The fence runs the live
+//   curve only with both signatures, so a withheld co-signature winds the book down within one heartbeat TTL.
 import http from 'node:http';
 import { readLease, crewIdOf } from '../lib/lease.mjs';
-import { decide, DEFAULT_LIMITS } from '../lib/fo-policy.mjs';
+import { decide, decideHeartbeat, DEFAULT_LIMITS } from '../lib/fo-policy.mjs';
 import { signAttestation, attestationDigest } from '../lib/attest.mjs';
+import { signHeartbeat, heartbeatDigest, heartbeatSigner, MAX_HEARTBEAT_TTL } from '../lib/heartbeat.mjs';
 import { ensureChannel, postIncident } from '../lib/incidents.mjs';
 import { lastShipAge, replayFills, CASTLE_EVENTS } from '../lib/replay.mjs';
 import { contractAddress, abi, txLink } from '../lib/chain.mjs';
@@ -113,6 +118,35 @@ async function attest(ctx, request) {
   return { status: 200, body: { epoch: String(att.epoch), expiry: att.expiry, deadline: att.deadline, signature, digest, signer: ctx.account.address } };
 }
 
+async function cosign(ctx, request) {
+  const obs = await observe(ctx);
+  const { lease } = obs;
+  if (!lease.deployed || lease.version !== 3) return { status: 409, body: { withheld: 'not-v3', detail: { note: 'heartbeats are Castle v3' } } };
+  const hb = { chainId: await ctx.pc.getChainId(), castle: lease.castle, epoch: request.epoch, validUntil: request.validUntil };
+  let signer = null;
+  try { if (request.epoch !== undefined && request.validUntil !== undefined && request.holderSig) signer = await heartbeatSigner(hb, request.holderSig); } catch { /* not a signature */ }
+  const decision = decideHeartbeat({ now: lease.now, lease, request: { ...request, signer }, quotes: obs.quotes, market: obs.market, limits: LIMITS, maxTtlS: MAX_HEARTBEAT_TTL });
+  if (!decision.sign) {
+    ctx.logChange(`hb-${request.requester}`, 'heartbeat-withheld', { reason: decision.reason, requester: request.requester || null, ...decision.detail });
+    return { status: 409, body: { withheld: decision.reason, detail: decision.detail } };
+  }
+  if (lease.fo.toLowerCase() !== ctx.account.address.toLowerCase()) {
+    ctx.logChange(`hb-${request.requester}`, 'heartbeat-withheld', { reason: 'not-castle-fo', castleFo: lease.fo, me: ctx.account.address });
+    return { status: 409, body: { withheld: 'not-castle-fo', detail: { castleFo: lease.fo } } };
+  }
+  // Check against the Castle's own digest before signing: a domain mismatch would wind every fill down.
+  const digest = heartbeatDigest(hb);
+  const onchain = await ctx.pc.readContract({ address: lease.castle, abi: abi('Castle'), functionName: 'heartbeatDigest', args: [BigInt(hb.epoch), BigInt(hb.validUntil)] }).catch(() => null);
+  if (onchain && onchain !== digest) {
+    ctx.log('heartbeat-withheld', { reason: 'digest-mismatch', local: digest, castle: onchain });
+    return { status: 500, body: { withheld: 'digest-mismatch' } };
+  }
+  const signature = await signHeartbeat(ctx.account, hb);
+  ctx.logChange(`hb-${request.requester}`, 'heartbeat-cosigning', { requester: request.requester || null, epoch: String(hb.epoch), digestChecked: Boolean(onchain), ...decision.checks });
+  ctx.log('cosigned', { epoch: String(hb.epoch), validUntil: Number(hb.validUntil), requester: request.requester || null });
+  return { status: 200, body: { epoch: String(hb.epoch), validUntil: Number(hb.validUntil), signature, digest, signer: ctx.account.address } };
+}
+
 function serve(ctx) {
   const server = http.createServer(async (req, res) => {
     const reply = (status, body) => { res.writeHead(status, { 'content-type': 'application/json' }); res.end(JSON.stringify(body, big)); };
@@ -125,7 +159,14 @@ function serve(ctx) {
         const r = await attest(ctx, { expiry: body.expiry, epoch: body.epoch, requester: body.requester });
         return reply(r.status, r.body);
       }
-      reply(404, { error: 'POST /attest {expiry?, epoch?, requester?} or GET /health' });
+      if (req.method === 'POST' && req.url === '/heartbeat') {
+        let raw = '';
+        for await (const chunk of req) { raw += chunk; if (raw.length > 4096) return reply(413, { error: 'body too large' }); }
+        const body = raw ? JSON.parse(raw) : {};
+        const r = await cosign(ctx, { epoch: body.epoch, validUntil: body.validUntil, holderSig: body.holderSig, requester: body.requester });
+        return reply(r.status, r.body);
+      }
+      reply(404, { error: 'POST /attest {expiry?, epoch?, requester?}, POST /heartbeat {epoch, validUntil, holderSig, requester?} or GET /health' });
     } catch (e) { reply(500, { error: e.shortMessage || e.message }); }
   });
   server.on('error', (e) => ctx.log('attester-error', { error: e.message }));

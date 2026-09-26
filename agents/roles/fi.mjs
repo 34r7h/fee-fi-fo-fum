@@ -1,16 +1,18 @@
 // fi, the hot standby (p3-feefi).
 //
-// fi acts on the lease, never on a missed heartbeat alone: Castle.claim() reverts while the lease is live, so
-// fee's silence only shows in the logs. The moment block time passes expiry, fi takes the castle in one
-// multicall: claim() (a new epoch, which fences the old shift's book), dock every strategy still on Aqua, and
-// relink() castle.feefifofum.eth to fi's own crew name. From then on fi is the holder and runs the same loop as
-// fee: renew with fo's seal, ship and re-centre the book on the ENS anchor.
+// fi acts on the lease. On v2, Castle.claim() reverts while the lease is live, so fee's silence only shows in the
+// logs until block time passes expiry. On v3 the lease is a day long and liveness is the co-signed heartbeat: once
+// the holder's heartbeat has been expired CHALLENGE_SILENT_S, fi calls challenge(), and if the holder does not
+// respond() within 60s the castle is claimable early. Either way fi takes it in one multicall: claim() (a new epoch,
+// which fences the old shift's book), dock every strategy still on Aqua, and relink() castle.feefifofum.eth to fi's
+// own crew name. From then on fi is the holder and runs the same loop as fee: heartbeat, renew with fo's seal, ship
+// and re-centre the book on the ENS anchor.
 //
 // Demo switches (env): FI_CLAIM_DELAY_S holds the wind-down gap open that long after expiry, so a taker can fill
 // reduce-only before the claim; FI_STALE=1 is a restart from stale state (fi was the holder, was killed, and fee
 // took over): one unsimulated renew, which the chain rejects with a mined NotHolder.
 import { readLease } from '../lib/lease.mjs';
-import { renewIfDue, shipIfDue, standbyClaim, staleRenew } from '../lib/shift.mjs';
+import { renewIfDue, shipIfDue, standbyClaim, staleRenew, heartbeatIfDue, respondIfChallenged, challengeIfSilent } from '../lib/shift.mjs';
 import { env } from '../lib/env.mjs';
 
 const CLAIM_DELAY_S = Number(env('FI_CLAIM_DELAY_S', 0));
@@ -31,12 +33,16 @@ export default {
 
     if (STALE && !staleShot) { staleShot = true; await staleRenew(ctx, lease); return; }
     if (mine && lease.state === 'LIVE') {
+      // v3: answer a challenge first (60s window), then keep the heartbeat current.
+      await respondIfChallenged(ctx, lease);
+      await heartbeatIfDue(ctx, lease);
       // Re-centre before renewing: fo withholds the seal from a book the ENS anchor has moved off.
       await shipIfDue(ctx, lease);
       await renewIfDue(ctx, lease);
       return;
     }
-    // Standby, or back after its own lease lapsed: either way the castle is open to claim.
+    // Standby, or back after its own lease lapsed: challenge a silent v3 holder, and claim once the castle is claimable.
+    await challengeIfSilent(ctx, lease);
     await standbyClaim(ctx, lease, { delayS: CLAIM_DELAY_S });
   },
   async onMessage(ctx, msg) {

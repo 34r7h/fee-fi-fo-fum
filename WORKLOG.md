@@ -8,7 +8,7 @@ The running record of the feefifofum build: what was done, who did it, which com
 - **Deadline:** Sun 27 Sep 00:00 UTC
 - **Pre-existing product:** handoff (private), baseline `079f8f0`
 - **Earlier product:** the lease edition, retired at 10:51Z on Sat 26 Sep. Its code and full worklog are at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition).
-- **Last regenerated:** Sat 11:15Z
+- **Last regenerated:** Sat 11:18Z
 
 All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified).
 
@@ -19,8 +19,8 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 | Task | Owner | Assignee | Due | Status | Commit | On-chain |
 |---|---|---|---|---|---|---|
 | **BLOCKER** Research gate: prize rules, Sepolia deployments, and the CCIP-Read path <br>`research` `53d4d720` | korg | korg | Sat 12:15Z | done | d6d21a1 | fork probe: register(quote) + UR OffchainLookup |
-| **BLOCKER** Lock docs/SPEC.md <br>`spec` `3136bd1d` | SirKit | SirKit | Sat 12:45Z | in_progress | 7c3a6fd |  |
-| Validate SPEC.md against the architecture <br>`v-spec` `c7d24d0e` | agy | agy | Sat 13:00Z | in_progress |  |  |
+| **BLOCKER** Lock docs/SPEC.md <br>`spec` `3136bd1d` | SirKit | SirKit | Sat 12:45Z | done | d70dafa | agy PASS (v-spec) |
+| Validate SPEC.md against the architecture <br>`v-spec` `c7d24d0e` | agy | agy | Sat 13:00Z | done | d70dafa | PASS; SirKit re-ran CastleVault.t.sol: 19 passed |
 
 ### Contracts: the Castle vault, the v4 JIT hook and the CCIP-Read resolver
 
@@ -63,7 +63,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 | Task | Owner | Assignee | Due | Status | Commit | On-chain |
 |---|---|---|---|---|---|---|
-| README, sponsor write-ups and FEEDBACK <br>`s-writeups` `ae2058f7` | korg |  | Sat 23:00Z | todo |  |  |
+| README, sponsor write-ups and FEEDBACK <br>`s-writeups` `ae2058f7` | korg | korg | Sat 23:00Z | in_progress |  |  |
 | AI_USAGE.md and WORKLOG.md <br>`s-ai` `e16fb6a1` | SirKit | SirKit | Sat 23:30Z | todo |  |  |
 | OPERATOR: record the video and submit on ETHGlobal <br>`s-submit` `fd56d78b` | OPERATOR |  | Sat 23:59Z | todo |  |  |
 
@@ -82,7 +82,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 ## Wallets
 
-Live balances read at block 11785879.
+Live balances read at block 11785889.
 
 | Wallet | handoff agent | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -108,7 +108,7 @@ Live balances read at block 11785879.
 
 | Doc | Owner | Status |
 |---|---|---|
-| docs/SPEC.md (locked build scope) | SirKit | locked 7c3a6fd |
+| docs/SPEC.md (locked build scope) | SirKit | locked d70dafa, agy PASS |
 | docs/PIVOT.md (architecture brief) | agy | 77d2b85 |
 | docs/research.md (gates) | korg | verified d6d21a1 (SirKit re-ran the fork probe) |
 | miniapp/STREAM.md (stream v2) | impecc | 08ba999 |
@@ -154,3 +154,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 11:10Z | korg | Research gates measured on a fork: v4 Sepolia addresses by eth_getCode; 0x67Cc registers quote with a custom resolver in one call; UniversalResolverV2 surfaces OffchainLookup for text() when the resolver advertises IExtendedResolver; no UniswapX on Sepolia |
 | Sat 11:12Z | SirKit | docs/SPEC.md locked (d2c5eac, 7c3a6fd): CastleVault with leverage caps, PriceExtruction, CastleJITHook, OffchainQuoteResolver; quote format; gateway; crew duties; demo; 0.02 ETH gas ceiling; cut lines |
 | Sat 11:14Z | SirKit | Verified korg's research (re-ran contracts/probes/quote-register on a live Sepolia fork: 1 passed). Board: 16 of 18 tasks claimed. WORKLOG and AI_USAGE switched to this product; the lease edition's record stays at tag lease-edition. |
+| Sat 11:18Z | agy | v-spec: a conditional FAIL on 7c3a6fd (four of its five items came from a stale working tree; one real fix: the resolver extraData is the callData), then PASS on d70dafa. SirKit re-ran test/CastleVault.t.sol: 19 passed. spec, v-spec and research are verified. |

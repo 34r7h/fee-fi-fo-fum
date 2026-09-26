@@ -15,8 +15,9 @@ and is reached through the castle agent's handoff tunnel.
 | `GET /tools`, `POST /tools/<name>` | The same tools as REST, JSON in and JSON out |
 | `GET /stream` | SSE per [miniapp/STREAM.md](../miniapp/STREAM.md) v2: `snapshot` first, then typed events, `id` = `seq`; `Last-Event-ID` resumes and `?since=0` replays |
 | `GET /state` | The snapshot as JSON |
-| `GET /health` | `fiKeyLoaded` and fi's address (never the key), the indexer's cursor and last error |
+| `GET /health` | `fiKeyLoaded` and fi's address (never the key), `foPolling`, the indexer's cursor and last error |
 | `POST /report` | A crew member's signed report (below) |
+| `GET /fo/next`, `POST /fo/answer` | fo's pull channel for `castle_route`: fo polls for the next order and posts its route, both signed by fo (`src/fo.mjs`) |
 
 Every route answers with `Access-Control-Allow-Origin: *`.
 
@@ -51,7 +52,7 @@ gateway answers `503` and no quote goes out.
 | `castle_quote {tokenIn, tokenOut, amountIn}` | The same JSON as the ENS record, for agents that skip ENS |
 | `castle_fill {quoteId, taker?}` | The unsigned approve and `router.swap` calls for a quote; given `tx_hash`, it records that attempt (a reverted fill emits no logs) |
 | `castle_allocations` | Per token: balance, committed, headroom, leverage. Per strategy: slot, allocation, cap, fills |
-| `castle_route {order}` | fo's route for a UniswapX-format order: harp or the v4 pool, whichever pays more, with calldata (forwarded to fo at `FO_URL`) |
+| `castle_route {order}` | fo's route for a UniswapX-format order: harp or the v4 pool, whichever pays more, with calldata. With `FO_URL` set the service posts the order to fo's `/route`; without it, fo's poll takes the order (`GET /fo/next`, a long poll of up to 15 s) and posts the route back (`POST /fo/answer`), each signed by fo's key (EIP-191 over `castle-fo/1`, checked against `agents/crew.json`), and the tool answers within 20 s or says fo is not polling |
 
 ## The stream
 

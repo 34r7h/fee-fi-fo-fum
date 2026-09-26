@@ -6,6 +6,7 @@
 //   GET  /stream         SSE, miniapp/STREAM.md v2 (snapshot first, id = seq, Last-Event-ID resumes, ping 15s)
 //   GET  /state          the snapshot as JSON
 //   POST /report         a crew member's signed report (report.mjs)
+//   GET  /fo/next, POST /fo/answer   fo's signed poll for castle_route orders, when FO_URL is unset (fo.mjs)
 //   GET  /health
 // CORS is open (Access-Control-Allow-Origin: *): the miniapp reads this cross-origin from handoff.lol, and CCIP-Read
 // clients call the gateway from anywhere. Every gateway answer and refusal is one JSON log line on stdout.
@@ -20,6 +21,7 @@ import { start, snapshot, health } from './indexer.mjs';
 import { route as gateway } from './gateway.mjs';
 import { acceptReport } from './report.mjs';
 import { fiStatus } from './fi.mjs';
+import { next as foNext, answer as foAnswer, foPolling } from './fo.mjs';
 
 const json = (v) => JSON.stringify(v, (_k, x) => (typeof x === 'bigint' ? x.toString() : x));
 const log = (o) => console.log(json({ t: new Date().toISOString(), ...o }));
@@ -100,10 +102,21 @@ const srv = http.createServer(async (req, res) => {
     }
     if (p === '/stream' && req.method === 'GET') return sse(req, res);
     if (p === '/state' && req.method === 'GET') return send(res, 200, snapshot());
-    if (p === '/health') return send(res, 200, { ok: true, ...fiStatus(), ...health() });
+    if (p === '/health') return send(res, 200, { ok: true, ...fiStatus(), foPolling: foPolling(), ...health() });
     if (p === '/report' && req.method === 'POST') {
       try { return send(res, 200, await acceptReport(await readBody(req))); }
       catch (e) { log({ report: 'refused', status: e.status || 500, message: e.message }); return send(res, e.status || 500, { error: e.message }); }
+    }
+    if (p === '/fo/next' && req.method === 'GET') {
+      try {
+        const job = await foNext(req.headers, url.searchParams, Math.min(15_000, Number(url.searchParams.get('wait') ?? 10_000)));
+        if (!job) { res.writeHead(204, CORS); res.end(); return; }
+        return send(res, 200, job);
+      } catch (e) { return send(res, e.status || 500, { error: e.message }); }
+    }
+    if (p === '/fo/answer' && req.method === 'POST') {
+      try { return send(res, 200, await foAnswer(await readBody(req))); }
+      catch (e) { return send(res, e.status || 500, { error: e.message }); }
     }
     if (p === '/tools' && req.method === 'GET') return send(res, 200, { tools: Object.entries(tools).map(([name, t]) => ({ name, description: t.description, params: Object.keys(t.input) })) });
     const m = p.match(/^\/tools\/([a-z_]+)$/);

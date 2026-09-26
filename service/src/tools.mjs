@@ -9,6 +9,7 @@ import { client, head, sameAddr } from './chain.mjs';
 import { view, emit } from './stream.mjs';
 import { snapshot, liveStrategies, health, hoardAt, allocAt, refusedFill, config, SLOT_NAMES } from './indexer.mjs';
 import { harpQuote, quoteById, feePrice } from './quote.mjs';
+import { routeViaPoll } from './fo.mjs';
 
 const MAX = 2n ** 256n - 1n;
 const symbols = [['USDC', () => addr('usdc')], ['WETH', () => addr('weth')]];
@@ -109,7 +110,7 @@ export const tools = {
     input: { order: z.record(z.any()) },
     run: async ({ order }) => {
       const fo = process.env.FO_URL;
-      if (!fo) throw new Error('fo is not reachable from this service (FO_URL unset)');
+      if (!fo) return routeViaPoll(order);   // fo polls this service from wherever the crew runs
       const r = await fetch(`${fo.replace(/\/$/, '')}/route`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ order }), signal: AbortSignal.timeout(20_000) }).catch((e) => ({ ok: false, status: 502, json: async () => ({ error: `fo is down: ${e.message}` }) }));
       const j = await r.json().catch(() => ({ error: 'fo answered with no JSON' }));
       if (!r.ok) throw new Error(j.error || `fo answered ${r.status}`);

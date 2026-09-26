@@ -573,12 +573,14 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       case 'lease.renewed': leaseEntry('renew', ev); S.dissolved = false; break;
       case 'lease.claimed': leaseEntry('claim', ev); S.dissolved = false; break;
       case 'strategy.shipped':
+        if (strat(ev.hash)) break;
         S.strategies.push({ hash: ev.hash, epoch: String(ev.epoch), shippedBy: ev.shippedBy, center: ev.center, weth: ev.weth, usdc: ev.usdc, docked: false, t: ev.t });
         if (S.strategies.length > 8) S.strategies.shift();
         break;
       case 'strategy.docked': var st = strat(ev.hash); if (st) st.docked = true; break;
       case 'inventory': S.inventory = { weth: ev.weth, usdc: ev.usdc }; break;
       case 'fill':
+        if (ev.tx && S.fills.some(function (x) { return x.tx === ev.tx && x.status === ev.status; })) return;
         S.fills.push(ev);
         if (S.fills.length > 200) S.fills.shift();
         if (ev.decision === 'fenced') S.shoutUntil = clock() + 3600;
@@ -659,7 +661,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       case 'snapshot': return { ev: ev, icon: 'castle', ti: 'HERE THE TALE BEGINS', gl: [S.lease ? up(S.lease.holderAgent) + ' holds the castle, epoch ' + ep(S.lease.epoch) : 'The castle stands empty'] };
       case 'lease.renewed': return { ev: ev, icon: 'needle', ti: 'HERE ' + A + ' KEEPS THE CASTLE', gl: ['epoch ' + ep(ev.epoch) + ' · lease to ' + hhmmss(ev.expiry * 1000), 'sealed by fo'] };
       case 'lease.expired': return { ev: ev, icon: 'glass', tone: 'woad', ti: 'HERE THE LEASE RUNS OUT', gl: ['epoch ' + ep(ev.epoch) + ' winds down', 'the castle only sells, and wide'] };
-      case 'lease.claimed': return { ev: ev, icon: 'key', tone: 'gold', ti: 'HERE ' + A + ' CLAIMS THE CASTLE', gl: ['epoch ' + ep(ev.prevEpoch) + ' → ' + ep(ev.epoch), 'after ' + ev.gapSeconds + ' s of wind-down'] };
+      case 'lease.claimed': return { ev: ev, icon: 'key', tone: 'gold', ti: 'HERE ' + A + ' CLAIMS THE CASTLE', gl: ev.gapSeconds == null ? ['epoch ' + ep(ev.epoch), 'the first claim on the castle'] : ['epoch ' + ep(ev.prevEpoch) + ' → ' + ep(ev.epoch), 'after ' + ev.gapSeconds + ' s of wind-down'] };
       case 'lease.rejected': return { ev: ev, icon: 'shield', tone: 'madder', ti: 'HERE THE CASTLE REFUSES ' + A, gl: [ev.call + ' from epoch ' + ep(ev.epoch), ev.reason] };
       case 'attestation.withheld': return { ev: ev, icon: 'shield', tone: 'madder', ti: 'HERE FO WITHHOLDS THE SEAL', gl: [ev.reason] };
       case 'incident': return { ev: ev, icon: 'bell', tone: 'woad', ti: 'HERE FO WRITES IT DOWN', gl: [ev.summary] };
@@ -1152,14 +1154,34 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     stopChain(); MOCK = null; R('mockbar').hidden = true;
     reset('live');
     S.config = Object.assign({}, CONFIG);
-    try { es = new EventSource(base() + '/stream'); } catch (e) { fallBack('The castle service could not be reached.'); return; }
-    var got = false, mine = es;
+    var got = false, mine = null, run = S;
     liveOk = clock();
-    function on(e) { got = true; liveOk = clock(); try { feed(JSON.parse(e.data)); } catch (x) { /* a malformed frame is skipped, not fatal */ } }
-    TYPES.forEach(function (t) { es.addEventListener(t, on); });
-    es.onmessage = on;
-    es.onopen = function () { liveOk = clock(); };
-    setTimeout(function () { if (!got && es === mine) fallBack('The castle service did not answer.'); }, 8000);
+    // The snapshot gives config, the crew and the hoard; the stream from seq 0 then retells the whole tale in order,
+    // so the tapestry and the replay tab have the history, not just the present.
+    state().then(function (snap) {
+      if (S !== run) return;
+      feed({ v: 1, type: 'snapshot', t: snap.t, block: snap.block, tx: null, src: 'service', config: snap.config, shifts: snap.shifts, agents: snap.agents,
+        lease: snap.lease, leases: [], strategies: snap.strategies, inventory: snap.inventory, price: snap.price, auction: null, fills: [] });
+      S.scenes = [];
+      try { mine = es = new EventSource(base() + '/stream?since=0'); } catch (e) { fallBack('The castle service could not be reached.'); return; }
+      function on(e) { got = true; liveOk = clock(); try { feed(JSON.parse(e.data)); } catch (x) { /* a malformed frame is skipped, not fatal */ } }
+      TYPES.forEach(function (t) { es.addEventListener(t, on); });
+      es.onmessage = on;
+      es.onopen = function () { got = true; liveOk = clock(); };
+    }, function () { if (S === run) fallBack('The castle service did not answer.'); });
+    setTimeout(function () { if (S === run && !got && (!es || es === mine)) fallBack('The castle service did not answer.'); }, 8000);
+  }
+  function state() { return fetch(base() + '/state').then(function (r) { if (!r.ok) throw new Error('state ' + r.status); return r.json(); }); }
+  // The stream carries no balance events, so the hoard and the anchor are refreshed from the snapshot.
+  function liveHoard() {
+    if (!es || S.mode !== 'live') return;
+    var run = S;
+    state().then(function (snap) {
+      if (S !== run) return;
+      if (snap.inventory) S.inventory = snap.inventory;
+      if (snap.price && (!S.price || !S.price.tx || S.price.q96 !== snap.price.q96)) S.price = snap.price;
+      dirty = true;
+    }, function () { /* the watchdog decides */ });
   }
   // The service closes each SSE response every few seconds and the browser reconnects; only a long silence counts.
   function liveWatch() {
@@ -1227,7 +1249,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     if (es) { es.close(); es = null; }
     reset('chain');
     S.config = Object.assign({}, CONFIG);
-    var c = CH = { rpc: 0, cursor: 0, auctions: [], shipEpoch: {}, leases: [], fillTx: {}, expiredFor: '', bal: '', times: {}, why: why || '' };
+    var c = CH = { rpc: 0, cursor: 0, castleTx: {}, auctions: [], shipEpoch: {}, leases: [], fillTx: {}, expiredFor: '', bal: '', times: {}, why: why || '' };
     var castle = CONFIG.contracts.castle.address, aqua = CONFIG.external.aqua, deploy = Number(CONFIG.contracts.castle.block);
     c.time = function (log) { return log && log.blockTimestamp ? hexN(log.blockTimestamp) * 1000 : log && c.times[log.blockNumber] ? c.times[log.blockNumber] : clock(); };
     var parent = String(CONFIG.name || 'castle.feefifofum.eth').split('.').slice(1).join('.');
@@ -1238,8 +1260,8 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       if (!n) return;
       if (same(log.address, aqua)) {
         if ((n !== 'Pulled' && n !== 'Pushed') || !same(wAddr(w[0]), castle)) return;
-        var f = c.fillTx[log.transactionHash] || (c.fillTx[log.transactionHash] = { log: log, legs: {} });
-        f.legs[n] = { hash: w[2], token: wAddr(w[3]), amount: BigInt(w[4]).toString() };
+        var f = c.fillTx[log.transactionHash] || (c.fillTx[log.transactionHash] = { log: log, legs: {}, n: 0 });
+        f.legs[n] = { hash: w[2], token: wAddr(w[3]), amount: BigInt(w[4]).toString() }; f.n++;
         return;
       }
       if (!same(log.address, castle)) {
@@ -1248,6 +1270,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         return;
       }
       var b = hexN(log.blockNumber), t = c.time(log);
+      c.castleTx[log.transactionHash] = true;
       if (n === 'Renewed' || n === 'Claimed') {
         var epoch = BigInt(tp[1]).toString(), holder = wAddr(tp[2]), exp = hexN(w[0]), prev = c.leases[c.leases.length - 1];
         if (n === 'Claimed' && prev && t / 1000 > prev.expiry) feed(Object.assign(chainEv('lease.expired', { epoch: prev.epoch, holder: prev.holder, holderAgent: prev.agent, expiry: prev.expiry }, null), { t: prev.expiry * 1000, block: null, tx: null }));
@@ -1281,6 +1304,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       return txs.reduce(function (p, h0) {
         return p.then(function () {
           var f = c.fillTx[h0]; delete c.fillTx[h0];
+          if (f.n !== 2 || !f.legs.Pulled || !f.legs.Pushed || same(f.legs.Pulled.token, f.legs.Pushed.token) || c.castleTx[h0]) return null;
           return rpc('eth_getTransactionByHash', [h0]).then(function (tx) {
             var out = f.legs.Pulled, inn = f.legs.Pushed, hash = (out || inn).hash, b = hexN(f.log.blockNumber), L = leaseAtBlock(b), pe = c.shipEpoch[hash] || null;
             var tIn = inn && same(inn.token, CONFIG.external.usdc) ? 'USDC' : 'WETH', tOut = tIn === 'USDC' ? 'WETH' : 'USDC';
@@ -1539,6 +1563,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   else if (!wantMock && hasChain()) startChain('');
   else startMock(CONFIG ? '' : 'The castle service is not wired into this build yet.');
   setInterval(liveWatch, 5000);
+  setInterval(liveHoard, 30000);
   requestAnimationFrame(frame);
 })();
 </script>

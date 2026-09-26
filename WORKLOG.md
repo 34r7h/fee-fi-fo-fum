@@ -56,8 +56,8 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 | Task | Owner | Assignee | Due | Status | Commit | On-chain |
 |---|---|---|---|---|---|---|
 | The one live run on Sepolia <br>`a-live` `a92e968f` | agent-smith | agent-smith | Sat 22:00Z | in_progress |  |  |
-| **BLOCKER** Fork end-to-end as the outside Jack (two passes) <br>`v-e2e` `48b54583` | korg | korg | Sat 20:00Z | todo |  |  |
-| Co-sign the live run on-chain <br>`v-live` `e113e331` | agy | agy | Sat 22:30Z | in_progress |  |  |
+| **BLOCKER** Fork end-to-end of the whole demo (two passes) <br>`v-e2e` `48b54583` | korg | korg | Sat 20:00Z | in_progress |  |  |
+| Verify the live run on-chain <br>`v-live` `e113e331` | agy | agy | Sat 22:30Z | in_progress |  |  |
 
 ### Submission
 
@@ -82,7 +82,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 ## Wallets
 
-Live balances read at block 11785962.
+Live balances read at block 11785963.
 
 | Wallet | handoff agent | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|

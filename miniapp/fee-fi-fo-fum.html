@@ -727,7 +727,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
   var HB = null;
   function drawHarp() {
     var hp = T.harp, F = T.flow && T.flow.kind === 'harp' ? T.flow : null, a = amountIn();
-    once('harp', JSON.stringify([hp.s, hp.q && hp.q.id, hp.err, F && F.steps.map(function (s) { return s.s + s.hash; }), F && F.err, F && F.note, onSepolia(), W.bal && String(W.bal[T.tin]), R('harp').hasAttribute('data-pick')]), function (el) {
+    once('harp', JSON.stringify([hp.s, hp.q && hp.q.id, hp.err, F && F.steps.map(function (s) { return s.s + s.hash; }), F && F.err, F && F.note, onSepolia(), W.bal && String(W.bal[T.tin]), canSend(a), R('harp').hasAttribute('data-pick')]), function (el) {
       HB = null;
       var head = h('div', { class: 'ch' }, [h('div', null, [h('h2', { class: 'reg', 'aria-label': 'The harp' }, letters('THE HARP', true)), h('div', { class: 'qname' }, [C.quoteName || 'quote.feefifofum.eth', h('span', { text: 'ENS · CCIP-Read · good 30 s' })])]),
         R('harp').hasAttribute('data-pick') ? h('span', { class: 'chip pick', text: 'FO’S PICK' }) : vignette('harp', 'sm')]);
@@ -768,7 +768,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
 
   function drawHen() {
     var hn = T.hen, F = T.flow && T.flow.kind === 'hen' ? T.flow : null, a = amountIn();
-    once('hen', JSON.stringify([hn.s, hn.out && String(hn.out), hn.err, F && F.steps.map(function (s) { return s.s + s.hash; }), F && F.err, onSepolia(), W.bal && String(W.bal[T.tin]), R('hen').hasAttribute('data-pick')]), function (el) {
+    once('hen', JSON.stringify([hn.s, hn.out && String(hn.out), hn.err, F && F.steps.map(function (s) { return s.s + s.hash; }), F && F.err, onSepolia(), W.bal && String(W.bal[T.tin]), canSend(a), R('hen').hasAttribute('data-pick')]), function (el) {
       var head = h('div', { class: 'ch' }, [h('div', null, [h('h2', { class: 'reg', 'aria-label': 'The hen' }, letters('THE HEN', true)), h('div', { class: 'qname' }, ['USDC/WETH v4 pool', h('span', { text: 'no liquidity of its own' })])]),
         R('hen').hasAttribute('data-pick') ? h('span', { class: 'chip pick', text: 'FO’S PICK' }) : vignette('hen', 'sm')]);
       var kids = [head];

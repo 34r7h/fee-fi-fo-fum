@@ -71,13 +71,14 @@ New, in this repo: Castle, the ENSv2 parent `feefifofum.eth` and its subregistry
 | `contracts/` | Foundry: Castle.sol, FeeFiFoFumExtruction.sol, JackHook.sol, and Sepolia-fork tests |
 | `agents/` | fee, fi, fo and fum: handoff agents with viem on Ethereum Sepolia |
 | `service/` | The castle service: MCP tools and the live stream |
-| `miniapp/` | `fee-fi-fo-fum.html`: a world-clock ring of shifts, the lease countdown, the fence state, and a live CCA chart |
+| `miniapp/` | `fee-fi-fo-fum.html`: a world-clock ring of shifts, the lease countdown, the fence state, the hoard, a live CCA chart, a tapestry of every event and a replay tab that re-judges each fill; `STREAM.md` is the stream schema |
 | `docs/` | The plan, naming, sponsor write-ups, FEEDBACK.md and AI_USAGE.md |
 | `WORKLOG.md` | A running record of what was built, by whom, and where it lives on-chain |
 
 ## Live
 
 - Castle service (MCP, REST, SSE): https://handoff.lol/t/castle/, with MCP at `/mcp`, tools at `/tools` and the stream at `/stream`
+- Miniapp: https://handoff.lol/app/impecc/fee-fi-fo-fum (v1.0.1, app hash `2aa89e9b0eb0ec4794d1efff0a3d0f527a5dc4dbe1784db7`, validator 100/100). It reads the castle stream. If the service is quiet, it reads Castle, Aqua and the CCA on Sepolia directly and says "Chain replay". The labelled mock plays only if neither answers. Build it with `node miniapp/build.mjs --live`.
 
 ## Trust assumptions
 

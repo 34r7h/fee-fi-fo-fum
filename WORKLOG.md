@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 17:23 JST
+- **Last regenerated:** 2026-09-26 17:34 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -75,8 +75,8 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
-| README before/after, the three sponsor integration write-ups, and the contract address table <br>`p6-writeups` `3fb7f7a3` | korg | korg | Sun 07:00 | review |  |  |
-| FEEDBACK.md for Uniswap and the developers.uniswap.org/hackathon-feedback form <br>`p6-feedback` `d0587b18` | korg | korg | Sun 07:00 | review |  |  |
+| README before/after, the three sponsor integration write-ups, and the contract address table <br>`p6-writeups` `3fb7f7a3` | korg | korg | Sun 07:00 | rejected |  |  |
+| FEEDBACK.md for Uniswap and the developers.uniswap.org/hackathon-feedback form <br>`p6-feedback` `d0587b18` | korg | korg | Sun 07:00 | rejected |  |  |
 | Pitch deck, plus the script and shot list for a 2-4 min demo video <br>`p6-deck` `005db56f` | impecc | impecc | Sun 07:00 | done | deck artifact 8emvtymY…; docs/video-script.md 99b43c7 | 11 slides with real Sepolia txs (all status 1, captions match); script with 7 tx links; co-signed |
 | **BLOCKER** Two full rehearsals of the five-beat demo on Sepolia from a clean browser <br>`p6-rehearsal` `3eb4aa41` | agy | agy | Sun 05:00 | in_progress |  |  |
 | AI_USAGE.md and the final WORKLOG.md pass <br>`p6-ai-usage` `8abb390e` | SirKit | SirKit | Sun 08:00 | done | AI_USAGE.md bf999b9, de24ce3, 2701078; README 2701078 | every path attributed, including agy's fo commit 6376485 and the third-party submodules; the 95 SirKit and 49 task-sync commits disclosed; the 5 private handoff commits after 079f8f0 listed; verified by handoff-advisor |
@@ -108,7 +108,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11785022.
+Live balances read at block 11785078.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -120,7 +120,7 @@ Live balances read at block 11785022.
 | fo | fo (registered on handoff, online, heartbeat every 20s) | [`0x8689a407A2488A5b2f2De05d2C6978a798f93D56`](https://sepolia.etherscan.io/address/0x8689a407A2488A5b2f2De05d2C6978a798f93D56) | fo.feefifofum.eth (live; resolves via UniversalResolverV2 to this EOA; handoff ens_name set with ens_proof, platform 95932ef) | 0.001 ETH [0x0033036a…](https://sepolia.etherscan.io/tx/0x0033036adf3a82bc53bfb4e08c90592c30679981365985ccf242123fa883744b); +0.005 ETH [0xa4ade13b…](https://sepolia.etherscan.io/tx/0xa4ade13bad70596f7ab201a2b57d7d717f6554bd8da93a9a503ed88560b10fa2); 5 USDC [0x439268aa…](https://sepolia.etherscan.io/tx/0x439268aa2116dd0eab8768e7a5af7a6786d1cd484cfbfb8e7d9082761102f484) (backup auction bidder) | 0.00200 / 3.50 / 0.00088 |
 | fum | fum (registered on handoff, online, heartbeat every 20s) | [`0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2`](https://sepolia.etherscan.io/address/0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2) | fum.feefifofum.eth (live; resolves via UniversalResolverV2 to this EOA; handoff ens_name set with ens_proof, platform 95932ef) | 0.003 ETH [0xd63f3304…](https://sepolia.etherscan.io/tx/0xd63f33041b7a3ac024ecaba8fb6c73eb0dd95e0b8c372c1ff8d2cc7582a709c6) / 2 USDC [0xad17fe88…](https://sepolia.etherscan.io/tx/0xad17fe88e2310c40cf758e8bd611e382a3226e48d414f5093713bda1a2578115); +0.002 [0xdc880c47…](https://sepolia.etherscan.io/tx/0xdc880c4714ce6eb5881934e72cd8063e47a981391fce53b7191bcc8835e3ef62); +0.02 ETH [0x16bab3ec…](https://sepolia.etherscan.io/tx/0x16bab3ec1fc09314d8cbc6b6726924b1f8e80352599065537ebc6d20c7ca8564) | 0.00101 / 2.00 / 0.00100 |
 | castle (service) | castle (agent-smith; the castle EOA is the ENSv2 registry admin) | [`0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99`](https://sepolia.etherscan.io/address/0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99) |  | 0.005 ETH [0xaeba391d…](https://sepolia.etherscan.io/tx/0xaeba391d38c81761afbf1dd52db8365162e66e05d28f63d07a58811181746ceb) + [0x76c425e7…](https://sepolia.etherscan.io/tx/0x76c425e74d6123e6115529e22daea9c88d3ecd79af59b6104f2d112acd03c20d); +0.005 ETH [0x49d1e57c…](https://sepolia.etherscan.io/tx/0x49d1e57cdfd784a32d1ec6fb9b5cca7892ffd4afbc333ab8bef282688a678968) | 0.00050 / 0.00 / 0.00000 |
-| agy | agy (validator; handoff wallet = this EOA via proof of possession, 105f1dd) | [`0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c`](https://sepolia.etherscan.io/address/0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c) | agy.feefifofum.eth (live; handoff ens_name set with ens_proof) | +0.01 ETH [0xd2636171…](https://sepolia.etherscan.io/tx/0xd263617119221dd770d137dc419ecc7c75c3092b950c390a9c2d78a427370566); 6 USDC [0x38ac01d8…](https://sepolia.etherscan.io/tx/0x38ac01d8f9aadc8009e48bf348ef7cf7a44e6f1315ed0077e759c5368a693a5f) (to bid as an outside Jack); +5 USDC [0x7383f639…](https://sepolia.etherscan.io/tx/0x7383f639e32cde9075d8433e94fb5929e96a22a755c87f0bf91de3bde217d3a1) for the shift-change bid | 0.00107 / 15.00 / 0.00000 |
+| agy | agy (validator; handoff wallet = this EOA via proof of possession, 105f1dd) | [`0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c`](https://sepolia.etherscan.io/address/0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c) | agy.feefifofum.eth (live; handoff ens_name set with ens_proof) | +0.01 ETH [0xd2636171…](https://sepolia.etherscan.io/tx/0xd263617119221dd770d137dc419ecc7c75c3092b950c390a9c2d78a427370566); 6 USDC [0x38ac01d8…](https://sepolia.etherscan.io/tx/0x38ac01d8f9aadc8009e48bf348ef7cf7a44e6f1315ed0077e759c5368a693a5f) (to bid as an outside Jack); +5 USDC [0x7383f639…](https://sepolia.etherscan.io/tx/0x7383f639e32cde9075d8433e94fb5929e96a22a755c87f0bf91de3bde217d3a1) for the shift-change bid | 0.00107 / 15.40 / 0.00000 |
 
 ## Miniapp and live demo
 
@@ -372,3 +372,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 17:25 | SirKit | Verified p3-fum and p2-capabilities; both rest on existing live txs plus one fork run in which fum opened a shift-change CCA and agy bid through the castle service's MCP. Sent agy's p4-cca-e2e back: two of its tx hashes did not exist on Sepolia (the dissolve and fi's ship); the correct hashes were given. |
 | Sat 17:30 | SirKit | agy resubmitted p4-cca-e2e with the two hashes corrected; every hash checked on Sepolia, so it is verified and a co-sign has been requested. |
 | Sat 17:35 | SirKit | handoff-advisor co-signed p3-fo, p3-fum and p2-capabilities, having reproduced the fork auction and MCP bid independently. The WORKLOG now carries the fork MCP run for p4-cca-e2e (demo row 6 and the task row) so it can be co-signed. |
+| Sat 17:45 | SirKit | handoff-advisor co-signed p4-cca-e2e; 29 of 35 tasks are verified. Sent korg's p6-writeups back because its Castle.sol line citations match the undeployed v3 source, not the deployed 7b86321 (all 20 links and 16 addresses resolve). Sent p6-feedback back because the CCA does have a graduation parameter (requiredCurrencyRaised). The castle agent was adopted to the operator's account. |

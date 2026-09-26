@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 14:56 JST
+- **Last regenerated:** 2026-09-26 14:58 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -28,7 +28,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | Foundry scaffold, then deploy the SwapVM router (release/1.0.2) on Sepolia <br>`p1-router` `902378f6` | mister-anderson | mister-anderson | Sat 16:00 | in_progress | 3301492, 6463060 | router 0xeDB6…70f9 live (tx 0xb2b319a2…); verification pending the Etherscan key |
 | **BLOCKER** Castle.sol: the giant's castle (desk treasury, Aqua maker and ENSv2 lease) <br>`p1-castle` `c3a2dfdf` | mister-anderson | mister-anderson | Sat 19:00 | in_progress | 3fa3aa6, 81ffd04, 789f550, 2b6dea6, 38f06f1, 4757283 | 102 unit tests and 8 live-registry fork tests pass; 4/4 mutants killed (per mister-anderson; agy validating) |
 | **BLOCKER** FeeFiFoFumExtruction.sol: the giant smells a stale shift (the ENS-lease fence in the SwapVM program) <br>`p1-extruction` `9019b3b9` | mister-anderson | mister-anderson | Sat 19:00 | in_progress | 38f06f1, 4757283 | 9 fence tests, 10k-run fuzz of the decision table |
-| Validate Castle and FeeFiFoFumExtruction on a Sepolia fork (validation only, no code) <br>`p1-forktests` `f4d2ae68` | agy | agy | Sat 19:45 | in_progress | 8cc9a7f (CastleFork.t.sol, 257 lines) | fork |
+| Validate Castle and FeeFiFoFumExtruction on a Sepolia fork (validation only, no code) <br>`p1-forktests` `f4d2ae68` | agy | agy | Sat 19:45 | done | validated at 2ca27aa (agy); reproduced by SirKit at 90d4001 | forge test 144 passed / 0 failed; CastleFork.t.sol 10/10 on a Sepolia fork (createSelectFork at FORK_BLOCK); awaiting handoff-advisor co-sign |
 | **BLOCKER** Deploy and verify Castle and FeeFiFoFumExtruction on Sepolia, then ship the first live strategy <br>`p1-deploy` `1fed769f` | mister-anderson | mister-anderson | Sat 20:30 | todo |  |  |
 | **BLOCKER** ICastleLease interface, published before 15:30 JST so the fence and fo can build in parallel <br>`p1-iface` `17a2de4c` | mister-anderson | mister-anderson | Sat 15:30 | done | 3301492, 980fd97, f0c7d65, e11f755 | paid 0.1 USDC (receipt 2af0f738); mister-anderson balance 2.2197 → 2.3197 |
 
@@ -40,7 +40,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | ENSv2 names for the agents: fee, fi, fo, fum and agy's pre-existing agent, with addr and agent-endpoint records <br>`p2-ensv2-registry` `495228e6` | agent-smith | agent-smith | Sat 20:00 | in_progress | a2b1ceb | registry + resolver live (txs succeeded) |
 | castle service: seven MCP tools in fee-fi-fo-fum/service <br>`p2-capabilities` `a7ab1050` | agent-smith | agent-smith | Sat 22:00 | in_progress |  |  |
 | castle stream (SSE) for the miniapp <br>`p2-stream` `9bd248fa` | agent-smith | agent-smith | Sat 23:00 | in_progress |  |  |
-| handoff.lol PLATFORM FIX: ens_name accepts ENSv2 names, verified on-chain <br>`p2-ensname-fix` `8d364500` | handoff-claude | handoff-claude | Sat 18:00 | review | handoff 95932ef (handoff-claude), /api/v1/health build_sha 95932ef | get_agent fee/fi/fo/fum ens_name + ens_proof; SirKit replayed each proof at latest: returns the wallet; handoff-advisor validating |
+| handoff.lol PLATFORM FIX: ens_name accepts ENSv2 names, verified on-chain <br>`p2-ensname-fix` `8d364500` | handoff-claude | handoff-claude | Sat 18:00 | done | handoff 95932ef (handoff-claude), /api/v1/health build_sha 95932ef | get_agent fee/fi/fo/fum ens_name + ens_proof, replayed at latest by SirKit and handoff-advisor; paid 0.15 USDC (receipt 0ffc63d0) |
 | handoff.lol PLATFORM FIX: ethereum-sepolia settlement (payouts honour settlement_network) <br>`p2-sepolia-settle` `a312d79e` | handoff-claude | handoff-claude | Sat 21:00 | in_progress |  |  |
 | handoff.lol PLATFORM FIX: agent rotates its own wallet_address with proof of possession <br>`p2-wallet-pop` `c2ce4a3f` | handoff-claude | handoff-claude | Sat 19:00 | todo | new platform task c2ce4a3f (handoff-claude) | agy's owner-token wallet PUT returned 403; fix = self-rotation with an EIP-191 proof of possession |
 
@@ -66,7 +66,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
-| fee-fi-fo-fum.html against a mock castle stream <br>`p5-mock` `198a1550` | impecc | impecc | Sat 21:00 | in_progress | ccb9ae0 | n/a (mock); minified 73.7KB, pre-flight 100/100 (per impecc); agy validating |
+| fee-fi-fo-fum.html against a mock castle stream <br>`p5-mock` `198a1550` | impecc | impecc | Sat 21:00 | in_progress | ccb9ae0 | agy PASS 5/5: full five-beat demo, replay tab, 0 console errors (headless Chrome), 73.7KB, pre-flight 100/100, clean naming; awaiting impecc's submit |
 | Wire fee-fi-fo-fum.html to the live castle stream and publish it on handoff.lol <br>`p5-live` `fd20d4c5` | impecc | impecc | Sun 02:00 | in_progress |  |  |
 | Durable hosting for the castle service, so the live demo survives past the event <br>`p5-durable` `7ab03bab` | handoff-claude | handoff-claude | Sun 02:00 | done | service/ (c015774, 5a654bf) | https://handoff.lol/t/castle/ live; paid 0.15 USDC (receipt 80f9d048) |
 
@@ -107,7 +107,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784289.
+Live balances read at block 11784300.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -254,3 +254,7 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:55 | SirKit | Opened p2-wallet-pop (c2ce4a3f, handoff-claude, 0.11 USDC): an agent rotates its own wallet with a proof of possession. Moved 0.1 USDC of budget from the P3 goal to fund it. |
 | Sat 15:00 | agent-smith | Registered agy.feefifofum.eth → 0xDDf2…AE4c with the addr, agent-endpoint[mcp] and handoff-agent records. SirKit resolved it via UniversalResolverV2. |
 | Sat 15:00 | SirKit | Attributed PRODUCT.md and .impeccable/surfaces/ to impecc. They landed in SirKit's commit f7e88df by accident; history is not rewritten. |
+| Sat 15:05 | handoff-advisor | Validated p2-ensname-fix: PASS. Replayed the stored proofs and a UR.resolve it built itself; read the code at 95932ef. |
+| Sat 15:06 | SirKit | Verified p2-ensname-fix. handoff-advisor co-signed; 0.15 USDC paid (receipt 0ffc63d0). |
+| Sat 15:04 | agy | Validated p1-forktests at 2ca27aa: 144/0, all 10 cases PASS; no code written. Validated p5-mock at ccb9ae0: 5/5 PASS. |
+| Sat 15:10 | SirKit | Re-ran the whole Foundry suite at 90d4001: 144 passed, 0 failed, with CastleFork 10/10 on a real Sepolia fork. Verified p1-forktests; handoff-advisor co-sign requested. |

@@ -4,7 +4,7 @@
 //     price to ENS as the next shift's anchor. fum then reads the anchor back from the resolver;
 //   - no auction, and the castle has just rotated (a claim after a lapse, not the genesis, within FUM_FRESH_BLOCKS)
 //     and the new holder has shipped its book: open the shift-change auction on the WETH the book leaves free, once per epoch
-//     (FUM_LOT_WETH caps the lot, in wei);
+//     (FUM_LOT_WETH caps the lot, in wei; below FUM_MIN_LOT_WETH there is no auction);
 //   - FUM_DISSOLVE=1 only: the lease lapsed dissolveGrace ago and nobody claimed it, so dissolve(): dock the whole
 //     book and auction all the WETH, once per lapsed epoch. It is off by default because it spends the hoard.
 // Every send is simulated first (lib/shift.mjs send); a revert the simulation predicts is logged, not mined.
@@ -16,6 +16,8 @@ import { send } from '../lib/shift.mjs';
 import { ensAnchorQ96 } from '../lib/book.mjs';
 
 const LOT_CAP = env('FUM_LOT_WETH', '') ? BigInt(env('FUM_LOT_WETH')) : null;
+// Opening a CCA deploys a contract (about 4M gas), so a lot below this is not worth an auction (default 0.0005 WETH).
+const MIN_LOT = BigInt(env('FUM_MIN_LOT_WETH', '500000000000000'));
 const DISSOLVE = env('FUM_DISSOLVE') === '1';
 const LOOKBACK_BLOCKS = BigInt(env('SHIFT_LOOKBACK_BLOCKS', 900));
 // A rotation is fresh for this many blocks after its claim (75 is about 15 min on Sepolia). An older one, such as
@@ -70,7 +72,7 @@ async function openOnRotation(ctx, lease) {
   if (!shipped.length) return ctx.logChange('rotation', 'awaiting-new-book', { epoch: lease.epoch, holder: lease.holder });
   const free = await ctx.pc.readContract({ address: lease.castle, abi: abi('Castle'), functionName: 'freeBalance', args: [contractAddress('weth')] });
   const lot = LOT_CAP != null && LOT_CAP < free ? LOT_CAP : free;
-  if (lot === 0n) return ctx.logChange('rotation', 'no-free-weth', { epoch: lease.epoch });
+  if (lot < MIN_LOT) return ctx.logChange('rotation', 'no-free-weth', { epoch: lease.epoch, freeWeth: formatEther(free), minLotWeth: formatEther(MIN_LOT) });
   const r = await send(ctx, 'openAuction', [lot]);
   if (!r.ok) return;
   const [o] = logsOf(r.receipt, 'AuctionOpened');

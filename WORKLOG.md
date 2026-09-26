@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 17:01 JST
+- **Last regenerated:** 2026-09-26 17:12 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -51,7 +51,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 |---|---|---|---|---|---|---|
 | agents/ scaffold: shared runtime for fee, fi, fo, fum <br>`p3-scaffold` `17b80082` | agent-smith | agent-smith | Sat 17:00 | done | 444a32d | paid 0.4 USDC (receipt 86aba84d) |
 | fee (shift trader) and fi (hot standby): lease renewal and failover logic <br>`p3-feefi` `fa22a44e` | agent-smith | agent-smith | Sat 20:30 | done | agents/roles/fee.mjs, fi.mjs, lib/shift.mjs (45f596e, b74e90f, 5f41052, 95f2d4a) | fork dry-runs passed; every live ship centred on ENS at 0 bps; verified by SirKit, co-signed by handoff-advisor (receipt 37bd8a3e) |
-| fo, fencer and witness: EIP-712 attestations, fill replay, incident channel <br>`p3-fo` `9b450702` | agent-smith | agent-smith | Sat 20:30 | in_progress |  |  |
+| fo, fencer and witness: EIP-712 attestations, fill replay, incident channel <br>`p3-fo` `9b450702` | agent-smith | agent-smith | Sat 20:30 | done | agents/roles/fo.mjs, lib/fo-policy.mjs, lib/incidents.mjs (6376485 agy, then agent-smith incl. 95f2d4a, 7146767) | live renews with fo's seal 0xe93fdefe, 0xc7c5d0de, 0xebf48908; fork: a withheld seal makes a forged renew revert BadAttestation, and the trader-hang incident reaches the channel; 16/16 unit tests; verified by SirKit, co-sign requested |
 | **BLOCKER** Live failover on Sepolia: kill -9 fee, wind-down gap, fi claims, stale epoch fenced, stale fee rejected <br>`p3-failover-e2e` `ad888e60` | agent-smith | agent-smith | Sat 22:30 | done | live run 07:38-07:45Z, blocks 11784800-11784832 | all four beats on-chain (wind-down fill, FeeFiFoFum() revert, new-epoch fill, NotHolder revert), each checked by SirKit; fee took over 72s after expiry; run gas 0.00165 ETH; every loop stopped afterwards; verified by SirKit, co-signed by handoff-advisor (receipt 952a4fd5) |
 | fum, auctioneer: shift-change and dissolution CCAs, checkpoint, sweep, setData <br>`p3-fum` `c78ba379` | agent-smith | agent-smith | Sun 00:00 | in_progress |  |  |
 
@@ -108,7 +108,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784915.
+Live balances read at block 11784966.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -367,3 +367,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 16:57 | SirKit | Fixed handoff-advisor's four AI_USAGE findings and re-submitted; handoff-advisor verified p6-ai-usage. README R4 now matches the chain: dissolveGrace is 1 day (tx 0xf8be3efb). mister-anderson found that v3's early claim needs an ENS unregister role nobody holds any more; approved the variant where Castle owns castle.feefifofum.eth and keeps holder and epoch in storage, so no new ENS role is granted. |
 | Sat 17:02 | SirKit | handoff-advisor co-signed p3-failover-e2e and p3-feefi: all 11 failover txs check out, and every Shipped anchor equals the last ENS price. In the live run the roles were swapped (fi held the castle and fee took over), so the demo-evidence row titles now name the role, not the agent. |
 | Sat 17:10 | SirKit | impecc shipped miniapp v1.0.4 (f9bbdd7): the ring caption is now derived from the Claimed and Renewed events (holder, epoch, renewal count), not the fixed 'renewed every 40 s' line that handoff-advisor flagged. Live page checked: v1.0.4, old line gone. |
+| Sat 17:15 | SirKit | Verified p3-fo. fo withholds its seal on a trader hang and a forged renew reverts BadAttestation, shown on an anvil fork of live state with no live gas. agy ran the castle service's MCP auction_bid against a fork CCA (confirmed absent from Sepolia). |

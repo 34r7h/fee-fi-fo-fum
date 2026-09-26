@@ -112,6 +112,9 @@ error QuoteExpired(uint64 validUntil);
 error BadQuoteSigner(address recovered);
 error QuoteMismatch();     // strategyHash, tokenIn or tokenOut differ from the swap
 error QuoteTooLarge(uint256 amountIn, uint256 maxAmountIn);
+error QuoteTooLong(uint64 validUntil);        // validUntil > now + MAX_QUOTE_TTL (300 s)
+error MissingQuote(uint256 length);           // takerData is not abi.encode(Quote, bytes)
+error ExactOutNotSupported();
 ```
 
 ### CastleJITHook.sol: the v4 pool filled from the Castle
@@ -137,10 +140,12 @@ An ERC-3668 plus ENSIP-10 extended resolver, in the ENS offchain-resolver refere
 ```solidity
 constructor(string[] memory urls, address owner, address[] memory signers);   // urls[0] below; signers = [fi]
 function resolve(bytes calldata name, bytes calldata data) external view returns (bytes memory);
-//   always reverts OffchainLookup(address(this), urls, abi.encodeCall(resolve,(name,data)), resolveWithProof.selector, abi.encode(name,data))
+//   always reverts OffchainLookup(address(this), urls, callData, this.resolveWithProof.selector, callData)
+//   where callData = abi.encodeCall(IExtendedResolver.resolve, (name, data)); extraData IS callData, as in ENS's reference
 function resolveWithProof(bytes calldata response, bytes calldata extraData) external view returns (bytes memory);
 //   response = abi.encode(bytes result, uint64 expires, bytes sig)
 //   sig = fi over keccak256(abi.encodePacked(hex"1900", address(this), expires, keccak256(request), keccak256(result)))
+//   request = extraData = callData: the exact bytes the gateway received as {data}
 //   reverts SignatureExpired() or InvalidSigner(address)
 function setSigners(address[] calldata, bool) external;   // owner
 function supportsInterface(bytes4) external view returns (bool);   // IExtendedResolver 0x9061b923, ERC-165

@@ -20,9 +20,7 @@ The build scope is [docs/SPEC.md](docs/SPEC.md). Where this file and the spec di
 
 ## Live
 
-Everything runs on Ethereum Sepolia.
-
-The dapp is at https://handoff.lol/app/impecc/fee-fi-fo-fum. A user connects a Sepolia wallet and gets a quote for `harp` by resolving its ENS name from the browser. The user then either fills that quote through 1inch Aqua or swaps on the v4 pool that `hen` fills, and fo shows which of the two pays more. Every number on the page is read from Sepolia or from the castle service. Every action is a transaction from the user's own wallet, with an approve for the exact amount and an Etherscan link. From the published page (version 2.0.1, validator 100/100), 0.25 USDC filled `harp` in [0xb825bdd0…a59d](https://sepolia.etherscan.io/tx/0xb825bdd056ac2c8724b3e49dfd9b222dd2652341ad3724d93dc9e714ebb3a59d) for 93,065,725,297,176 WETH units. Another 0.25 USDC swapped on the v4 pool in [0xf840c09a…466b](https://sepolia.etherscan.io/tx/0xf840c09a95177625e57420694cb94a06548cd54dd23ae202c13800b567be466b) for 86,151,391,457,575 WETH units, filled by the hook from `hen`.
+Everything described here runs on Ethereum Sepolia. The dapp is at https://handoff.lol/app/impecc/fee-fi-fo-fum. A user connects a Sepolia wallet and gets a quote for `harp` by resolving its ENS name from the browser. The user then either fills that quote through 1inch Aqua or swaps on the v4 pool that `hen` fills, and fo shows which of the two pays more. Every number on the page is read from Sepolia or from the castle service. Every action is a transaction from the user's own wallet, with an approve for the exact amount and an Etherscan link. From the published page (version 2.0.1, validator 100/100), 0.25 USDC filled `harp` in [0xb825bdd0…a59d](https://sepolia.etherscan.io/tx/0xb825bdd056ac2c8724b3e49dfd9b222dd2652341ad3724d93dc9e714ebb3a59d) for 93,065,725,297,176 WETH units. Another 0.25 USDC swapped on the v4 pool in [0xf840c09a…466b](https://sepolia.etherscan.io/tx/0xf840c09a95177625e57420694cb94a06548cd54dd23ae202c13800b567be466b) for 86,151,391,457,575 WETH units, filled by the hook from `hen`.
 
 The tale, at https://handoff.lol/app/impecc/fee-fi-fo-fum-tale, renders the castle service's event stream (https://handoff.lol/t/castle/stream) as a story while events happen. It shows the vault's balance, fum's limits, the quotes and the fills, and it can replay the whole live run in a clean browser (validator 100/100).
 
@@ -61,9 +59,7 @@ The live run followed the order in [docs/SPEC.md](docs/SPEC.md):
 
 ## How to verify
 
-None of the checks below needs a key.
-
-The vault's state can be read with Foundry and any Sepolia RPC:
+None of the checks below needs a key. The vault's state can be read with Foundry and any Sepolia RPC:
 
 ```sh
 RPC=https://ethereum-sepolia-rpc.publicnode.com

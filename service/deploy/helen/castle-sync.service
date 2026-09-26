@@ -1,0 +1,5 @@
+[Unit]
+Description=fee-fi-fo-fum: follow origin/main for the castle service
+[Service]
+Type=oneshot
+ExecStart=%h/.config/castle/sync.sh

@@ -8,7 +8,7 @@
 // Idempotent: every step reads chain state first and skips what is already true. Then it VERIFIES from the
 // outside: registry.findOwner/findExpiry (the contract-level read JackHook makes) and UniversalResolverV2.
 //
-//   node agent-registry.mjs --rpc <url> [--fork] [--agent agy ...] [--dry-run]
+//   node agent-registry.mjs --rpc <url> [--fork] [--castle <Castle>] [--agent agy ...] [--mcp label=url ...] [--castle-mcp url] [--dry-run]
 //
 // --fork is for an anvil fork: it impersonates whoever must act for us (the parent's owner, the ETHRegistrar)
 // and tops up gas, so the whole flow runs before live funds land. State goes to
@@ -39,6 +39,11 @@ if (!RPC) throw new Error('--rpc <url> or SEPOLIA_RPC_URL');
 const PARENT = opt('parent', process.env.ENS_PARENT_LABEL || 'feefifofum');
 const HANDOFF_API = (process.env.HANDOFF_API || 'https://handoff.lol/api/v1').replace(/\/$/, '');
 const DEFAULT_MCP = process.env.AGENT_MCP_ENDPOINT || 'https://handoff.lol/mcp';
+// The shift agents (fee, fi) answer through the castle service: castle.feefifofum.eth is linked to the
+// holder's record, so the holder's agent-endpoint[mcp] is what resolving castle.* reaches.
+const CASTLE_MCP = opt('castle-mcp', process.env.CASTLE_MCP_ENDPOINT || 'https://handoff.lol/t/castle/mcp');
+const SHIFT_ROLES = new Set(['shift trader', 'hot standby']);
+const MCP_OVERRIDE = Object.fromEntries(many('mcp').filter(Boolean).map((kv) => kv.split(/=(.*)/s).slice(0, 2)));
 const YEAR = 365n * 24n * 3600n;
 
 const deps = JSON.parse(fs.readFileSync(path.join(repo, 'contracts/deployments/sepolia.json'), 'utf8'));
@@ -83,6 +88,8 @@ const REG = parseAbi([
   'function findExpiry(string label) view returns (uint64)',
   'function findTokenId(string label) view returns (uint256)',
   'function hasRoles(uint256 anyId, uint256 roleBitmap, address account) view returns (bool)',
+  'function hasRootRoles(uint256 roleBitmap, address account) view returns (bool)',
+  'function grantRootRoles(uint256 roleBitmap, address account) returns (bool)',
 ]);
 const RES = parseAbi([
   'struct Grant { address account; uint256 roleBitmap; }',
@@ -91,6 +98,8 @@ const RES = parseAbi([
   'function setText(bytes name, string key, string value)',
   'function multicall(bytes[] calls) returns (bytes[])',
   'function resolve(bytes name, bytes data) view returns (bytes)',
+  'function hasRootRoles(uint256 roleBitmap, address account) view returns (bool)',
+  'function grantRootRoles(uint256 roleBitmap, address account) returns (bool)',
 ]);
 const PROFILE = parseAbi(['function addr(bytes32 node) view returns (address)', 'function text(bytes32 node, string key) view returns (string)']);
 const FACTORY = parseAbi([
@@ -209,12 +218,31 @@ async function findRegistrar() {
   throw new Error('could not find the ETHRegistrar; set ENS_ETH_REGISTRAR');
 }
 
+// ---- 2b. Castle holds the lease name castle.<parent> in this same registry ---------------------------------
+// Castle.claim() registers `castle` here (ROLE_REGISTRAR), renew() extends it (ROLE_RENEW), relink() links
+// castle.* to the holder's record in this resolver (ROLE_LINK), and fum's price goes to ENS data (ROLE_SET_DATA).
+const CASTLE = opt('castle', process.env.CASTLE_ADDRESS || ext.castle || null);
+if (CASTLE) {
+  const castle = getAddress(CASTLE);
+  const regRoles = R.REGISTRAR | R.RENEW;
+  const resRoles = RS.LINK | RS.SET_DATA | RS.SET_TEXT | RS.SET_ADDRESS;
+  if (!(await pub.readContract({ address: state.agentRegistry, abi: REG, functionName: 'hasRootRoles', args: [regRoles, castle] }))) {
+    await send(wallet, { address: state.agentRegistry, abi: REG, functionName: 'grantRootRoles', args: [regRoles, castle] }, `grant Castle ${castle} REGISTRAR|RENEW on the agent registry`);
+  }
+  if (!(await pub.readContract({ address: state.resolver, abi: RES, functionName: 'hasRootRoles', args: [resRoles, castle] }))) {
+    await send(wallet, { address: state.resolver, abi: RES, functionName: 'grantRootRoles', args: [resRoles, castle] }, `grant Castle ${castle} LINK|SET_DATA|SET_TEXT|SET_ADDRESS on the agent resolver`);
+  }
+  state.castle = castle;
+  saveState();
+}
+
 // ---- 3. the agents ---------------------------------------------------------------------------------------
 const crew = JSON.parse(fs.readFileSync(path.join(repo, 'agents/crew.json'), 'utf8')).agents || {};
 const roster = [
-  ...Object.entries(crew).map(([id, a]) => ({ id, label: id, addr: a.address, mcp: DEFAULT_MCP, source: 'crew.json' })),
+  ...Object.entries(crew).map(([id, a]) => ({ id, label: id, addr: a.address, mcp: SHIFT_ROLES.has(a.role) ? CASTLE_MCP : DEFAULT_MCP, source: 'crew.json' })),
   ...many('agent').filter(Boolean).map((id) => ({ id, label: id, addr: null, mcp: DEFAULT_MCP, source: 'handoff.lol' })),
 ];
+for (const a of roster) if (MCP_OVERRIDE[a.label]) a.mcp = MCP_OVERRIDE[a.label];
 for (const a of roster) {
   if (a.source === 'handoff.lol' || !a.addr) {
     const rec = await handoffAgent(a.id);

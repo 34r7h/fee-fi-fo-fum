@@ -1,0 +1,7 @@
+[Unit]
+Description=fee-fi-fo-fum castle sync every 2 minutes
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=2min
+[Install]
+WantedBy=timers.target

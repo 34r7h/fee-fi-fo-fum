@@ -75,6 +75,16 @@
       "what": "records for agy.feefifofum.eth (3)",
       "hash": "0x3ae1d670faa20de5d2b5f58e2720cf0a56f6a25c99d7288819f54e9e2baf59d1",
       "block": 11783995
+    },
+    {
+      "what": "records for fee.feefifofum.eth (1)",
+      "hash": "0x8bbf9b379a2aeb71c9b357690083a1bde43adfe5b5843cf803f57f2c84a83801",
+      "block": 11783996
+    },
+    {
+      "what": "records for fi.feefifofum.eth (1)",
+      "hash": "0xc744f4e3cbb9d7d0c3b5d2af525ecaf736528af2c33d3adaead762d80b79e481",
+      "block": 11783997
     }
   ],
   "agentRegistry": "0x2F2164507471a1a46506f902aBfdfB9d22e4bE09",
@@ -86,15 +96,15 @@
       "labelhash": "0x833b9f6abf0b529613680afe2a00fa663cc95cbdc47d726d85a044462eabbf02",
       "handoff_agent": "fee",
       "addr": "0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538",
-      "mcp": "https://handoff.lol/mcp",
+      "mcp": "https://handoff.lol/t/castle/mcp",
       "registered_at": null,
       "verified": {
         "owner": "0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538",
         "expiry": 1821934516,
         "urAddr": "0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538",
-        "urMcp": "https://handoff.lol/mcp",
+        "urMcp": "https://handoff.lol/t/castle/mcp",
         "ok": true,
-        "block": 11783995
+        "block": 11783999
       }
     },
     "fi": {
@@ -103,15 +113,15 @@
       "labelhash": "0xd7884a76b5eebe601ddb427195752db0165b44150b83c38b75b75ca295e99dfe",
       "handoff_agent": "fi",
       "addr": "0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2",
-      "mcp": "https://handoff.lol/mcp",
+      "mcp": "https://handoff.lol/t/castle/mcp",
       "registered_at": null,
       "verified": {
         "owner": "0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2",
         "expiry": 1821934516,
         "urAddr": "0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2",
-        "urMcp": "https://handoff.lol/mcp",
+        "urMcp": "https://handoff.lol/t/castle/mcp",
         "ok": true,
-        "block": 11783995
+        "block": 11783999
       }
     },
     "fo": {
@@ -128,7 +138,7 @@
         "urAddr": "0x8689a407A2488A5b2f2De05d2C6978a798f93D56",
         "urMcp": "https://handoff.lol/mcp",
         "ok": true,
-        "block": 11783995
+        "block": 11783999
       }
     },
     "fum": {
@@ -145,7 +155,7 @@
         "urAddr": "0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2",
         "urMcp": "https://handoff.lol/mcp",
         "ok": true,
-        "block": 11783995
+        "block": 11783999
       }
     },
     "agy": {
@@ -162,7 +172,7 @@
         "urAddr": "0x750428A8f5B81Aa019c40783d26780297654AE33",
         "urMcp": "https://handoff.lol/mcp",
         "ok": true,
-        "block": 11783995
+        "block": 11783999
       }
     }
   }

@@ -1,3 +1,5 @@
+> **Research by handoff-advisor.** The operator renamed the entry to **fee-fi-fo-fum** on 2026-09-26, and the identifiers below were renamed to match (see [NAMING.md](NAMING.md)). Nothing else in the text changed. The pre-rename original is commit `3cb55b7` (sha256 `774b7475…af29`). Where this plan and the handoff board differ, the board wins: it carries the alignment edits.
+
 # ETHGlobal Tokyo 2026: a plan to win the 1inch, Uniswap and ENS Continuity prizes
 
 The entry is four handoff agents, **fee, fi, fo and fum**, plus one miniapp for humans. Agents use it through the handoff MCP and REST (both are generated from `src/capabilities/defs.ts`). All on-chain work runs on **Ethereum Sepolia**. This file is a planning artifact; ETHGlobal's AI rules ask for these to be in the submission repo.
@@ -96,53 +98,53 @@ The entry is four handoff agents, **fee, fi, fo and fum**, plus one miniapp for 
 
 Each option names one loop where **on-chain data flows between the three sponsors**. Every edge in the loop is a contract call, and if you remove any one agent the loop breaks.
 
-### Option A: BATON, fenced liquidity handoffs for a follow-the-sun agent desk *(recommended)*
+### Option A: fee-fi-fo-fum, fenced liquidity handoffs for a follow-the-sun agent desk *(recommended)*
 
-**Pitch:** Agents crash, and a dead agent can't send the transaction that cancels its quotes. BATON makes an agent desk's liquidity **live only while its operator holds an ENS lease**, and hands the book from agent to agent (Tokyo → London → New York) with no gap and no zombie fills. If nobody picks the book up, a **Uniswap CCA** auctions it off fairly instead of dumping it. The pitch line: "handoff, literally", and it fits the Continuity theme.
+**Pitch:** Agents crash, and a dead agent can't send the transaction that cancels its quotes. fee-fi-fo-fum makes an agent desk's liquidity **live only while its operator holds an ENS lease**, and hands the book from agent to agent (Tokyo → London → New York) with no gap and no zombie fills. If nobody picks the book up, a **Uniswap CCA** auctions it off fairly instead of dumping it. The pitch line: "handoff, literally", and it fits the Continuity theme.
 
-**The book is a contract, not an agent's wallet.** Aqua keys balances to `msg.sender` and leaves tokens in the maker's wallet. If fee shipped from its own EOA, fee's wallet would *be* the book, and fi re-shipping from fi's wallet would hand off nothing. So **Baton.sol is both the desk treasury and the Aqua maker**:
+**The book is a contract, not an agent's wallet.** Aqua keys balances to `msg.sender` and leaves tokens in the maker's wallet. If fee shipped from its own EOA, fee's wallet would *be* the book, and fi re-shipping from fi's wallet would hand off nothing. So **Castle.sol is both the desk treasury and the Aqua maker**:
 - It holds the WETH and USDC and approves Aqua once.
 - It exposes `ship`, `dock` and `multicall` only to the current lease holder.
 
-After fi claims, it can dock fee's old strategies through Baton. The fence's value is therefore **the window between lease expiry and anyone's claim tx**, and during that window it needs no transaction from anyone. That is the answer to "why not just dock on takeover?": the takeover tx may never come, or may land minutes later, and during that gap stale quotes are free money for arbitrageurs.
+After fi claims, it can dock fee's old strategies through Castle. The fence's value is therefore **the window between lease expiry and anyone's claim tx**, and during that window it needs no transaction from anyone. That is the answer to "why not just dock on takeover?": the takeover tx may never come, or may land minutes later, and during that gap stale quotes are free money for arbitrageurs.
 
 **The loop:**
 ```
-  (1) ENSv2 lease  desk.feefifofum.eth
-      Baton.sol holds the registry roles.
+  (1) ENSv2 lease  castle.feefifofum.eth
+      Castle.sol holds the registry roles.
       renew(expiry, foSig): extends the lease to now+120s. Needs the holder's call PLUS fo's
       EIP-712 attestation that the holder's live quotes are sane, so a hung-but-heartbeating
       trader still loses the lease.
       claim(): after expiry, = register(label, newOwner, ...). The token id is regenerated, and
       that is the FENCING EPOCH.
-      PermissionedResolver.linkToNode(desk, <holder's node>): anyone resolving desk.* reaches
+      PermissionedResolver.linkToNode(castle, <holder's node>): anyone resolving castle.* reaches
       the current shift, including ENSIP-26 agent-endpoint[mcp] → handoff MCP.
         │  read at fill time (registry read directly, never via UniversalResolver)
         ▼
-  (2) 1inch Aqua + SwapVM 1.0.2. Maker = Baton.sol (the desk treasury).
-      Baton.ship(router, program, [WETH,USDC], amounts) → aqua.ship(...); only the lease holder
+  (2) 1inch Aqua + SwapVM 1.0.2. Maker = Castle.sol (the desk treasury).
+      Castle.ship(router, program, [WETH,USDC], amounts) → aqua.ship(...); only the lease holder
       can call it.
-      Program = [Extruction(FenceExtruction, labelhash, epoch)] → XYCConcentrateGrowLiquidity2D →
+      Program = [Extruction(FeeFiFoFumExtruction, labelhash, epoch)] → XYCConcentrateGrowLiquidity2D →
       FlatFeeIn.
-      FenceExtruction reads the registry's expiry and token id:
+      FeeFiFoFumExtruction reads the registry's expiry and token id:
         - live and same epoch → continue;
         - expired → JumpIfTokenIn to a wind-down branch (Decay, reduce-only, wide spread);
-        - epoch changed → revert FENCED (a zombie shift's orders are dead with no tx from it).
+        - epoch changed → revert FeeFiFoFum() (a zombie shift's orders are dead with no tx from it).
       Taker: router.swap(order, tokenIn, tokenOut, amt, takerData) → aqua.pull / push
-      (real transfer out of Baton).
+      (real transfer out of Castle).
         │  every shift change: inventory the next shift doesn't want
         │  (and, if nobody claims within grace, the whole book)
         ▼
   (3) Uniswap CCA as the exit, not the entrance
-      Baton.sol → CCA factory: auction {currency: USDC, token: WETH inventory,
-      tokensRecipient/fundsRecipient: Baton, validationHook: CrewHook}.
-      CrewHook.validate(...) gives the incoming shift no privilege; it's just another bidder, so
+      Castle.sol → CCA factory: auction {currency: USDC, token: WETH inventory,
+      tokensRecipient/fundsRecipient: Castle, validationHook: JackHook}.
+      JackHook.validate(...) gives the incoming shift no privilege; it's just another bidder, so
       transfer prices between agents are discovered, not dictated.
       Bidder rule: owns an unexpired name in handoff's ENSv2 agent registry, read from the
       registry directly (a hook can't follow CCIP-read's OffchainLookup).
       After the auction: fum writes clearingPrice() to ENS as bytes via
-      PermissionedResolver.setData(desk, "handoff-price", ...). The next shift's first ship()
-      centres its curve on it, and FenceExtruction can read it on-chain without string parsing.
+      PermissionedResolver.setData(castle, "handoff-price", ...). The next shift's first ship()
+      centres its curve on it, and FeeFiFoFumExtruction can read it on-chain without string parsing.
         │
         └────────► back to (1)
 ```
@@ -151,23 +153,23 @@ After fi claims, it can dock fee's old strategies through Baton. The fence's val
 
 | Agent | Role | Without it |
 |---|---|---|
-| **fee** | Shift trader. Holds the baton, renews the lease, and ships and re-ships strategies via `Baton.multicall(dock+ship)`. | No live liquidity |
-| **fi** | Hot standby and next shift. Watches fee's heartbeats over handoff messages; on expiry calls `Baton.claim()`, docks stale strategies, relinks `desk`, re-ships at the new epoch. | No failover; the book goes dark |
+| **fee** | Shift trader. Holds the castle, renews the lease, and ships and re-ships strategies via `Castle.multicall(dock+ship)`. | No live liquidity |
+| **fi** | Hot standby and next shift. Watches fee's heartbeats over handoff messages; on expiry calls `Castle.claim()`, docks stale strategies, relinks `castle`, re-ships at the new epoch. | No failover; the book goes dark |
 | **fo** | Fencer and witness. Signs the quote-sanity attestation each `renew` needs, and withholds it when a trader hangs or quotes off-market. Also replays every fill against the lease timeline and publishes incident reports to a handoff channel. This is the measurement angle, like TARE. | No lease can be renewed, and nothing proves the fence works |
 | **fum** | Auctioneer. Opens the shift-change CCA every rotation, and the dissolution CCA if nobody claims. Calls `checkpoint()` and `sweepCurrency()`, and writes `clearingPrice` to ENS with `setData`. | No exit path, and no price anchor for the next shift |
 
 **MCP tools** (defined in `src/capabilities/defs.ts`; each generates an MCP tool and a REST route):
-- `desk_status`: lease holder, epoch, expiry, strategies and inventory.
-- `desk_quote`: an Aqua quote through the view Extruction.
-- `desk_fill`: returns `{to,data}` for `router.swap`, or executes it from the caller's agent wallet.
-- `desk_join_crew`: any handoff agent can apply to be a standby.
-- `baton_claim`: crew only.
+- `castle_status`: lease holder, epoch, expiry, strategies and inventory.
+- `castle_quote`: an Aqua quote through the view Extruction.
+- `castle_fill`: returns `{to,data}` for `router.swap`, or executes it from the caller's agent wallet.
+- `castle_join`: any handoff agent can apply to be a standby.
+- `castle_claim`: crew only.
 - `auction_status` and `auction_bid`: CCA `submitBid(maxPriceQ96, amount, owner, hookData)`.
 
-Any agent on handoff can trade against the desk, bid in its auctions, or run its own BATON desk.
+Any agent on handoff can trade against the desk, bid in its auctions, or run its own fee-fi-fo-fum desk.
 
-**Miniapp (`miniapps/apps/baton.html`, ringout pattern):**
-- A system agent `baton` serves `/api/v1/desk/stream`.
+**Miniapp (`miniapp/fee-fi-fo-fum.html`, ringout pattern):**
+- A system agent `castle` serves `/api/v1/desk/stream`.
 - The view: a world-clock ring of shifts, a lease countdown, and FENCED/LIVE/WIND-DOWN state.
 - Fills link to Sepolia Etherscan, and a live CCA clearing chart runs when an auction is open.
 - A "kill fee" button is for the operator only.
@@ -175,21 +177,21 @@ Any agent on handoff can trade against the desk, bid in its auctions, or run its
 
 **Demo beat (the "wow"):**
 1. `kill -9` fee.
-2. A taker's fill reverts `FENCED`.
-3. fi claims the lease, `desk.*` relinks, and fills resume.
+2. A taker's fill reverts `FeeFiFoFum()`.
+3. fi claims the lease, `castle.*` relinks, and fills resume.
 4. Restart fee from stale state: its orders are rejected on-chain.
 5. Kill everyone: fum's CCA clears the book, and the price flows into the next desk.
 
 **Not seen:**
 - Liveness-gated Aqua positions: none found. Dead-man projects were non-Aqua escrows.
 - CCA used as liquidation or transfer pricing: all 4 CCA projects are launches or privacy.
-- ENS lease-as-fencing-token and `linkToNode` baton: not on any ENS winner page. This is *operational failover*, not Herit-style inheritance; say so explicitly.
+- ENS lease-as-fencing-token and `linkToNode` castle relink: not on any ENS winner page. This is *operational failover*, not Herit-style inheritance; say so explicitly.
 
 **How ENSv2 improves handoff** (for the ENS Continuity write-up):
 - handoff already has an `agent_heartbeat` tool and an `ens_name` field on every agent.
 - `src/impute.ts` already mints ENSv1 subnames under `handoff.socnet.eth`.
-- Today a heartbeat is just a row in the broker's database. With BATON, **an ENSv2 lease becomes handoff's on-chain, verifiable liveness for any agent**: contracts and other agents can check it without trusting the broker.
-- Agent subname minting moves from ENSv1 to an ENSv2 registry, which is the registry CrewHook reads.
+- Today a heartbeat is just a row in the broker's database. With fee-fi-fo-fum, **an ENSv2 lease becomes handoff's on-chain, verifiable liveness for any agent**: contracts and other agents can check it without trusting the broker.
+- Agent subname minting moves from ENSv1 to an ENSv2 registry, which is the registry JackHook reads.
 
 **How the three help each other (say this at the booth):**
 - ENS says who is allowed to be live.
@@ -201,22 +203,22 @@ Any agent on handoff can trade against the desk, bid in its auctions, or run its
 
 | Pre-existing (before `079f8f0`) | New this weekend |
 |---|---|
-| handoff broker, agent messaging and `agent_heartbeat`, `ens_name` and ENSv1 subnames, the Ethereum Sepolia rail, and the ringout scaffolding | Baton.sol (treasury, Aqua maker and lease), FenceExtruction.sol, CrewHook.sol, the router deploy, the ENSv2 agent registry, the four agents, 6 capabilities, the stream route, and baton.html |
+| handoff broker, agent messaging and `agent_heartbeat`, `ens_name` and ENSv1 subnames, the Ethereum Sepolia rail, and the ringout scaffolding | Castle.sol (treasury, Aqua maker and lease), FeeFiFoFumExtruction.sol, JackHook.sol, the router deploy, the ENSv2 agent registry, the four agents, 6 capabilities, the stream route, and fee-fi-fo-fum.html |
 
 **MVP (about 14 build hours):**
 - Must:
-  - Baton (treasury and lease) + FenceExtruction + router 1.0.2 on Sepolia, with Foundry tests on a Sepolia fork.
+  - Castle (treasury and lease) + FeeFiFoFumExtruction + router 1.0.2 on Sepolia, with Foundry tests on a Sepolia fork.
   - fee/fi failover with fo-attested renewals.
   - **A shift-change CCA on every rotation**, with the price written back via `setData`. This is the demo path, not the failure path.
-  - fum's dissolution CCA with CrewHook.
+  - fum's dissolution CCA with JackHook.
   - 4 MCP tools and the miniapp live.
 - Stretch:
   - fo replay proofs;
   - an emancipated forever-name incident log (`incident-N.desk…`, immutable).
 
-**Top risk:** the lease semantics on the ENSv2 beta. Does `renew` accept sub-minute expiries, and does re-registration really change the token id? **Check both in hour 1.** The fallback is an epoch counter in Baton.sol with the ENS expiry as the lease; the fence then reads Baton, which still reads ENS.
+**Top risk:** the lease semantics on the ENSv2 beta. Does `renew` accept sub-minute expiries, and does re-registration really change the token id? **Check both in hour 1.** The fallback is an epoch counter in Castle.sol with the ENS expiry as the lease; the fence then reads Castle, which still reads ENS.
 
-**Solidity:** 3 small contracts (Baton, which is also the treasury; FenceExtruction; CrewHook). This is the **lowest schedule risk** of the three options.
+**Solidity:** 3 small contracts (Castle, which is also the treasury; FeeFiFoFumExtruction; JackHook). This is the **lowest schedule risk** of the three options.
 
 ---
 
@@ -357,18 +359,18 @@ Any agent on handoff can trade against the desk, bid in its auctions, or run its
 
 ## 3. Comparison and recommendation
 
-| | A: BATON | B: BEANSTALK | C: GIANT'S TABLE |
+| | A: fee-fi-fo-fum | B: BEANSTALK | C: GIANT'S TABLE |
 |---|---|---|---|
 | New Solidity | 3 small contracts | 4 or more, including an ENS registry subclass | 3 or more, plus an on-chain PnL ledger |
 | Feasible in about 14h | **High** | Medium | Low |
 | 1inch hook | Liveness-fenced position (Extruction reads ENS) | New perish invariant | Formula tournament on shared liquidity |
 | Uniswap hook | CCA as exit and transfer price | CCA for agent labor | CCA as capital rent |
-| ENS hook | Lease = fencing token, `linkToNode` baton | Burn-to-register rule registry, wildcard `resolve` | `linkToNode` crown, emancipated trophies |
+| ENS hook | Lease = fencing token, `linkToNode` castle relink | Burn-to-register rule registry, wildcard `resolve` | `linkToNode` crown, emancipated trophies |
 | Continuity / handoff story | Strongest ("handoff" of a book; agents crash) | Strong (prices handoff's task economy) | Weak |
 | Demo drama | `kill -9` live, zombie rejected on-chain | Hire an agent and watch the job name resolve | A leaderboard |
 | Cliché risk | Inheritance (Herit), so frame as failover | "Agent tokens" (Virtuals), so frame as perishable capacity, not equity | AI trading agents |
 
-**Recommendation: A (BATON).**
+**Recommendation: A (fee-fi-fo-fum).**
 - It has the least new Solidity.
 - Its demo is the most dramatic.
 - It uses each sponsor's least-seen feature *centrally*.
@@ -383,10 +385,10 @@ Any agent on handoff can trade against the desk, bid in its auctions, or run its
 | When (JST) | Work | Done when |
 |---|---|---|
 | 12:45–13:30 | Confirm Continuity registration. Tag baseline `079f8f0`, commit the pre-existing dirty tree separately, branch `ethglobal-tokyo`. Register `feefifofum.eth` (or similar) on the ENSv2 ETHRegistrar with MockUSDC. Fund 4 agent wallets with Sepolia ETH, USDC and WETH. **Hour-1 probes:** does `renew` accept a sub-minute expiry? Does re-registration change the token id? Can a contract read name ownership and expiry from the registry directly? (Hooks must not call UniversalResolverV2, since `OffchainLookup` reverts.) Does `setData` and `linkToNode` work on the deployed PermissionedResolver? | Parent name resolves via UniversalResolverV2; all four probes answered |
-| 13:30–17:30 | Foundry: deploy router `release/1.0.2`; write Baton.sol (treasury and Aqua maker; lease, `renew(expiry, foSig)`, `claim`, epoch; `linkToNode` and `setData` via resolver roles) and FenceExtruction.sol (view and stateful paths identical). Fork tests: live fill passes; expired fill winds down; wrong epoch reverts `FENCED`; renew without fo's signature reverts. | Tests green on a Sepolia fork; contracts verified on Etherscan |
+| 13:30–17:30 | Foundry: deploy router `release/1.0.2`; write Castle.sol (treasury and Aqua maker; lease, `renew(expiry, foSig)`, `claim`, epoch; `linkToNode` and `setData` via resolver roles) and FeeFiFoFumExtruction.sol (view and stateful paths identical). Fork tests: live fill passes; expired fill winds down; wrong epoch reverts `FeeFiFoFum()`; renew without fo's signature reverts. | Tests green on a Sepolia fork; contracts verified on Etherscan |
 | 17:30–20:30 | Agents on handoff: register fee/fi/fo/fum, one realtime listener each, heartbeat protocol over handoff messages, viem clients on `ethereum-sepolia`. Failover path end to end on Sepolia. | fi takes over within one lease period after `kill -9 fee`, with a tx link |
-| 20:30–23:30 | CrewHook.sol plus fum's shift-change and dissolution CCAs (factory deploy, `submitBid`, `checkpoint`, `sweepCurrency`, clearing price written to ENS with `setData`, next ship centred on it). 6 capabilities in `defs.ts`. | An outside agent bids via MCP; a shift-change auction clears on Sepolia and the next shift's curve moves to its price |
-| 23:30–03:00 | `/api/v1/desk/stream` and `baton.html` (under 100KB, ringout publish rules); publish to handoff.lol for the live demo link; full rehearsal twice. | Live URL works from a clean browser |
+| 20:30–23:30 | JackHook.sol plus fum's shift-change and dissolution CCAs (factory deploy, `submitBid`, `checkpoint`, `sweepCurrency`, clearing price written to ENS with `setData`, next ship centred on it). 6 capabilities in `defs.ts`. | An outside agent bids via MCP; a shift-change auction clears on Sepolia and the next shift's curve moves to its price |
+| 23:30–03:00 | `/api/v1/desk/stream` and `fee-fi-fo-fum.html` (under 100KB, ringout publish rules); publish to handoff.lol for the live demo link; full rehearsal twice. | Live URL works from a clean browser |
 | 03:00–05:00 | Buffer, fixes, sleep. | – |
 | 05:00–08:15 | README (pitch, loop diagram, pre-existing vs new, contract addresses, lines that call each sponsor), FEEDBACK.md and the Uniswap form, AI_USAGE.md (plus this file), 1inch/Uniswap/ENS integration write-ups, and a 2–4 min video (720p+, no speed-up, voiceover). | Everything linked from the submission |
 | 08:15–08:45 | Submit and select the 3 partner prizes. | Confirmation on the dashboard |

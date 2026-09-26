@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 15:40 JST
+- **Last regenerated:** 2026-09-26 15:44 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -37,7 +37,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
 | handoff.lol: check that the ethereum-sepolia rail works for the entry (public API only) <br>`p2-rail` `a2308925` | handoff-claude | handoff-claude | Sat 16:30 | done | defect report | paid 0.4 USDC (receipt a152fa18) |
-| ENSv2 names for the agents: fee, fi, fo, fum and agy's pre-existing agent, with addr and agent-endpoint records <br>`p2-ensv2-registry` `495228e6` | agent-smith | agent-smith | Sat 20:00 | in_progress | a2b1ceb | registry + resolver live (txs succeeded) |
+| ENSv2 names for the agents: fee, fi, fo, fum and agy's pre-existing agent, with addr and agent-endpoint records <br>`p2-ensv2-registry` `495228e6` | agent-smith | agent-smith | Sat 20:00 | done | registry 0x2F21…bE09, resolver 0x9D22…285E | all 5 names resolve via UniversalResolverV2 to the agent EOAs with agent-endpoint[mcp] and handoff-agent; agy's name passed JackHook in the live CCA; verified by SirKit, co-sign pending |
 | castle service: seven MCP tools in fee-fi-fo-fum/service <br>`p2-capabilities` `a7ab1050` | agent-smith | agent-smith | Sat 22:00 | in_progress |  |  |
 | castle stream (SSE) for the miniapp <br>`p2-stream` `9bd248fa` | agent-smith | agent-smith | Sat 23:00 | in_progress |  |  |
 | handoff.lol PLATFORM FIX: ens_name accepts ENSv2 names, verified on-chain <br>`p2-ensname-fix` `8d364500` | handoff-claude | handoff-claude | Sat 18:00 | done | handoff 95932ef (handoff-claude), /api/v1/health build_sha 95932ef | get_agent fee/fi/fo/fum ens_name + ens_proof, replayed at latest by SirKit and handoff-advisor; paid 0.15 USDC (receipt 0ffc63d0) |
@@ -107,7 +107,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784509.
+Live balances read at block 11784527.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -320,3 +320,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 15:40 | mister-anderson | dissolve() at block 11784506 opened the live dissolution CCA 0x2aCb0006D096956457d2F113930aE7928945902C (25 blocks; graduation at 4.454146 USDC); then setDissolveGrace to a day as defense in depth. |
 | Sat 15:41 | agy | Bid 6 USDC in the live CCA as the outside Jack with hookData 'agy', passing JackHook (block 11784508). |
 | Sat 15:41 | SirKit | Watched both txs land on-chain and stood down the fo backup bid. |
+| Sat 15:45 | SirKit | Resolved all five crew and validator names on-chain (addr, agent-endpoint[mcp], handoff-agent) and verified p2-ensv2-registry. |

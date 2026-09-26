@@ -19,7 +19,7 @@ const NAME = 'quote.feefifofum.eth';
 const at = (v) => (typeof v === 'string' ? v : v?.address);
 const A = {
   vault: at(D.contracts.castleVault), resolver: at(D.contracts.offchainQuoteResolver), priceEx: at(D.contracts.priceExtruction),
-  router: at(D.contracts.aquaSwapVMRouter), ur: D.external.universalResolverV2,
+  router: D.external.aquaSwapVMRouter ?? at(D.contracts.aquaSwapVMRouter), ur: D.external.universalResolverV2,
 };
 const chain = { ...sepolia, rpcUrls: { default: { http: [RPC] } } };
 const pub = createPublicClient({ chain, transport: http(RPC) });

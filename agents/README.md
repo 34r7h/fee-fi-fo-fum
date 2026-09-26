@@ -1,88 +1,134 @@
 # agents: fee, fi, fo and fum
 
-The four syllables of the giant's chant, each a handoff agent with its own process, its own signing key and its
-own self-custodied Ethereum Sepolia EOA. See [docs/NAMING.md](../docs/NAMING.md) for who does what.
+The crew of feefifofum ([docs/SPEC.md](../docs/SPEC.md), "The crew"). Each is a handoff agent with its own process,
+its own handoff signing key and its own self-custodied Ethereum Sepolia EOA. Together they run one hoard in the
+CastleVault as many markets: fee prices it, fi turns it into SwapVM strategies and signs every quote, fo routes
+orders to the better of them, and fum bounds how far the one balance may stretch.
 
-| Agent | Role | Sepolia address |
-|---|---|---|
-| fee | shift trader | [`0x56EB…6538`](https://sepolia.etherscan.io/address/0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538) |
-| fi | hot standby | [`0xB6eA…40b2`](https://sepolia.etherscan.io/address/0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2) |
-| fo | fencer and witness | [`0x8689…3D56`](https://sepolia.etherscan.io/address/0x8689a407A2488A5b2f2De05d2C6978a798f93D56) |
-| fum | auctioneer | [`0xcaD0…82D2`](https://sepolia.etherscan.io/address/0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2) |
+| Agent | Job | On-chain | Sepolia address |
+|---|---|---|---|
+| fee | pricing engine | no transactions | [`0x56EB…6538`](https://sepolia.etherscan.io/address/0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538) |
+| fi | SwapVM compiler and quote signer | `ship`, `dock` (the vault's `fi`) | [`0xB6eA…40b2`](https://sepolia.etherscan.io/address/0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2) |
+| fo | intent forwarder | no transactions | [`0x8689…3D56`](https://sepolia.etherscan.io/address/0x8689a407A2488A5b2f2De05d2C6978a798f93D56) |
+| fum | inventory and risk | `setLeverage`, `setCap`, `dock` (the vault's `fum`) | [`0xcaD0…82D2`](https://sepolia.etherscan.io/address/0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2) |
+
+## What each one does
+
+**fee** (`roles/fee.mjs`) reads Chainlink ETH/USD every new block and keeps a window of 30 prices. The mid is the
+feed's answer; the spread is `FEE_BASE_SPREAD_BPS` (10) plus `FEE_VOL_K` (2) times the window's realized volatility
+in bps, clamped to 5..200. It also reads hen's curve (the ratio of hen's two Aqua balances). It reports the price to
+the castle service, signed, when it changes and at least every `FEE_REPORT_S` (20 s). The gateway prices every harp
+quote from that report and goes silent when it is older than 60 s. When the mid is more than `FEE_DRIFT_BPS` (50)
+from hen's curve, the report carries `recentre: "hen"`, which is fee asking fi to re-centre.
+
+**fi** (`roles/fi.mjs`) compiles two programs (`lib/programs.mjs`) and ships them from the one vault balance:
+
+| Slot | Strategy | Program | Size |
+|---|---|---|---|
+| 0 | harp | `Extruction(PriceExtruction)`: an RFQ that fills only at a price fi signed | 80% of each token (`FI_PROMISE_BPS`) |
+| 1 | hen | `flatFee(30 bps)` then `XYCSwap`: a curve over its own Aqua balances, which the v4 hook fills from | 80%, both sides in fee's mid ratio, so the curve starts at the price |
+| 2 | greedy | hen's program, asked for another 0.5× of the hoard (`FI_GREEDY=1` only) | exists to be refused |
+
+Each promise is capped by its slot's cap and the token's headroom under fum's leverage, so fi waits for fum first.
+greedy goes out unsimulated with a manual 90k gas limit, because `estimateGas` fails on a revert; the vault reverts
+`OverAllocated` on-chain, and fi reports the reverted tx so the stream can show the refusal. On `recentre: "hen"`, fi
+docks hen and ships it again at the new mid. A slot that fum or the owner docked stays docked: fi does not overrule
+fum. fi's other half, signing each Quote (EIP-712) and each gateway response, runs in the castle service on the host
+that holds fi's key (`service/src/fi.mjs`).
+
+**fo** (`roles/fo.mjs`) answers `POST /route {order}` on `127.0.0.1:FO_PORT` (8731); the service's MCP tool
+`castle_route` forwards there. An order is UniswapX-shaped: `{swapper, nonce, deadline, input: {token, amount},
+outputs: [{token, amount (the minimum), recipient}]}`, tokens `USDC`/`WETH` or addresses. fo asks the service for a
+harp quote (`castle_quote`) and the V4Quoter for the Castle pool, and returns the better route that meets the minimum,
+with its calls (approve, then `router.swap` or `PoolSwapTest.swap`). There is no UniswapX reactor on Sepolia, so the
+swapper sends the calls itself. fo reports `intent.routed`, signed.
+
+**fum** (`roles/fum.mjs`) sets leverage (`FUM_LEVERAGE_BPS`, 20000 = promises may total 2× the balance) for both
+tokens and a cap per slot (`FUM_CAP_BPS` of the hoard, 100%) once the hoard is funded. Then it keeps the ledger:
+balance, committed, headroom and leverage per token, and each live strategy's Aqua allocation. It docks only when
+fills have pushed `committed(token)` past `balance × leverage`, lowest priority first (`FUM_DOCK_ORDER`: greedy,
+harp, hen), one per check until the Castle is back under. A single promise larger than the balance is not a reason
+to dock: that is shared liquidity, and the demo's 80% + 80% sits inside 2×.
 
 ## Run
 
 ```sh
 cd agents && npm ci
-cp .env.example .env            # optional: real values (ETHERSCAN_API_KEY, a keyed RPC). Never commit it.
-./scripts/up.sh                  # fee, fi, fo, fum as four processes; logs in agents/logs/<id>.log
-kill -9 "$(cat logs/fee.pid)"    # the failover demo: exactly one giant falls
-./scripts/down.sh                # SIGTERM everyone (each also stops its listener)
+cp .env.example .env            # optional: real values (a keyed RPC). Never commit it.
+CASTLE_SERVICE_URL=https://handoff.lol/t/castle ./scripts/up.sh    # four processes; logs in agents/logs/<id>.log
+./scripts/down.sh                                                  # SIGTERM everyone (each also stops its listener)
 ```
 
-### Rehearse on a fork first
+Every process signs its handoff calls with its own key, sends `agent_heartbeat`, runs one realtime listener, and
+beats to the castle service (a signed `agent` report), which is how the stream knows who is up.
 
-The renew loop spends real Sepolia ETH (a renew costs about 73k gas, a ship about 218k, a claim about 280k), so
-every demo runs on an anvil fork first. `scripts/local-castle.sh` deploys Castle, the fence and JackHook on its
-own timed anvil (port 8745) and wires them to the LIVE router, Aqua, WETH, USDC, CCA factory and ENSv2 agent
-registry and resolver. It grants roles as the registry admin (impersonated), sets fee and fi as crew and fum as
-auctioneer, seeds the anchor and funds the book. `scripts/rehearse.sh` then drives a whole demo and fails loudly at the first missing beat:
+## Rehearse on a fork first
+
+Sepolia ETH is real money, so everything runs on an anvil fork of live Sepolia first. `scripts/crew-fork.sh` is the
+whole demo there with the real crew and the real castle service, and fails loudly at the first missing beat:
 
 ```sh
-./scripts/rehearse.sh failover   # genesis claim, ship centred on the ENS anchor, renewals, kill -9 fee,
-                                 # fi claims within one lease period and re-ships, stale fee reverts NotHolder
-./scripts/rehearse.sh e2e        # p3-failover-e2e with a taker (scripts/jack.mjs as fum): a live fill, kill -9 fee,
-                                 # a wind-down fill in the gap, fi claims, the old epoch's book reverts
-                                 # FeeFiFoFum(), fi's new book fills, stale fee reverts NotHolder
-./scripts/rehearse.sh withhold   # fee hangs, fo withholds (trader-hang) and posts an incident,
-                                 # fee's self-signed renew reverts BadAttestation, fi takes over
-./scripts/down.sh && ./scripts/local-castle.sh --stop
+./scripts/crew-fork.sh                         # RECORD=<dir> keeps the run's record; STRESS=0 skips step 6
 ```
 
-`scripts/withhold-fork.sh` and `scripts/auction-fork.sh` fork the LIVE castle as it stands (lease, books, ENS
-anchor) and run an isolated copy of the crew, stopping every process they started on exit. The first is p3-fo's
-withheld seal: fi renews with fo's seal, fee hangs and forges its own, Castle.renew reverts BadAttestation. The
-second is p3-fum's shift-change CCA, with a bid through the castle service's MCP tool auction_bid
-(`scripts/mcp-bid.mjs`; `scripts/mcp-call.mjs` calls any tool) and the settle traced.
+0. `scripts/fork-deploy.mjs` readies the fork: on a fork taken after c-deploy it adopts the deployed contracts and
+   points the resolver at this run's service (`setUrls` as the owner, fork only); on an older fork it deploys them as
+   `contracts/script/DeployHoard.s.sol` does. It funds the hoard as the treasury will (5 USDC plus 5/mid WETH).
+1. fum sets leverage and caps; fi ships harp and hen at 80% each; fi's greedy reverts `OverAllocated`.
+2. agy (`scripts/jack.mjs`, impersonated) resolves `quote.feefifofum.eth` by CCIP-Read through UniversalResolverV2
+   and fills the quote through the router.
+3. agy swaps 0.5 USDC on the Castle's v4 pool, and the hook fills it just in time from hen. fee sees hen drift, and
+   fi re-centres it.
+4. fo routes a UniswapX-format order (`castle_route`), and agy sends the calls.
+5. The step-2 quote, 31 s later, reverts `QuoteExpired`.
+6. Outside the demo: a harp fill sized to push committed WETH past `balance × 2` while hen alone would fit. fum
+   docks harp and stops.
+7. `service/test/gateway-fork.mjs` checks the gateway, all five MCP tools, `/stream`, `/state` and `/health`.
 
-A local primary RPC disables the fallbacks, so a rehearsal can't leak a transaction onto Sepolia, and fo's
-incidents go to `fee-fi-fo-fum-rehearsal`, not the live channel. Before a live window, `node scripts/preflight.mjs`
-checks the deployed castle read-only (roles, crew, anchor, book, gas) and exits 1 if the crew must not start.
-`node scripts/genesis.mjs` is fee's first claim on an unclaimed castle as a one-shot, with no renew loop:
-`multicall([claim, relink])`, then `ship` (sized by `SHIP_MAX_WETH`, `SHIP_MAX_USDC`, `SHIP_FEE_BPS`,
-`SHIP_RANGE_BPS`), read back from Aqua's Shipped event (band centre against the ENS anchor, fence epoch).
+The crew runs with `CREW_OFFLINE=1` there (no `agent_heartbeat`, no listener), so a rehearsal never shows as the
+live agents' liveness. A local RPC disables the fallbacks (`lib/chain.mjs`), so a rehearsal can't leak a
+transaction onto Sepolia. `fork-run/` holds a recorded run.
 
-Demo switches for fee: `FEE_STAGE_HANG=1` (heartbeat on, no ships), `FEE_STALE=1` (one unsimulated renew
-from stale state), `FEE_FORCE_RENEW=1` (forge its own seal after fo withholds). Pacing: `RENEW_EVERY_S` (90 of
-the 120s lease). There is no re-ship timer: the holder ships once per epoch and re-centres only when the ENS anchor
-moves. fo's `FO_STALE_QUOTES_S` (300) is how long an epoch may go without its first ship before fo calls it a hang. For fi,
-`FI_CLAIM_DELAY_S` holds the wind-down gap open so a taker can fill reduce-only before the claim.
+## Env
+
+| Variable | Default | Who |
+|---|---|---|
+| `SEPOLIA_RPC_URL`, `SEPOLIA_RPC_URL_FALLBACK`, `SEPOLIA_RPC_URL_FALLBACK_2` | public endpoints | all |
+| `DEPLOYMENTS_PATH` | `../contracts/deployments/sepolia.json` | all |
+| `CASTLE_SERVICE_URL` | unset (reports are only logged) | all |
+| `<ID>_KEY_PATH` | `~/.handoff/agents/<id>/sepolia.key` | all |
+| `CREW_OFFLINE`, `HEARTBEAT_MS` | `0`, 20000 | all |
+| `FEE_BASE_SPREAD_BPS`, `FEE_VOL_K`, `FEE_MIN_SPREAD_BPS`, `FEE_MAX_SPREAD_BPS`, `FEE_WINDOW`, `FEE_DRIFT_BPS`, `FEE_REPORT_S` | 10, 2, 5, 200, 30, 50, 20 | fee |
+| `FEE_SHIFT_FILE` | unset (fork runs: a file holding a bps shift of the reference) | fee |
+| `FI_SHIP`, `FI_PROMISE_BPS`, `FI_HEN_FEE_BPS` | `harp,hen`, 8000, 30 | fi |
+| `FI_GREEDY`, `FI_GREEDY_BPS`, `FI_GREEDY_GAS` | `0`, 5000, 90000 | fi |
+| `FO_PORT` | 8731 | fo |
+| `FUM_LEVERAGE_BPS`, `FUM_CAP_BPS`, `FUM_DOCK_ORDER` | 20000, 10000, `greedy,harp,hen` | fum |
 
 ## Layout
 
 | Path | What |
 |---|---|
-| `run.mjs` | One crew member: heartbeat loop, realtime listener, role tick loop, JSON-line logs |
-| `roles/<id>.mjs` | The role's logic: `tick(ctx)` on an interval and `onMessage(ctx, msg)` for inbound handoff messages |
-| `lib/handoff.mjs` | Signed handoff client (Ed25519 over `handoff-signed-req`; no bearer key on the wire) |
-| `lib/chain.mjs` | viem on Sepolia: fallback RPCs from env, the key-file account, deployments and ABIs |
-| `lib/lease.mjs` | The castle lease (holder, epoch, expiry) and its fence state |
-| `lib/shift.mjs` | The holder's moves on Castle: renew with fo's seal, claim + dock + relink, ship and re-centre |
-| `lib/book.mjs` | Reads a shipped program back: its fence epoch, and its band's centre against ENS `handoff-price` |
-| `lib/attest.mjs`, `lib/fo-policy.mjs` | fo's EIP-712 seal and its sign-or-withhold rules |
-| `lib/replay.mjs`, `lib/incidents.mjs` | fo's fill replay against the lease timeline, and its incident channel |
-| `lib/listener.mjs` | One `handoff-realtime` listener per agent, reaping only this agent's orphan after a `kill -9` |
-| `crew.json` | Public crew data: roles, addresses, capabilities, personas |
-| `abi/` | The ICastleLease ABI (Castle's full ABI comes from `contracts/out-abi/`) |
-| `scripts/` | `new-wallets.mjs`, `register-crew.mjs`, `balances.mjs`, `wrap-weth.mjs`, `preflight.mjs`, `up.sh`, `down.sh`, `local-castle.sh`, `rehearse.sh`, `withhold-fork.sh`, `auction-fork.sh`, `mcp-bid.mjs`, `mcp-call.mjs`, `genesis.mjs`, `jack.mjs` |
+| `run.mjs` | One crew member: heartbeat and service beat, realtime listener, role tick loop, JSON-line logs |
+| `roles/<id>.mjs` | The role: `tick(ctx)` on an interval, `onMessage(ctx, msg)` for inbound handoff messages |
+| `lib/vault.mjs` | The crew's view of CastleVault: the ledger (balances, committed, headroom, slots, Aqua allocations) and `send`, which simulates every write first |
+| `lib/programs.mjs` | SwapVM programs: harp, hen, and a decoder |
+| `lib/report.mjs` | Signed reports to the castle service (EIP-191 over a canonical message; `service/src/report.mjs` checks them) |
+| `lib/chain.mjs`, `lib/abis.mjs` | viem on Sepolia (a local RPC never falls back), the key-file account, deployments and ABIs |
+| `lib/handoff.mjs`, `lib/listener.mjs` | The signed handoff client and one realtime listener per agent |
+| `crew.json` | Public crew data: jobs, addresses, capabilities, personas |
+| `scripts/` | `crew-fork.sh`, `fork-deploy.mjs`, `jack.mjs` (fork rehearsal); `register-quote.mjs` (0x67Cc registers `quote`, simulate first, `--send` to send); `up.sh`, `down.sh`; `new-wallets.mjs`, `register-crew.mjs`, `balances.mjs`, `wrap-weth.mjs`, `mcp-call.mjs` |
+
+The lease edition's crew (shifts, heartbeats co-signed by fo, the CCA) is at tag `lease-edition`.
 
 ## Rules the runtime keeps
 
 - **Keys stay home.** EOA keys are `~/.handoff/agents/<id>/sepolia.key` and handoff signing keys are
   `~/.handoff/agents/<id>/config.json`, both mode 0600. The runtime refuses a key file readable by others.
   Nothing prints a key.
-- **Liveness is `agent_heartbeat`, never messages**, which are charged and rate-limited. On-chain, the castle
-  lease renew is the real heartbeat. fi acts on the lease, not on a missed heartbeat.
+- **Every write is simulated first.** A revert the simulation predicts is logged and not sent. The one exception is
+  greedy, whose revert is the point.
+- **Liveness is `agent_heartbeat` and signed beats, never messages**, which are charged and rate-limited.
 - **No hard-coded addresses.** Contracts come from `contracts/deployments/sepolia.json`.
 - **Signing is code, not judgment.** Inbound messages are logged and routed to deterministic role handlers.
   No model decides what a funded key signs.

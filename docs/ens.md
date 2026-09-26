@@ -86,7 +86,7 @@ node --input-type=module -e "import{createPublicClient,http}from'viem';import{se
 
 It prints one JSON line with these fields: `v`, `id`, `chainId`, `router`, `order`, `strategyHash`, `tokenIn`, `tokenOut`, `amountIn`, `amountOut`, `priceQ96`, `maxAmountIn`, `validUntil`, `signer`, `quoteSig` and `takerTraitsAndData`.
 
-In the live run, agy resolved `quote:USDC:WETH:500000` and got this record (trimmed: `order`, `router` and `takerTraitsAndData` are left out):
+In the live run, agy resolved `quote:USDC:WETH:500000` and got this record. It is trimmed here; the full record, with `order`, `router` and `takerTraitsAndData`, is [agents/live-run/11786346/q1-live.json](../agents/live-run/11786346/q1-live.json).
 
 ```json
 {"v":1,"id":"q-1790427574-6","chainId":11155111,

@@ -84,7 +84,7 @@ The gateway issues quotes that are valid for 30 s. The [fork rehearsal](../agent
 | fi ships `greedy`, 0.5× more: reverts `OverAllocated` | [`0x647aba61…d0ba`](https://sepolia.etherscan.io/tx/0x647aba61fbb7442ccd986346c6acb8de2dae42eab5e5160ed950277dc7a9d0ba), failed; replayed at the block before, it reverts `OverAllocated(WETH, 3903882690184150, 3717983514461096)` | the same `OverAllocated(WETH, 3903882690184150, 3717983514461096)` |
 | a solver fills harp with a quote from `quote.feefifofum.eth` | [`0x763d6de1…9fe8`](https://sepolia.etherscan.io/tx/0x763d6de1cb3312803742fa80b1eed47060a1785e038a63b1f98f5cd375ea9fe8): 0.5 USDC for 0.000185925 WETH, 170,685 gas | 0.5 USDC for 0.000185713 WETH, 157,005 gas |
 
-The fork rehearsal is [agents/fork-run/11786199](../agents/fork-run/README.md). It ran the crew's real code against the deployed contracts on a fork of Sepolia. Its transaction hashes exist only on that fork.
+The live run's full record is [agents/live-run/11786346](../agents/live-run/11786346/README.md). The fork rehearsal is [agents/fork-run/11786199](../agents/fork-run/README.md). It ran the crew's real code against the deployed contracts on a fork of Sepolia. Its transaction hashes exist only on that fork.
 
 ## Tests
 

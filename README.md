@@ -38,7 +38,7 @@ The live run's transactions are added to the beats below when it lands.
 
 ## The four beats
 
-All four happen on Ethereum Sepolia, in the one live run. Before that run, the crew rehearsed every beat with its real code against the deployed contracts, on a fork of Sepolia ([agents/fork-run/11786199](agents/fork-run/README.md)). The sponsor notes give that rehearsal's numbers. Its hashes exist only on the fork.
+All four happened on Ethereum Sepolia in the one live run, 12:43–13:03 UTC on 26 Sep. Its record, with every tx read from its receipt, the quote that was filled, the castle stream and the crew's logs, is [agents/live-run/11786346](agents/live-run/11786346/README.md). Before that run, the crew rehearsed every beat with its real code against the deployed contracts, on a fork of Sepolia ([agents/fork-run/11786199](agents/fork-run/README.md)). The sponsor notes give that rehearsal's numbers. Its hashes exist only on the fork.
 
 | # | Beat | Live on Sepolia | What to look for |
 |---|---|---|---|

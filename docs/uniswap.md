@@ -68,7 +68,7 @@ emit Swap(id: 0x95e0…889c, sender: PoolSwapTest, amount0: 0, amount1: 0, sqrtP
 | a solver swaps USDC for WETH on the Castle's pool through PoolSwapTest; the hook fills it from hen | [`0x53f773de…e116`](https://sepolia.etherscan.io/tx/0x53f773ded5f3f8c8586d05c9129a897a0796a92ee0a1c27a1711ba708290e116): 0.5 USDC in, 0.000164970 WETH out, 278,346 gas | 0.5 USDC in, 0.000164803 WETH out, 278,346 gas |
 | fee asks for a re-centre; fi docks hen and ships it again at the mid | dock [`0x32a20d16…638a`](https://sepolia.etherscan.io/tx/0x32a20d169556fd013eaa69cb2dc2db2108275c9513d36e24b0886ceab23d638a) <br> ship [`0x03dbf62b…67f3`](https://sepolia.etherscan.io/tx/0x03dbf62b16214b7bf36dce5b742ad80c7deccc466a9925328f9b26a817e267f3) | dock 47,007 gas, ship 223,064 gas |
 
-In the fork rehearsal, fee then saw hen's curve at 3,402.92, against a mid of 2,689.63, and asked for a re-centre. fi docked hen and shipped it again at the mid. The rehearsal is [agents/fork-run/11786199](../agents/fork-run/README.md), and its transaction hashes exist only on that fork.
+Live, after the swap, fee saw hen's curve at 3,399.91 against a mid of 2,686.57 (2,098 bps) and asked for a re-centre, and fi docked hen and shipped it again at the mid. The fork rehearsal did the same, at 3,402.92 against 2,689.63. The live run's record is [agents/live-run/11786346](../agents/live-run/11786346/README.md). The rehearsal is [agents/fork-run/11786199](../agents/fork-run/README.md), and its transaction hashes exist only on that fork.
 
 ## Tests
 
@@ -100,6 +100,6 @@ The hook is built against v4-core `v4.0.0` (`e50237c`), and its fork tests pass 
 
 ## UniswapX
 
-No UniswapX reactor is published for Sepolia, and the reactors published for other chains have no code on Sepolia. fo still takes UniswapX-format orders off-chain through `castle_route` and prices them both ways, against harp and against the v4 pool, then routes to whichever pays more. In the fork rehearsal, a 0.5 USDC order got 0.000185713 WETH from harp against 0.000160666 WETH from the v4 pool, so fo routed it to harp. Filling a live UniswapX reactor is a stretch goal, on a chain that has one.
+No UniswapX reactor is published for Sepolia, and the reactors published for other chains have no code on Sepolia. fo still takes UniswapX-format orders off-chain through `castle_route` and prices them both ways, against harp and against the v4 pool, then routes to whichever pays more. In the live run, a 0.5 USDC order from agy got 185,924,989,671,030 WETH units from harp against 160,819,112,822,369 from the v4 pool, so fo routed it to harp (`intent.routed` i-1790427777-1, in [the live record](../agents/live-run/11786346/README.md)). Filling a live UniswapX reactor is a stretch goal, on a chain that has one.
 
 The lease edition's CCA auction and JackHook are not this product. They remain at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition).

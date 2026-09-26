@@ -34,7 +34,9 @@ The resolver's owner is the treasury. Only the owner may change the gateway URL 
 
 ## The gateway
 
-The gateway is the castle service, live at `https://handoff.lol/t/castle/` ([service/README.md](../service/README.md)). It runs on the operator's host and holds fi's key to sign quotes, and no other key.
+The gateway is the castle service ([service/src/gateway.mjs](../service/src/gateway.mjs), [service/README.md](../service/README.md)). It runs on the operator's host (helen), behind the handoff tunnel, at the one URL the resolver names: `https://handoff.lol/t/castle/ccip/{sender}/{data}.json`. `POST /ccip {sender, data}` works too.
+
+fi's key is only on that host: it is read from `CASTLE_FI_KEY_PATH` (mode 0600) and never logged. `https://handoff.lol/t/castle/health` shows `fiKeyLoaded` and fi's address.
 
 | Record key | What it answers |
 |---|---|
@@ -44,14 +46,19 @@ The gateway is the castle service, live at `https://handoff.lol/t/castle/` ([ser
 
 In a quote key, the tokens are `USDC` or `WETH`, and the amount is in base units.
 
-How a quote is made:
-- It is priced from fee's latest signed price: the mid, widened by fee's spread against the solver.
-- fi signs it as an EIP-712 `Quote` in PriceExtruction's domain.
-- It is valid for 30 s. The gateway's `expires` and the quote's `validUntil` are the same.
-- Before the gateway serves a quote, it checks it with `router.quote` and against harp's Aqua allocation and the vault's balance. So a served quote is one that `router.swap` fills until `validUntil`.
-- The record carries `takerTraitsAndData`, ready for `router.swap(order, tokenIn, tokenOut, amountIn, takerTraitsAndData)`.
+For a quote key, the service prices harp from fee's latest signed price. It refuses in three cases:
+- `503` if fee has been silent for 60 s, or if harp is not shipped;
+- `422` if the quote is larger than harp's Aqua allocation or the vault's balance.
 
-If fee has been silent for more than 60 s, or harp is not shipped, the gateway answers `503`, and no quote goes out.
+It also checks the quote with `router.quote`.
+
+fi then signs twice:
+- **The quote.** `Quote {strategyHash, tokenIn, tokenOut, priceQ96, maxAmountIn, validUntil}` is signed as EIP-712 typed data in PriceExtruction's domain (`feefifofum PriceExtruction`, version `1`, chain 11155111, verifyingContract PriceExtruction). PriceExtruction recovers the signer at fill time and requires `vault.fi()`.
+- **The ERC-3668 response.** `abi.encode(result, expires, sig)` is signed over the digest in step 5 above, and `resolveWithProof` checks that signature.
+
+Both expire together. The response's `expires` is the quote's `validUntil`, 30 s after the quote was made (`CASTLE_QUOTE_TTL_S`). After that, the record no longer resolves (`SignatureExpired`), and the quote no longer fills (`QuoteExpired`).
+
+The record carries `takerTraitsAndData`, ready for `router.swap(order, tokenIn, tokenOut, amountIn, takerTraitsAndData)`.
 
 ## Try it
 
@@ -70,6 +77,14 @@ await client.getEnsText({ name: 'quote.feefifofum.eth', key: 'castle', universal
 await client.getEnsText({ name: 'quote.feefifofum.eth', key: 'quote:USDC:WETH:500000', universalResolverAddress })
 // harp's quote for 0.5 USDC while harp is live
 ```
+
+Or as one command, after `cd service && npm ci` in a checkout:
+
+```sh
+node --input-type=module -e "import{createPublicClient,http}from'viem';import{sepolia}from'viem/chains';const c=createPublicClient({chain:sepolia,transport:http('https://ethereum-sepolia-rpc.publicnode.com')});console.log(await c.getEnsText({name:'quote.feefifofum.eth',key:'quote:USDC:WETH:500000',universalResolverAddress:'0x5d25C1D6aCBb71B7a28AA7899618a3412a8303e3'}))"
+```
+
+It prints one JSON line with these fields: `v`, `id`, `chainId`, `router`, `order`, `strategyHash`, `tokenIn`, `tokenOut`, `amountIn`, `amountOut`, `priceQ96`, `maxAmountIn`, `validUntil`, `signer`, `quoteSig` and `takerTraitsAndData`.
 
 A live quote record from the run is TODO-LIVE:quote-record. The fill of that quote through AquaSwapVMRouter is TODO-TX:harp-fill.
 

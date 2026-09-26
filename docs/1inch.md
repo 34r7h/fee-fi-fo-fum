@@ -77,10 +77,11 @@ The gateway issues quotes that are valid for 30 s. The [fork rehearsal](../agent
 
 | Step | Sepolia tx | Fork rehearsal, block 11786199 |
 |---|---|---|
-| fum sets leverage 2× for WETH and USDC | TODO-TX:leverage | 31,401 + 31,357 gas |
-| fi ships `harp`, 80% of the hoard | TODO-TX:ship-harp | 238,098 gas |
-| fi ships `hen`, 80% of the hoard in fee's mid ratio | TODO-TX:ship-hen | 223,064 gas |
-| fi ships `greedy`, 0.5× more: reverts `OverAllocated` | TODO-TX:ship-greedy | `OverAllocated(WETH, 3903882690184150, 3717983514461096)` |
+| fum sets leverage 2× for WETH and USDC | [`0xcf95760d…54f9`](https://sepolia.etherscan.io/tx/0xcf95760df456850bb1db11811c887c06fae925611984c7fc4e188f838b1a54f9) and [`0x53336098…e5f7`](https://sepolia.etherscan.io/tx/0x533360983d9b137e5f2513f88c5a8c9d63003c60d0201b5c43fd92162fa0e5f7) | 31,401 + 31,357 gas |
+| fum sets the caps for slots 0, 1 and 2 | [`0xd2fbb4f8…88b5`](https://sepolia.etherscan.io/tx/0xd2fbb4f8db826c5a202d4724da0767b10ebf8be666751f1324c91b467ba788b5) and [`0x3d145621…8970`](https://sepolia.etherscan.io/tx/0x3d145621afcd2d43c97a400139b8f5caee7768d6f3e4477dddc4723e5b568970) and [`0x1b24490f…481f`](https://sepolia.etherscan.io/tx/0x1b24490f1c5a1ae23ab58d8d1c79508c9ba85903b06b9735b73ef2f0d068481f) | 3 × about 70,565 gas |
+| fi ships `harp`, 80% of the hoard | [`0x15711ddf…095a`](https://sepolia.etherscan.io/tx/0x15711ddff90cc60b42144f8e62facb6cc4cd69bb6e3263956fe674bcc396095a) | 238,098 gas |
+| fi ships `hen`, 80% of the hoard in fee's mid ratio | [`0x5d7bee55…d6ce`](https://sepolia.etherscan.io/tx/0x5d7bee55fe98474b4fcdcef0940e5d03d0767da89d3f20290b19bb00fa1cd6ce) | 223,064 gas |
+| fi ships `greedy`, 0.5× more: reverts `OverAllocated` | [`0x647aba61…d0ba`](https://sepolia.etherscan.io/tx/0x647aba61fbb7442ccd986346c6acb8de2dae42eab5e5160ed950277dc7a9d0ba), failed; replayed at the block before, it reverts `OverAllocated(WETH, 3903882690184150, 3717983514461096)` | the same `OverAllocated(WETH, 3903882690184150, 3717983514461096)` |
 | a solver fills harp with a quote from `quote.feefifofum.eth` | TODO-TX:harp-fill | 0.5 USDC for 0.000185713 WETH, 157,005 gas |
 
 The fork rehearsal is [agents/fork-run/11786199](../agents/fork-run/README.md). It ran the crew's real code against the deployed contracts on a fork of Sepolia. Its transaction hashes exist only on that fork.

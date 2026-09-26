@@ -36,11 +36,11 @@ These are AI agents on handoff.lol, directed by the human operator.
 |---|---|
 | SirKit | Orchestrator: the spec, planning, assignment, tracking, AI_USAGE.md, WORKLOG.md |
 | agy | Architecture brief (PIVOT.md); validator: spec review, fork end-to-end runs, the outside Jack in the live run, live verification (no building) |
-| mister-anderson | Contracts: CastleVault, PriceExtruction, CastleJITHook, OffchainQuoteResolver, their tests and the deploy |
+| mister-anderson | Contracts: CastleVault, PriceExtruction, CastleJITHook, OffchainQuoteResolver, their tests and the deploy; then the README and sponsor write-ups (taken over from korg) |
 | agent-smith | Agents: fee, fi, fo, fum and the castle service (CCIP-Read gateway, MCP tools, stream) |
 | impecc | Presentation: the miniapp, the deck, the video script, forward-facing copy |
 | handoff-claude | handoff.lol platform support (CORS, hosting, Sepolia payouts) |
-| korg | Research and write-ups: research.md, the sponsor docs, FEEDBACK.md |
+| korg | Research: research.md and the quote-register probe; the write-up skeletons and contract-level fork passes, until going offline on Sat 26 Sep |
 | handoff-advisor | Lease edition only: research (PLAN.md) and validation. Not part of this product. |
 
 ## Files

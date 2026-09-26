@@ -8,7 +8,7 @@ The running record of the feefifofum build: what was done, who did it, which com
 - **Deadline:** Sun 27 Sep 00:00 UTC
 - **Pre-existing product:** handoff (private), baseline `079f8f0`
 - **Earlier product:** the lease edition, retired at 10:51Z on Sat 26 Sep. Its code and full worklog are at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition).
-- **Last regenerated:** Sat 12:29Z
+- **Last regenerated:** Sat 12:34Z
 
 All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified).
 
@@ -56,14 +56,14 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 | Task | Owner | Assignee | Due | Status | Commit | On-chain |
 |---|---|---|---|---|---|---|
 | The one live run on Sepolia <br>`a-live` `a92e968f` | agent-smith | agent-smith | Sat 22:00Z | in_progress |  |  |
-| **BLOCKER** Fork end-to-end of the whole demo (two passes) <br>`v-e2e` `48b54583` | korg | korg | Sat 20:00Z | in_progress | dea47ea | contract-level passes (cheatcodes); full passes after c-deploy |
+| **BLOCKER** Fork end-to-end of the whole demo (two passes) <br>`v-e2e` `48b54583` | agy | agy | Sat 20:00Z | todo | dea47ea | contract-level passes (cheatcodes); full passes after c-deploy |
 | Verify the live run on-chain <br>`v-live` `e113e331` | agy | agy | Sat 22:30Z | in_progress |  |  |
 
 ### Submission
 
 | Task | Owner | Assignee | Due | Status | Commit | On-chain |
 |---|---|---|---|---|---|---|
-| README, sponsor write-ups and FEEDBACK <br>`s-writeups` `ae2058f7` | korg | korg | Sat 23:00Z | in_progress |  |  |
+| README, sponsor write-ups and FEEDBACK <br>`s-writeups` `ae2058f7` | mister-anderson | mister-anderson | Sat 23:00Z | in_progress |  |  |
 | AI_USAGE.md and WORKLOG.md <br>`s-ai` `e16fb6a1` | SirKit | SirKit | Sat 23:30Z | todo |  |  |
 | OPERATOR: record the video and submit on ETHGlobal <br>`s-submit` `fd56d78b` | OPERATOR |  | Sat 23:59Z | todo |  |  |
 
@@ -86,7 +86,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 ## Wallets
 
-Live balances read at block 11786226.
+Live balances read at block 11786249.
 
 | Wallet | handoff agent | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -153,6 +153,7 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 11:22Z | Asked for frequent commits and a well-organized repo: main carries only this product, and the lease edition lives at its tag |
 | Sat 11:25Z | Approved a 0.02 ETH gas ceiling for the one live deploy and live run, and asked that the total budget be watched |
 | Sat 11:32Z | agy is rate-limited until 12:15Z: asked for agy's current tasks to be redistributed |
+| Sat 12:34Z | korg is out for the week (rate limits); asked for korg's tasks to be redistributed |
 
 ## Log
 
@@ -181,3 +182,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 12:27Z | agy | An independent read-only check of the live deployment against sepolia.json (a394209) found zero discrepancies: code sizes, Sourcify exact_match on all 4 contracts, owners and roles, the resolver signers and URL, the hook wiring and flags, pool slot0, and quote.feefifofum.eth resolving through UniversalResolverV2. |
 | Sat 12:27Z | impecc | The live miniapp reads the real castle from a clean browser (93e645e, 1ae8aca); the deploy tx is told as the castle being built; the publish waits for a-live. |
 | Sat 12:29Z | agent-smith | a-crew and a-gateway verified by SirKit (agents 9/9, service 6/6, the fork-run record at agents/fork-run/11786199, and live gateway checks). The a-live plan is approved: phases A to F, about 1.77M gas (about 0.0021 ETH), gated on two v-e2e passes of crew-fork.sh, with one go per phase. |
+| Sat 12:34Z | SirKit | korg's tasks were redistributed: v-e2e to agy (both passes, with crew-fork.sh and jack.mjs); s-writeups to mister-anderson, with impecc keeping the README voice. The backup Jack is now SirKit's payer 0x6216…1D1C. |

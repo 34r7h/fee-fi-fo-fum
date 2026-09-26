@@ -32,6 +32,7 @@ interface IPermit2 {
 
 interface IEnhancedAccessControl {
     function grantRootRoles(uint256 roleBitmap, address account) external returns (bool);
+    function revokeRootRoles(uint256 roleBitmap, address account) external returns (bool);
 }
 
 interface IResolverSetData {
@@ -610,5 +611,44 @@ contract CastleForkTest is CastleHelpers {
         vm.prank(FEE); // v2 crew
         vm.expectRevert(abi.encodeWithSelector(ICastleLease.LeaseStillLive.selector, v2Expiry));
         Castle(CASTLE_V2).claim();
+    }
+
+    /// @notice Migration (SirKit's option c): after v3 is live, the resolver admin revokes v2 Castle's LINK|SET_DATA,
+    ///         so nothing on v2 can overwrite the anchor record v3 shares. v2 keeps REGISTRAR/RENEW, which cannot
+    ///         touch a label v3 holds. Logs the revoke's execution gas for the approval request.
+    function test_fork_revokingV2ResolverRolesProtectsTheSharedAnchor() public {
+        address v2Owner = 0x89a7d90F6bCAF2FFd5c1519Fa7F3D9DB84e9AA73;
+        uint256 roles = ENSv2Roles.RESOLVER_LINK | ENSv2Roles.RESOLVER_SET_DATA;
+        vm.startPrank(kfee);
+        castle.claim();
+        castle.relink();
+        vm.stopPrank();
+        assertEq(castle.anchorPriceQ96(), ANCHOR_Q96);
+
+        // before the revoke, v2 can still write the shared anchor (here: its owner's setAnchorPrice)
+        uint256 snap = vm.snapshotState();
+        vm.prank(v2Owner);
+        Castle(CASTLE_V2).setAnchorPrice(1);
+        assertEq(castle.anchorPriceQ96(), 1, "v2 could overwrite v3's anchor");
+        vm.revertToState(snap);
+
+        assertTrue(IENSv2Resolver(RESOLVER).hasRootRoles(roles, CASTLE_V2));
+        vm.prank(ADMIN);
+        uint256 g = gasleft();
+        IEnhancedAccessControl(RESOLVER).revokeRootRoles(roles, CASTLE_V2);
+        emit log_named_uint("revoke v2 LINK|SET_DATA, execution gas", g - gasleft());
+        assertFalse(IENSv2Resolver(RESOLVER).hasRootRoles(ENSv2Roles.RESOLVER_SET_DATA, CASTLE_V2));
+        assertFalse(IENSv2Resolver(RESOLVER).hasRootRoles(ENSv2Roles.RESOLVER_LINK, CASTLE_V2));
+
+        vm.prank(v2Owner);
+        vm.expectRevert(); // Unauthorized in the resolver
+        Castle(CASTLE_V2).setAnchorPrice(1);
+        assertEq(castle.anchorPriceQ96(), ANCHOR_Q96, "the shared anchor is v3's alone");
+        // v2 cannot dissolve either: its expiry() now reads v3's year-long registration of the shared label
+        assertEq(Castle(CASTLE_V2).expiry(), block.timestamp + castle.NAME_PERIOD());
+        // v3 is unaffected
+        vm.prank(operator);
+        castle.setAnchorPrice(ANCHOR_Q96 + 1);
+        assertEq(castle.anchorPriceQ96(), ANCHOR_Q96 + 1);
     }
 }

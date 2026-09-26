@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 15:28 JST
+- **Last regenerated:** 2026-09-26 15:31 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -76,7 +76,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 |---|---|---|---|---|---|---|
 | README before/after, the three sponsor integration write-ups, and the contract address table <br>`p6-writeups` `3fb7f7a3` | korg | korg | Sun 07:00 | in_progress |  |  |
 | FEEDBACK.md for Uniswap and the developers.uniswap.org/hackathon-feedback form <br>`p6-feedback` `d0587b18` | korg | korg | Sun 07:00 | in_progress |  |  |
-| Pitch deck, plus the script and shot list for a 2-4 min demo video <br>`p6-deck` `005db56f` | impecc | impecc | Sun 07:00 | in_progress |  |  |
+| Pitch deck, plus the script and shot list for a 2-4 min demo video <br>`p6-deck` `005db56f` | impecc | impecc | Sun 07:00 | done | deck artifact 8emvtymY…; docs/video-script.md 99b43c7 | 11 slides with real Sepolia txs; script with 7 tx links; verified by SirKit, co-sign pending |
 | **BLOCKER** Two full rehearsals of the five-beat demo on Sepolia from a clean browser <br>`p6-rehearsal` `3eb4aa41` | agy | agy | Sun 05:00 | in_progress |  |  |
 | AI_USAGE.md and the final WORKLOG.md pass <br>`p6-ai-usage` `8abb390e` | SirKit | SirKit | Sun 08:00 | in_progress |  |  |
 | **BLOCKER** OPERATOR: record the video, submit on ETHGlobal and select 1inch, Uniswap and ENS <br>`p6-submit` `6aa606a5` | OPERATOR |  | Sun 08:45 | todo |  |  |
@@ -107,7 +107,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784448.
+Live balances read at block 11784463.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -143,7 +143,7 @@ Live balances read at block 11784448.
 | docs/ens-probes.md | korg | done: live and fork evidence, verified by handoff-advisor, plus the subregistry design note (bde95fc) |
 | docs/1inch.md, docs/uniswap.md, docs/ens.md | korg | todo |
 | FEEDBACK.md | korg | drafted (f7aa1d5): the CCA floor, the 50% graduation check, Sourcify vs Etherscan; the Uniswap form is the operator's to submit |
-| docs/video-script.md + deck | impecc | todo |
+| docs/video-script.md + deck | impecc | deck https://claude.ai/artifact/8emvtymYBXfwNjxXsy4QDa (11 slides, private until the operator shares it); script 50be565/99b43c7 (11 shots, real tx table) |
 | AI_USAGE.md | SirKit | in progress |
 | miniapp/STREAM.md | impecc | done (6a50934) |
 | PRODUCT.md, .impeccable/surfaces/ | impecc | done; landed inside SirKit's commit f7e88df by accident (a shared-tree sweep), authored by impecc |
@@ -309,3 +309,5 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 15:28 | agent-smith | R1 finished: the castle EOA revoked UNREGISTER_ADMIN, SET_RESOLVER(+admin) and SET_SUBREGISTRY(+admin) in one tx ([0x5973bca0…](https://sepolia.etherscan.io/tx/0x5973bca0ee11925f48a9d5b2e05d7185067e77879b4b2e7eec996cd182bdae9a)). |
 | Sat 15:29 | SirKit | Read every revoked bit back on-chain (20, 24, 140, 148, 152 and 4096 are all false; REGISTRAR true). Sent korg the README R1 update. |
 | Sat 15:32 | agy | Second independent validation on live Sepolia, all PASS. p1-baton: claim as fo and as a random address reverts NotCrew; multicall with transfer reverts SelectorNotAllowed; root roles true. p1-fence: 9/9 tests. p4-crewhook: agy's own name passes, unnamed → Unnamed, wrong owner → NotNameOwner. Full suite 149/149. |
+| Sat 15:34 | impecc | Submitted p6-deck: an 11-slide deck in the giant's voice, plus docs/video-script.md (11 shots, one voiceover, real tx table). Miniapp 1.0.2 labels every price with its unit. |
+| Sat 15:37 | SirKit | Read the deck's slides (real txs, live URL, 0 'baton') and the script; verified p6-deck. |

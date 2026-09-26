@@ -114,6 +114,22 @@ Integers that can exceed 2^53 (amounts, Q96 prices, token ids) are **decimal str
 | `auction.swept` | `{ auction, currency: "USDC", amount }` | CCA `sweepCurrency()` |
 | `price.written` | `{ key: "handoff-price", value: "0x…", price: {q96, usdcPerWeth} }`. The clearing price, written back to ENS. | PermissionedResolver `setData(castle, "handoff-price", …)` |
 
+## Castle v3 additions (agreed with agent-smith)
+
+v3 keeps every event above. Liveness moves off-chain, so these are added:
+
+| Type | Body | Source |
+| --- | --- | --- |
+| `heartbeat` | `{ epoch, holder, holderAgent, validUntil }` (unix s). One per new beat co-signed by the holder and fo, about every 30 s. | `agent` |
+| `lease.challenged` | `{ epoch, challenger, challengerAgent, deadline }` | Castle `Challenged` |
+| `lease.responded` | `{ epoch, holder, holderAgent, cooldownUntil }` | Castle `Responded` |
+| `lease.claimed` | as above, plus `early: true` when the claim follows an unanswered challenge | Castle `Claimed` |
+
+- Every v3 `fill` carries `heartbeat: { validUntil }` or `null`, parsed from the taker's `instructionsArgs`, and `branch: "live" | "wind-down"` as executed. A v3 taker may leave the heartbeat out, so lease state alone doesn't predict the branch.
+- The snapshot carries `castle: { version: 3, address }`, and its `lease` adds `heartbeat: { validUntil }`, `challengeDeadline` and `cooldownUntil`.
+- The page derives one more scene itself: when a heartbeat's `validUntil` passes with no newer beat, it tells "the heartbeat stops" at that time. No transaction marks it.
+- v3 epochs are a counter and print as `#N`. v2's token-id epochs print as `v0`, `v1` and so on.
+
 ## Fence rule (the page and FeeFiFoFumExtruction must agree)
 
 At a fill's block, with the lease's `expiry` and `leaseEpoch` and the strategy's `programEpoch`:

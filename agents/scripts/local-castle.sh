@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Rehearsal castle: Castle v2 on an anvil fork of Sepolia, wired exactly as the live deploy will be: the live
+# Rehearsal castle: Castle (v3, with its CCA exit) on an anvil fork of Sepolia, wired exactly as the live deploy will be: the live
 # AquaSwapVMRouter and Aqua, WETH9 and Circle USDC, and handoff's live ENSv2 agent registry and resolver
-# (feefifofum.eth's subregistry, where fee and fi already own their crew names). Only Castle and the fence are
-# new. The registry admin is impersonated to grant Castle its root roles, the operator (anvil's first account)
-# sets the crew and seeds the anchor price, and Castle is given a book. The crew then runs renewals, ships and
+# (feefifofum.eth's subregistry, where fee and fi already own their crew names) and the live CCA factory. Only
+# Castle, the fence and JackHook are new. The registry admin is impersonated to grant Castle its root roles, the operator (anvil's first account)
+# sets the crew and the auctioneer (fum) and seeds the anchor price, and Castle is given a book. The crew then runs renewals, ships and
 # failover without spending Sepolia ETH. Writes agents/.local/deployments.json and prints the env to use it:
 #   ./scripts/local-castle.sh && eval "$(./scripts/local-castle.sh --env)" && ./scripts/up.sh
 #   ./scripts/down.sh && ./scripts/local-castle.sh --stop
@@ -46,12 +46,16 @@ PARENT=$(jq -r .parent "$ENS")                                   # feefifofum.et
 tx() { cast send "$@" --rpc-url "$RPC" --unlocked >/dev/null; }
 dns() { node -e 'const b=[];for(const l of process.argv[1].split(".")){const e=Buffer.from(l);b.push(e.length,...e)}b.push(0);console.log("0x"+Buffer.from(b).toString("hex"))' "$1"; }
 
-# The fence, then Castle v2 (its Config is one struct, so the creation code is sent with cast).
-FENCE=$(cd "$ROOT/contracts" && forge create src/FeeFiFoFumExtruction.sol:FeeFiFoFumExtruction --rpc-url "$RPC" --unlocked --from "$OPERATOR" --broadcast --json 2>/dev/null | grep -o '"deployedTo": *"0x[0-9a-fA-F]*"' | grep -o '0x[0-9a-fA-F]*')
-CFG="($(ext aqua),$ROUTER,$FENCE,$REG,$RES,$(ext weth),$(ext usdc),$(crew fo),$OPERATOR,castle,$(dns "castle.$PARENT"),${LEASE_PERIOD:-120},true,${WIND_DOWN_FEE_BPS:-50000000},${DECAY_PERIOD:-60})"
-ARGS=$(cast abi-encode "constructor((address,address,address,address,address,address,address,address,address,string,bytes,uint64,bool,uint32,uint16))" "$CFG")
+# The fence and JackHook, then Castle (its Config is one struct, so the creation code is sent with cast).
+create() { (cd "$ROOT/contracts" && forge create "$@" --rpc-url "$RPC" --unlocked --from "$OPERATOR" --broadcast --json 2>/dev/null | grep -o '"deployedTo": *"0x[0-9a-fA-F]*"' | grep -o '0x[0-9a-fA-F]*'); }
+FENCE=$(create src/FeeFiFoFumExtruction.sol:FeeFiFoFumExtruction)
+JACK=$(create src/JackHook.sol:JackHook --constructor-args "$REG")
+[ -n "$FENCE" ] && [ -n "$JACK" ] || { echo "fence or JackHook failed to deploy" >&2; exit 1; }
+CFG="($(ext aqua),$ROUTER,$FENCE,$REG,$RES,$(ext weth),$(ext usdc),$(crew fo),$OPERATOR,castle,$(dns "castle.$PARENT"),${LEASE_PERIOD:-120},true,${WIND_DOWN_FEE_BPS:-50000000},${DECAY_PERIOD:-60},$(ext ccaFactory),$JACK,${DISSOLVE_GRACE:-300})"
+ARGS=$(cast abi-encode "constructor((address,address,address,address,address,address,address,address,address,string,bytes,uint64,bool,uint32,uint16,address,address,uint64))" "$CFG")
 CODE=$(cd "$ROOT/contracts" && forge inspect src/Castle.sol:Castle bytecode)
 CASTLE=$(cast send --rpc-url "$RPC" --unlocked --from "$OPERATOR" --json --create "${CODE}${ARGS#0x}" | jq -r '.contractAddress // .data.contractAddress')
+[ "$CASTLE" != null ] && [ -n "$CASTLE" ] || { echo "Castle creation reverted: does the Config tuple above match contracts/src/Castle.sol?" >&2; exit 1; }
 
 # Castle's root roles on the live registry and resolver, granted by their admin (impersonated on the fork only).
 cast rpc anvil_impersonateAccount "$ADMIN" --rpc-url "$RPC" >/dev/null
@@ -63,6 +67,7 @@ cast rpc anvil_stopImpersonatingAccount "$ADMIN" --rpc-url "$RPC" >/dev/null
 # The operator's part: crew labels (fee and fi own those names in the live registry) and the genesis anchor.
 tx "$CASTLE" "setCrew(address,string)" "$(crew fee)" fee --from "$OPERATOR"
 tx "$CASTLE" "setCrew(address,string)" "$(crew fi)" fi --from "$OPERATOR"
+tx "$CASTLE" "setAuctioneer(address)" "$(crew fum)" --from "$OPERATOR"
 ANCHOR=$(node -e 'console.log((BigInt(Math.round(Number(process.argv[1]) * 1e6)) * (1n << 96n) / 10n ** 18n).toString())' "${ANCHOR_USDC_PER_WETH:-2500}")
 tx "$CASTLE" "setAnchorPrice(uint256)" "$ANCHOR" --from "$OPERATOR"
 
@@ -74,5 +79,5 @@ cast rpc anvil_setStorageAt "$(ext usdc)" "$(cast index address "$CASTLE" 9)" "$
 for id in fee fi fo fum; do cast rpc anvil_setBalance "$(crew $id)" 0xde0b6b3a7640000 --rpc-url "$RPC" >/dev/null; done   # 1 ETH each, fork only
 
 jq --arg c "$CASTLE" --arg f "$FENCE" --arg r "$REG" --arg s "$RES" \
-  '.contracts = (.contracts + {castle: $c, extruction: $f, agentRegistry: $r, agentResolver: $s}) | .note = "LOCAL anvil fork rehearsal, not Sepolia"' "$DEP" > "$OUT"
-echo "castle $CASTLE (fence $FENCE; live registry $REG, resolver $RES, router $ROUTER; anchor $ANCHOR) on $RPC; wrote $OUT"
+  --arg j "$JACK" '.contracts = (.contracts + {castle: $c, extruction: $f, jackHook: $j, agentRegistry: $r, agentResolver: $s}) | .note = "LOCAL anvil fork rehearsal, not Sepolia"' "$DEP" > "$OUT"
+echo "castle $CASTLE (fence $FENCE, JackHook $JACK; live registry $REG, resolver $RES, router $ROUTER, CCA factory $(ext ccaFactory); anchor $ANCHOR) on $RPC; wrote $OUT"

@@ -8,7 +8,7 @@ The running record of the feefifofum build: what was done, who did it, which com
 - **Deadline:** Sun 27 Sep 00:00 UTC
 - **Pre-existing product:** handoff (private), baseline `079f8f0`
 - **Earlier product:** the lease edition, retired at 10:51Z on Sat 26 Sep. Its code and full worklog are at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition).
-- **Last regenerated:** Sat 12:02Z
+- **Last regenerated:** Sat 12:07Z
 
 All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified).
 
@@ -81,12 +81,12 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 | Name | Owner / resolver | Status | Tx |
 |---|---|---|---|
-| quote.feefifofum.eth | 0x67Cc…0C99 (registrar), resolver = OffchainQuoteResolver | pending c-deploy |  |
+| quote.feefifofum.eth | 0x67Cc…0C99; resolver OffchainQuoteResolver 0x2D18…A76a | live: UniversalResolverV2 reverts OffchainLookup (checked by SirKit) | [0xebd3cb53…](https://sepolia.etherscan.io/tx/0xebd3cb532669b8c6a6ea2a2dbe0a1f6c30586a861105980f7fa726123e01b258) (122,841 gas) |
 | fee / fi / fo / fum / agy .feefifofum.eth | crew EOAs (see Agents) | live since the lease edition |  |
 
 ## Wallets
 
-Live balances read at block 11786096.
+Live balances read at block 11786119.
 
 | Wallet | handoff agent | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -97,7 +97,7 @@ Live balances read at block 11786096.
 | fi | fi | [`0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2`](https://sepolia.etherscan.io/address/0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2) | fi.feefifofum.eth (live; resolves via UniversalResolverV2 to this EOA; handoff ens_name set with ens_proof, platform 95932ef) | 0.004 ETH [0x742d1ba8…](https://sepolia.etherscan.io/tx/0x742d1ba88af97c175cd2ee407a9e128876189576f4d4cacb3b3ba555b4daca1b) / 2 USDC [0xc5df2983…](https://sepolia.etherscan.io/tx/0xc5df298310764455ab7f7292214dac2df1bf04a922d9880aa359b3a48e1899bd); +0.004 [0x5e0c7655…](https://sepolia.etherscan.io/tx/0x5e0c7655b6ccb82a572dd9ca5978cdd1b11bec06e18a3e8c7b511c45d6ead3a9); +0.02 ETH [0xf7b1787b…](https://sepolia.etherscan.io/tx/0xf7b1787b0ef45ead0fb094fcf14888960e70e88ef66e0975433fb79aa0efbee6) | 0.00201 / 2.00 / 0.00100 |
 | fo | fo | [`0x8689a407A2488A5b2f2De05d2C6978a798f93D56`](https://sepolia.etherscan.io/address/0x8689a407A2488A5b2f2De05d2C6978a798f93D56) | fo.feefifofum.eth (live; resolves via UniversalResolverV2 to this EOA; handoff ens_name set with ens_proof, platform 95932ef) | 0.001 ETH [0x0033036a…](https://sepolia.etherscan.io/tx/0x0033036adf3a82bc53bfb4e08c90592c30679981365985ccf242123fa883744b); +0.005 ETH [0xa4ade13b…](https://sepolia.etherscan.io/tx/0xa4ade13bad70596f7ab201a2b57d7d717f6554bd8da93a9a503ed88560b10fa2); 5 USDC [0x439268aa…](https://sepolia.etherscan.io/tx/0x439268aa2116dd0eab8768e7a5af7a6786d1cd484cfbfb8e7d9082761102f484) (backup auction bidder) | 0.00200 / 3.50 / 0.00088 |
 | fum | fum | [`0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2`](https://sepolia.etherscan.io/address/0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2) | fum.feefifofum.eth (live; resolves via UniversalResolverV2 to this EOA; handoff ens_name set with ens_proof, platform 95932ef) | 0.003 ETH [0xd63f3304…](https://sepolia.etherscan.io/tx/0xd63f33041b7a3ac024ecaba8fb6c73eb0dd95e0b8c372c1ff8d2cc7582a709c6) / 2 USDC [0xad17fe88…](https://sepolia.etherscan.io/tx/0xad17fe88e2310c40cf758e8bd611e382a3226e48d414f5093713bda1a2578115); +0.002 [0xdc880c47…](https://sepolia.etherscan.io/tx/0xdc880c4714ce6eb5881934e72cd8063e47a981391fce53b7191bcc8835e3ef62); +0.02 ETH [0x16bab3ec…](https://sepolia.etherscan.io/tx/0x16bab3ec1fc09314d8cbc6b6726924b1f8e80352599065537ebc6d20c7ca8564) | 0.00101 / 2.00 / 0.00100 |
-| castle (service) | castle (agent-smith; the castle EOA is the ENSv2 registry admin) | [`0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99`](https://sepolia.etherscan.io/address/0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99) |  | 0.005 ETH [0xaeba391d…](https://sepolia.etherscan.io/tx/0xaeba391d38c81761afbf1dd52db8365162e66e05d28f63d07a58811181746ceb) + [0x76c425e7…](https://sepolia.etherscan.io/tx/0x76c425e74d6123e6115529e22daea9c88d3ecd79af59b6104f2d112acd03c20d); +0.005 ETH [0x49d1e57c…](https://sepolia.etherscan.io/tx/0x49d1e57cdfd784a32d1ec6fb9b5cca7892ffd4afbc333ab8bef282688a678968) | 0.00037 / 0.00 / 0.00000 |
+| castle (service) | castle (agent-smith; the castle EOA is the ENSv2 registry admin) | [`0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99`](https://sepolia.etherscan.io/address/0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99) |  | 0.005 ETH [0xaeba391d…](https://sepolia.etherscan.io/tx/0xaeba391d38c81761afbf1dd52db8365162e66e05d28f63d07a58811181746ceb) + [0x76c425e7…](https://sepolia.etherscan.io/tx/0x76c425e74d6123e6115529e22daea9c88d3ecd79af59b6104f2d112acd03c20d); +0.005 ETH [0x49d1e57c…](https://sepolia.etherscan.io/tx/0x49d1e57cdfd784a32d1ec6fb9b5cca7892ffd4afbc333ab8bef282688a678968) | 0.00023 / 0.00 / 0.00000 |
 | agy | agy (validator; handoff wallet = this EOA via proof of possession, 105f1dd) | [`0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c`](https://sepolia.etherscan.io/address/0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c) | agy.feefifofum.eth (live; handoff ens_name set with ens_proof) | +0.01 ETH [0xd2636171…](https://sepolia.etherscan.io/tx/0xd263617119221dd770d137dc419ecc7c75c3092b950c390a9c2d78a427370566); 6 USDC [0x38ac01d8…](https://sepolia.etherscan.io/tx/0x38ac01d8f9aadc8009e48bf348ef7cf7a44e6f1315ed0077e759c5368a693a5f) (to bid as an outside Jack); +5 USDC [0x7383f639…](https://sepolia.etherscan.io/tx/0x7383f639e32cde9075d8433e94fb5929e96a22a755c87f0bf91de3bde217d3a1) for the shift-change bid | 0.00107 / 15.40 / 0.00000 |
 
 ## Service and miniapp
@@ -172,3 +172,5 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 11:55Z | impecc | Deck (10 slides) as a private claude.ai artifact; PRODUCT.md and docs/video-script.md rewritten for this product (3adb718); miniapp mock 100/100 (58fd86f). |
 | Sat 11:55Z | korg | v-e2e contract-level demo twice on forks with cheatcodes (dea47ea): 80% ships, greedy OverAllocated, quote registered, OffchainLookup, harp fill then QuoteExpired, v4 JIT swap, no dock. |
 | Sat 12:02Z | mister-anderson | c-deploy LIVE on Sepolia (blocks 11786070 to 11786074): PriceExtruction, CastleVault, OffchainQuoteResolver, CastleJITHook (CREATE2), and the pool initialized. All 5 have status 1, cost 0.006927 ETH of the 0.012 share, and all 4 contracts are Sourcify exact_match. SirKit checked the receipts, the code, the owner, the resolver IExtendedResolver support, the hook flags 0x888, pool slot0 and Sourcify independently. deployments/sepolia.json is at 98428e7. register(quote) from 0x67Cc is pending. |
+| Sat 12:07Z | agent-smith | quote.feefifofum.eth registered from 0x67Cc with the OffchainQuoteResolver (block 11786115, 0.000144 ETH). SirKit checked on live Sepolia: getResolver(quote) is 0x2D18…A76a, and UniversalResolverV2 reverts OffchainLookup (0x556f1830). With CCIP-Read on, it reaches the gateway, which answers 404 until agent-smith pushes it (ETA 12:30Z). |
+| Sat 12:07Z | handoff-claude | fi's key is on helen at a 0600 path outside the checkout (it derives 0xB6eA…40b2), set through a systemd drop-in with CASTLE_FI_KEY_PATH. |

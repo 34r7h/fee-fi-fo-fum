@@ -1,0 +1,6 @@
+{"t":"2026-09-26T12:36:32.394Z","service":"castle","port":18842,"rpcs":1,"fiKeyLoaded":true,"fi":"0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2"}
+{"t":"2026-09-26T12:36:52.982Z","gateway":"answered","key":"quote:USDC:WETH:500000","quote":"q-1790426242-1","amountIn":"500000","amountOut":"185713462260794","validUntil":1790426242,"digest":"0x70b626c007e39ace8e29d334b1956104e5ea7cb975510c49365fdc928b18910d","ms":119}
+{"t":"2026-09-26T12:37:57.408Z","gateway":"answered","key":"quote:USDC:WETH:500000","quote":"q-1790426307-3","amountIn":"500000","amountOut":"185713462260794","validUntil":1790426307,"digest":"0xb6dc682c97deb11e0c9bb5d279a8dc3082520cee0fd3b8b5ee799730ce363cb0","ms":20}
+{"t":"2026-09-26T12:37:57.442Z","gateway":"answered","key":"castle","quote":null,"validUntil":1790426307,"digest":"0x1b8a293055c6b789da803010536d390f6eeec133f74af2c7afe1eb72069ba0a2","ms":1}
+{"t":"2026-09-26T12:37:57.449Z","gateway":"refused","status":404,"message":"unknown key \"avatar\": use quote:<tokenIn>:<tokenOut>:<amountIn> (USDC or WETH, base units) or castle","ms":0}
+{"t":"2026-09-26T12:37:57.477Z","gateway":"answered","key":"quote:WETH:USDC:100000000000000","quote":"q-1790426307-4","amountIn":"100000000000000","amountOut":"268694","validUntil":1790426307,"digest":"0x77405851505641103d3522ae6445db662c58558ae3240ced256f67e131e6bade","ms":20}

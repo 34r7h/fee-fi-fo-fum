@@ -1,0 +1,1 @@
+{"jack":"stale","quoteId":"q-1790426372-1","validUntil":1790426372,"tx":"0xf7a358a4b13cfec4a68d66d9a0c3762e528c4e005fda2f3de23f0118266de934","status":"reverted","revert":"QuoteExpired(1790426372)","recorded":{"recorded":true,"status":"reverted","revert":"QuoteExpired(1790426372)","tx":"0xf7a358a4b13cfec4a68d66d9a0c3762e528c4e005fda2f3de23f0118266de934"}}

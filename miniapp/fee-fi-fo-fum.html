@@ -155,6 +155,9 @@ h2.reg .lt{height:26px}
 /* frieze */
 .frieze{display:flex;flex-direction:row-reverse;flex-wrap:wrap;justify-content:flex-end;align-content:flex-start;height:calc(234px + 3.2px);overflow:hidden;overflow:clip;overflow-anchor:none;border-top:1.6px solid var(--ink);border-bottom:1.6px solid var(--ink)}
 .scene{flex:1 0 auto;width:max-content;min-width:200px;max-width:100%;height:234px;padding:12px 18px 10px;border-left:1.4px solid var(--thread);animation:unroll .6s var(--ease) both}
+.frieze[data-open]{height:auto}
+.unroll{margin-top:10px;border:1.4px solid var(--ink);background:var(--ground);border-radius:999px;padding:5px 13px;font-size:13px;font-weight:700;transition:background .2s var(--ease)}
+.unroll:hover{background:var(--linen)}
 .vg{display:block;width:168px;height:90px;margin:4px 0 10px}
 .vg.big{width:180px;height:96px;flex:none}
 .scene .ti{display:flex;flex-wrap:wrap;gap:4px 5px;color:var(--ink);margin-bottom:10px}
@@ -293,8 +296,9 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
 
       <section aria-labelledby="h-tale">
         <h2 class="reg" id="h-tale" data-lt="THE TAPESTRY"></h2>
-        <p class="note" style="margin:-4px 0 10px">Every event, stitched as a scene. The newest is on the right, and older scenes roll off to the left.</p>
+        <p class="note" style="margin:-4px 0 10px">Every event, stitched as a scene, the newest on the right. Unroll the tapestry to read the whole tale.</p>
         <div class="frieze" data-r="frieze" aria-live="polite"></div>
+        <button class="unroll" data-r="unroll" type="button" hidden></button>
       </section>
 
       <div class="band" aria-hidden="true"></div>
@@ -589,12 +593,25 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       case 'castle.dissolved': S.dissolved = true; break;
       case 'castle.relinked': S.relink = ev; break;
     }
-    var sc = scene(ev), prev = S.scenes[S.scenes.length - 1];
-    if (sc && ev.type === 'lease.renewed' && prev && prev.ev.type === 'lease.renewed' && prev.ev.holderAgent === ev.holderAgent && String(prev.ev.epoch) === String(ev.epoch)) {
-      sc.n = (prev.n || 1) + 1;
-      sc.gl[1] = 'sealed by fo, ' + sc.n + ' renewals in a row';
-      S.scenes[S.scenes.length - 1] = sc; S.sceneRev = (S.sceneRev || 0) + 1;
-    } else if (sc) { S.scenes.push(sc); if (S.scenes.length > 150) S.scenes.shift(); }
+    var sc = scene(ev);
+    if (!sc) return;
+    // A renewal is the heartbeat, not a new chapter: it folds into this epoch's lease scene (the claim or the first
+    // renewal), so the newest scene is always the latest thing that happened to the castle.
+    if (ev.type === 'lease.renewed') {
+      for (var i = S.scenes.length - 1; i >= 0; i--) {
+        var ls = S.scenes[i], le = ls.ev;
+        if ((le.type === 'lease.renewed' || le.type === 'lease.claimed') && String(le.epoch) === String(ev.epoch) && le.holderAgent === ev.holderAgent) {
+          ls.n = (ls.n || (le.type === 'lease.renewed' ? 1 : 0)) + 1;
+          ls.last = ev;
+          (S.dirty || (S.dirty = [])).push(ls.id);
+          return;
+        }
+        if (le.type === 'lease.renewed' || le.type === 'lease.claimed' || le.type === 'lease.expired') break;
+      }
+    }
+    sc.id = S.sceneSeq = (S.sceneSeq || 0) + 1;
+    S.scenes.push(sc);
+    if (S.scenes.length > 150) S.scenes.shift();
   }
 
   // The fence rule, the same order as FeeFiFoFumExtruction: epoch first, then time.
@@ -877,7 +894,9 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       fill(el, [h('div', { class: 'dormant' }, [vignette('sprout', true), h('p', { class: 'empty', text: 'No auction is open. When a shift hands over gold it doesn’t want, or the castle falls with nobody to claim it, the gold goes up the beanstalk: a Uniswap CCA that any Jack with an ENS name may climb.' })]), h('div')]);
       return;
     }
-    var W = 640, H = 250, L = 58, Rr = 16, T = 14, B = 34;
+    // drawn at the size it shows, so the axis type stays at 11.5px on a phone
+    var narrow = root.getAttribute('data-size') !== 'full';
+    var W = narrow ? 340 : 640, H = narrow ? 230 : 250, L = 58, Rr = 16, T = 14, B = 34;
     var pts = a.points.map(function (p) { return { b: Number(p.block), p: Number(p.price.usdcPerWeth) }; });
     var bidsP = a.bids.map(function (b) { return Number(b.maxPrice.usdcPerWeth); });
     var fl = Number(a.floor.usdcPerWeth);
@@ -888,12 +907,12 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     function Y(p) { return T + (H - T - B) * (1 - (p - lo) / (hi - lo)); }
     var g = [];
     // the weave: price rows and block columns, exact ticks
-    var step = niceStep((hi - lo) / 5);
+    var step = niceStep((hi - lo) / (narrow ? 4 : 5));
     for (var v = Math.ceil(lo / step) * step; v <= hi; v += step) {
       g.push(sv('path', { d: 'M' + L + ' ' + Y(v).toFixed(1) + 'H' + (W - Rr), stroke: '#E6DAC0', 'stroke-width': 1.2 }));
       g.push(sv('text', { x: L - 8, y: (Y(v) + 4).toFixed(1), 'text-anchor': 'end', class: 'num' }, px(v)));
     }
-    var bs = niceStep((b1 - b0) / 6) || 1;
+    var bs = niceStep((b1 - b0) / (narrow ? 4 : 6)) || 1;
     for (var bb = b0; bb <= b1; bb += bs) {
       g.push(sv('path', { d: 'M' + X(bb).toFixed(1) + ' ' + T + 'V' + (H - B), stroke: '#E6DAC0', 'stroke-width': 1.2 }));
       g.push(sv('text', { x: X(bb).toFixed(1), y: H - B + 18, 'text-anchor': 'middle', class: 'num' }, '+' + (bb - b0)));
@@ -961,20 +980,35 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     return h('a', { class: 'tx num', href: S.config.explorer + '/tx/' + tx, target: '_blank', rel: 'noopener' }, short(tx));
   }
 
-  var drawnScenes = 0, drawnRev = 0;
+  var drawnFor = null, drawnId = 0, sceneNodes = {};
+  function sceneEl(sc) {
+    var ev = sc.last || sc.ev, gl = sc.gl.slice();
+    if (sc.n) gl[1] = (sc.ev.type === 'lease.claimed' ? 'then ' : '') + 'sealed by fo, ' + sc.n + (sc.n === 1 ? ' renewal' : ' renewals') + ', lease to ' + hhmmss(Number(ev.expiry) * 1000);
+    var gloss = gl.filter(Boolean).map(function (x, i) { return h('div', null, i === 0 ? h('b', { text: x }) : x); });
+    var meta = h('div', { class: 'gl num' }, [hhmmss(ev.t || clock()), ev.block ? ' · block ' + ev.block : '', ' · ', txEl(ev.tx, ev)]);
+    return h('div', { class: 'scene', 'data-tone': sc.tone || null }, [
+      h('div', { class: 'ti', role: 'img', 'aria-label': sc.ti }, sc.ti.split(' ').map(function (w) { return letters(w, true); })),
+      vignette(VK[sc.icon] === 'fill' && sc.tone === 'woad' ? 'wide' : VK[sc.icon] || 'begin'), h('div', { class: 'gl' }, gloss), meta
+    ]);
+  }
   function drawFrieze() {
     var el = R('frieze');
-    if (drawnScenes > S.scenes.length) { el.replaceChildren(); drawnScenes = 0; drawnRev = S.sceneRev || 0; }
-    if ((S.sceneRev || 0) !== drawnRev && drawnScenes > 0) { drawnRev = S.sceneRev; if (el.firstChild) el.removeChild(el.firstChild); drawnScenes--; }
-    for (; drawnScenes < S.scenes.length; drawnScenes++) {
-      var sc = S.scenes[drawnScenes], ev = sc.ev;
-      var gloss = sc.gl.filter(Boolean).map(function (x, i) { return h('div', null, i === 0 ? h('b', { text: x }) : x); });
-      var meta = h('div', { class: 'gl num' }, [hhmmss(ev.t || clock()), ev.block ? ' · block ' + ev.block : '', ' · ', txEl(ev.tx, ev)]);
-      el.insertBefore(h('div', { class: 'scene', 'data-tone': sc.tone || null }, [
-        h('div', { class: 'ti', role: 'img', 'aria-label': sc.ti }, sc.ti.split(' ').map(function (w) { return letters(w, true); })), vignette(VK[sc.icon] === 'fill' && sc.tone === 'woad' ? 'wide' : VK[sc.icon] || 'begin'), h('div', { class: 'gl' }, gloss), meta
-      ]), el.firstChild);
-    }
+    if (drawnFor !== S) { el.replaceChildren(); drawnFor = S; drawnId = 0; sceneNodes = {}; }
+    (S.dirty || []).forEach(function (id) {
+      var node = sceneNodes[id], sc = null;
+      for (var i = S.scenes.length - 1; i >= 0 && !sc; i--) if (S.scenes[i].id === id) sc = S.scenes[i];
+      if (node && sc && node.parentNode) { var nn = sceneEl(sc); nn.style.animation = 'none'; node.replaceWith(nn); sceneNodes[id] = nn; }
+    });
+    S.dirty = [];
+    S.scenes.forEach(function (sc) {
+      if (sc.id <= drawnId) return;
+      drawnId = sc.id;
+      el.insertBefore(sceneNodes[sc.id] = sceneEl(sc), el.firstChild);
+    });
     while (el.children.length > 40) el.removeChild(el.lastChild);
+    var n = el.children.length, t = R('unroll');
+    t.hidden = n < 2;
+    t.textContent = el.dataset.open ? 'Roll the tapestry back up' : 'Unroll the whole tapestry (' + n + ' scenes)';
   }
 
   var drawnFills = -1;
@@ -1214,12 +1248,12 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     if (!MOCK) return;
     var el = (clock() - MOCK.t0) / 1000;
     while (MOCK.i < MOCK.T.length && MOCK.T[MOCK.i].at <= el) { feed(MOCK.T[MOCK.i].ev); MOCK.i++; }
-    if (el > MOCK.end) { var why = MOCK.why; drawnScenes = 1e9; drawnFills = -1; drawnReplay = -1; startMock(why); }
+    if (el > MOCK.end) { var why = MOCK.why; drawnFills = -1; drawnReplay = -1; startMock(why); }
     markBeat(el);
   }
   // Jump the loop to a beat: rebuild from zero with the clock moved back, so every countdown stays honest.
   function jump(at) {
-    var why = MOCK.why; drawnScenes = 1e9; drawnFills = -1; drawnReplay = -1;
+    var why = MOCK.why; drawnFills = -1; drawnReplay = -1;
     startMock(why);
     var shift = at * 1000;
     MOCK.T.forEach(function (x) { x.ev.t -= shift; if (x.ev.expiry) x.ev.expiry -= at; if (x.ev.type === 'snapshot') { x.ev.lease.expiry -= at; x.ev.leases.forEach(function (l) { l.expiry -= at; l.t -= shift; }); } });
@@ -1251,7 +1285,8 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     var w = root.getBoundingClientRect().width, rn = root.getRootNode ? root.getRootNode() : null, host = rn && rn.host;
     var boxH = host ? (host.clientHeight || (host.parentElement ? host.parentElement.clientHeight : 0)) : window.innerHeight;
     var short = boxH > 0 && boxH < 420;
-    root.setAttribute('data-size', short && w < 268 ? 'watch' : short && w < 420 ? 'mini' : w < 620 ? 'compact' : 'full');
+    var sz = short && w < 268 ? 'watch' : short && w < 420 ? 'mini' : w < 620 ? 'compact' : 'full';
+    if (root.getAttribute('data-size') !== sz) { root.setAttribute('data-size', sz); dirty = true; }
   }
   if (typeof ResizeObserver === 'function') new ResizeObserver(size).observe(root);
   size();
@@ -1263,6 +1298,12 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       root.querySelectorAll('[data-view]').forEach(function (v) { v.hidden = v.getAttribute('data-view') !== tab; });
       drawnReplay = -1; dirty = true;
     });
+  });
+  R('unroll').addEventListener('click', function () {
+    var f = R('frieze');
+    if (f.dataset.open) delete f.dataset.open; else f.dataset.open = '1';
+    R('unroll').setAttribute('aria-expanded', String(!!f.dataset.open));
+    drawFrieze();
   });
   root.querySelectorAll('[data-lt]').forEach(function (n) { put(n, letters(n.getAttribute('data-lt'), true)); });
   put(R('mark'), letters('fee·fi·fo·fum'));

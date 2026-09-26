@@ -47,7 +47,8 @@ tx() { cast send "$@" --rpc-url "$RPC" --unlocked >/dev/null; }
 dns() { node -e 'const b=[];for(const l of process.argv[1].split(".")){const e=Buffer.from(l);b.push(e.length,...e)}b.push(0);console.log("0x"+Buffer.from(b).toString("hex"))' "$1"; }
 
 # The fence and JackHook, then Castle (its Config is one struct, so the creation code is sent with cast).
-create() { (cd "$ROOT/contracts" && forge create "$@" --rpc-url "$RPC" --unlocked --from "$OPERATOR" --broadcast --json 2>/dev/null | grep -o '"deployedTo": *"0x[0-9a-fA-F]*"' | grep -o '0x[0-9a-fA-F]*'); }
+# --constructor-args is variadic in forge, so it goes last.
+create() { local c=$1; shift; (cd "$ROOT/contracts" && forge create "$c" --rpc-url "$RPC" --unlocked --from "$OPERATOR" --broadcast --json "$@" 2>/dev/null | grep -o '"deployedTo": *"0x[0-9a-fA-F]*"' | grep -o '0x[0-9a-fA-F]*'); }
 FENCE=$(create src/FeeFiFoFumExtruction.sol:FeeFiFoFumExtruction)
 JACK=$(create src/JackHook.sol:JackHook --constructor-args "$REG")
 [ -n "$FENCE" ] && [ -n "$JACK" ] || { echo "fence or JackHook failed to deploy" >&2; exit 1; }

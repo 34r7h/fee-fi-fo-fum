@@ -91,6 +91,51 @@
           "registryRoot": "REGISTRAR|RENEW = (1<<0)|(1<<16) = 65537",
           "resolverRoot": "SET_DATA|LINK = (1<<24)|(1<<28) = 285212672"
         }
+      },
+      "roles": {
+        "registryRootGrant": {
+          "bitmap": 65537,
+          "meaning": "REGISTRAR 1<<0 | RENEW 1<<16",
+          "tx": "0xb0fc68f070c60273119362116f5742046ff05f8fcddf7bd5c53b0910a4320a71",
+          "by": "0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99"
+        },
+        "resolverRootGrant": {
+          "bitmap": 285212672,
+          "meaning": "SET_DATA 1<<24 | LINK 1<<28",
+          "tx": "0x611b19cea6ab2a676712d6a2f955ec122fcbfc4cc10212e8efecde9f5d4a41fd",
+          "by": "0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99"
+        },
+        "proof": {
+          "block": 11784335,
+          "registry.hasRootRoles(65537,Castle)": true,
+          "resolver.hasRootRoles(285212672,Castle)": true
+        }
+      },
+      "anchorSeed": {
+        "tx": "0x7a9d2f1a650f534681bfca094dbb6a3a63f81299b22798bb7ccd3f567c0e5d51",
+        "block": 11784333,
+        "priceQ96": "212946088512823943940",
+        "usdcPerWeth": 2687.75750636,
+        "source": {
+          "feed": "0x694AA1769357215DE4FAC081bf1f309aDC325306",
+          "description": "Chainlink ETH / USD (Sepolia), 8 decimals, USD taken as USDC",
+          "readAtBlock": 11784332,
+          "roundId": "18446744073709587959",
+          "answer": "268775750636",
+          "updatedAt": 1790401272
+        },
+        "conversion": "priceQ96 = answer * 1e6 * 2**96 / (1e8 * 1e18)  (raw USDC per raw WETH, Q96)"
+      },
+      "funding": {
+        "weth": {
+          "amount": "4000000000000000",
+          "tx": "0x3a77c9f0a01a02eaab81f016d95bf747b8a6b3def8f99a856ec9a1f83f11c557"
+        },
+        "usdc": {
+          "amount": "8000000",
+          "tx": "0x6bc6cb631df32477eb47f110d96167a3630c35639fb8f38a764279bb8eedd3b0"
+        },
+        "wrap": "0xd980a07a8201a0578d2b4afbc4a0b5adf9c493c435ff1251a8683679e752ec57"
       }
     }
   }

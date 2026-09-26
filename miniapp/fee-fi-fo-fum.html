@@ -547,6 +547,19 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     for (var k in n) if (same(k, addr)) return n[k];
     return null;
   }
+  // The caption under the ring, told only from the lease events seen: who holds it, since which claim, how many
+  // renewals and when the last one landed. Nothing here comes from config.
+  function leaseStory(L, st) {
+    var mine = S.leases.filter(function (x) { return x.epoch === L.epoch; });
+    var claim = null, rn = [];
+    mine.forEach(function (x) { if (x.kind === 'claim') claim = x; else if (x.kind === 'renew') rn.push(x); });
+    var out = [h('b', { text: up(L.holderAgent) }), (st === 'LIVE' ? ' holds the castle' : ' held the castle') + ', epoch ' + ep(L.epoch)];
+    if (claim && claim.t) out.push(', claimed at ' + hhmmss(claim.t));
+    if (rn.length) out.push('. Renewed ' + (rn.length === 1 ? 'once' : rn.length + ' times') + ' with fo’s seal, last at ' + hhmmss(rn[rn.length - 1].t));
+    if (st !== 'LIVE') out.push((rn.length ? '; the lease ran out at ' : '. The lease ran out at ') + hhmmss(L.expiry * 1000));
+    out.push('.');
+    return out;
+  }
   function fateEl(f) {
     var label = f === 'live' ? 'LIVE' : f === 'wind-down' ? 'WIND-DOWN' : f === 'fenced' ? 'FENCED' : '?';
     return h('span', { class: 'fate', 'data-f': f }, [stitch(f, ''), label]);
@@ -827,8 +840,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
     RD.sub.textContent = L ? (st === 'LIVE' ? left(rem) + ' left on the lease' : 'lapsed ' + left(-rem) + ' ago') : 'no lease yet';
     RD.sub2.textContent = L ? 'epoch ' + ep(L.epoch) : '';
     var line = R('leaseLine');
-    var sh = S.shifts[act];
-    fill(line, L ? [h('b', { text: up(L.holderAgent) }), st === 'LIVE' ? ' holds the castle' : ' held the castle', sh ? ' during ' + sh.city + '’s shift' + (sh.agent && sh.agent !== L.holderAgent ? ', which the roster gives to ' + sh.agent : '') : '', '. Renewed every ' + (S.config.renewEverySeconds || 40) + ' s with fo’s seal' + (S.mode === 'mock' ? ' (mock time; the live lease is 120 s, renewed every 40 s).' : '.')] : 'Waiting for the castle’s first lease.');
+    fill(line, L ? leaseStory(L, st) : 'Waiting for the castle’s first lease.');
   }
 
   // the giant: calm when live, one eye open in wind-down, awake and roaring when a stale shift is fenced

@@ -1,0 +1,28 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+test = "test"
+script = "script"
+# Matches 1inch swap-vm release/1.0.2 so the router we deploy is built exactly as upstream builds it.
+solc_version = "0.8.30"
+optimizer = true
+optimizer_runs = 700
+via_ir = true
+# Tests stay compatible with halmos/echidna/medusa (forge 1.8 defaults this on in `forge init`).
+dynamic_test_linking = false
+fs_permissions = [{ access = "read", path = "./deployments" }, { access = "read-write", path = "./out-abi" }]
+
+[profile.default.optimizer_details]
+yul = true
+yulDetails = { stackAllocation = true, optimizerSteps = "dhfoDgvulfnTUtnIf[xa[r]EscLMcCTUtTOntnfDIulLculVcul Tpeul]jmul[jul] VcTOcul jmul : fDnTOcmu" }
+
+[rpc_endpoints]
+sepolia = "${SEPOLIA_RPC_URL}"
+sepolia_fallback = "${SEPOLIA_RPC_URL_FALLBACK}"
+
+[etherscan]
+sepolia = { key = "${ETHERSCAN_API_KEY}", chain = 11155111 }
+
+[fmt]
+line_length = 120

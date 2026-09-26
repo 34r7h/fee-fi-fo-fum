@@ -12,7 +12,7 @@ Status key: `todo` · `in_progress` · `review` (pending verification) · `done`
 
 ## Board
 
-### P0 BLOCKERS: Continuity registration, ENSv2 lease probes, wallets, handoff baseline
+### P0 BLOCKERS: Continuity registration, ENSv2 lease probes, agent wallets
 
 | Task | Owner | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|

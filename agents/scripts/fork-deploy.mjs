@@ -156,15 +156,20 @@ const CL = parseAbi(['function latestRoundData() view returns (uint80, int256, u
 const [[, answer], clDec] = await Promise.all([pub.readContract({ address: A.chainlinkEthUsd, abi: CL, functionName: 'latestRoundData' }), pub.readContract({ address: A.chainlinkEthUsd, abi: CL, functionName: 'decimals' })]);
 const HOARD_WETH = HOARD_WETH_ARG === 'balanced' ? (HOARD_USDC * 10n ** 12n * 10n ** BigInt(clDec)) / answer : BigInt(HOARD_WETH_ARG);
 const usdcTo = (who, amount) => rpc('anvil_setStorageAt', [A.usdc, keccak256(encodeAbiParameters([{ type: 'address' }, { type: 'uint256' }], [who, USDC_BALANCES_SLOT])), pad(toHex(amount), { size: 32 })]);
-await usdcTo(vault.address, HOARD_USDC);
-await send(OWNER, A.weth, ERC20, 'deposit', [], null, HOARD_WETH);
-await send(OWNER, A.weth, ERC20, 'transfer', [vault.address, HOARD_WETH], 'fund the hoard (WETH)');
+// Only what the vault lacks: on a fork taken after a-live's phase A the treasury's live funding is already there.
+const held = (t) => pub.readContract({ address: t, abi: ERC20, functionName: 'balanceOf', args: [vault.address] });
+const [hu0, hw0] = await Promise.all([held(A.usdc), held(A.weth)]);
+if (hu0 < HOARD_USDC) await usdcTo(vault.address, HOARD_USDC);
+if (hw0 < HOARD_WETH) {
+  await send(OWNER, A.weth, ERC20, 'deposit', [], null, HOARD_WETH - hw0);
+  await send(OWNER, A.weth, ERC20, 'transfer', [vault.address, HOARD_WETH - hw0], 'fund the hoard (WETH)');
+}
 for (const id of Object.keys(crew)) await rpc('anvil_setBalance', [crew[id].address, '0xde0b6b3a7640000']);   // 1 ETH
 await rpc('anvil_setBalance', [AGY, '0xde0b6b3a7640000']);
 await usdcTo(AGY, 20_000_000n);
 await send(AGY, A.weth, ERC20, 'deposit', [], null, 10n ** 16n);
 const [hu, hw] = await Promise.all([pub.readContract({ address: A.usdc, abi: ERC20, functionName: 'balanceOf', args: [vault.address] }), pub.readContract({ address: A.weth, abi: ERC20, functionName: 'balanceOf', args: [vault.address] })]);
-if (hu !== HOARD_USDC || hw !== HOARD_WETH) throw new Error(`hoard is ${hu} USDC, ${hw} WETH`);
+if (hu < HOARD_USDC || hw < HOARD_WETH) throw new Error(`hoard is ${hu} USDC, ${hw} WETH`);
 
 const forkNote = { rpc: RPC, forkBlock: Number(start.number), mode: adopt ? 'live' : 'fresh', gateway: gatewayUrl, note: adopt ? 'anvil fork of live Sepolia after c-deploy: the deployed contracts, with the resolver pointed at this run\'s gateway' : 'anvil fork of live Sepolia; fork-only addresses' };
 const out = adopt ? { ...live, fork: forkNote, txs } : {
@@ -179,4 +184,4 @@ const out = adopt ? { ...live, fork: forkNote, txs } : {
 };
 fs.mkdirSync(path.dirname(path.resolve(OUT)), { recursive: true });
 fs.writeFileSync(OUT, JSON.stringify(out, null, 2));
-console.log(JSON.stringify({ deployed: true, mode: adopt ? 'live' : 'fresh', forkBlock: Number(start.number), chainlink: Number(answer) / 10 ** Number(clDec), vault: vault.address, priceExtruction: priceEx.address, resolver: resolver.address, hook: hookAddr, poolId, gateway: gatewayUrl, hoard: { USDC: hu.toString(), WETH: hw.toString() }, out: OUT, gas: txs.reduce((a, t) => a + t.gasUsed, 0) }));
+console.log(JSON.stringify({ deployed: true, mode: adopt ? 'live' : 'fresh', forkBlock: Number(start.number), chainlink: Number(answer) / 10 ** Number(clDec), vault: vault.address, priceExtruction: priceEx.address, resolver: resolver.address, hook: hookAddr, poolId, gateway: gatewayUrl, hoard: { USDC: hu.toString(), WETH: hw.toString(), funded: hu0 >= HOARD_USDC && hw0 >= HOARD_WETH ? 'live (the treasury)' : 'fork' }, out: OUT, gas: txs.reduce((a, t) => a + t.gasUsed, 0) }));

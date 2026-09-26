@@ -18,10 +18,11 @@
 #   6. the service's gateway, MCP tools, /stream, /state and /health checked (service/test/gateway-fork.mjs)
 #   7. (STRESS=1) stress, outside the demo: a harp fill sized so committed WETH passes balance x leverage while hen
 #      alone would fit; fum docks harp (greedy is not live, so harp is the lowest priority) and stops
-# The record (each step's JSON, the crew's logs, the stream) lands in RECORD if set.
+# A pass is exit 0 and a last line "PASS: n of n checks": every step is checked (expect and holds below), and the run
+# stops with "FAIL: …" and exit 1 at the first one that does not hold. The record (each step's JSON, the crew's logs, the stream) lands in RECORD if set.
 # The Jack's fills are FILL (0.5 USDC) each, as in the live run.
-#   ./scripts/crew-fork.sh    env: ANVIL_PORT (18841), SVC_PORT (18842), FO_PORT (18843), FORK_URL, FORK_WORK,
-#                                  ARTIFACTS (contracts/out, for a fresh deploy), FILL (500000), STRESS (1),
+#   ./scripts/crew-fork.sh    env: ANVIL_PORT (18841), SVC_PORT (18842), FO_PORT (18843), FORK_URL, FORK_BLOCK (latest), FORK_WORK,
+#                                  ARTIFACTS (contracts/out, for a fresh deploy), FILL (500000), STRESS (1), FO_VIA (poll),
 #                                  RECORD (a directory for the run's record), KEEP=1 (leave it all running),
 #                                  STOP=1 (stop what a KEEP=1 run left)
 set -uo pipefail
@@ -35,6 +36,8 @@ ARTIFACTS=${ARTIFACTS:-$ROOT/contracts/out}
 T=${TMPDIR:-/tmp}; WORK=${FORK_WORK:-${T%/}/feefifofum-crew-fork}
 RECORD=${RECORD:-}
 FILL=${FILL:-500000}; STRESS=${STRESS:-1}
+# castle_route reaches fo as it does live (fo polls the service) unless FO_VIA=direct (the service calls fo's /route).
+FO_VIA=${FO_VIA:-poll}; FO_URL=; [ "$FO_VIA" = direct ] && FO_URL=http://127.0.0.1:$FO_PORT
 FI_KEY=${FI_KEY_PATH:-$HOME/.handoff/agents/fi/sepolia.key}
 export SEPOLIA_RPC_URL=$RPC SEPOLIA_RPC_URL_FALLBACK= SEPOLIA_RPC_URL_FALLBACK_2= CREW_OFFLINE=1 FO_PORT HEARTBEAT_MS=10000
 export DEPLOYMENTS_PATH=$WORK/deployments.json CASTLE_SERVICE_URL=$SVC
@@ -62,7 +65,12 @@ wait_for() { local f=$1 re=$2 secs=$3; for _ in $(seq 1 $((secs / 2))); do guard
 grab() { grep -m1 -E "$2" "$1"; }
 start() { local id=$1; shift; (cd "$AGENTS" && exec env "$@" nohup node run.mjs "$id" >> "$WORK/logs/$id.log" 2>&1) & track $! "run.mjs $id"; }
 state() { curl -sf "$SVC/state"; }
-jack() { local name=$1; shift; guard; (cd "$AGENTS" && node scripts/jack.mjs "$@" 2>&1) | tail -1 | tee "$WORK/steps/$name.json"; }
+# The Jack is agy impersonated here, never a key: a fork tx signed by a real key would be valid on Sepolia too.
+jack() { local name=$1; shift; guard; (cd "$AGENTS" && env -u JACK_KEY_PATH node scripts/jack.mjs "$@" 2>&1) | tail -1 | tee "$WORK/steps/$name.json"; }
+# A step holds only if its JSON line meets its jq condition; the first that does not fails the run with that line.
+CHECKS=0
+expect() { jq -e "$2" "$WORK/steps/$1.json" >/dev/null 2>&1 || fail "$1 did not hold ($2): $(cut -c1-400 "$WORK/steps/$1.json")"; CHECKS=$((CHECKS + 1)); }
+holds() { CHECKS=$((CHECKS + 1)); }
 
 mkdir -p "$WORK"; stop_all > /dev/null
 [ "${STOP:-0}" = 1 ] && exit 0
@@ -72,8 +80,8 @@ rm -rf "$WORK/logs" "$WORK/steps" "$WORK/svc-data" "$WORK/run.log" "$WORK/deploy
 trap stop_all EXIT; trap 'exit 130' INT TERM
 
 say "command: $0 (anvil --fork-url $FORK_URL --port $PORT; service :$SVC_PORT; fo :$FO_PORT; work $WORK)"
-nohup anvil --fork-url "$FORK_URL" --port "$PORT" > "$WORK/anvil.log" 2>&1 &
-track $! "anvil --fork-url $FORK_URL --port $PORT"; ANVIL=$!
+nohup anvil --fork-url "$FORK_URL" ${FORK_BLOCK:+--fork-block-number "$FORK_BLOCK"} --port "$PORT" > "$WORK/anvil.log" 2>&1 &
+track $! "anvil --fork-url $FORK_URL"; ANVIL=$!
 for _ in $(seq 1 60); do curl -sf -X POST -H 'content-type: application/json' --data '{"jsonrpc":"2.0","id":1,"method":"eth_chainId"}' "$RPC" >/dev/null && break; sleep 0.5; done
 listens "$ANVIL" "$PORT" || fail "this run's anvil is not the one listening on $PORT: $(head -2 "$WORK/anvil.log")"
 
@@ -82,7 +90,7 @@ listens "$ANVIL" "$PORT" || fail "this run's anvil is not the one listening on $
 say "0. contracts on the fork: $(jq -c '{mode, forkBlock, chainlink, vault, resolver, hook, poolId, hoard, gas}' "$WORK/steps/0-deploy.json")"
 
 (cd "$ROOT/service" && exec env SEPOLIA_RPC_URL="$RPC" SEPOLIA_RPC_URL_FALLBACK= PORT="$SVC_PORT" CASTLE_DEPLOYMENTS="$DEPLOYMENTS_PATH" \
-  CASTLE_FI_KEY_PATH="$FI_KEY" CASTLE_DATA_DIR="$WORK/svc-data" CASTLE_POLL_SECONDS=2 CASTLE_PUBLIC_URL="$SVC" FO_URL="http://127.0.0.1:$FO_PORT" \
+  CASTLE_FI_KEY_PATH="$FI_KEY" CASTLE_DATA_DIR="$WORK/svc-data" CASTLE_POLL_SECONDS=2 CASTLE_PUBLIC_URL="$SVC" FO_URL="$FO_URL" \
   nohup node src/server.mjs > "$WORK/logs/service.log" 2>&1) &
 track $! "src/server.mjs"; SVCPID=$!
 for _ in $(seq 1 30); do curl -sf "$SVC/health" >/dev/null && break; sleep 1; done
@@ -93,43 +101,58 @@ say "   castle service: $(curl -sf "$SVC/health" | jq -c '{ok, fi, vault}')"
 start fum; start fee; start fo; start fi FI_GREEDY=1
 wait_for "$WORK/logs/fo.log" '"event":"listening"' 30 || fail "fo did not come up: $(tail -2 "$WORK/logs/fo.log" | cut -c1-200)"
 wait_for "$WORK/logs/fum.log" '"event":"ledger"' 60 || fail "fum did not configure the vault: $(tail -2 "$WORK/logs/fum.log" | cut -c1-240)"
-say "1. fum: $(grep '"fn":"set[A-Za-z]*"' "$WORK/logs/fum.log" | jq -c '{fn, tx: .hash, gasUsed}' | tr '\n' ' ')"
+[ "$(grep -c '"event":"tx","fn":"set[A-Za-z]*"' "$WORK/logs/fum.log")" -ge 5 ] || fail "fum did not land its 5 settings (setLeverage x2, setCap x3)"; holds
+say "1. fum: $(grep '"event":"tx","fn":"set[A-Za-z]*"' "$WORK/logs/fum.log" | jq -c '{fn, tx: .hash, gasUsed}' | tr '\n' ' ')"
 wait_for "$WORK/logs/fi.log" '"event":"shipped","strategy":"hen"' 90 || fail "fi did not ship hen: $(tail -2 "$WORK/logs/fi.log" | cut -c1-240)"
+grep -q '"event":"shipped","strategy":"harp"' "$WORK/logs/fi.log" || fail "fi did not ship harp"; holds
 say "   fi shipped: $(grep '"event":"shipped"' "$WORK/logs/fi.log" | jq -c '{strategy, slot, tx, weth, usdc}' | tr '\n' ' ')"
 wait_for "$WORK/logs/fi.log" '"event":"greedy-[a-z]*"' 60 || fail "fi did not try greedy"
+grep -q '"event":"greedy-refused"' "$WORK/logs/fi.log" || fail "greedy was not refused: $(grab "$WORK/logs/fi.log" '"event":"greedy-[a-z]*"' | cut -c1-240)"; holds
 say "   fi greedy (0.5x more, manual gas): $(grab "$WORK/logs/fi.log" '"event":"greedy-[a-z]*"' | jq -c '{event, tx, reason}')"
 for _ in $(seq 1 15); do state | jq -e '.refusals | length > 0' >/dev/null && break; sleep 2; done
+state | jq -e '.refusals | length > 0' >/dev/null || fail "the stream shows no refusal for greedy"; holds
 say "   the stream's refusal: $(state | jq -c '.refusals[-1] | {label, error, errorArgs, tx}')"
 
 # ---- 2. the harp sings: CCIP-Read, then router.swap
 for _ in $(seq 1 30); do state | jq -e '.price.mid' >/dev/null && break; sleep 2; done
 say "2. harp quote by CCIP-Read, filled: $(jack 2-harp quote USDC WETH "$FILL" --save "$WORK/steps/q1.json" | jq -c '{quoteId, signer, amountIn, amountOut, validUntil, tx, status, received}')"
+expect 2-harp '.status == "success" and (.received | tonumber) > 0'
 
 # ---- 3. the hen lays: v4 swap filled just in time
 say "3. v4 swap, hook fills from hen: $(jack 3-v4 v4 USDC "$FILL" | jq -c '{tx, status, gasUsed, received, paid}')"
-wait_for "$WORK/logs/fi.log" '"event":"recentre"' 60 && say "   fee saw hen drift, fi re-centred: $(grab "$WORK/logs/fi.log" '"event":"recentre"' | jq -c '{mid, henMid, driftBps}')"
+expect 3-v4 '.status == "success" and (.received | tonumber) > 0'
+wait_for "$WORK/logs/fi.log" '"event":"recentre"' 60 || fail "fee and fi did not re-centre hen after the v4 swap: $(tail -1 "$WORK/logs/fee.log" | cut -c1-240)"; holds
+say "   fee saw hen drift, fi re-centred: $(grab "$WORK/logs/fi.log" '"event":"recentre"' | jq -c '{mid, henMid, driftBps}')"
 
 # ---- 4. fo routes a UniswapX-format order
 sleep 6
-say "4. fo routes an order (castle_route): $(jack 4-route route USDC WETH "$FILL" | jq -c '{intent, route, compared, quotedOut, received}')"
+say "4. fo routes an order (castle_route): $(jack 4-route route USDC WETH "$FILL" | jq -c '{intent, route, compared, quotedOut, tx, status, received}')"
+expect 4-route '(.route == "harp" or .route == "v4") and .status == "success" and (.received | tonumber) > 0'
 
 # ---- 5. the step-2 quote after it expired
 say "5. the same harp quote 31 s later: $(jack 5-stale stale "$WORK/steps/q1.json" | jq -c '{tx, status, revert, recorded: .recorded.recorded}')"
+expect 5-stale '.status == "reverted" and (.revert | startswith("QuoteExpired")) and .recorded.recorded == true'
 
-grep -q '"event":"docked"' "$WORK/logs/fum.log" && fail "fum docked during the demo path: $(grab "$WORK/logs/fum.log" '"event":"docked"')"
+grep -q '"event":"docked"' "$WORK/logs/fum.log" && fail "fum docked during the demo path: $(grab "$WORK/logs/fum.log" '"event":"docked"')"; holds
 say "   fum docked nothing on the demo path: $(grep -c '"event":"ledger"' "$WORK/logs/fum.log") ledger checks, 0 docks"
 
 # ---- 6. the service: gateway, tools, stream (while harp is live)
 sleep 4
 (cd "$ROOT/service" && node test/gateway-fork.mjs --service "$SVC" --rpc "$RPC" --deployments "$DEPLOYMENTS_PATH") > "$WORK/steps/6-service.json" 2>&1
 say "6. service checks: $(jq -rs '[.[] | select(.check)] | "\(map(select(.ok)) | length) of \(length) pass: " + (map("\(.check) \(if .ok then "ok" else "FAIL" end)") | join(", "))' "$WORK/steps/6-service.json" 2>/dev/null || tail -3 "$WORK/steps/6-service.json")"
+jq -se '[.[] | select(.check)] | length >= 13 and all(.ok)' "$WORK/steps/6-service.json" >/dev/null 2>&1 || fail "the service checks did not all pass (6-service.json)"; holds
 
 # ---- 7. stress: a fill sized to push committed WETH past balance x leverage; fum docks harp and stops
 if [ "$STRESS" = 1 ]; then
   say "7. stress (not in the live run): $(jack 7-stress stress | jq -c '{wethOut, between, harpWeth, henWeth, vaultWeth, amountIn, tx, status}')"
-  wait_for "$WORK/logs/fum.log" '"event":"docked"' 60 && say "   fum docked: $(grab "$WORK/logs/fum.log" '"event":"docked"' | jq -c '{strategy, slot, tx, reason}')" || say "   fum did not dock: $(tail -1 "$WORK/logs/fum.log" | cut -c1-240)"
+  expect 7-stress '.status == "success"'
+  wait_for "$WORK/logs/fum.log" '"event":"docked"' 60 || fail "fum did not dock after the stress fill: $(tail -1 "$WORK/logs/fum.log" | cut -c1-240)"
+  say "   fum docked: $(grab "$WORK/logs/fum.log" '"event":"docked"' | jq -c '{strategy, slot, tx, reason}')"
+  grab "$WORK/logs/fum.log" '"event":"docked"' | jq -e '.strategy == "harp"' >/dev/null || fail "fum docked something other than harp"; holds
   sleep 10
   say "   after: $(state | jq -c '[.strategies[] | {label, docked}]')"
+  [ "$(grep -c '"event":"docked"' "$WORK/logs/fum.log")" = 1 ] || fail "fum docked more than harp"; holds
+  state | jq -e '[.strategies[] | select(.label == "hen" and (.docked | not))] | length > 0' >/dev/null || fail "hen is not live after the stress"; holds
 fi
 
 state > "$WORK/steps/state.json"
@@ -146,4 +169,7 @@ fi
 if [ "${KEEP:-0}" = 1 ]; then
   trap - EXIT
   say "kept up for inspection: anvil $RPC, service $SVC, fo :$FO_PORT; STOP=1 FORK_WORK=$WORK $0 stops them"
+else
+  stop_all
 fi
+say "PASS: $CHECKS of $CHECKS checks (STRESS=$STRESS, FO_VIA=$FO_VIA, fork block $(jq -r .forkBlock "$WORK/steps/0-deploy.json"))"

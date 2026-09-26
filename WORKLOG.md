@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 16:32 JST
+- **Last regenerated:** 2026-09-26 16:35 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -31,6 +31,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | Validate Castle and FeeFiFoFumExtruction on a Sepolia fork (validation only, no code) <br>`p1-forktests` `f4d2ae68` | agy | agy | Sat 19:45 | done | validated at 2ca27aa (agy); reproduced at 90d4001 by SirKit and handoff-advisor | forge test 144/0; CastleFork 10/10 on a Sepolia fork; paid (receipt 83ba78b0) |
 | **BLOCKER** Deploy and verify Castle and FeeFiFoFumExtruction on Sepolia, then ship the first live strategy <br>`p1-deploy` `1fed769f` | mister-anderson | mister-anderson | Sat 20:30 | done | 7b86321, sepolia.json 99db322 | genesis claim/relink/ship from fee; live fill 0xb349a23c; wind-down fill 0x0065e64a; anchor from Chainlink; co-signed, paid on ethereum-sepolia (receipt 32d41040, eip3009-rail) |
 | **BLOCKER** ICastleLease interface, published before 15:30 JST so the fence and fo can build in parallel <br>`p1-iface` `17a2de4c` | mister-anderson | mister-anderson | Sat 15:30 | done | 3301492, 980fd97, f0c7d65, e11f755 | paid 0.1 USDC (receipt 2af0f738); mister-anderson balance 2.2197 → 2.3197 |
+| Castle v3: zero idle gas liveness (signed heartbeats checked at fill time, challenge/response takeover) <br>`p1-liveness-v3` `182ad6b1` | mister-anderson | mister-anderson | Sat 23:00 | todo |  |  |
 
 ### P1 CASTLE AGENT + ENS NAMES + HANDOFF PLATFORM FIXES
 
@@ -107,7 +108,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784769.
+Live balances read at block 11784782.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -182,6 +183,7 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 16:00 | Sent 20 Sepolia USDC to the SirKit treasury for bids, refills and payouts |
 | Sat 16:18 | Sepolia ETH costs real money (0.03 ETH ≈ $80): no more ETH top-ups; run on current balances |
 | Sat 16:30 | Gas spend is unacceptable: cut every non-essential live tx |
+| Sat 16:48 | Approved ~0.011 ETH for a Castle v3 redeploy (zero idle liveness gas) once fork-tested |
 
 ## Log
 
@@ -356,3 +358,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 16:35 | impecc | Armed the local screen recording of the single live run (4 views of the live miniapp, 1080p, real time). It costs no gas. |
 | Sat 16:37 | agy | Rebriefed on the new account. Swept excess ETH to the treasury ([0x05f62563…](https://sepolia.etherscan.io/tx/0x05f62563bddeb196bdca6a2a3e986f2d2669591ca963d050f971ee9c51140e18)), keeping 0.00107. Fork-only for the MCP bid and rehearsals. |
 | Sat 16:45 | SirKit | Root cause of the running cost: Castle's LEASE_PERIOD is an immutable 120s, so liveness needs an on-chain renew (73k gas ≈ $0.20) every 90s. Ops fix now: renewals only during the live demo run (~$1 per run). Engineering fix assigned to mister-anderson, fork-only until the operator approves a redeploy: off-chain EIP-712 heartbeats checked at fill time, plus a challenge/response takeover, so idle liveness costs zero gas. |
+| Sat 16:49 | SirKit | Opened p1-liveness-v3 (182ad6b1, mister-anderson, 0.2 USDC, due 14:00Z) with 0.2 of budget moved from P2 CCA and P1 agents: fork tests, validators PASS, then one live deploy capped at 0.012 ETH. |

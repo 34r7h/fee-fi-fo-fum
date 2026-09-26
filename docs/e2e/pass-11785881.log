@@ -1,0 +1,16 @@
+No files changed, compilation skipped
+
+Ran 1 test for test/fork/SpecDemoFork.t.sol:SpecDemoForkTest
+[PASS] test_fork_specDemo() (gas: 21785321)
+Logs:
+  gas ship harp 80%: 244468
+  gas ship hen 80%: 224902
+  gas greedy revert: 70153
+  gas register quote: 126181
+  gas harp fill: 199602
+  gas v4 jit swap: 355748
+  fork block: 11785881
+
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 16.11s (10.35s CPU time)
+
+Ran 1 test suite in 16.11s (16.11s CPU time): 1 tests passed, 0 failed, 0 skipped (1 total tests)

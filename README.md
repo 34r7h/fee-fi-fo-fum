@@ -51,6 +51,10 @@ It is an ETHGlobal Tokyo 2026 entry in the Continuity track. The existing projec
 | `docs/` | The plan, naming, sponsor write-ups, FEEDBACK.md and AI_USAGE.md |
 | `WORKLOG.md` | A running record of what was built, by whom, and where it lives on-chain |
 
+## Live
+
+- Castle service (MCP, REST, SSE): https://handoff.lol/t/castle/, with MCP at `/mcp`, tools at `/tools` and the stream at `/stream`
+
 ## Status
 
 Work in progress. See [WORKLOG.md](WORKLOG.md).

@@ -35,7 +35,7 @@ The deploy script mines the salt in [a short loop](https://github.com/34r7h/fee-
 1. It checks three things: the pair is USDC/WETH (`NotCastlePool`), the swap is exact-in (`ExactOutNotSupported`), and a `hen` is live in the vault's slot 1 (`NoHen`). If fi re-ships hen, the hook follows it with no redeploy.
 2. It `take`s `amountIn` of the input from the PoolManager.
 3. It calls `AquaSwapVMRouter.swap(henOrder, tokenIn, tokenOut, amountIn, takerData)` as the SwapVM taker. Aqua pushes the input into the Castle and pulls the output out of it.
-4. It honours an optional `hookData` of `abi.encode(uint256 minAmountOut)` by reverting `TooLittleOut`.
+4. It honours an optional `hookData` of `abi.encode(uint256 minAmountOut)` by reverting `TooLittleOut`. This is the swap's slippage guard. The pool's own step is 0, so v4 never checks `sqrtPriceLimitX96` here ([FEEDBACK.md](../FEEDBACK.md#sqrtpricelimitx96-does-nothing-on-a-pool-like-this)).
 5. It calls `sync`, transfers `amountOut` to the PoolManager, and calls `settle`.
 6. It emits `JitFill(poolId, strategyHash, sender, tokenIn, amountIn, amountOut)`.
 7. It returns `toBeforeSwapDelta(+amountIn, -amountOut)`. The pool's own swap step then runs with an amount of 0 and never needs liquidity.

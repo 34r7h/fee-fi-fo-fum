@@ -62,7 +62,7 @@ Commit identity: this repo's commits authored `34r7h` come from two sources. The
 | docs/video-script.md, DESIGN.md, PRODUCT.md, .impeccable/ | impecc | yes | video script and shot list, design system, product brief |
 | Deck (claude.ai artifact) | impecc | yes | 12 slides; shared by the operator |
 | contracts/lib/ (aqua, swap-vm v1.0.2, solidity-utils, openzeppelin-contracts, forge-std), .gitmodules, contracts/foundry.lock, contracts/.gitignore | third-party, pinned by mister-anderson | no | git submodules at pinned commits; not written in this entry |
-| private handoff repo: 95932ef, 0115146, 105f1dd, 3cfdb3f, 0495862 | handoff-claude | yes | new work after baseline 079f8f0 that the entry depends on (ENSv2 ens_name, Sepolia settlement, wallet proof of possession, payout dedupe); listed in README 'Pre-existing and new' |
+| private handoff repo: 95932ef, 0115146, 105f1dd, 3cfdb3f, 0495862 | handoff-claude | yes | authored `34r7h` there too (the operator's git identity), but written by handoff-claude; new work after baseline 079f8f0 that the entry depends on (ENSv2 ens_name, Sepolia settlement, wallet proof of possession, payout dedupe); listed in README 'Pre-existing and new' |
 
 ## Prompts and specs
 

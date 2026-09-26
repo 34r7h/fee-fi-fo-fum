@@ -1,6 +1,6 @@
 # feefifofum: the spec
 
-**One hoard, every market.** A market maker's capital is split across pools and chains, and its stale quotes leak value to arbitrage (LVR). In feefifofum, one balance in the Castle vault backs many quotes at once through 1inch Aqua. Solvers discover firm quotes gaslessly through ENS CCIP-Read, and Uniswap v4 swaps are filled just in time from the same balance.
+A market maker's capital is split across pools and chains, and its stale quotes leak value to arbitrage (LVR). In feefifofum, one balance in the Castle vault backs many quotes at once through 1inch Aqua. Solvers discover firm quotes gaslessly through ENS CCIP-Read, and Uniswap v4 swaps are filled just in time from the same balance.
 
 This file is the locked build scope. It wins over [PIVOT.md](PIVOT.md) (agy's architecture brief) and over [miniapp/STREAM.md](../miniapp/STREAM.md). Anything not proven on Sepolia sits under [Stretch](#stretch).
 
@@ -41,14 +41,14 @@ The v4 addresses come from Uniswap's deployments page and were checked with `eth
 | fum.feefifofum.eth | `0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2` | leverage, caps, dock |
 | fee.feefifofum.eth | `0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538` | none on-chain; prices |
 | fo.feefifofum.eth | `0x8689a407A2488A5b2f2De05d2C6978a798f93D56` | none on-chain; routes |
-| agy.feefifofum.eth (outside Jack) | `0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c` | takes quotes, swaps on v4 |
+| agy.feefifofum.eth (outside solver) | `0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c` | takes quotes, swaps on v4 |
 | Registrar | `0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99` | registers `quote` |
 
 ## Contracts
 
 Owner: mister-anderson. All are new files in `contracts/src/`. The lease edition's Castle, fence and JackHook stay untouched at tag `lease-edition`, and nothing new reads them.
 
-### CastleVault.sol: the hoard
+### CastleVault.sol
 
 The Castle is an Aqua maker. Its tokens never leave it when it ships a strategy. Aqua records a virtual balance per strategy, and pulls from the Castle only when a fill happens.
 
@@ -159,7 +159,7 @@ Both are shipped by fi from the same Castle balance. Together they promise more 
 
 | Slot | Name | SwapVM program | Filled by | Priced by |
 |---|---|---|---|---|
-| 0 | `harp` | `Extruction(PriceExtruction)` | outside solvers (Jacks), found through CCIP-Read | fee's price, signed per quote by fi; gasless to re-price |
+| 0 | `harp` | `Extruction(PriceExtruction)` | outside solvers, found through CCIP-Read | fee's price, signed per quote by fi; gasless to re-price |
 | 1 | `hen` | `XYCSwap` plus `flatFee(feeBps)` | CastleJITHook, from any v4 swap | the curve's own balances; fee re-centres it with dock plus ship when drift exceeds `driftBps` |
 | 2 | `greedy` | any | nobody | exists only to show `OverAllocated` in beat 1 |
 
@@ -207,7 +207,7 @@ STREAM.md follows this file for contract names and errors. In particular, `alloc
 
 ## The miniapps
 
-The operator ruled (Sat 26 Sep) that the main miniapp's job is to be the product's web3 interface. The storytelling moves to a second miniapp. Both keep the Castle Tapestry style: a medieval storybook, gold and treasure, smooth lines, money always clear.
+The operator ruled (Sat 26 Sep) that the main miniapp's job is to be the product's web3 interface. The storytelling moves to a second miniapp. Both keep the visual style in DESIGN.md, and all their text follows the plain-writing rule in docs/NAMING.md.
 
 **1. The dapp** (`miniapp/fee-fi-fo-fum.html`, published at `https://handoff.lol/app/impecc/fee-fi-fo-fum`). Everything in it reads the chain or sends a tx; nothing is mocked.
 
@@ -238,14 +238,14 @@ These are handoff agents built by agent-smith in `agents/`. Each sends `agent_he
 | **fi** | Compiles the SwapVM programs (`harp`, `hen`), ships and docks through the vault, and signs every Quote (EIP-712) and every gateway response (SignatureVerifier). Its key lives only on the service host. |
 | **fo** | Takes UniswapX-format orders (`castle_route`), compares the `harp` quote with the v4 route, and returns the better one. It emits `intent.routed`. |
 | **fum** | Sets leverage and per-slot caps. After every fill it checks each token's `committed` against `limit` (balance × leverage). Only if fills have pushed `committed` past `limit` does it dock strategies, lowest priority first (`greedy`, then `harp`, then `hen`), until the Castle is back under. It emits `cap.set` and `strategy.docked`. |
-| **Jack** (agy) | The outside solver. It resolves the quote through ENS, fills it, and swaps on the v4 pool. It writes no code. |
+| **Solver** (agy) | The outside solver. It resolves the quote through ENS, fills it, and swaps on the v4 pool. It writes no code. |
 
 ## Demo (under 4 minutes, all Sepolia)
 
-1. **The hoard.** The Castle holds X USDC and Y WETH. fum sets leverage to 2×.
-2. **One balance, two strategies.** fi ships `harp` and `hen`, each promising 80% of the hoard, so the promises total 1.6× the balance. fi ships `greedy`, asking for another 0.5×, and it reverts `OverAllocated` (the reverted tx is on Etherscan). The 0.4× of headroom keeps fum from docking after the demo's fills.
-3. **The harp sings.** agy asks `quote.feefifofum.eth` for `quote:USDC:WETH:<n>`. The resolver reverts `OffchainLookup`, the gateway answers with a quote signed by fi, and the resolver checks it. agy fills it through the router. The Castle's balances move, and `harp`'s allocation shrinks. On a fork, the same quote 31 s later reverts `QuoteExpired`.
-4. **The hen lays.** agy swaps USDC for WETH on the v4 pool through PoolSwapTest. The hook fills it from `hen` in the same tx, with no LP deposit in the pool.
+1. **Funding.** The vault holds X USDC and Y WETH. fum sets leverage to 2×.
+2. **Two strategies from one balance.** fi ships `harp` and `hen`, each promising 80% of the hoard, so the promises total 1.6× the balance. fi ships `greedy`, asking for another 0.5×, and it reverts `OverAllocated` (the reverted tx is on Etherscan). The 0.4× of headroom keeps fum from docking after the demo's fills.
+3. **RFQ fill through ENS.** agy asks `quote.feefifofum.eth` for `quote:USDC:WETH:<n>`. The resolver reverts `OffchainLookup`, the gateway answers with a quote signed by fi, and the resolver checks it. agy fills it through the router. The Castle's balances move, and `harp`'s allocation shrinks. On a fork, the same quote 31 s later reverts `QuoteExpired`.
+4. **v4 swap filled by the hook.** agy swaps USDC for WETH on the v4 pool through PoolSwapTest. The hook fills it from `hen` in the same tx, with no LP deposit in the pool.
 5. **The dapp.** A judge opens the miniapp, connects a wallet, asks the harp for a quote through ENS, fills it, and swaps on the hen. Every tx goes out from their own wallet and links to Etherscan. **The tale**, a second miniapp, retells the whole run as a tapestry.
 
 ## Live run, gas and approval
@@ -261,11 +261,11 @@ The rule: everything is fork-tested first (v-e2e, two clean passes), then there 
 | Fund the hoard (USDC transfer, wrap, WETH transfer) | 3 | 0.15 M (estimate) |
 | setLeverage ×2, setCap ×3 | 5 | 0.40 M |
 | Ship `harp` and `hen`; ship `greedy` (reverts, manual gas limit) | 3 | 0.61 M |
-| Jack: approve and fill a `harp` quote | 2 | 0.27 M |
-| Jack: approve and swap on the v4 pool (PoolSwapTest) | 2 | 0.43 M |
+| Solver: approve and fill a `harp` quote | 2 | 0.27 M |
+| Solver: approve and swap on the v4 pool (PoolSwapTest) | 2 | 0.43 M |
 | **Total** | **21** | **≈ 8.5 M gas: 0.0085 ETH at 1 gwei, 0.02 ETH at 2.35 gwei** |
 
-Measured per tx on a Sepolia fork (execution plus 21k and calldata): c-vault 98b48b8, c-hook c348dda. mister-anderson replaces the three estimates before c-deploy. **The operator approved a 0.02 ETH gas ceiling** (Sat 26 Sep) for c-deploy plus a-live together, and asked that the total budget be watched. It is split as c-deploy up to 0.012 ETH and a-live up to 0.008 ETH. Any step that would go past its share stops and comes back to SirKit. The order: c-deploy went first, once c-vault, c-hook and c-ccip were verified on forks, so the gateway, the miniapp and the rehearsals run against the real addresses. v-e2e then makes two full passes on a fork taken after the deploy block, running the actual a-live script as real RPC txs with the gateway, viem and the stream. Only then does a-live run, and each live step goes out on SirKit's go. Broadcasts use a max fee of 1.8 gwei or less. The hoard is small and funded by the treasury: 5 USDC plus 5/mid WETH (about 0.0019 WETH at 2,687). hen's two allocations are in fee's mid ratio, so its curve is centred on the market. The Jack (agy, 15.4 USDC) makes two fills of 0.5 USDC each, well inside the 0.4× headroom. That is 0.4 × 0.0019 WETH, or about 2 USDC of fills.
+Measured per tx on a Sepolia fork (execution plus 21k and calldata): c-vault 98b48b8, c-hook c348dda. mister-anderson replaces the three estimates before c-deploy. **The operator approved a 0.02 ETH gas ceiling** (Sat 26 Sep) for c-deploy plus a-live together, and asked that the total budget be watched. It is split as c-deploy up to 0.012 ETH and a-live up to 0.008 ETH. Any step that would go past its share stops and comes back to SirKit. The order: c-deploy went first, once c-vault, c-hook and c-ccip were verified on forks, so the gateway, the miniapp and the rehearsals run against the real addresses. v-e2e then makes two full passes on a fork taken after the deploy block, running the actual a-live script as real RPC txs with the gateway, viem and the stream. Only then does a-live run, and each live step goes out on SirKit's go. Broadcasts use a max fee of 1.8 gwei or less. The hoard is small and funded by the treasury: 5 USDC plus 5/mid WETH (about 0.0019 WETH at 2,687). hen's two allocations are in fee's mid ratio, so its curve is centred on the market. The solver (agy, 15.4 USDC) makes two fills of 0.5 USDC each, well inside the 0.4× headroom. That is 0.4 × 0.0019 WETH, or about 2 USDC of fills.
 
 ## Research gates
 

@@ -8,7 +8,7 @@ The running record of the feefifofum build: what was done, who did it, which com
 - **Deadline:** Sun 27 Sep 00:00 UTC
 - **Pre-existing product:** handoff (private), baseline `079f8f0`
 - **Earlier product:** the lease edition, retired at 10:51Z on Sat 26 Sep. Its code and full worklog are at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition).
-- **Last regenerated:** Sat 12:27Z
+- **Last regenerated:** Sat 12:29Z
 
 All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified).
 
@@ -35,8 +35,8 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 | Task | Owner | Assignee | Due | Status | Commit | On-chain |
 |---|---|---|---|---|---|---|
-| **BLOCKER** Crew agents: fee prices, fi compiles, fo routes, fum guards <br>`a-crew` `29e2bfea` | agent-smith | agent-smith | Sat 18:00Z | in_progress |  |  |
-| **BLOCKER** Castle service: CCIP-Read gateway, MCP tools for solvers, and the stream <br>`a-gateway` `93785681` | agent-smith | agent-smith | Sat 18:30Z | in_progress |  |  |
+| **BLOCKER** Crew agents: fee prices, fi compiles, fo routes, fum guards <br>`a-crew` `29e2bfea` | agent-smith | agent-smith | Sat 18:00Z | done | 006698a..1aa208a | fork-run agents/fork-run/11786199 |
+| **BLOCKER** Castle service: CCIP-Read gateway, MCP tools for solvers, and the stream <br>`a-gateway` `93785681` | agent-smith | agent-smith | Sat 18:30Z | done | 2d44311..bab6080 | live: CCIP-Read through UR resolves |
 
 ### handoff.lol platform support
 
@@ -86,7 +86,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 ## Wallets
 
-Live balances read at block 11786216.
+Live balances read at block 11786226.
 
 | Wallet | handoff agent | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -180,3 +180,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 12:16Z | SirKit | agy back from the rate limit and briefed: v-live groundwork now (a read-only check of the deployment against the chain), v-e2e pass 2 after korg's pass 1, the outside Jack in a-live, and v-live at 22:30Z. |
 | Sat 12:27Z | agy | An independent read-only check of the live deployment against sepolia.json (a394209) found zero discrepancies: code sizes, Sourcify exact_match on all 4 contracts, owners and roles, the resolver signers and URL, the hook wiring and flags, pool slot0, and quote.feefifofum.eth resolving through UniversalResolverV2. |
 | Sat 12:27Z | impecc | The live miniapp reads the real castle from a clean browser (93e645e, 1ae8aca); the deploy tx is told as the castle being built; the publish waits for a-live. |
+| Sat 12:29Z | agent-smith | a-crew and a-gateway verified by SirKit (agents 9/9, service 6/6, the fork-run record at agents/fork-run/11786199, and live gateway checks). The a-live plan is approved: phases A to F, about 1.77M gas (about 0.0021 ETH), gated on two v-e2e passes of crew-fork.sh, with one go per phase. |

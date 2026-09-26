@@ -16,10 +16,12 @@ A live read at block timestamp `1790409564`: `castle` on the subregistry has exp
 
 ## Call sites
 
-- `Castle.renew` calls `REGISTRY.renew` at `contracts/src/Castle.sol` line 315.
-- `Castle.claim` calls `REGISTRY.register` with role bitmap `0` at line 333.
-- `Castle.relink` calls `RESOLVER.linkToNode` at line 446.
-- `Castle._writePrice` calls `RESOLVER.setData` for `handoff-price` at line 627.
-- `JackHook.validate` calls `getOwner` and `getExpiry` at `contracts/src/JackHook.sol` lines 29 and 31.
+The lines are from the deployed source, commit `7b863212f649c07327ac53966e8fae40f813cfb7`.
+
+- [`Castle.renew` calls `REGISTRY.renew`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/Castle.sol#L296) at line 296.
+- [`Castle.claim` calls `REGISTRY.register`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/Castle.sol#L312) with role bitmap `0` at line 312.
+- [`Castle.relink` calls `RESOLVER.linkToNode`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/Castle.sol#L389) at line 389.
+- [`Castle._writePrice` calls `RESOLVER.setData`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/Castle.sol#L561) for `handoff-price` at line 561.
+- [`JackHook.validate`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/JackHook.sol#L29) calls `getOwner` at line 29 and `getExpiry` at line 31.
 
 The `.eth` registrar's minimum duration is 28 days and it does not grant `ROLE_RENEW`. The castle label is registered on the subregistry instead. That constraint is measured in [ens-probes.md](ens-probes.md).

@@ -12,8 +12,10 @@ Aqua and SwapVM were not in the handoff baseline (`079f8f0`). Castle is the Aqua
 
 ## Call sites
 
-- `Castle.ship` calls `AQUA.ship` at `contracts/src/Castle.sol` line 420.
-- `Castle._dock` calls `AQUA.dock` at line 622.
+The lines are from the deployed source, commit `7b863212f649c07327ac53966e8fae40f813cfb7`, not later Castle revisions.
+
+- [`Castle.ship` calls `AQUA.ship`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/Castle.sol#L363) at line 363.
+- [`Castle._dock` calls `AQUA.dock`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/Castle.sol#L556) at line 556.
 - Live ship: [`0x7306bda6…add7`](https://sepolia.etherscan.io/tx/0x7306bda652ba6ded88f5e49bc98cb9ac8408f999bda39e22ee963f0f5dfbadd7), strategy `0x1b29d5ebd84076bd37322ab50aa0a0cc2825f5610542a96d58983b8125138f48`.
 - Live fill while the lease was live: [`0xb349a23c…fa1d`](https://sepolia.etherscan.io/tx/0xb349a23c10f31273752064f5495673b39dff47cf5a3165a72e87352ddb07fa1d), 0.0005 WETH in, 1.329484 USDC out, quote matched swap.
 - Live fill after expiry, wind-down only: [`0x0065e64a…0d6c`](https://sepolia.etherscan.io/tx/0x0065e64a899acf825552777189387b0058b8fb58efc1e027cf0de18adfeb0d6c).

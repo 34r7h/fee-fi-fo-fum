@@ -11,7 +11,9 @@ Uniswap CCA is the exit. When a shift ends, or when nobody claims a lapsed castl
 
 ## Call sites
 
-- `Castle._openAuction` calls `CCA_FACTORY.create` at `contracts/src/Castle.sol` line 612. The auction is 25 blocks, the floor is 80% of the anchor, and graduation requires currency equal to 50% of the lot at that floor.
-- `JackHook.validate` reads `getOwner` and `getExpiry` at `contracts/src/JackHook.sol` lines 29 and 31. `hookData` is the bidder's label. It does not call UniversalResolverV2.
-- `Castle.settleAuction` writes the clearing price through `_writePrice` when the auction graduated (`Castle.sol` lines 467–479). `_writePrice` calls `RESOLVER.setData` at line 627.
+The lines are from the deployed source, commit `7b863212f649c07327ac53966e8fae40f813cfb7`.
+
+- [`Castle._openAuction` calls `CCA_FACTORY.create`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/Castle.sol#L546) at line 546. The auction is 25 blocks and the floor is 80% of the anchor. [`requiredCurrencyRaised`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/Castle.sol#L543) at line 543 is set to 50% of the lot valued at that floor.
+- [`JackHook.validate`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/JackHook.sol#L29) reads `getOwner` at line 29 and `getExpiry` at line 31. `hookData` is the bidder's label. It does not call UniversalResolverV2.
+- [`Castle.settleAuction`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/Castle.sol#L467) writes the clearing price through `_writePrice` when the auction graduated (lines 467–479). [`_writePrice` calls `RESOLVER.setData`](https://github.com/34r7h/fee-fi-fo-fum/blob/7b863212f649c07327ac53966e8fae40f813cfb7/contracts/src/Castle.sol#L561) at line 561.
 - Developer-experience notes are in [FEEDBACK.md](../FEEDBACK.md). The form itself is for the operator to submit.

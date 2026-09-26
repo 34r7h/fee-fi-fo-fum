@@ -12,6 +12,8 @@ When `beforeSwap` returns a delta that takes the whole input, the PoolManager st
 emit Swap(id: 0x95e0…889c, sender: PoolSwapTest, amount0: 0, amount1: 0, sqrtPriceX96: 1446501726624926496477173928747177, liquidity: 0, tick: 196256, fee: 0)
 ```
 
+The live Sepolia swap [`0x53f773de…e116`](https://sepolia.etherscan.io/tx/0x53f773ded5f3f8c8586d05c9129a897a0796a92ee0a1c27a1711ba708290e116) shows the same. It swapped 0.5 USDC for 0.000164970 WETH, as the hook's `JitFill` in that tx says. Its `Swap` log still reads `amount0` 0, `amount1` 0 and `liquidity` 0.
+
 This is [`PoolManager.swap`](https://github.com/Uniswap/v4-core/blob/e50237c43811bd9b526eff40f26772152a42daba/src/PoolManager.sol#L196-L215) passing the hook's `amountToSwap` to [`_swap`](https://github.com/Uniswap/v4-core/blob/e50237c43811bd9b526eff40f26772152a42daba/src/PoolManager.sol#L228-L250), which emits the pool's delta. It is correct, but an indexer or explorer reading `Swap` sees a zero trade, and a volume dashboard counts nothing.
 
 The [custom accounting guide](https://docs.uniswap.org/contracts/v4/guides/custom-accounting) explains `BeforeSwapDelta` and custom curves. It does not say what `Swap` will show for them, and it does not point to a standard event. OpenZeppelin's uniswap-hooks has one, [`IHookEvents.HookSwap`](https://github.com/OpenZeppelin/uniswap-hooks/blob/master/src/interfaces/IHookEvents.sol). We found it only after we had shipped our own `JitFill`. One paragraph in that guide, with a pointer to `HookSwap`, would have saved us the trace reading, and it would give indexers one event to look for.

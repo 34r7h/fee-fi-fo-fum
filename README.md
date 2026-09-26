@@ -62,6 +62,27 @@ New, against the spec: CastleVault, PriceExtruction, CastleJITHook, OffchainQuot
 
 Codesizes for the v4 rows and for Aqua are in [docs/research.md](docs/research.md). AquaSwapVMRouter's codesize was 20541 at the same public Sepolia endpoint on 2026-09-26. CastleVault, PriceExtruction, CastleJITHook and OffchainQuoteResolver are not deployed. Their addresses will be added in `contracts/deployments/sepolia.json` after the deploy.
 
+## Repository layout
+
+| Path | What it is |
+|---|---|
+| `contracts/` | Foundry project: vault and extruction sources, fork probes, deployment records |
+| `service/` | Castle gateway, its tests, and the host deploy notes |
+| `agents/` | fee, fi, fo, and fum: roles, crew config, and the runner |
+| `miniapp/` | The browser page and its stream schema |
+| `docs/` | The notes below |
+
+| Doc | One line |
+|---|---|
+| [docs/SPEC.md](docs/SPEC.md) | Locked build scope at `d70dafa`. It wins over the pivot brief. |
+| [docs/research.md](docs/research.md) | Fork measurements for the quote register, v4 addresses, UniswapX, and the prize text. |
+| [docs/PIVOT.md](docs/PIVOT.md) | agy's architecture brief, kept verbatim. |
+| [docs/NAMING.md](docs/NAMING.md) | Voice, and what the hoard, the harp, and the hen mean. |
+| [docs/1inch.md](docs/1inch.md) | The Aqua app: one balance, harp, hen, leverage, PriceExtruction. |
+| [docs/uniswap.md](docs/uniswap.md) | CastleJITHook: a v4 pool with no LP deposit. |
+| [docs/ens.md](docs/ens.md) | `quote.feefifofum.eth` through UniversalResolverV2. |
+| [docs/video-script.md](docs/video-script.md) | Shot list for the submission video. |
+
 ## Write-ups
 
 - [docs/1inch.md](docs/1inch.md) — the Aqua app

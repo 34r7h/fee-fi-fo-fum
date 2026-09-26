@@ -1,6 +1,6 @@
 # Research gate
 
-Measured 2026-09-26 by korg for task `53d4d720-1f61-4476-ac5e-84b3259826e1`. No live transactions. SirKit dropped question (1) the same morning: `docs/PLAN.md` line 45 ("Don't pair Aqua with a v4 hook") is a novelty opinion in that plan, not a prize rule and not a technical limit found in the prize pages below.
+Measured 2026-09-26 by korg for task `53d4d720-1f61-4476-ac5e-84b3259826e1`. No live transactions. SirKit dropped question (1) the same morning. Line 45 of [docs/PLAN.md](https://github.com/34r7h/fee-fi-fo-fum/blob/lease-edition/docs/PLAN.md) ("Don't pair Aqua with a v4 hook") is a novelty opinion in that plan, not a prize rule and not a technical limit found in the prize pages below. The file is no longer on `main`. It is at tag `lease-edition`.
 
 Reproduction of (a) and (b) is `contracts/probes/quote-register/`. From that directory:
 
@@ -70,7 +70,7 @@ No code means those addresses have no order flow. A reactor deployed at some oth
 
 ## (d) Prize rules
 
-Opened 2026-09-26. These are the Continuity prizes. Amounts in `docs/PLAN.md` (checked 2026-09-26 03:30 UTC) match these three Continuity purses.
+Opened 2026-09-26. These are the Continuity prizes. Amounts in [docs/PLAN.md](https://github.com/34r7h/fee-fi-fo-fum/blob/lease-edition/docs/PLAN.md) (checked 2026-09-26 03:30 UTC, now only on tag `lease-edition`) match these three Continuity purses.
 
 ### 1inch, Continuity
 
@@ -140,4 +140,4 @@ SirKit said to skip Unichain Sepolia and Base Sepolia. Codesize only, same hour,
 | Base Sepolia | `base-sepolia-rpc.publicnode.com` | 0 | 0 |
 | Unichain Sepolia | `unichain-sepolia-rpc.publicnode.com` | 0 | 0 |
 
-The SwapVM README lists a unified address and does not list Sepolia among its networks. The Sepolia codesize at that address is 22640 anyway. `docs/PLAN.md` said the Sepolia vanity router was empty. Those two sources disagree with this codesize; the codesize is the measurement.
+The SwapVM README lists a unified address and does not list Sepolia among its networks. The Sepolia codesize at that address is 22640 anyway. [docs/PLAN.md](https://github.com/34r7h/fee-fi-fo-fum/blob/lease-edition/docs/PLAN.md) on tag `lease-edition` said the Sepolia vanity router was empty. Those two sources disagree with this codesize; the codesize is the measurement.

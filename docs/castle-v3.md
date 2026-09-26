@@ -100,7 +100,19 @@ v3 costs takers about 0.9k extra gas per fill. It saves the operator about 2.9M 
   - that v2 can't take the shared label back once v3 holds it;
   - revoking v2's resolver LINK|SET_DATA, which protects the shared anchor (48,768 execution gas).
 - **Mutation testing:** 13 of 13 mutants killed. They removed the TTL cap, the fo co-signature, the early claim, the deadline race, the dissolve guard, the fee floor, name keeping, the lease-expiry gate, the cooldown, the unresponsive-holder gate, the self-challenge check and challenge clearing, and extended heartbeat expiry by one second.
-- **Static analysis:** see `docs/cca-auction.md`. aderyn reports the same H-1, H-2 and H-3 as v2, all false positives. The one new instance is `uint32(newEpoch)`: `newEpoch` is `epoch + 1`, computed with checked uint32 arithmetic.
+- **Static analysis** (slither 0.11.6 and aderyn 0.6.8 on the v3 source). No true positives. For the v2 leads, see `docs/cca-auction.md`. The v3 leads:
+  - aderyn H-1, H-2 and H-3 are the same false positives as in v2. The one new instance is `uint32(newEpoch)`: `newEpoch` is `epoch + 1`, computed with checked uint32 arithmetic, so it can't truncate.
+  - slither `reentrancy-balance` in `ship`: the balances `_book` reads go to Aqua's `ship`, which is the trusted, immutable 1inch Aqua and makes no callback. The "stale" value used after the call is only the returned strategy-hash check.
+  - slither `incorrect-equality`:
+    - `_book` checks liquidity and amounts against 0;
+    - `_writePrice` checks the price against 0;
+    - `dissolve` compares `dissolvedEpoch` with the current epoch.
+    None of these compares a balance.
+  - slither `unused-return`:
+    - `_keepName` drops the token id `register` returns; the name is keyed by its label;
+    - `committed` drops the version byte of `rawBalances`;
+    - the third return of `tryRecover` is the signature error, and the first two returns are checked.
+  - slither `reentrancy-no-eth` in `dissolve` and `_openAuction`, and `divide-before-multiply` in the floor: the same as v2 (see `docs/cca-auction.md`).
 
 To run them:
 

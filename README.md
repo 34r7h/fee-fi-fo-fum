@@ -1,10 +1,40 @@
 # feefifofum
 
-**One hoard, every market.**
+**One hoard, every market.** Fee, fi, fo, fum.
 
-A market maker's capital sits split across pools, and its stale quotes leak value to arbitrage. feefifofum keeps one balance in the Castle vault and backs many quotes from it through 1inch Aqua. Solvers discover firm quotes gaslessly through ENS CCIP-Read. Uniswap v4 swaps are filled just in time from the same balance.
+In the old tale the giant keeps a bag of gold, a harp that sings and a hen that lays golden eggs. In feefifofum the giant's gold works for every market at once.
 
-It is an ETHGlobal Tokyo 2026 Continuity entry. The existing project is handoff. This repo is the new work. The build scope is [docs/SPEC.md](docs/SPEC.md) at `d70dafa`. Where this file and the spec differ, the spec wins.
+- **The hoard** is one balance in the Castle vault, a 1inch Aqua maker. Its SwapVM strategies get promises, not deposits, so the same gold backs many quotes at once. fum, the guard, sets how far the promises may stretch (2× the hoard in the demo). The vault refuses a promise past that line with `OverAllocated`.
+- **The harp** sings firm prices by name. A solver asks the ENS name `quote.feefifofum.eth` through CCIP-Read. The castle's gateway answers with a quote that fi signs, and the solver fills it through Aqua. Asking costs no gas, and a quote more than 30 s old reverts `QuoteExpired`.
+- **The hen** lays just in time. The Castle's Uniswap v4 pool holds no liquidity of its own. CastleJITHook fills each swap from the hoard, inside the swap's own transaction.
+
+Why it matters: a market maker's capital sits split across pools and chains, most of it idle, and its stale quotes leak value to arbitrage (LVR). One guarded hoard puts all of it to work. Its prices expire, so a stale one can't be used against the castle.
+
+This is an ETHGlobal Tokyo 2026 Continuity entry (1inch Aqua, Uniswap v4, ENSv2). The existing project is handoff, and the crew are handoff agents:
+- fee prices the hoard;
+- fi writes the strategies and signs the quotes;
+- fo carries the orders;
+- fum guards the hoard.
+
+The build scope is [docs/SPEC.md](docs/SPEC.md). Where this file and the spec differ, the spec wins.
+
+## Live
+
+Everything runs on Ethereum Sepolia.
+
+- **Watch the castle.** The miniapp at https://handoff.lol/app/impecc/fee-fi-fo-fum tells the hoard, fum's promises, the harp's quotes and the hen's fills as they happen, from the castle service's stream at https://handoff.lol/t/castle/stream. It is published after the live run.
+- **Ask the harp.** Resolve the text record `quote:USDC:WETH:1000000` on `quote.feefifofum.eth` with any ENS client that follows CCIP-Read, for example viem `getEnsText` through UniversalResolverV2. The name was registered in [0xebd3cb53…b258](https://sepolia.etherscan.io/tx/0xebd3cb532669b8c6a6ea2a2dbe0a1f6c30586a861105980f7fa726123e01b258).
+- **The contracts.** All four are Sourcify exact_match, recorded in [contracts/deployments/sepolia.json](contracts/deployments/sepolia.json).
+
+| Contract | Address |
+|---|---|
+| CastleVault (the hoard) | [`0x0fa4a0Fd0bE6536d7462FF922F28500123c37A98`](https://sepolia.etherscan.io/address/0x0fa4a0Fd0bE6536d7462FF922F28500123c37A98) |
+| PriceExtruction (fi's signed quotes) | [`0xda14a4e0cC06eaFcd6Da1905C033b3c1224aE757`](https://sepolia.etherscan.io/address/0xda14a4e0cC06eaFcd6Da1905C033b3c1224aE757) |
+| OffchainQuoteResolver (`quote.feefifofum.eth`) | [`0x2D18c04Aec64f93255a417d56Cfdc5577712A76a`](https://sepolia.etherscan.io/address/0x2D18c04Aec64f93255a417d56Cfdc5577712A76a) |
+| CastleJITHook (the hen) | [`0x890125413c9FeDB770D872BbA9415f5E1B7C0888`](https://sepolia.etherscan.io/address/0x890125413c9FeDB770D872BbA9415f5E1B7C0888) |
+| v4 pool {USDC, WETH, fee 0, tickSpacing 60} | pool id `0xb1d82d460c7ddb0f881b310b4c69fcb435fcddb05317ab70cad0643eacad112a` |
+
+The live run's transactions are added to the beats below when it lands.
 
 ## The four beats
 

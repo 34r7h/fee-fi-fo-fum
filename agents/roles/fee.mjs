@@ -1,6 +1,6 @@
 // fee, the shift trader (p3-feefi).
 //
-// While fee holds a LIVE castle it renews every RENEW_EVERY_S (40s of a 120s lease) with fo's seal, and keeps
+// While fee holds a LIVE castle it renews every RENEW_EVERY_S (90s of a 120s lease) with fo's seal, and keeps
 // the book on Aqua: it ships as soon as it holds the castle and re-centres on the ENS anchor every
 // RESHIP_EVERY_S (Castle v2 builds the fenced program itself; lib/book.mjs checks the centre). If fo withholds,
 // fee does not fight: the lease runs out, fills wind down, and fi claims.
@@ -59,9 +59,10 @@ export default {
       return ctx.log('genesis-claim', { ok: r.ok, tx: r.hash || null, reason: r.reason || null });
     }
     if (STANDBY && !mine) { await standbyClaim(ctx, lease, { delayS: CLAIM_DELAY_S }); return; }
+    // Re-centre before renewing: fo withholds the seal from a book the ENS anchor has moved off.
+    if (!HANG) await shipIfDue(ctx, lease);
     const r = await renewIfDue(ctx, lease);
     if (FORCE && r.due && !r.renewed && r.reason && lease.state === 'LIVE' && forcedEpoch !== lease.epoch) await forgedRenew(ctx, lease, r.reason);
-    if (!HANG) await shipIfDue(ctx, lease);
   },
   async onMessage(ctx, msg) {
     ctx.log('noted', { from: msg.from, kind: msg.kind });

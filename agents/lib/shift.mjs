@@ -15,7 +15,7 @@ import { shippedBook } from './book.mjs';
 import { readLease } from './lease.mjs';
 
 export const FO_URL = env('FO_URL', `http://127.0.0.1:${env('FO_PORT', 8711)}`);
-export const RENEW_EVERY_S = Number(env('RENEW_EVERY_S', 40));
+export const RENEW_EVERY_S = Number(env('RENEW_EVERY_S', 90));
 export const RESHIP_EVERY_S = Number(env('RESHIP_EVERY_S', 240));
 // What the holder chooses when shipping (Castle clamps amounts to its balance and bounds fee and band).
 export const SHIP_PARAMS = () => ({
@@ -57,7 +57,8 @@ export async function requestSeal(ctx, lease) {
 
 const mine = (ctx, lease) => lease.holder?.toLowerCase() === ctx.account.address.toLowerCase();
 
-// Renew when the lease has run RENEW_EVERY_S since its last renewal (a 120s lease renewed every 40s keeps 80s of slack).
+// Renew when the lease has run RENEW_EVERY_S since its last renewal: a 120s lease renewed at 90s keeps 30s of slack
+// (about two Sepolia blocks) and costs less than half the renew gas of every 40s.
 export async function renewIfDue(ctx, lease) {
   if (!lease.deployed || !mine(ctx, lease) || lease.state !== 'LIVE') return { due: false };
   if (lease.secondsLeft > lease.leasePeriod - RENEW_EVERY_S) return { due: false };
@@ -79,7 +80,7 @@ export async function openStrategies(ctx, lease) {
     ctx.pc.getLogs({ address: lease.castle, event: CASTLE_EVENTS.Docked, fromBlock: from, toBlock: 'latest' }),
   ]);
   const gone = new Set(docked.map((l) => l.args.strategyHash));
-  return shipped.filter((l) => !gone.has(l.args.strategyHash)).map((l) => ({ strategyHash: l.args.strategyHash, epoch: l.args.epoch, block: l.blockNumber }));
+  return shipped.filter((l) => !gone.has(l.args.strategyHash)).map((l) => ({ strategyHash: l.args.strategyHash, epoch: l.args.epoch, block: l.blockNumber, anchorQ96: l.args.anchorQ96 }));
 }
 
 // Take the castle after expiry: claim, dock every strategy still on Aqua, and link castle.* to the new holder.
@@ -99,7 +100,9 @@ export async function shipBook(ctx, { dock = [] } = {}) {
   return { ...r, book };
 }
 
-// The holder's book upkeep: ship if nothing of this epoch is on Aqua, re-centre every RESHIP_EVERY_S.
+// The holder's book upkeep: ship if nothing of this epoch is on Aqua, re-centre every RESHIP_EVERY_S, and re-centre
+// at once when the ENS anchor has moved off the live book (a CCA settled and wrote a new price; fo withholds the
+// seal from an off-market book).
 export async function shipIfDue(ctx, lease) {
   if (!lease.deployed || !mine(ctx, lease) || lease.state !== 'LIVE') return { due: false };
   const open = await openStrategies(ctx, lease);
@@ -109,8 +112,12 @@ export async function shipIfDue(ctx, lease) {
     return { due: false };
   }
   if (ours.length) {
-    const b = await ctx.pc.getBlock({ blockNumber: ours.at(-1).block });
-    if (lease.now - Number(b.timestamp) < RESHIP_EVERY_S) return { due: false };
+    const last = ours.at(-1);
+    const anchor = await ctx.pc.readContract({ address: lease.castle, abi: castleAbi(), functionName: 'anchorPriceQ96' });
+    if (anchor === last.anchorQ96) {
+      const b = await ctx.pc.getBlock({ blockNumber: last.block });
+      if (lease.now - Number(b.timestamp) < RESHIP_EVERY_S) return { due: false };
+    } else ctx.log('anchor-moved', { bookAnchorQ96: last.anchorQ96, ensAnchorQ96: anchor, strategy: last.strategyHash });
   }
   return { due: true, ...(await shipBook(ctx, { dock: open })) };
 }

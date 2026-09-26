@@ -7,35 +7,57 @@ For the ETHGlobal Tokyo 2026 submission (Continuity track: 1inch Aqua, Uniswap a
 - **Voice:** one voiceover by the operator, spoken slowly over live footage.
 - **Screens:** the live miniapp on handoff.lol, a terminal with the four agents, and Sepolia Etherscan.
 
-Every transaction shown must be a real Sepolia tx. Before recording, paste each tx link from WORKLOG.md into the shot list's "proof" column, so the edit can freeze on it.
+Every transaction shown is a real Sepolia tx, and each one has an Etherscan capture the edit can freeze on.
 
-## Before you record
+## The footage
 
-1. Open the miniapp from a clean browser profile at its live URL (the p5-live URL in WORKLOG.md). Set zoom to 100% and the window to 1920×1080.
-2. Terminal: a 2×2 tmux grid with `fee`, `fi`, `fo` and `fum` running, font at 18pt or larger. Keep a fifth pane free for `kill -9`.
-3. Etherscan open in a second tab on the Castle contract's event log.
-4. The lease is 120s with renewals every 40s, so a lapse takes up to two minutes. Rehearse the timing once, and start each take right after a renewal so the wait is known.
-5. Nothing on screen may show a private key, an `.env` file or an RPC URL with a key in it.
+There was one live failover run on Sepolia, 07:38–07:45:18Z on 26 September 2026 (blocks 11784800–11784832). It was screen-recorded once, in real time, and there is no second take.
+
+- **Miniapp, four views, 10 minutes each:** `~/Movies/feefifofum-demo/live/cut/{top,stalk,tale,replay}-0737-30.mp4`. Each is 1920×1080 at 15 fps and runs 07:37:30–07:47:30Z, so **cut time = UTC − 07:37:30**. `top` is the first viewport (chant, shifts, fence, hoard), `stalk` is the beanstalk chart, `tale` is the tapestry and the fills ledger, and `replay` is the replay tab.
+- **Full-length masters:** `~/Movies/feefifofum-demo/live/{top,stalk,tale,replay}.mp4`, from 07:37:08Z (master time = UTC − 07:37:08).
+- **Etherscan stills:** `~/Movies/feefifofum-demo/etherscan/`, one 1920×1080 PNG per tx in the tables below.
+- The page prints times in the viewer's clock (JST, UTC+9), so 07:43:36Z reads 16:43:36 on screen.
+- In this run **fi held the castle and fee took it over**, the reverse of the first draft of this script. The shot list and voiceover below follow the real run.
+- **Crop out the ring caption under the shift ring.** The recording has the old caption ("Renewed every 40 s with fo's seal"), which was wrong for fee's new lease. The live miniapp now tells each lease's story from its events.
+- **Two beats are not on the page.** The castle service never listed the `FeeFiFoFum()` revert or the `NotHolder` revert, so the recording shows no FENCED fill, no shout and no refusal scene. Show those two beats with their Etherscan stills. Etherscan shows only "execution reverted" for them, because the Aqua router is unverified, so put the error name in a caption.
+- No terminal was recorded. The `kill -9` is off screen, so the voiceover carries it.
+
+### Failover run timeline
+
+| UTC | Cut time | What happens | Tx | On the page |
+|---|---|---|---|---|
+| 07:38:48 | 1:18 | fi claims the castle at epoch v2 | [0xf20660a6…02cc](https://sepolia.etherscan.io/tx/0xf20660a6b92324373822afb68ab2a1df8c9e63ae40ed67059c398b13eb4d02cc) | By 1:36: FI lights gold, holds the castle, and the ring reads epoch v2 |
+| 07:39:12 | 1:42 | fi ships its epoch v2 book centred on 2,150.21 USDC/WETH | [0x9a3ec7a6…316a](https://sepolia.etherscan.io/tx/0x9a3ec7a65108da52aab267c8dc250c23cc42659203357fabfe5ff2b474cd316a) | By 1:48: the fence is LIVE with the epoch v2 book |
+| 07:40:24 | 2:54 | Live fill on fi's epoch v2 book: 0.50 USDC in, 0.000231 WETH out, at 2,160.34 USDC/WETH | [0xb790493d…a70e](https://sepolia.etherscan.io/tx/0xb790493dfe1ecc09ca8296e59ebea190eac0b497e4e1ec5f5c4d7963da5da70e) | A LIVE v2 row in the fills ledger |
+| 07:40:30 | 3:00 | `kill -9` fi | – | Nothing changes yet: fi still holds the lease |
+| 07:40:36 | 3:06 | A renewal fi sent before it died lands, carrying the lease to 07:42:24 | [0xc7c5d0de…538d](https://sepolia.etherscan.io/tx/0xc7c5d0ded061f43872cd92381fb98d18b5547082b8e11ff9c6c7cc070ed4538d) | By 3:12: the ring goes from 0:18 left on the lease to 1:42 |
+| 07:42:24 | 4:54 | fi's lease runs out, with no tx from anyone | – | By 5:00: FI reads "lease lapsed", the fence moves to WIND-DOWN and the giant opens one eye |
+| 07:42:36 | 5:06 | Wind-down fill on fi's old book: 0.50 USDC in, 0.000220 WETH out, at 2,274.74 USDC/WETH (the wide spread) | [0x9f67e848…ec3d](https://sepolia.etherscan.io/tx/0x9f67e84828323dcdf9c3431df694a50a095315aabda23fe18404f0a2772fec3d) | A WIND-DOWN row in the fills ledger |
+| 07:43:36 | 6:06 | fee claims the castle 72 s after the lapse, and the epoch goes v2 → v3 | [0xe3cc78d6…69e7](https://sepolia.etherscan.io/tx/0xe3cc78d669461c26d82aa1227cdaafb36c180afd04c9e21f9bd6aef0026169e7) | By 6:12: FEE lights gold and the ring reads "1:54 left on the lease, epoch v3" |
+| 07:43:48 | 6:18 | A fill on fi's old epoch v2 book reverts with `FeeFiFoFum()` (selector 0x0f7adc36) | [0xe9a742be…1f14](https://sepolia.etherscan.io/tx/0xe9a742bed8be9246a3669e8967345c4b1097c303dc75983139a9cef7ee2c1f14) | Not shown; use the Etherscan still |
+| 07:44:48 | 7:18 | fee docks fi's old book and ships a new epoch v3 book centred on the ENS price, 2,150.21 USDC/WETH | [0x66acde2e…e821](https://sepolia.etherscan.io/tx/0x66acde2e4c9b6c394c9d8918ae6eee372e374fa179ff729d2f3bb19792bce821) | Tapestry: "Here the old book is docked" and "Here fee ships the book"; fence back to LIVE |
+| 07:45:00 | 7:30 | New-epoch fill: 0.50 USDC in, 0.000231 WETH out, at 2,161.33 USDC/WETH | [0x08f881ee…1de4](https://sepolia.etherscan.io/tx/0x08f881eef57c3fca0bfb026f760dc60d7bf5038cb187717fa2b89f72be711de4) | By 7:40: a LIVE v3 row at the top of the fills ledger |
+| 07:45:12 | 7:42 | fi restarts from its stale state, and its renew reverts with `NotHolder` (selector 0xbf5cd21d) | [0x0247b377…3d82](https://sepolia.etherscan.io/tx/0x0247b37731e82ef6361b7afaff20ad105a4094f8d8c2d7fe061e8e03301c3d82) | Not shown; use the Etherscan still |
 
 ## Shot list
 
 | # | Time | Picture | Voiceover | Proof on screen |
 |---|---|---|---|---|
-| 1 | 0:00–0:15 | The miniapp's first viewport: FEE lit gold in the chant, the lease thread running round the shift ring. Slow push-in on the gold thread. | "Every market-making agent is a giant sitting on a hoard. And every giant falls asleep sometimes." | https://handoff.lol/app/impecc/fee-fi-fo-fum in the address bar |
-| 2 | 0:15–0:35 | The fills ledger, then the Etherscan tx of one live fill with the Aqua `pull` and `push` transfers highlighted. | "When an agent crashes, its quotes stay out. A dead agent can't send the transaction that cancels them, so its stale prices are gold left out for any Jack who climbs the beanstalk first." | Live fill [0xb349a23c…fa1d](https://sepolia.etherscan.io/tx/0xb349a23c10f31273752064f5495673b39dff47cf5a3165a72e87352ddb07fa1d): 0.0005 WETH in, 1.329484 USDC out |
+| 1 | 0:00–0:15 | `top` cut, 1:40–2:50: FI lit gold in the chant, the lease thread running round the shift ring. Slow push-in on the gold thread. | "Every market-making agent is a giant sitting on a hoard. And every giant falls asleep sometimes." | https://handoff.lol/app/impecc/fee-fi-fo-fum in the address bar |
+| 2 | 0:15–0:35 | `tale` cut from 2:54: the fills ledger with fi's live fill on top. Then the Etherscan still `a1-live-fill-0xb790493d.png` with the Aqua `pull` and `push` transfers highlighted. | "When an agent crashes, its quotes stay out. A dead agent can't send the transaction that cancels them, so its stale prices are gold left out for any Jack who climbs the beanstalk first." | Live fill [0xb790493d…a70e](https://sepolia.etherscan.io/tx/0xb790493dfe1ecc09ca8296e59ebea190eac0b497e4e1ec5f5c4d7963da5da70e): 0.50 USDC in, 0.000231 WETH out, at 2,160.34 USDC/WETH |
 | 3 | 0:35–0:55 | Diagram card (the loop from the README): the ENS lease → Aqua fence → Uniswap CCA → the price back into ENS. | "fee-fi-fo-fum is the giant that wakes up. A desk's 1inch Aqua liquidity is live only while its operator holds an ENSv2 lease on castle.feefifofum.eth. Castle.sol holds the hoard, and every quote carries the lease's epoch." | – |
-| 4 | 0:55–1:10 | **Beat 1.** Terminal: type `kill -9` on fee's pid and press enter. Cut to the miniapp: FEE's syllable goes pale and "asleep" appears. | "Beat one. We kill fee, our shift trader. No goodbye, no cleanup transaction." | fee's pid gone in `ps` |
-| 5 | 1:10–1:35 | The lease thread runs out on the ring. The fence moves to WIND-DOWN, and the giant opens one eye. A wind-down fill lands at the wide spread. | "Nobody renews the lease. The moment it lapses, with no transaction from anyone, the castle winds down. It will only sell, and only at a wide spread. The Jacks get no free lunch." | Wind-down fill [0x0065e64a…0d6c](https://sepolia.etherscan.io/tx/0x0065e64a899acf825552777189387b0058b8fb58efc1e027cf0de18adfeb0d6c): 1 USDC in, 0.000357 WETH out |
-| 6 | 1:35–2:00 | **Beat 2 and 3.** fi's pane logs its claim. On the miniapp FI lights gold and the epoch goes 7 → 8. A stale epoch-7 fill hits: the giant wakes, "FEE-FI-FO-FUM!", and the fill reverts. Cut to Etherscan on the reverted tx with `FeeFiFoFum()` visible. | "fi, the hot standby, claims the castle. That re-registers the ENS name, and the new token id is the new epoch. Now any quote from the old shift is dead on-chain. The giant smells it: FeeFiFoFum." | fi's claim tx; the reverted fill tx showing `FeeFiFoFum()` |
-| 7 | 2:00–2:15 | A new-epoch fill passes. The replay tab: the lease timeline with the wind-down gap and the claim, and every row saying "agrees". | "Fills resume under fi, with no gap and no zombie quotes. The replay tab judges every fill again from the lease history alone, and they all agree." | The new-epoch fill tx |
-| 8 | 2:15–2:30 | **Beat 4.** Restart fee from its stale state. Its pane shows the renew attempt reverting. The miniapp tapestry shows "HERE THE CASTLE REFUSES FEE". | "Now fee comes back from the dead, still thinking it's in charge. The castle refuses it on-chain." | fee's reverted renew tx |
-| 9 | 2:30–3:00 | **Beat 5.** Kill all four panes. The lease lapses. Anyone calls `dissolve()`. The beanstalk chart climbs as Jacks bid, one bidder is struck out ("no ENS name: JackHook said no"), and the auction clears. | "Beat five: everyone falls. The hoard isn't looted. It goes up the beanstalk, a Uniswap CCA that any Jack with an ENS name may climb. The next shift gets no privilege. Size buys nothing." | The dissolve, bid, clear and sweep txs |
-| 10 | 3:00–3:15 | The clearing price is written to ENS (`handoff-price`). The next shift claims and ships centred on that price, and the hoard panel shows the new anchor. | "The clearing price is written back to ENS, and the next castle opens right there. ENS says who is live. Aqua obeys it at fill time. The CCA prices every handover." | The setData tx; the next ship tx |
+| 4 | 0:55–1:10 | **Beat 1.** `top` cut, 2:54–3:00, with a caption card: "07:40:30 UTC · kill -9 fi". Cut away before 3:06: a renewal fi sent before it died lands then and refills the ring, which reads as if fi were still alive. | "Beat one. fi is holding the castle, and we kill it. No goodbye, no cleanup transaction." | The caption card; no terminal was recorded |
+| 5 | 1:10–1:35 | A "two minutes later" card with the clock. `top` cut, 4:50–5:05: the lease thread runs out, FI reads "lease lapsed", the fence moves to WIND-DOWN and the giant opens one eye. `tale` cut, 5:06–5:15: the WIND-DOWN row lands at 2,274.74 USDC/WETH, under the live row at 2,160.34. | "Nobody renews the lease. The moment it lapses, with no transaction from anyone, the castle winds down. It will only sell, and only at a wide spread. The Jacks get no free lunch." | Wind-down fill [0x9f67e848…ec3d](https://sepolia.etherscan.io/tx/0x9f67e84828323dcdf9c3431df694a50a095315aabda23fe18404f0a2772fec3d): 0.50 USDC in, 0.000220 WETH out |
+| 6 | 1:35–2:00 | **Beats 2 and 3.** `top` cut, 6:04–6:16: FEE lights gold and the ring reads "epoch v3". Then the Etherscan still `b-fenced-revert-0xe9a742be.png` (status Fail), captioned "FeeFiFoFum(): a fill on fi's old epoch v2 book". | "fee, the shift trader, takes over the castle. That re-registers the ENS name, and the new token id is the new epoch. Now any quote from fi's shift is dead on-chain. The giant smells it: FeeFiFoFum." | fee's claim [0xe3cc78d6…69e7](https://sepolia.etherscan.io/tx/0xe3cc78d669461c26d82aa1227cdaafb36c180afd04c9e21f9bd6aef0026169e7); the fenced fill [0xe9a742be…1f14](https://sepolia.etherscan.io/tx/0xe9a742bed8be9246a3669e8967345c4b1097c303dc75983139a9cef7ee2c1f14) |
+| 7 | 2:00–2:15 | `tale` cut, 7:18–7:45: "Here the old book is docked", "Here fee ships the book", then the LIVE v3 fill at the top of the ledger. `replay` cut from 8:00: the lease timeline and every row saying "agrees". Frame the table, not the timeline labels: fi's epoch v2 and fee's epoch v3 labels overlap in this recording. | "Fills resume under fee, with no gap and no zombie quotes. The replay tab judges every fill again from the lease history alone, and they all agree." | fee's ship [0x66acde2e…e821](https://sepolia.etherscan.io/tx/0x66acde2e4c9b6c394c9d8918ae6eee372e374fa179ff729d2f3bb19792bce821); the new-epoch fill [0x08f881ee…1de4](https://sepolia.etherscan.io/tx/0x08f881eef57c3fca0bfb026f760dc60d7bf5038cb187717fa2b89f72be711de4) |
+| 8 | 2:15–2:30 | **Beat 4.** The Etherscan still `d-notholder-revert-0x0247b377.png` (status Fail), captioned "NotHolder: fi's stale renew, refused". | "Now fi comes back from the dead, still thinking it's in charge. The castle refuses it on-chain." | fi's refused renew [0x0247b377…3d82](https://sepolia.etherscan.io/tx/0x0247b37731e82ef6361b7afaff20ad105a4094f8d8c2d7fe061e8e03301c3d82) |
+| 9 | 2:30–3:00 | **Beat 5**, which ran earlier, 06:40–06:48Z, before the failover recording. `stalk` cut, 0:00–1:30: that auction's beanstalk, cleared at 2,150.21 USDC/WETH with agy.feefifofum.eth's 6.00 USDC bid. After 1:30 the fence list grows and pushes the chart off the bottom of the frame. Then the Etherscan stills `e1-dissolve`, `e2-jackhook-bid` and `e3-settle-price-to-ens`. | "Beat five: everyone falls. The hoard isn't looted. It goes up the beanstalk, a Uniswap CCA that any Jack with an ENS name may climb. The next shift gets no privilege. Size buys nothing." | The dissolve, bid and settle txs in "Real transactions so far" |
+| 10 | 3:00–3:15 | The Etherscan stills `e3-settle-price-to-ens`, `e4-fi-claim` and `e6-fi-ship`. Then the `top` cut: the hoard panel's anchor price, 2,150.21 USDC/WETH, "handoff-price in ENS". | "The clearing price is written back to ENS, and the next castle opens right there. ENS says who is live. Aqua obeys it at fill time. The CCA prices every handover." | The settle tx; fi's claim and ship txs |
 | 11 | 3:15–3:25 | End card: fee·fi·fo·fum wordmark, "The giant never sleeps.", the live URL and repo URL, and the three sponsor names. | "fee-fi-fo-fum. The giant never sleeps." | – |
 
-## Real transactions so far
+## Real transactions before the failover run
 
-These are on Sepolia now and can be used as they are. Add the fenced revert and fee's refused renew from WORKLOG.md after the failover run at 07:40Z.
+These are on Sepolia and can be used as they are. The failover run's txs are in the timeline above.
 
 | What | Tx |
 |---|---|
@@ -61,15 +83,15 @@ The pitch deck that goes with this script: https://claude.ai/artifact/8emvtymYBX
 >
 > fee-fi-fo-fum is the giant that wakes up. A desk's 1inch Aqua liquidity is live only while its operator holds an ENSv2 lease on castle.feefifofum.eth. Castle.sol holds the hoard, and every quote carries the lease's epoch.
 >
-> Beat one. We kill fee, our shift trader. No goodbye, no cleanup transaction.
+> Beat one. fi is holding the castle, and we kill it. No goodbye, no cleanup transaction.
 >
 > Nobody renews the lease. The moment it lapses, with no transaction from anyone, the castle winds down. It will only sell, and only at a wide spread. The Jacks get no free lunch.
 >
-> fi, the hot standby, claims the castle. That re-registers the ENS name, and the new token id is the new epoch. Now any quote from the old shift is dead on-chain. The giant smells it: FeeFiFoFum.
+> fee, the shift trader, takes over the castle. That re-registers the ENS name, and the new token id is the new epoch. Now any quote from fi's shift is dead on-chain. The giant smells it: FeeFiFoFum.
 >
-> Fills resume under fi, with no gap and no zombie quotes. The replay tab judges every fill again from the lease history alone, and they all agree.
+> Fills resume under fee, with no gap and no zombie quotes. The replay tab judges every fill again from the lease history alone, and they all agree.
 >
-> Now fee comes back from the dead, still thinking it's in charge. The castle refuses it on-chain.
+> Now fi comes back from the dead, still thinking it's in charge. The castle refuses it on-chain.
 >
 > Beat five: everyone falls. The hoard isn't looted. It goes up the beanstalk, a Uniswap CCA that any Jack with an ENS name may climb. The next shift gets no privilege. Size buys nothing.
 >

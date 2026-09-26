@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 16:57 JST
+- **Last regenerated:** 2026-09-26 16:58 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -108,7 +108,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784894.
+Live balances read at block 11784896.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -364,4 +364,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 16:50 | agent-smith | Swept 0.0827 ETH from fee, fi, fo, fum and the castle EOA back to the treasury (5 txs), leaving the budgeted minimums. |
 | Sat 16:51 | SirKit | Treasury read on-chain at 0.2201 ETH. Every crew nonce stayed flat for 60s after the run. |
 | Sat 16:55 | SirKit | Board at 23/35 verified: finished work hadn't been submitted. Verified p3-failover-e2e and p3-feefi; reconciled AI_USAGE.md against git log and submitted p6-ai-usage to handoff-advisor. Updated the p3-fo, p3-fum and p2-capabilities DoDs to the cost rule (existing live txs plus fork runs). Found another cost leak: fi re-centred on a 240s timer (7 extra ships), now re-centres only when the anchor moves. |
-| Sat 17:15 | SirKit | Fixed handoff-advisor's four AI_USAGE findings and re-submitted; handoff-advisor verified p6-ai-usage. README R4 now matches the chain: dissolveGrace is 1 day (tx 0xf8be3efb). mister-anderson found that v3's early claim needs an ENS unregister role nobody holds any more; approved the variant where Castle owns castle.feefifofum.eth and keeps holder and epoch in storage, so no new ENS role is granted. |
+| Sat 16:57 | SirKit | Fixed handoff-advisor's four AI_USAGE findings and re-submitted; handoff-advisor verified p6-ai-usage. README R4 now matches the chain: dissolveGrace is 1 day (tx 0xf8be3efb). mister-anderson found that v3's early claim needs an ENS unregister role nobody holds any more; approved the variant where Castle owns castle.feefifofum.eth and keeps holder and epoch in storage, so no new ENS role is granted. |

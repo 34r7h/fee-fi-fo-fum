@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 13:42 JST
+- **Last regenerated:** 2026-09-26 13:45 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -25,12 +25,12 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
-| Foundry scaffold, then deploy the SwapVM router (release/1.0.2) on Sepolia <br>`p1-router` `902378f6` | mister-anderson | mister-anderson | Sat 16:00 | in_progress |  |  |
+| Foundry scaffold, then deploy the SwapVM router (release/1.0.2) on Sepolia <br>`p1-router` `902378f6` | mister-anderson | mister-anderson | Sat 16:00 | in_progress | 3301492 (scaffold) |  |
 | **BLOCKER** Castle.sol: the giant's castle (desk treasury, Aqua maker and ENSv2 lease) <br>`p1-castle` `c3a2dfdf` | mister-anderson |  | Sat 19:00 | todo |  |  |
 | **BLOCKER** FeeFiFoFumExtruction.sol: the giant smells a stale shift (the ENS-lease fence in the SwapVM program) <br>`p1-extruction` `9019b3b9` | korg |  | Sat 19:00 | todo |  |  |
 | Independent Sepolia-fork test suite for Castle and FeeFiFoFumExtruction <br>`p1-forktests` `f4d2ae68` | agy |  | Sat 19:45 | todo |  |  |
 | **BLOCKER** Deploy and verify Castle and FeeFiFoFumExtruction on Sepolia, then ship the first live strategy <br>`p1-deploy` `1fed769f` | mister-anderson |  | Sat 20:30 | todo |  |  |
-| **BLOCKER** ICastleLease interface, published before 15:30 JST so the fence and fo can build in parallel <br>`p1-iface` `17a2de4c` | mister-anderson | mister-anderson | Sat 15:30 | in_progress |  |  |
+| **BLOCKER** ICastleLease interface, published before 15:30 JST so the fence and fo can build in parallel <br>`p1-iface` `17a2de4c` | mister-anderson | mister-anderson | Sat 15:30 | review | 3301492, 980fd97, f0c7d65, e11f755 |  |
 
 ### P1 CASTLE SERVICE + ENS: ENSv2 agent names, castle MCP tools and stream, Sepolia rail check
 
@@ -133,8 +133,8 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | docs/1inch.md, docs/uniswap.md, docs/ens.md | korg | todo |
 | FEEDBACK.md | korg | todo |
 | docs/video-script.md + deck | impecc | todo |
-| miniapp/STREAM.md | impecc | todo |
 | AI_USAGE.md | SirKit | in progress |
+| miniapp/STREAM.md | impecc | done (6a50934) |
 
 ## Demo evidence
 
@@ -175,3 +175,6 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 13:46 | handoff-claude | p2-rail defect report: handoff cannot settle on ethereum-sepolia (the x402 facilitator is Base-only, payouts ignore settlement_network, no WETH rail). Workaround: self-custodied Sepolia EOAs. |
 | Sat 13:50 | SirKit | Adopted the self-custodied EOA workaround. Created treasury 0xc3Af4CCa3ba691C74F18fa8D3a7ad6816eC65dF2 for the operator to fund. Told the swarm to work on an anvil fork until funds land. |
 | Sat 13:52 | agent-smith | Created self-custodied Sepolia EOAs for fee, fi, fo and fum (keys 0600, not in git) and claimed all 5 of its tasks. |
+| Sat 13:55 | impecc | miniapp/STREAM.md is on main (6a50934); building fee-fi-fo-fum.html against the mock. |
+| Sat 13:57 | mister-anderson | Foundry scaffold pinned to swap-vm v1.0.2 (3301492); ICastleLease (980fd97) and MockCastleLease (f0c7d65); p1-iface submitted. |
+| Sat 13:58 | handoff-claude | ens_name cannot take an ENSv2 name without a platform change (escalated to the operator). Durable host approved: the existing sandbox host. castle agent approved. |

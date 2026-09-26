@@ -11,6 +11,8 @@ export function canonical(v) {
   return JSON.stringify(typeof v === 'bigint' ? v.toString() : v);
 }
 export const reportMessage = ({ agent, type, t, data }) => `castle-report/1\n${agent}\n${type}\n${t}\n${canonical(data)}`;
+// fo's poll for castle_route orders (service/src/fo.mjs builds the same string).
+export const foMessage = ({ what, t, body }) => `castle-fo/1\n${what}\n${t}\n${canonical(body ?? {})}`;
 
 const plain = (v) => JSON.parse(JSON.stringify(v, (_k, x) => (typeof x === 'bigint' ? x.toString() : x)));
 

@@ -3,7 +3,8 @@
 // fo takes UniswapX-format orders and routes each one to the better of two fills from the same Castle balance:
 //   harp  a firm quote fi signed (the castle service's castle_quote), filled through router.swap;
 //   v4    the Castle's v4 pool, whose hook fills the swap just in time from hen (the V4Quoter prices it).
-// It answers POST /route {order} on 127.0.0.1:FO_PORT (the castle service's castle_route tool forwards here), returns
+// It answers POST /route {order} on 127.0.0.1:FO_PORT (the castle service's castle_route forwards here when it can
+// reach fo, and otherwise hands the order to fo's signed poll of /fo/next), returns
 // the chosen route with ready calldata, and reports intent.routed to the service, signed. There is no UniswapX
 // reactor on Sepolia (docs/research.md), so the swapper signs and sends the calls itself. fo holds no on-chain role
 // and sends no transactions.
@@ -15,7 +16,7 @@ import http from 'node:http';
 import { encodeAbiParameters, encodeFunctionData, getAddress, isAddress } from 'viem';
 import { contractAddress, abi } from '../lib/chain.mjs';
 import { env } from '../lib/env.mjs';
-import { report, serviceBase } from '../lib/report.mjs';
+import { report, serviceBase, foMessage } from '../lib/report.mjs';
 
 const PORT = Number(env('FO_PORT', 8731));
 const MIN_SQRT = 4295128739n + 1n;
@@ -103,9 +104,39 @@ export async function route(ctx, order) {
   return { id, route: best.route, amountIn: o.amountIn.toString(), amountOut: best.amountOut.toString(), minOut: o.minOut.toString(), quoteId: best.quoteId ?? null, validUntil: best.validUntil ?? null, compared: why, calls: best.calls, note: 'sign and send calls in order from the swapper; a harp quote lives 30 s' };
 }
 
+// castle_route reaches fo through the service: fo polls GET /fo/next (signed) and posts each route, or why there is
+// none, to POST /fo/answer. This works wherever fo runs; a service with FO_URL set calls /route directly instead.
+let polling = false;
+async function poll(ctx) {
+  const base = serviceBase();
+  if (!base || env('FO_POLL', '1') === '0' || polling) return;
+  polling = true;
+  ctx.log('polling', { service: base });
+  const signed = async (what, body) => { const t = Date.now(); return { t, sig: await ctx.account.signMessage({ message: foMessage({ what, t, body }) }) }; };
+  while (polling) {
+    try {
+      const { t, sig } = await signed('next', {});
+      const r = await fetch(`${base}/fo/next?wait=10000`, { headers: { 'x-fo-t': String(t), 'x-fo-sig': sig }, signal: AbortSignal.timeout(20_000) });
+      if (r.status === 204) { ctx.logChange('poll', 'poll', { ok: true }); continue; }
+      const job = await r.json().catch(() => null);
+      if (r.status !== 200 || !job?.id) { ctx.logChange('poll', 'poll', { ok: false, status: r.status, error: job?.error }); await new Promise((z) => setTimeout(z, 5_000)); continue; }
+      ctx.logChange('poll', 'poll', { ok: true });
+      let result = null, error = null;
+      try { result = JSON.parse(JSON.stringify(await route(ctx, job.order), (_k, x) => (typeof x === 'bigint' ? x.toString() : x))); }
+      catch (e) { error = e.shortMessage || e.message; }
+      const s = await signed('answer', { id: job.id, result, error });
+      await fetch(`${base}/fo/answer`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: job.id, result, error, ...s }), signal: AbortSignal.timeout(15_000) });
+    } catch (e) {
+      ctx.logChange('poll', 'poll', { ok: false, error: e.message });
+      await new Promise((z) => setTimeout(z, 5_000));
+    }
+  }
+}
+
 export default {
   intervalMs: 30_000,
   async init(ctx) {
+    poll(ctx);
     server = http.createServer(async (req, res) => {
       const send = (s, b) => { res.writeHead(s, { 'content-type': 'application/json' }); res.end(JSON.stringify(b, (_k, x) => (typeof x === 'bigint' ? x.toString() : x))); };
       if (req.method !== 'POST' || new URL(req.url, 'http://x').pathname !== '/route') return send(404, { error: 'POST /route {order}' });

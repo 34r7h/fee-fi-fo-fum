@@ -22,6 +22,7 @@ export const env = {
   handoffApi: (process.env.HANDOFF_API || 'https://handoff.lol/api/v1').replace(/\/$/, ''),
   pollMs: Math.max(1, Number(process.env.CASTLE_POLL_SECONDS || 4)) * 1000,
   publicUrl: (process.env.CASTLE_PUBLIC_URL || '').replace(/\/$/, ''),
+  chainId: Number(process.env.CASTLE_CHAIN_ID || 11155111),
 };
 if (!env.rpcs.length) throw new Error('set SEPOLIA_RPC_URL (and optionally SEPOLIA_RPC_URL_FALLBACK)');
 
@@ -38,36 +39,45 @@ export function deployments() {
   const raw = readJson(env.deploymentsPath) || {};
   const ens = readJson(env.ensDeploymentsPath) || {};
   const obj = (v) => (v && typeof v === 'object' ? v : {});
-  // contracts.castle is Castle v3 from its deploy on, and v2 moved to raw.v2. This service still speaks v2, so it
-  // keeps serving the v2 castle and fence until the v3 port sets CASTLE_VERSION=3 at genesis.
-  const v2 = process.env.CASTLE_VERSION !== '3' ? obj(raw.v2) : {};
-  const src = { agentRegistry: ens.agentRegistry, agentResolver: ens.resolver, ...raw, ...obj(raw.external), ...obj(raw.contracts), ...v2 };
+  const src = { agentRegistry: ens.agentRegistry, agentResolver: ens.resolver, ...raw, ...obj(raw.external), ...obj(raw.contracts) };
   const out = {};
   for (const [k, v] of Object.entries(src)) {
     if (isAddr(v)) out[k] = { address: v, block: null };
-    else if (v && isAddr(v.address)) out[k] = { address: v.address, block: v.block ?? v.deployBlock ?? v.blockNumber ?? null };
+    else if (v && isAddr(v.address) && !RETIRED.has(v.version)) out[k] = { address: v.address, block: v.block ?? v.deployBlock ?? v.blockNumber ?? null };
   }
   return { chainId: raw.chainId ?? 11155111, contracts: out, raw };
 }
 
-// Lookup by any of the names the lanes might use for the same contract.
+// Lookup by any of the names the lanes might use for the same contract. The lease edition's castle (an entry with a
+// "version" of v2 or v3) is retired at tag lease-edition, and nothing here reads it.
 const ALIASES = {
-  castle: ['castle', 'Castle'],
+  castle: ['castleVault', 'CastleVault', 'vault', 'castle'],
+  priceExtruction: ['priceExtruction', 'PriceExtruction'],
+  quoteResolver: ['quoteResolver', 'offchainQuoteResolver', 'OffchainQuoteResolver'],
+  hook: ['castleJITHook', 'CastleJITHook', 'jitHook', 'hook'],
   aqua: ['aqua', 'Aqua'],
   router: ['router', 'aquaSwapVMRouter', 'swapVmRouter', 'AquaSwapVMRouter', 'SwapVMRouter'],
-  extruction: ['extruction', 'feeFiFoFumExtruction', 'FeeFiFoFumExtruction', 'fence'],
-  jackHook: ['jackHook', 'JackHook'],
-  ccaFactory: ['ccaFactory', 'CCAFactory', 'ContinuousClearingAuctionFactory'],
-  registry: ['registry', 'ensRegistry', 'ETHRegistry', 'castleRegistry', 'agentRegistry'],
-  resolver: ['resolver', 'PermissionedResolver', 'ensResolver', 'agentResolver'],
+  poolManager: ['poolManager', 'v4PoolManager', 'PoolManager'],
+  poolSwapTest: ['poolSwapTest', 'v4PoolSwapTest', 'PoolSwapTest'],
+  v4Quoter: ['v4Quoter', 'quoter', 'V4Quoter'],
+  stateView: ['stateView', 'v4StateView', 'StateView'],
+  chainlink: ['chainlinkEthUsd', 'ethUsdFeed', 'chainlink'],
+  registry: ['feefifofumRegistry', 'registry', 'ensRegistry'],
   universalResolver: ['universalResolver', 'universalResolverV2', 'UniversalResolverV2'],
   usdc: ['usdc', 'USDC'],
   weth: ['weth', 'WETH'],
 };
+const RETIRED = new Set(['v2', 'v3']);
 export function addr(name) {
   const { contracts } = deployments();
   for (const k of ALIASES[name] || [name]) if (contracts[k]) return contracts[k].address;
   return null;
+}
+// A non-address value the contracts lane records (e.g. poolId), from contracts, external or the top level.
+export function value(name) {
+  const { raw } = deployments();
+  const v = raw?.contracts?.[name] ?? raw?.external?.[name] ?? raw?.[name];
+  return v && typeof v === 'object' && !Array.isArray(v) ? (v.value ?? v.id ?? null) : (v ?? null);
 }
 export function deployBlock(name) {
   const { contracts } = deployments();
@@ -80,7 +90,7 @@ export function addressBook() {
   return out;
 }
 
-// miniapp/config.json: the shift table, the lease name and the agents. Operator config, not chain state.
+// miniapp/config.json: display names for known addresses (names). Operator config, not chain state.
 export function miniappConfig() {
   return readJson(env.miniappConfigPath) || {};
 }

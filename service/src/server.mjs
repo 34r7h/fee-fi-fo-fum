@@ -1,20 +1,28 @@
-// castle service HTTP surface:
-//   POST /mcp            MCP over Streamable HTTP (stateless), the seven castle tools
+// castle service HTTP surface (docs/SPEC.md "The castle service"):
+//   GET  /ccip/{sender}/{data}.json, POST /ccip   the ERC-3668 gateway for quote.feefifofum.eth (gateway.mjs)
+//   POST /mcp            MCP over Streamable HTTP (stateless): castle_status, castle_quote, castle_fill,
+//                        castle_allocations, castle_route
 //   GET  /tools          tool list;  POST /tools/<name>  the same tools as REST (JSON body in, JSON out)
-//   GET  /stream         SSE, miniapp/STREAM.md v1 (snapshot first, id = seq, Last-Event-ID resumes, ping 15s)
+//   GET  /stream         SSE, miniapp/STREAM.md v2 (snapshot first, id = seq, Last-Event-ID resumes, ping 15s)
 //   GET  /state          the snapshot as JSON
-//   GET  /fills?from_block=N   every fill attempt since N, reverted ones included
+//   POST /report         a crew member's signed report (report.mjs)
 //   GET  /health
-// CORS is open (Access-Control-Allow-Origin: *): the miniapp reads this cross-origin from handoff.lol.
+// CORS is open (Access-Control-Allow-Origin: *): the miniapp reads this cross-origin from handoff.lol, and CCIP-Read
+// clients call the gateway from anywhere. Every gateway answer and refusal is one JSON log line on stdout.
 import http from 'node:http';
 import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { env } from './config.mjs';
 import { tools } from './tools.mjs';
-import { bus, start, snapshot, since, fillsFrom, health } from './indexer.mjs';
+import { bus, since } from './stream.mjs';
+import { start, snapshot, health } from './indexer.mjs';
+import { route as gateway } from './gateway.mjs';
+import { acceptReport } from './report.mjs';
+import { fiStatus } from './fi.mjs';
 
 const json = (v) => JSON.stringify(v, (_k, x) => (typeof x === 'bigint' ? x.toString() : x));
+const log = (o) => console.log(json({ t: new Date().toISOString(), ...o }));
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -27,13 +35,14 @@ function send(res, status, body) {
 }
 async function readBody(req) {
   const chunks = [];
-  for await (const c of req) chunks.push(c);
+  let n = 0;
+  for await (const c of req) { n += c.length; if (n > 1_000_000) throw Object.assign(new Error('body too large'), { status: 413 }); chunks.push(c); }
   const s = Buffer.concat(chunks).toString('utf8');
-  return s ? JSON.parse(s) : {};
+  try { return s ? JSON.parse(s) : {}; } catch { throw Object.assign(new Error('body is not JSON'), { status: 400 }); }
 }
 
 function mcpServer() {
-  const server = new McpServer({ name: 'castle', version: '0.1.0' });
+  const server = new McpServer({ name: 'castle', version: '0.2.0' });
   for (const [name, t] of Object.entries(tools)) {
     server.registerTool(name, { description: t.description, inputSchema: t.input }, async (args) => {
       try {
@@ -58,11 +67,12 @@ function sse(req, res) {
   const frame = (ev) => res.write(`id: ${ev.seq}\nevent: ${ev.type}\ndata: ${json(ev)}\n\n`);
   const last = Number(req.headers['last-event-id'] || url.searchParams.get('since') || NaN);
   if (windowMs > 0) res.write('retry: 250\n\n');
-  if (Number.isFinite(last)) {
+  if (Number.isFinite(last) && last > 0) {
     for (const ev of since(last)) frame(ev);   // a resume: the missed events, no second snapshot
   } else {
     const snap = snapshot();
     res.write(`id: ${snap.seq}\nevent: snapshot\ndata: ${json(snap)}\n\n`);
+    if (last === 0) for (const ev of since(0)) frame(ev);   // ?since=0 replays the whole history after the snapshot
   }
   const on = (ev) => frame(ev);
   bus.on('event', on);
@@ -76,6 +86,7 @@ const srv = http.createServer(async (req, res) => {
   const p = url.pathname.replace(/\/+$/, '') || '/';
   try {
     if (req.method === 'OPTIONS') { res.writeHead(204, CORS); res.end(); return; }
+    if (p === '/ccip' || p.startsWith('/ccip/')) { await gateway(req, res, p, send, readBody, log); return; }
     if (p === '/mcp') {
       if (req.method !== 'POST') { send(res, 405, { jsonrpc: '2.0', error: { code: -32000, message: 'POST only (stateless Streamable HTTP)' }, id: null }); return; }
       for (const [k, v] of Object.entries(CORS)) res.setHeader(k, v);
@@ -89,8 +100,11 @@ const srv = http.createServer(async (req, res) => {
     }
     if (p === '/stream' && req.method === 'GET') return sse(req, res);
     if (p === '/state' && req.method === 'GET') return send(res, 200, snapshot());
-    if (p === '/fills' && req.method === 'GET') return send(res, 200, { fills: fillsFrom(Number(url.searchParams.get('from_block') || 0)) });
-    if (p === '/health') return send(res, 200, { ok: true, ...health() });
+    if (p === '/health') return send(res, 200, { ok: true, ...fiStatus(), ...health() });
+    if (p === '/report' && req.method === 'POST') {
+      try { return send(res, 200, await acceptReport(await readBody(req))); }
+      catch (e) { log({ report: 'refused', status: e.status || 500, message: e.message }); return send(res, e.status || 500, { error: e.message }); }
+    }
     if (p === '/tools' && req.method === 'GET') return send(res, 200, { tools: Object.entries(tools).map(([name, t]) => ({ name, description: t.description, params: Object.keys(t.input) })) });
     const m = p.match(/^\/tools\/([a-z_]+)$/);
     if (m && req.method === 'POST') {
@@ -102,12 +116,12 @@ const srv = http.createServer(async (req, res) => {
       try { return send(res, 200, await t.run(parsed.data)); }
       catch (e) { return send(res, 400, { error: String(e?.shortMessage || e?.message || e) }); }
     }
-    if (p === '/') return send(res, 200, { service: 'castle', mcp: '/mcp', tools: '/tools', stream: '/stream', state: '/state', fills: '/fills', health: '/health' });
+    if (p === '/') return send(res, 200, { service: 'castle', gateway: '/ccip/{sender}/{data}.json', mcp: '/mcp', tools: '/tools', stream: '/stream', state: '/state', health: '/health' });
     send(res, 404, { error: 'not found' });
   } catch (e) {
-    if (!res.headersSent) send(res, 500, { error: String(e?.message || e) });
+    if (!res.headersSent) send(res, e.status || 500, { error: String(e?.message || e) });
   }
 });
 
 start();
-srv.listen(env.port, () => console.log(`castle service on :${env.port} (rpcs: ${env.rpcs.length})`));
+srv.listen(env.port, () => log({ service: 'castle', port: env.port, rpcs: env.rpcs.length, ...fiStatus() }));

@@ -1,139 +1,116 @@
-// The castle, as one ordered stream of events (miniapp/STREAM.md, v1). The indexer polls Sepolia for Castle,
-// Aqua (maker = Castle) and CCA logs, derives lease.expired from block time, folds relayed fill attempts in
-// (reverted txs emit no logs, so only this service can report a FeeFiFoFum() revert), and polls handoff.lol
-// for the agents' agent_heartbeat liveness. Every event goes through one reducer that keeps the snapshot.
-import fs from 'node:fs';
-import { EventEmitter } from 'node:events';
-import { env, addr, addressBook, deployBlock, miniappConfig, crewConfig, dataFile } from './config.mjs';
-import { client, head, blockTime, readLease, inventory, auctionView, priceView, fenceDecision, leaseState, tryDecode, sameAddr } from './chain.mjs';
-import { keccak256, toHex, getAddress } from 'viem';
+// The chain half of the castle stream v2 (miniapp/STREAM.md, with docs/SPEC.md's names). The indexer polls Sepolia
+// (or an anvil fork of it) for the CastleVault's logs and the router's Swapped logs whose maker is the vault, and
+// emits strategy.shipped, strategy.docked, cap.set, leverage.set, fill and hoard. Aqua is the ledger: a ship records
+// a virtual balance per token (rawBalances), and a fill pulls one token and pushes the other. A fill whose taker is
+// the hook (its tx also holds a PoolManager Swap) is route "v4", filled just in time from hen; otherwise "aqua".
+// Reverted txs emit no logs: a reverted ship reaches the stream through fi's report (report.mjs), and a reverted
+// fill through castle_fill {tx_hash}. Agent liveness is the later of each agent's last_seen on handoff.lol
+// (agent_heartbeat) and its last signed beat to POST /report.
+import { getAddress, decodeFunctionData, decodeAbiParameters, encodeAbiParameters, keccak256, sliceHex } from 'viem';
+import { env, addr, addressBook, deployBlock, value, crewConfig, miniappConfig } from './config.mjs';
+import { abi } from './abi.mjs';
+import { client, head, blockTime, tryDecode, sameAddr, revertReason, revertError } from './chain.mjs';
+import { open, emit, view, find, since, snapshotBody, cursorMeta, saveMeta } from './stream.mjs';
+import { forgetHarp, findQuote, HARP_SLOT, HEN_SLOT } from './quote.mjs';
 
 const CHUNK = 2000n;          // eth_getLogs block span per request (public Sepolia RPCs cap the range)
-const RING = 5000;            // events kept in memory for Last-Event-ID resume
-const STALE_BEATS = 2;        // an agent is dead after this many renew periods without agent_heartbeat
+const STALE_MS = 90_000;      // an agent whose agent_heartbeat is older than this is shown as down
 
-export const bus = new EventEmitter();
-bus.setMaxListeners(0);
+export const DECIMALS = { USDC: 6, WETH: 18 };
+export const SLOT_NAMES = { [HARP_SLOT]: 'harp', [HEN_SLOT]: 'hen', 2: 'greedy' };
+const OP_NAMES = { 17: 'XYCSwap', 21: 'XYCSwap + flatFee', 32: 'PriceExtruction' };
+const henFees = new Map();   // strategy hash -> hen's flatFee in swap-vm's 1e9 scale
+const symbolOf = (a) => (sameAddr(a, addr('usdc')) ? 'USDC' : sameAddr(a, addr('weth')) ? 'WETH' : null);
+const str = (v) => (v == null ? null : v.toString());
+const arg = (d, n) => d?.args?.[n];
+const ORDER = [{ type: 'tuple', components: [{ name: 'maker', type: 'address' }, { name: 'traits', type: 'uint256' }, { name: 'data', type: 'bytes' }] }];
+const QUOTE_TUPLE = { type: 'tuple', components: [{ name: 'strategyHash', type: 'bytes32' }, { name: 'tokenIn', type: 'address' }, { name: 'tokenOut', type: 'address' }, { name: 'priceQ96', type: 'uint256' }, { name: 'maxAmountIn', type: 'uint256' }, { name: 'validUntil', type: 'uint64' }] };
 
-const events = [];
-let seq = 0;
-let cursor = null;            // next block to scan
-let lastExpiredEpoch = null;  // lease.expired is emitted once per epoch
-const auctions = new Set();   // CCAs Castle opened (plus AUCTION env / tool-reported ones)
-const clearedAuctions = new Set();
-const leaseTimeline = [];     // [{block, epoch, expiry}] from Castle events, for replaying fills at their block
-const strategies = new Map(); // hash -> strategy row
-const agents = new Map();     // id -> {id, role, addr, ens, alive, lastBeat}
-const strategyBytes = new Map(); // hash -> the full strategy bytes Aqua logged at ship (the encoded Order)
+let cursor = null;
+let vaultKey = null;
+const slotCaps = new Map();   // slot -> {WETH, USDC}
+const slotOf = new Map();     // strategy hash -> slot
+const leverage = {};          // symbol -> bps
 
-const state = {
-  lease: null, strategies: [], inventory: { weth: null, usdc: null },
-  price: null, auction: null, fills: [], crew: [],
-};
-
-// ---- persistence for what the chain cannot give back ---------------------------------------------------
-function load(name, fallback) { try { return JSON.parse(fs.readFileSync(dataFile(name), 'utf8')); } catch { return fallback; } }
-function save(name, v) { fs.writeFileSync(dataFile(name), JSON.stringify(v, null, 2)); }
-const relayed = load('fills.json', []);       // fill attempts reported through castle_fill (success or revert)
-state.crew = load('crew.json', []);
-
-// ---- the reducer ---------------------------------------------------------------------------------------
-function emit(type, data, meta = {}) {
-  const ev = { v: 1, seq: ++seq, type, t: meta.t ?? Date.now(), block: meta.block ?? null, tx: meta.tx ?? null, src: meta.src ?? 'chain', ...data };
-  events.push(ev);
-  if (events.length > RING) events.shift();
-  reduce(ev);
-  bus.emit('event', ev);
-  return ev;
+// ---- chain reads -----------------------------------------------------------------------------------------
+const at = (b) => (b != null ? { blockNumber: BigInt(b) } : {});
+async function erc20(token, fn, args, b) {
+  if (!token) return null;
+  return client.readContract({ address: token, abi: abi('ERC20'), functionName: fn, args, ...at(b) }).catch(() => null);
 }
-
-function reduce(ev) {
-  switch (ev.type) {
-    case 'lease.renewed':
-    case 'lease.claimed':
-      state.lease = { holder: ev.holder, holderAgent: ev.holderAgent, epoch: ev.epoch, expiry: ev.expiry, state: 'LIVE' };
-      break;
-    case 'lease.expired':
-      if (state.lease) state.lease.state = 'WIND-DOWN';
-      break;
-    case 'strategy.shipped':
-      strategies.set(ev.hash, { hash: ev.hash, epoch: ev.epoch, shippedBy: ev.shippedBy, center: ev.center, docked: false });
-      state.strategies = [...strategies.values()];
-      break;
-    case 'strategy.docked':
-      if (strategies.has(ev.hash)) strategies.get(ev.hash).docked = true;
-      state.strategies = [...strategies.values()];
-      break;
-    case 'price.written':
-      state.price = { ...ev.price, block: ev.block, tx: ev.tx };
-      break;
-    case 'auction.opened':
-      state.auction = { auction: ev.auction, kind: ev.kind, status: 'open', floor: ev.floor, clearing: null, endBlock: ev.endBlock };
-      break;
-    case 'auction.checkpoint':
-      if (state.auction?.auction === ev.auction) state.auction.clearing = ev.clearing;
-      break;
-    case 'auction.cleared':
-      if (state.auction?.auction === ev.auction) Object.assign(state.auction, { status: 'cleared', clearing: ev.clearing });
-      break;
-    case 'fill': {
-      state.fills.push(ev);
-      if (state.fills.length > 50) state.fills.shift();
-      break;
-    }
-    case 'agent': {
-      const a = agents.get(ev.id);
-      if (a) Object.assign(a, { alive: ev.alive, lastBeat: ev.lastBeat });
-      break;
-    }
-    default: break;
+export async function hoardAt(b) {
+  const vault = addr('castle');
+  const [u, w] = await Promise.all([erc20(addr('usdc'), 'balanceOf', [vault], b), erc20(addr('weth'), 'balanceOf', [vault], b)]);
+  const bag = {};
+  if (u != null) bag.USDC = u.toString();
+  if (w != null) bag.WETH = w.toString();
+  return bag;
+}
+// A strategy's Aqua allocation per token (its virtual balance), at a block.
+export async function allocAt(hash, b) {
+  const aqua = addr('aqua'), vault = addr('castle'), router = addr('router');
+  const bag = {};
+  for (const [sym, token] of [['USDC', addr('usdc')], ['WETH', addr('weth')]]) {
+    if (!aqua || !token) continue;
+    const r = await client.readContract({ address: aqua, abi: abi('Aqua'), functionName: 'rawBalances', args: [vault, router, hash, token], ...at(b) }).catch(() => null);
+    if (r) bag[sym] = r[0].toString();
   }
+  return bag;
 }
+async function vaultRead(fn, args = [], b) {
+  return client.readContract({ address: addr('castle'), abi: abi('CastleVault'), functionName: fn, args, ...at(b) }).catch(() => null);
+}
+export async function committedAt(b) {
+  const [u, w] = await Promise.all([vaultRead('committed', [addr('usdc')], b), vaultRead('committed', [addr('weth')], b)]);
+  return { ...(u != null ? { USDC: u.toString() } : {}), ...(w != null ? { WETH: w.toString() } : {}) };
+}
+// The program's shape, from its first opcode: harp is Extruction(PriceExtruction), hen is flatFee + XYCSwap.
+async function kindOf(hash, b) {
+  const o = await vaultRead('orderOf', [hash], b);
+  if (!o?.data || o.data.length < 4) return null;
+  const op = parseInt(sliceHex(o.data, 0, 1), 16);
+  if (op === 21) henFees.set(hash, BigInt(sliceHex(o.data, 2, 6)));
+  return OP_NAMES[op] ?? 'program';
+}
+const crewId = (a) => { for (const [id, c] of Object.entries(crewConfig())) if (sameAddr(c.address, a)) return id; return null; };
 
-// ---- names ---------------------------------------------------------------------------------------------
-function agentByAddr(a) {
+// ---- names -----------------------------------------------------------------------------------------------
+export function nameOf(a) {
   if (!a) return null;
-  for (const x of agents.values()) if (sameAddr(x.addr, a)) return x.id;
-  for (const c of state.crew) if (sameAddr(c.addr, a)) return c.agent_id;
-  return null;
-}
-const ensFor = (id) => agents.get(id)?.ens || state.crew.find((c) => c.agent_id === id)?.ens || null;
-
-// DNS wire format -> dotted name (Castle's Relinked carries the holder's DNS-encoded name).
-function dnsDecode(hex) {
-  if (!hex || hex === '0x') return null;
-  const b = Buffer.from(hex.slice(2), 'hex');
-  const out = [];
-  for (let i = 0; i < b.length && b[i] !== 0; i += b[i] + 1) out.push(b.subarray(i + 1, i + 1 + b[i]).toString('utf8'));
-  return out.join('.') || null;
-}
-async function mcpOf(name) {
-  const ur = addr('universalResolver');
-  if (!ur) return null;
-  try { return await client.getEnsText({ name, key: 'agent-endpoint[mcp]', universalResolverAddress: ur }); } catch { return null; }
+  const cfg = miniappConfig();
+  for (const [k, v] of Object.entries(cfg.names || {})) if (sameAddr(k, a)) return v;
+  const id = crewId(a);
+  return id ? `${id}.feefifofum.eth` : null;
 }
 
-// The first block whose timestamp is at or after `ts`, by bisection over [lo, hi] (block times only go up).
-async function blockAtOrAfter(ts, lo, hi) {
-  lo = BigInt(lo); hi = BigInt(hi);
-  while (lo < hi) {
-    const mid = (lo + hi) / 2n;
-    if ((await blockTime(mid)) >= ts) hi = mid; else lo = mid + 1n;
-  }
-  return lo;
+// ---- links a fill to the quote or the routed order behind it --------------------------------------------
+// A router.swap tx, decoded: the order's strategy hash, the tokens and amountIn, and the harp Quote in its takerData
+// (instructionsArgs, the 8th slice) when there is one. null for any other tx.
+function swapCall(txn) {
+  if (!sameAddr(txn?.to, addr('router'))) return null;
+  try {
+    const d = decodeFunctionData({ abi: abi('SwapVM'), data: txn.input });
+    const [order, tokenIn, tokenOut, amountIn, ttd] = d.args;
+    const strategy = keccak256(encodeAbiParameters(ORDER, [order]));
+    let quote = null;
+    try {
+      const flags = BigInt(ttd.slice(0, 2 + 44));
+      const i8 = Number((flags >> 16n >> (8n * 16n)) & 0xffffn);
+      [quote] = decodeAbiParameters([QUOTE_TUPLE, { type: 'bytes' }], `0x${ttd.slice(2 + 44 + i8 * 2)}`);
+    } catch { /* no Quote: not a harp fill */ }
+    return { strategy, tokenIn, tokenOut, amountIn, quote };
+  } catch { return null; }
 }
-// A lapse is stamped at the lease's real expiry (t = expiry, the first block at or after it), not when the service
-// notices it, so a wind-down fill made in the gap sorts after the lease ran out.
-async function emitExpired({ epoch, expiry }, lo, hi) {
-  lastExpiredEpoch = epoch;
-  const block = await blockAtOrAfter(expiry, lo, hi);
-  emit('lease.expired', { epoch, expiry }, { block: Number(block), tx: null, t: expiry * 1000, src: 'derived' });
+// A harp fill carries its Quote in the router.swap takerData: match it to the quote this service signed (through
+// the gateway or castle_quote).
+function quoteIdOf(txn) {
+  const q = swapCall(txn)?.quote;
+  if (!q) return null;
+  return findQuote((r) => r.strategyHash === q.strategyHash && String(r.validUntil) === String(q.validUntil) && r.priceQ96 === q.priceQ96.toString())?.id ?? null;
 }
-
-function leaseAt(block) {
-  let cur = null;
-  for (const l of leaseTimeline) { if (l.block <= block) cur = l; else break; }
-  return cur;
+function intentIdOf(taker, route, amountIn) {
+  const e = find((x) => x.type === 'intent.routed' && x.route === route && sameAddr(x.swapper, taker) && String(x.amountIn) === String(amountIn));
+  return e?.id ?? null;
 }
 
 // ---- log scanning --------------------------------------------------------------------------------------
@@ -141,253 +118,179 @@ async function logsFor(address, from, to) {
   if (!address) return [];
   return client.getLogs({ address, fromBlock: from, toBlock: to });
 }
-
-const evName = (d) => d?.eventName || '';
-const arg = (d, ...names) => { for (const n of names) if (d?.args?.[n] !== undefined) return d.args[n]; return undefined; };
-const str = (v) => (v == null ? null : v.toString());
+const byPos = (a, b) => (a.blockNumber === b.blockNumber ? a.logIndex - b.logIndex : a.blockNumber < b.blockNumber ? -1 : 1);
 
 async function scan(from, to) {
-  const castle = addr('castle');
-  const aqua = addr('aqua');
-  const [castleLogs, aquaLogs] = await Promise.all([logsFor(castle, from, to), logsFor(aqua, from, to)]);
-  // An auction Castle opens in this range is watched from this range on, so bids in its first blocks are not missed.
-  for (const l of castleLogs) {
-    const d = tryDecode('Castle', l);
-    if (evName(d) === 'AuctionOpened') auctions.add(getAddress(arg(d, 'auction')));
-  }
-  const ccaLogs = await Promise.all([...auctions].map((a) => logsFor(a, from, to)));
-  const all = [...castleLogs, ...aquaLogs, ...ccaLogs.flat()]
-    .sort((a, b) => (a.blockNumber === b.blockNumber ? a.logIndex - b.logIndex : a.blockNumber < b.blockNumber ? -1 : 1));
-
-  // Group Aqua pull/push per tx: one router.swap is one fill.
-  const fillTx = new Map();
-  for (const log of all) {
-    const block = Number(log.blockNumber);
-    const t = (await blockTime(log.blockNumber)) * 1000;
-    const meta = { block, tx: log.transactionHash, t };
-    if (castle && sameAddr(log.address, castle)) {
-      const d = tryDecode('Castle', log);
-      const n = evName(d);
-      if (/Renewed$/.test(n)) {
-        const epoch = str(arg(d, 'epoch')); const expiry = Number(arg(d, 'expiry'));
-        leaseTimeline.push({ block, epoch, expiry });
-        const holder = arg(d, 'holder');
-        emit('lease.renewed', { epoch, holder, holderAgent: agentByAddr(holder), expiry, attestor: 'fo', digest: str(arg(d, 'attestationDigest', 'digest')) }, meta);
-      } else if (/Claimed$/.test(n)) {
-        const epoch = str(arg(d, 'epoch')); const expiry = Number(arg(d, 'expiry'));
-        const prevEpoch = str(arg(d, 'previousEpoch', 'prevEpoch'));
-        const prev = leaseTimeline.at(-1);
-        // The previous lease lapsed before this claim (a failover): its lease.expired comes first, at its expiry.
-        if (prev && prev.epoch !== epoch && prev.expiry > 0 && t / 1000 > prev.expiry && lastExpiredEpoch !== prev.epoch) {
-          await emitExpired(prev, prev.block, block);
-        }
-        leaseTimeline.push({ block, epoch, expiry });
-        const holder = arg(d, 'holder');
-        emit('lease.claimed', { epoch, prevEpoch, holder, holderAgent: agentByAddr(holder), expiry, gapSeconds: prev ? t / 1000 - prev.expiry : null }, meta);
-        const cfg = miniappConfig();
-        const shift = (cfg.shifts || []).find((s) => s.agent === agentByAddr(holder));
-        emit('shift.changed', { from: prev ? agentByAddr(state.lease?.holder) : null, to: agentByAddr(holder), city: shift?.city ?? null, auction: null }, { ...meta, src: 'service' });
-      } else if (/Relinked$/.test(n)) {
-        // Castle v2 names the holder's crew label (castle.<parent> now shares <label>.<parent>'s record); v1 sent a DNS name.
-        const label = arg(d, 'holderLabel');
-        const parent = (miniappConfig().name || 'castle.feefifofum.eth').split('.').slice(1).join('.');
-        const holderName = label ? `${label}.${parent}` : dnsDecode(arg(d, 'holderName'));
-        emit('castle.relinked', { node: arg(d, 'node'), holderNode: arg(d, 'holderNode'), holderName, mcpEndpoint: holderName ? await mcpOf(holderName) : null }, meta);
-      } else if (n === 'Docked') {
-        emit('strategy.docked', { hash: arg(d, 'strategyHash'), epoch: str(arg(d, 'epoch')), dockedBy: agentByAddr(arg(d, 'dockedBy')) }, meta);
-      } else if (n === 'Shipped') {
-        const hash = arg(d, 'strategyHash');
+  const vault = addr('castle'), router = addr('router'), hook = addr('hook'), pm = addr('poolManager');
+  const [vaultLogs, routerLogs] = await Promise.all([logsFor(vault, from, to), logsFor(router, from, to)]);
+  // A fill is the router's Swapped with the vault as maker (a ship's Aqua Pushed logs are not fills).
+  const swaps = routerLogs.filter((l) => { const d = tryDecode('SwapVM', l); return d?.eventName === 'Swapped' && sameAddr(arg(d, 'maker'), vault); });
+  let lastFillBlock = null;
+  for (const l of [...vaultLogs, ...swaps].sort(byPos)) {
+    const block = Number(l.blockNumber), tx = l.transactionHash;
+    const m = { block, tx, t: (await blockTime(l.blockNumber)) * 1000 };
+    if (sameAddr(l.address, router)) {
+      const d = tryDecode('SwapVM', l);
+      const hash = arg(d, 'orderHash');
+      const [txn, rc] = await Promise.all([client.getTransaction({ hash: tx }).catch(() => null), client.getTransactionReceipt({ hash: tx }).catch(() => null)]);
+      const v4 = sameAddr(arg(d, 'taker'), hook) || !!rc?.logs?.some((x) => sameAddr(x.address, pm));
+      const swap = v4 ? rc?.logs?.find((x) => sameAddr(x.address, pm) && tryDecode('PoolManager', x)?.eventName === 'Swap') : null;
+      const amountIn = str(arg(d, 'amountIn'));
+      emit('fill', {
+        route: v4 ? 'v4' : 'aqua', strategy: hash, slot: slotOf.get(hash) ?? null,
+        quoteId: v4 ? null : quoteIdOf(txn), intentId: intentIdOf(txn?.from, v4 ? 'v4' : 'aqua', amountIn),
+        taker: txn?.from ?? arg(d, 'taker'), takerName: nameOf(txn?.from ?? arg(d, 'taker')),
+        tokenIn: symbolOf(arg(d, 'tokenIn')), tokenOut: symbolOf(arg(d, 'tokenOut')), amountIn, amountOut: str(arg(d, 'amountOut')),
+        fee: henFees.has(hash) ? { [symbolOf(arg(d, 'tokenIn'))]: ((BigInt(amountIn) * henFees.get(hash)) / 1_000_000_000n).toString() } : null,
+        pool: swap ? tryDecode('PoolManager', swap).args.id : null, label: SLOT_NAMES[slotOf.get(hash)] ?? null,
+        alloc: await allocAt(hash, block), status: 'success', revert: null,
+      }, m);
+      if (lastFillBlock !== block) { emit('hoard', { hoard: await hoardAt(block), reason: 'fill' }, m); lastFillBlock = block; }
+      continue;
+    }
+    const d = tryDecode('CastleVault', l);
+    switch (d?.eventName) {
+      case 'Shipped': {
+        const slot = Number(arg(d, 'slot')), hash = arg(d, 'strategyHash');
+        slotOf.set(hash, slot);
+        forgetHarp();
         emit('strategy.shipped', {
-          hash, epoch: str(arg(d, 'epoch')), shippedBy: agentByAddr((await client.getTransaction({ hash: log.transactionHash })).from),
-          center: (arg(d, 'anchorQ96', 'centerQ96') ?? 0n) > 0n ? priceView(arg(d, 'anchorQ96', 'centerQ96')) : null, weth: str(arg(d, 'weth')), usdc: str(arg(d, 'usdc')),
-        }, meta);
-      } else if (/AuctionOpened$/.test(n)) {
-        // Castle v3: AuctionOpened(auction, epoch, amount, floorQ96, endBlock, dissolution); the CCA starts in this block.
-        const auction = getAddress(arg(d, 'auction'));
-        auctions.add(auction);
-        const dissolution = arg(d, 'dissolution');
-        emit('auction.opened', {
-          auction, kind: dissolution === true || Number(arg(d, 'kind')) === 1 ? 'dissolution' : 'shift-change', amount: str(arg(d, 'amount')),
-          floor: arg(d, 'floorQ96') != null ? priceView(arg(d, 'floorQ96')) : null, epoch: str(arg(d, 'epoch')),
-          startBlock: Number(arg(d, 'startBlock') ?? block), endBlock: Number(arg(d, 'endBlock') ?? 0), hook: addr('jackHook'),
-        }, meta);
-      } else if (/AuctionSettled$/.test(n)) {
-        // settleAuction(): the CCA's currency and unsold WETH swept home; a graduated auction's clearing price goes to ENS.
-        const clearing = arg(d, 'clearingPriceQ96');
-        clearedAuctions.add(getAddress(arg(d, 'auction')));   // the settle is the clear: no derived duplicate
-        emit('auction.cleared', {
-          auction: getAddress(arg(d, 'auction')), clearing: clearing != null ? priceView(clearing) : null, sold: null,
-          raised: str(arg(d, 'currencyRaised')), priceWritten: Boolean(arg(d, 'priceWritten')),
-          settledBy: agentByAddr((await client.getTransaction({ hash: log.transactionHash })).from) || (await client.getTransaction({ hash: log.transactionHash })).from,
-        }, meta);
-      } else if (/PriceWritten$/.test(n)) {
-        const q = arg(d, 'priceQ96');
-        emit('price.written', { key: 'handoff-price', value: toHex(q ?? 0n, { size: 32 }), price: priceView(q) }, meta);
-      } else if (/Dissolved$/.test(n)) {
-        // v3: Dissolved(epoch, strategiesDocked, weth), then AuctionOpened for the whole WETH in the same tx.
-        const opened = castleLogs.find((l) => l.transactionHash === log.transactionHash && evName(tryDecode('Castle', l)) === 'AuctionOpened');
-        emit('castle.dissolved', {
-          caller: arg(d, 'caller') ?? (await client.getTransaction({ hash: log.transactionHash })).from,
-          auction: arg(d, 'auction') ?? (opened ? getAddress(arg(tryDecode('Castle', opened), 'auction')) : null),
-          epoch: str(arg(d, 'epoch')), strategiesDocked: str(arg(d, 'strategiesDocked')), weth: str(arg(d, 'weth')),
-        }, meta);
+          hash, slot, label: SLOT_NAMES[slot] ?? `slot ${slot}`, kind: await kindOf(hash, block),
+          alloc: { WETH: str(arg(d, 'weth')), USDC: str(arg(d, 'usdc')) }, cap: slotCaps.get(slot) ?? null, shippedBy: 'fi',
+        }, m);
+        break;
       }
-      continue;
-    }
-    if (aqua && sameAddr(log.address, aqua)) {
-      const d = tryDecode('Aqua', log);
-      if (!d || !sameAddr(arg(d, 'maker'), castle)) continue;
-      const n = evName(d);
-      if (n === 'Shipped') {
-        strategyBytes.set(arg(d, 'strategyHash'), arg(d, 'strategy'));
-        // Castle's own Shipped carries the epoch; if Castle's ABI has none, emit from Aqua with the epoch at ship time.
-        if (!castleLogs.some((l) => l.transactionHash === log.transactionHash && evName(tryDecode('Castle', l)) === 'Shipped')) {
-          const hash = arg(d, 'strategyHash');
-          emit('strategy.shipped', { hash, epoch: leaseAt(block)?.epoch ?? null, shippedBy: agentByAddr((await client.getTransaction({ hash: log.transactionHash })).from), center: null, weth: null, usdc: null }, meta);
-        }
-      } else if (n === 'Docked') {
-        if (castleLogs.some((l) => l.transactionHash === log.transactionHash && evName(tryDecode('Castle', l)) === 'Docked')) continue;
-        emit('strategy.docked', { hash: arg(d, 'strategyHash'), epoch: strategies.get(arg(d, 'strategyHash'))?.epoch ?? null, dockedBy: agentByAddr((await client.getTransaction({ hash: log.transactionHash })).from) }, meta);
-      } else if (n === 'Pulled' || n === 'Pushed') {
-        const f = fillTx.get(log.transactionHash) || { meta, legs: [] };
-        f.legs.push({ kind: n, token: arg(d, 'token'), amount: arg(d, 'amount'), hash: arg(d, 'strategyHash') });
-        fillTx.set(log.transactionHash, f);
+      case 'Docked': {
+        const by = crewId(arg(d, 'by')) ?? 'owner';
+        forgetHarp();
+        emit('strategy.docked', { hash: arg(d, 'strategyHash'), slot: slotOf.get(arg(d, 'strategyHash')) ?? null, by, reason: by === 'fum' ? 'risk: the hoard can no longer cover its biggest promise' : by === 'fi' ? 're-centre' : null }, m);
+        break;
       }
-      continue;
+      case 'CapSet': {
+        const slot = Number(arg(d, 'slot'));
+        const cap = { WETH: str(arg(d, 'wethCap')), USDC: str(arg(d, 'usdcCap')) };
+        slotCaps.set(slot, cap);
+        const hash = await vaultRead('strategyIn', [slot], block);
+        emit('cap.set', { hash: hash && !/^0x0+$/.test(hash) ? hash : null, slot, label: SLOT_NAMES[slot] ?? `slot ${slot}`, cap, by: 'fum' }, m);
+        break;
+      }
+      case 'LeverageSet': {
+        const sym = symbolOf(arg(d, 'token'));
+        leverage[sym] = Number(arg(d, 'bps'));
+        emit('leverage.set', { token: sym, bps: Number(arg(d, 'bps')), by: 'fum' }, m);
+        break;
+      }
+      default: break;
     }
-    // A CCA Castle opened.
-    const d = tryDecode('CCA', log);
-    const n = evName(d);
-    const auction = getAddress(log.address);
-    if (n === 'BidSubmitted') {
-      const owner = arg(d, 'owner');
-      emit('auction.bid', { auction, bidId: str(arg(d, 'id')), owner, ownerName: ensFor(agentByAddr(owner)), maxPrice: priceView(arg(d, 'priceQ96')), amount: str(arg(d, 'amount')) }, meta);
-    } else if (n === 'CheckpointUpdated' || n === 'ClearingPriceUpdated') {
-      emit('auction.checkpoint', { auction, clearing: priceView(arg(d, 'clearingPriceQ96')), sold: null, raised: null }, meta);
-    } else if (/Swept/.test(n)) {
-      emit('auction.swept', { auction, currency: 'USDC', amount: str(arg(d, 'amount', 'currencyAmount')) }, meta);
-    }
   }
-
-  // One fill per swap tx: the taker's tokenIn pushed and tokenOut pulled. A ship or dock also moves Castle's
-  // balances through Aqua, so a tx that ships or docks is never a fill.
-  const usdc = addr('usdc'); const weth = addr('weth');
-  const sym = (tk) => (sameAddr(tk, usdc) ? 'USDC' : sameAddr(tk, weth) ? 'WETH' : tk);
-  const books = new Set(all.filter((l) => ['Shipped', 'Docked'].includes(evName(tryDecode(sameAddr(l.address, aqua) ? 'Aqua' : 'Castle', l)))).map((l) => l.transactionHash));
-  for (const [txHash, f] of fillTx) {
-    const pulled = f.legs.find((l) => l.kind === 'Pulled'); const pushed = f.legs.find((l) => l.kind === 'Pushed');
-    if (books.has(txHash) || !pulled || !pushed) continue;
-    const tx = await client.getTransaction({ hash: txHash });
-    const lease = leaseAt(f.meta.block);
-    const programEpoch = strategies.get((pulled || pushed)?.hash)?.epoch ?? null;
-    emitFill({
-      id: `${txHash}:0`, taker: tx.from, takerName: ensFor(agentByAddr(tx.from)),
-      tokenIn: pushed ? sym(pushed.token) : null, tokenOut: pulled ? sym(pulled.token) : null,
-      amountIn: str(pushed?.amount), amountOut: str(pulled?.amount), strategy: (pulled || pushed)?.hash ?? null,
-      programEpoch, leaseEpoch: lease?.epoch ?? null, expiry: lease?.expiry ?? null,
-      decision: fenceDecision(programEpoch, lease?.epoch, lease?.expiry, f.meta.t / 1000), status: 'success', revert: null,
-    }, f.meta);
+  // Deposits and withdrawals: any other change in the vault's balances by the end of the range.
+  const now = await hoardAt(to);
+  const prev = view().hoard || {};
+  if ((now.USDC ?? null) !== (prev.USDC ?? null) || (now.WETH ?? null) !== (prev.WETH ?? null)) {
+    const up = BigInt(now.USDC ?? 0) > BigInt(prev.USDC ?? 0) || BigInt(now.WETH ?? 0) > BigInt(prev.WETH ?? 0);
+    emit('hoard', { hoard: now, reason: up ? 'deposit' : 'withdraw' }, { block: Number(to), tx: null, t: (await blockTime(to)) * 1000 });
   }
 }
 
-const seenFills = new Set();
-function emitFill(fill, meta) {
-  if (seenFills.has(fill.id)) return;
-  seenFills.add(fill.id);
-  emit('fill', fill, meta);
+// ---- reverted txs (they emit no logs) --------------------------------------------------------------------
+// fi's reverted ship, as fi reports it: checked against the chain, then told with the vault's own numbers.
+export async function refusedShip(txHash) {
+  const rc = await client.getTransactionReceipt({ hash: txHash });
+  const txn = await client.getTransaction({ hash: txHash });
+  if (rc.status !== 'reverted') throw Object.assign(new Error(`${txHash} did not revert`), { status: 400 });
+  if (!sameAddr(txn.to, addr('castle'))) throw Object.assign(new Error(`${txHash} is not a vault call`), { status: 400 });
+  const d = decodeFunctionData({ abi: abi('CastleVault'), data: txn.input });
+  if (d.functionName !== 'ship') throw Object.assign(new Error(`${txHash} is ${d.functionName}, not ship`), { status: 400 });
+  if (find((e) => e.type === 'allocation.refused' && e.tx === txHash)) return null;
+  const [slot, , weth, usdc] = d.args;
+  const b = rc.blockNumber - 1n;
+  const [err, committed, balance, levU, levW] = await Promise.all([revertError(txHash), committedAt(b), hoardAt(b), vaultRead('leverageOf', [addr('usdc')], b), vaultRead('leverageOf', [addr('weth')], b)]);
+  const lev = { USDC: BigInt(levU ?? 10_000), WETH: BigInt(levW ?? 10_000) };
+  const limit = Object.fromEntries(Object.entries(balance).map(([k, v]) => [k, ((BigInt(v) * lev[k]) / 10_000n).toString()]));
+  let errorArgs = null;
+  if (err?.name === 'OverAllocated') errorArgs = { token: symbolOf(err.args[0]), committedAfter: str(err.args[1]), limit: str(err.args[2]) };
+  else if (err?.name === 'OverCap') errorArgs = { slot: Number(err.args[0]), token: symbolOf(err.args[1]), amount: str(err.args[2]), cap: str(err.args[3]) };
+  return emit('allocation.refused', {
+    slot: Number(slot), label: SLOT_NAMES[Number(slot)] ?? `slot ${slot}`, hash: null,
+    asked: { WETH: str(weth), USDC: str(usdc) }, committed, balance, limit,
+    error: err?.name ?? err?.raw ?? 'reverted', errorArgs, by: crewId(txn.from) ?? 'fi', status: 'reverted',
+  }, { block: Number(rc.blockNumber), tx: txHash, t: (await blockTime(rc.blockNumber)) * 1000, src: 'service' });
+}
+// A reverted fill relayed through castle_fill {tx_hash}.
+export async function refusedFill(txHash, { quoteId = null } = {}) {
+  const rc = await client.getTransactionReceipt({ hash: txHash });
+  if (rc.status !== 'reverted') return null;
+  if (find((e) => e.type === 'fill' && e.tx === txHash)) return null;
+  const txn = await client.getTransaction({ hash: txHash });
+  const { reason } = await revertReason(txHash);
+  const route = sameAddr(txn.to, addr('router')) ? 'aqua' : 'v4';
+  const c = swapCall(txn);
+  const slot = c ? slotOf.get(c.strategy) ?? null : null;
+  return emit('fill', {
+    route, strategy: c?.strategy ?? null, slot, label: slot != null ? SLOT_NAMES[slot] ?? null : null, quoteId: quoteId ?? quoteIdOf(txn), intentId: null,
+    taker: txn.from, takerName: nameOf(txn.from), tokenIn: symbolOf(c?.tokenIn), tokenOut: symbolOf(c?.tokenOut), amountIn: str(c?.amountIn),
+    amountOut: null, fee: null, pool: null, alloc: null, status: 'reverted', revert: reason,
+  }, { block: Number(rc.blockNumber), tx: txHash, t: (await blockTime(rc.blockNumber)) * 1000, src: 'service' });
 }
 
-// A fill attempt reported through castle_fill. Successful ones also arrive via Aqua logs; reverted ones only here.
-export async function recordRelayedFill(entry) {
-  if (relayed.some((r) => r.id === entry.id)) return relayed.find((r) => r.id === entry.id);
-  relayed.push(entry);
-  save('fills.json', relayed);
-  if (entry.status === 'reverted') {
-    emitFill(entry, { block: entry.block, tx: entry.tx, t: entry.t, src: 'service' });
-  }
-  return entry;
-}
-export const relayedFills = () => relayed;
-
-// ---- crew ----------------------------------------------------------------------------------------------
-export function joinCrew(row) {
-  const i = state.crew.findIndex((c) => c.agent_id === row.agent_id);
-  if (i >= 0) state.crew[i] = { ...state.crew[i], ...row }; else state.crew.push(row);
-  save('crew.json', state.crew);
-  return row;
-}
-export const crew = () => state.crew;
-export function watchAuction(a) { auctions.add(getAddress(a)); }
-
-// ---- agents (handoff.lol agent_heartbeat) --------------------------------------------------------------
-function agentList() {
-  const cfg = miniappConfig();
-  const roles = { fee: 'shift trader', fi: 'hot standby', fo: 'fencer and witness', fum: 'auctioneer', castle: 'castle service' };
-  const crewCfg = crewConfig();
-  const rows = cfg.agents?.length ? cfg.agents : (Object.keys(crewCfg).length ? Object.keys(crewCfg) : ['fee', 'fi', 'fo', 'fum']).map((id) => ({ id }));
-  return rows.map((r) => ({ id: r.id, role: r.role || crewCfg[r.id]?.role || roles[r.id] || null, addr: r.addr || crewCfg[r.id]?.address || null, ens: r.ens || `${r.id}.feefifofum.eth`, handoffId: r.handoffId || r.id }));
-}
-async function pollAgents(renewEvery) {
-  for (const a of agentList()) {
+// ---- agents (handoff.lol agent_heartbeat and the crew's signed beats) ----------------------------------
+const ROLES = { fee: 'prices', fi: 'compiles and signs', fo: 'routes', fum: 'guards' };
+export const beats = new Map();   // agent -> the t (unix ms) of its last signed beat (report.mjs)
+async function pollAgents() {
+  const crew = crewConfig();
+  for (const id of ['fee', 'fi', 'fo', 'fum']) {
     let rec = null;
-    try { const r = await fetch(`${env.handoffApi}/agents/${encodeURIComponent(a.handoffId)}`); if (r.ok) { const j = await r.json(); rec = j.agent || j; } } catch { /* broker down: keep last */ }
-    const prev = agents.get(a.id);
-    const lastBeat = rec?.last_seen ? Date.parse(rec.last_seen) : prev?.lastBeat ?? null;
-    const alive = lastBeat != null && Date.now() - lastBeat < STALE_BEATS * renewEvery * 1000 + 30_000;
-    const row = { ...a, addr: a.addr || rec?.wallet_address || prev?.addr || null, ens: rec?.ens_name && /feefifofum/.test(rec.ens_name) ? rec.ens_name : a.ens, alive, lastBeat };
-    agents.set(a.id, { ...(prev || {}), ...row });
-    if (!prev || prev.alive !== alive) emit('agent', { id: a.id, role: row.role, alive, lastBeat, addr: row.addr, ens: row.ens }, { src: 'agent' });
+    try { const r = await fetch(`${env.handoffApi}/agents/${encodeURIComponent(id)}`, { signal: AbortSignal.timeout(10_000) }); if (r.ok) { const j = await r.json(); rec = j.agent || j; } } catch { /* broker down: keep last */ }
+    const prev = view().agents.get(id);
+    const seen = [rec?.last_seen ? Date.parse(rec.last_seen) : null, beats.get(id), prev?.lastBeat].filter(Number.isFinite);
+    const lastBeat = seen.length ? Math.max(...seen) : null;
+    const alive = lastBeat != null && Date.now() - lastBeat < STALE_MS;
+    if (!prev || prev.alive !== alive) emit('agent', { id, role: ROLES[id], alive, lastBeat, addr: crew[id]?.address ?? null, ens: `${id}.feefifofum.eth`, note: null }, { src: 'agent' });
   }
 }
 
 // ---- the loop ------------------------------------------------------------------------------------------
-let running = false;
 export let lastError = null;
 export let lastScan = null;
 
 async function tick() {
+  const vault = addr('castle');
+  if (!vault) { lastScan = { block: null, at: Date.now(), note: 'no CastleVault in the deployments file yet' }; return; }
+  if (vaultKey !== vault.toLowerCase()) {
+    vaultKey = vault.toLowerCase();
+    open(vaultKey, { vault });
+    cursor = cursorMeta().next != null ? BigInt(cursorMeta().next) : null;
+    // A restart resumes from the saved cursor: rebuild what the indexer keeps beside the stream from its events.
+    slotOf.clear(); slotCaps.clear(); henFees.clear();
+    for (const k of Object.keys(leverage)) delete leverage[k];
+    for (const e of since(0)) {
+      if (e.type === 'strategy.shipped' && e.slot != null) slotOf.set(e.hash, e.slot);
+      if (e.type === 'cap.set' && e.slot != null) slotCaps.set(e.slot, e.cap);
+      if (e.type === 'leverage.set') leverage[e.token] = e.bps;
+    }
+    for (const x of view().strategies.values()) if (!x.docked && x.kind) await kindOf(x.hash).catch(() => null);
+  }
   const h = await head();
   if (cursor == null) cursor = deployBlock('castle') ?? (h.number > 5000n ? h.number - 5000n : 0n);
-  const extraAuction = process.env.CASTLE_AUCTION;
-  if (extraAuction) watchAuction(extraAuction);
   while (cursor <= h.number) {
     const to = cursor + CHUNK - 1n < h.number ? cursor + CHUNK - 1n : h.number;
     await scan(cursor, to);
     cursor = to + 1n;
-  }
-  const lease = await readLease();
-  if (lease?.epoch != null) {
-    const holderAgent = agentByAddr(lease.holder);
-    state.lease = { holder: lease.holder, holderAgent, epoch: lease.epoch, expiry: lease.expiry, state: leaseState(lease, h.timestamp) };
-    if (!leaseTimeline.length) leaseTimeline.push({ block: Number(deployBlock('castle') ?? 0n), epoch: lease.epoch, expiry: lease.expiry });
-    if (lease.expiry > 0 && h.timestamp > lease.expiry && lastExpiredEpoch !== lease.epoch) {
-      await emitExpired({ epoch: lease.epoch, expiry: lease.expiry }, leaseTimeline.at(-1)?.block ?? 0, h.number);
-    }
-  }
-  state.inventory = await inventory();
-  for (const a of auctions) {
-    const v = await auctionView(a);
-    if (state.auction?.auction === a) Object.assign(state.auction, { status: v.status, clearing: v.clearing ?? state.auction.clearing, endBlock: v.endBlock });
-    if (v.status === 'ended' && !clearedAuctions.has(a)) {
-      clearedAuctions.add(a);
-      // Not settled yet: the clear as the auction's own view reports it, stamped at its end block.
-      const t = v.endBlock != null ? (await blockTime(v.endBlock).catch(() => null)) : null;
-      emit('auction.cleared', { auction: a, clearing: v.clearing, sold: null, raised: null }, { block: v.endBlock, tx: null, t: t != null ? t * 1000 : undefined, src: 'derived' });
-    }
+    saveMeta({ next: cursor.toString() });
   }
   lastScan = { block: Number(h.number), at: Date.now() };
 }
 
+let running = false;
 export function start() {
   if (running) return;
   running = true;
-  const cfg = () => miniappConfig();
   const loop = async () => {
     try { await tick(); lastError = null; } catch (e) { lastError = String(e?.shortMessage || e?.message || e); }
     setTimeout(loop, env.pollMs);
   };
   const agentLoop = async () => {
-    try { await pollAgents(cfg().renewEverySeconds || 40); } catch { /* next round */ }
+    try { await pollAgents(); } catch { /* next round */ }
     setTimeout(agentLoop, 20_000);
   };
   loop();
@@ -395,28 +298,20 @@ export function start() {
 }
 
 // ---- reads for the routes ------------------------------------------------------------------------------
-export function snapshot() {
-  const cfg = miniappConfig();
+export function config() {
   const book = addressBook();
-  const name = cfg.name || 'castle.feefifofum.eth';
   return {
-    v: 1, seq, type: 'snapshot', t: Date.now(), block: lastScan?.block ?? null, tx: null, src: 'service',
-    config: {
-      chainId: 11155111, explorer: 'https://sepolia.etherscan.io', name, labelhash: keccak256(toHex(name.split('.')[0])),
-      ...book, leaseSeconds: cfg.leaseSeconds ?? 120, renewEverySeconds: cfg.renewEverySeconds ?? 40, graceSeconds: cfg.graceSeconds ?? 0,
-    },
-    shifts: cfg.shifts || [],
-    agents: [...agents.values()].map(({ id, role, addr: a, ens, alive, lastBeat }) => ({ id, role, addr: a, ens, alive, lastBeat })),
-    lease: state.lease, strategies: state.strategies, inventory: state.inventory, price: state.price, auction: state.auction,
-    fills: state.fills,
+    chainId: env.chainId, explorer: 'https://sepolia.etherscan.io',
+    name: 'castle.feefifofum.eth', quoteName: process.env.CASTLE_QUOTE_NAME || 'quote.feefifofum.eth',
+    gateway: `${env.publicUrl || ''}/ccip/{sender}/{data}.json`,
+    castle: book.castle, aqua: book.aqua, router: book.router, priceExtruction: book.priceExtruction, resolver: book.quoteResolver,
+    hook: book.hook, poolManager: book.poolManager, poolSwapTest: book.poolSwapTest, poolId: value('poolId'),
+    usdc: book.usdc, weth: book.weth, decimals: DECIMALS, slots: SLOT_NAMES, leverage,
   };
 }
-export const since = (n) => events.filter((e) => e.seq > n);
-export function fillsFrom(fromBlock) {
-  const chainFills = events.filter((e) => e.type === 'fill' && (e.block ?? 0) >= fromBlock);
-  const reverted = relayed.filter((r) => r.status === 'reverted' && (r.block ?? 0) >= fromBlock && !chainFills.some((c) => c.id === r.id));
-  return [...chainFills, ...reverted].sort((a, b) => (a.block ?? 0) - (b.block ?? 0));
-}
-export const health = () => ({ lastScan, lastError, cursor: cursor != null ? Number(cursor) : null, events: seq, auctions: [...auctions] });
-export const liveStrategies = () => state.strategies.filter((x) => !x.docked).map((x) => ({ ...x, strategy: strategyBytes.get(x.hash) ?? null }));
-export const currentLease = () => state.lease;
+export const snapshot = () => {
+  const body = snapshotBody({ config: config(), block: lastScan?.block ?? null });
+  return { ...body, leverage: { ...leverage }, caps: Object.fromEntries([...slotCaps.entries()].map(([k, v]) => [String(k), v])) };
+};
+export const health = () => ({ lastScan, lastError, cursor: cursor != null ? Number(cursor) : null, vault: vaultKey });
+export const liveStrategies = () => [...view().strategies.values()].filter((x) => !x.docked);

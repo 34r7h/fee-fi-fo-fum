@@ -2,14 +2,15 @@
   "name": "castle-service",
   "version": "0.1.0",
   "private": true,
-  "description": "fee-fi-fo-fum castle service: the castle's MCP tools, REST mirrors and the SSE stream the miniapp reads",
+  "description": "feefifofum castle service: the ERC-3668 gateway for quote.feefifofum.eth, the MCP tools for solvers, and the SSE stream the miniapp reads",
   "type": "module",
   "main": "src/server.mjs",
   "scripts": {
     "start": "node src/server.mjs",
     "check": "node --check src/*.mjs",
     "test": "node --test test/*.test.mjs",
-    "quote-fork": "node test/quote-fork.mjs"
+    "quote-fork": "node test/quote-fork.mjs",
+    "gateway-fork": "node test/gateway-fork.mjs"
   },
   "engines": { "node": ">=20" },
   "dependencies": {

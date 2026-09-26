@@ -96,7 +96,7 @@ export async function auctionView(auction) {
 }
 
 // Decode a revert from any ABI we know, so a fenced fill reads FeeFiFoFum() and a JackHook refusal reads as one.
-const REVERT_ABIS = ['Castle', 'FeeFiFoFumExtruction', 'SwapVM', 'CCA', 'JackHook', 'Aqua'];
+const REVERT_ABIS = ['Castle', 'FeeFiFoFumExtruction', 'SwapVM', 'TakerTraits', 'CCA', 'JackHook', 'Aqua'];
 export function decodeRevert(data) {
   if (!data || data === '0x') return null;
   for (const n of REVERT_ABIS) {

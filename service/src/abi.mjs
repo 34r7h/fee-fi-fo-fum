@@ -45,6 +45,22 @@ const FALLBACK = {
     'function quote(Order order, address tokenIn, address tokenOut, uint256 amount, bytes takerTraitsAndData) view returns (uint256 amountIn, uint256 amountOut, bytes32 orderHash)',
     'function swap(Order order, address tokenIn, address tokenOut, uint256 amount, bytes takerTraitsAndData) returns (uint256 amountIn, uint256 amountOut, bytes32 orderHash)',
   ]),
+  // swap-vm 1.0.2 src/libs/TakerTraits.sol: a quote or swap whose taker bounds fail reverts with one of these.
+  TakerTraits: parseAbi([
+    'error TakerTraitsMissingTraits()',
+    'error TakerTraitsMissingHookData()',
+    'error TakerTraitsMissingHasPreTransferInFlag()',
+    'error TakerTraitsMissingHasPreTransferOutFlag()',
+    'error TakerTraitsThresholdLengthInvalid(bytes threshold)',
+    'error TakerTraitsNonExactThresholdAmountIn(uint256 amountIn, uint256 amountThreshold)',
+    'error TakerTraitsNonExactThresholdAmountOut(uint256 amountOut, uint256 amountThreshold)',
+    'error TakerTraitsInsufficientMinOutputAmount(uint256 amountOut, uint256 amountOutMin)',
+    'error TakerTraitsAmountOutMustBeGreaterThanZero(uint256 amountOut)',
+    'error TakerTraitsExceedingMaxInputAmount(uint256 amountIn, uint256 amountInMax)',
+    'error TakerTraitsTakerAmountInMismatch(uint256 takerAmount, uint256 computedAmount)',
+    'error TakerTraitsTakerAmountOutMismatch(uint256 takerAmount, uint256 computedAmount)',
+    'error TakerTraitsDeadlineExpired()',
+  ]),
   CCA: parseAbi([
     'event BidSubmitted(uint256 indexed id, address indexed owner, uint256 priceQ96, uint128 amount)',
     'event CheckpointUpdated(uint256 blockNumber, uint256 clearingPriceQ96, uint24 cumulativeMps)',

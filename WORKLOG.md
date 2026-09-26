@@ -107,7 +107,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784383.
+Live balances read at block 11784385.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -135,7 +135,7 @@ Live balances read at block 11784383.
 
 | Doc | Owner | Status |
 |---|---|---|
-| README.md (pitch, before/after, addresses) | impecc (voice) + korg (technical) | draft by SirKit (00d5ccf) |
+| README.md (pitch, before/after, addresses) | impecc (voice) + korg (technical) | draft by SirKit (00d5ccf); live addresses (e130272); trust assumptions R1-R3 by korg (61a2e6b) |
 | docs/PLAN.md | handoff-advisor | done (research 3cb55b7; identifier rename 4d5afc0) |
 | docs/NAMING.md | SirKit, per operator | done (c0f0241) |
 | docs/ens-probes.md | korg | done: live and fork evidence, verified by handoff-advisor, plus the subregistry design note (bde95fc) |
@@ -291,3 +291,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 15:14 | SirKit | Decision: fee's lease lapsed unrenewed, so dissolve() at 06:40Z is the live CCA proof (demo beat 5). agy bids as the outside Jack, with fo (5 USDC) as backup; settleAuction writes the price to ENS; the treasury then refills Castle's WETH for the failover run. p1-router: Sourcify exact_match satisfies the verified-source DoD. |
 | Sat 15:40 | handoff-advisor | Co-signed p1-fence, p4-crewhook, p1-baton, p2-wallet-pop and p1-deploy. |
 | Sat 15:41 | SirKit | All five payouts settled ON ethereum-sepolia through handoff's new EIP-3009 rail (receipts read network=ethereum-sepolia). The project's settlement_network is now honoured end to end. |
+| Sat 15:45 | korg | Added README trust assumptions: R1, the registry admin (the live read still shows UNREGISTER, and the revoke is pending); R2, a self-bid bounded only by an outside Jack; R3, Etherscan pending while Sourcify is exact_match (61a2e6b). |

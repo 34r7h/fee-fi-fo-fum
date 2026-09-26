@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 14:05 JST
+- **Last regenerated:** 2026-09-26 14:07 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -25,10 +25,10 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 | Task | Owner | Assignee | Due (JST) | Status | Commit / PR | On-chain (address / tx) |
 |---|---|---|---|---|---|---|
-| Foundry scaffold, then deploy the SwapVM router (release/1.0.2) on Sepolia <br>`p1-router` `902378f6` | mister-anderson | mister-anderson | Sat 16:00 | in_progress | 3301492 (scaffold) |  |
+| Foundry scaffold, then deploy the SwapVM router (release/1.0.2) on Sepolia <br>`p1-router` `902378f6` | mister-anderson | mister-anderson | Sat 16:00 | in_progress | 3301492, 6463060 | router 0xeDB6…70f9 live (tx 0xb2b319a2…); verification pending the Etherscan key |
 | **BLOCKER** Castle.sol: the giant's castle (desk treasury, Aqua maker and ENSv2 lease) <br>`p1-castle` `c3a2dfdf` | mister-anderson | mister-anderson | Sat 19:00 | in_progress | 3fa3aa6, 81ffd04, 789f550 |  |
 | **BLOCKER** FeeFiFoFumExtruction.sol: the giant smells a stale shift (the ENS-lease fence in the SwapVM program) <br>`p1-extruction` `9019b3b9` | mister-anderson | mister-anderson | Sat 19:00 | in_progress |  |  |
-| Independent Sepolia-fork test suite for Castle and FeeFiFoFumExtruction <br>`p1-forktests` `f4d2ae68` | agy | agy | Sat 19:45 | in_progress | 8cc9a7f (CastleFork.t.sol, 257 lines) | fork |
+| Validate Castle and FeeFiFoFumExtruction on a Sepolia fork (validation only, no code) <br>`p1-forktests` `f4d2ae68` | agy | agy | Sat 19:45 | in_progress | 8cc9a7f (CastleFork.t.sol, 257 lines) | fork |
 | **BLOCKER** Deploy and verify Castle and FeeFiFoFumExtruction on Sepolia, then ship the first live strategy <br>`p1-deploy` `1fed769f` | mister-anderson |  | Sat 20:30 | todo |  |  |
 | **BLOCKER** ICastleLease interface, published before 15:30 JST so the fence and fo can build in parallel <br>`p1-iface` `17a2de4c` | mister-anderson | mister-anderson | Sat 15:30 | done | 3301492, 980fd97, f0c7d65, e11f755 | paid 0.1 USDC (receipt 2af0f738); mister-anderson balance 2.2197 → 2.3197 |
 
@@ -87,7 +87,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 | Uniswap CCA factory (pre-existing) | `0x000000001F26a0044BaA66024e7b6599c61963F8` | n/a | Uniswap |  |
 | ENSv2 UniversalResolverV2 (pre-existing) | `0x5d25c1d6acbb71b7a28aa7899618a3412a8303e3` | n/a | ENS |  |
 | Circle USDC (pre-existing) | `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238` | n/a | Circle |  |
-| SwapVM router release/1.0.2 |  |  | mister-anderson |  |
+| SwapVM router release/1.0.2 | [`0xeDB6933949dB941D495b23604818F9AbF55e70f9`](https://sepolia.etherscan.io/address/0xeDB6933949dB941D495b23604818F9AbF55e70f9) (AQUA() = official Aqua) | pending (Etherscan key) | mister-anderson | [0xb2b319a2…](https://sepolia.etherscan.io/tx/0xb2b319a23732ade788971450ed30498b0dbf6cbb54d86c9ad343e7b42a32cd4d) |
 | Castle.sol |  |  | mister-anderson |  |
 | FeeFiFoFumExtruction.sol |  |  | mister-anderson |  |
 | JackHook.sol |  |  | mister-anderson |  |
@@ -161,6 +161,7 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:05 | Sent Sepolia ETH to the treasury 0xc3Af4CCa3ba691C74F18fa8D3a7ad6816eC65dF2 |
 | Sat 13:47 | Funded the treasury with 20 Circle Sepolia USDC (tx 0x1dc2132a810bd8f2551e337193a446bb507478f9d2be5a4dcc522f1e95fb4884) |
 | Sat 14:00 | Funded the treasury with 0.05 Sepolia ETH and a further 20 USDC |
+| Sat 14:12 | Ruled that validators (agy) validate only and never build or edit other agents' work |
 
 ## Log
 
@@ -205,3 +206,6 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:08 | handoff-advisor | PASS on p5-durable (live Sepolia reads at head; runs on helen, not the laptop) and on p3-scaffold. |
 | Sat 14:09 | SirKit | Verified p5-durable and p3-scaffold; co-sign requested. |
 | Sat 14:10 | handoff-advisor | Co-signed p5-durable and p3-scaffold; both paid (receipts 80f9d048 and 86aba84d). |
+| Sat 14:06 | mister-anderson | SwapVM router 1.0.2 deployed live, 0xeDB6…70f9, bound to official Aqua (on-chain check: code present, status 1). Castle v2 closes the crew-only claim and the multicall allowlist, plus a third drain (holder-chosen app/program): Castle now builds the fenced program on-chain. |
+| Sat 14:12 | operator | Ruled that validators do not build: agy must not write code or touch other agents' work. |
+| Sat 14:12 | SirKit | Ordered agy to validate only. Re-scoped p1-forktests to validation. All Castle test code, including CastleFork.t.sol, goes to mister-anderson; agy's fo code goes to agent-smith. |

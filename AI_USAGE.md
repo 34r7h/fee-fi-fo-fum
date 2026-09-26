@@ -6,23 +6,26 @@ ETHGlobal's AI rules ask entries to disclose which files, and which parts of the
 
 The human operator directs the swarm and owns these decisions and outputs. They are logged with timestamps in [WORKLOG.md](WORKLOG.md#operator-owned-contributions).
 
-- Chose Option A from handoff-advisor's research, appointed the orchestrator and picked the swarm.
+- Retired the first product (the lease edition, now at tag `lease-edition`) and pivoted the entry to agy's architecture: one Aqua balance backing many quotes, ENS CCIP-Read quote discovery, and Uniswap v4 JIT fills. Kept the Castle Tapestry design and motif, cleared the other agents' memory, and asked for a new handoff project with tasks oriented to the best agent for each.
 - Set the binding role map for the swarm, and ruled that validators never build.
 - Ruled that all entry work lives in this public repo and none goes in the handoff repo.
-- Confirmed Continuity-track registration, linked the GitHub repo to the handoff project, and funded the Sepolia treasury (ETH, including PoW-faucet mining, and Circle USDC).
+- Confirmed Continuity-track registration, linked the GitHub repo to handoff, and funded the Sepolia treasury (ETH, including PoW-faucet mining, and Circle USDC).
 - Named the entry **fee-fi-fo-fum** and set its Jack the Giant Killer voice ([docs/NAMING.md](docs/NAMING.md)).
 - Approved the XMBL_GATE=skip deploys of the handoff.lol platform fixes, and set the standing rule not to hold up progress.
-- Set the cost rule: Sepolia ETH is real money, so there is exactly one live demo run and every rehearsal runs on a fork. Required that the project description be short and on point.
-- Challenged the running cost of on-chain lease renewals, which led to the zero-idle-gas liveness redesign (Castle v3). Approved its redeploy budget and chose to ship v3 live, retiring v2, instead of presenting it as a fork-tested next version.
-- Still to come (tracked on the board): review sign-offs, recording and voicing the video, and the sponsor booth conversations.
+- Set the cost rule: Sepolia ETH is real money, so there is exactly one live run and every rehearsal runs on a fork. Required that the project description be short and on point.
+- Still to come (tracked on the board): the gas approval for the live run, recording and voicing the video, the ETHGlobal and Uniswap feedback forms, and the sponsor booth conversations.
 
 ## Planning artifacts
 
 | Artifact | Author | Notes |
 |---|---|---|
-| [docs/PLAN.md](docs/PLAN.md) | handoff-advisor (AI agent on handoff) | Research and three options; the operator chose Option A. Identifiers were renamed to fee-fi-fo-fum names; the original is commit `3cb55b7`. |
-| handoff project `2af16779` (description, goals, tasks) | SirKit (AI orchestrator), reviewed by handoff-advisor | The spec and task breakdown the swarm works from. |
+| [docs/PIVOT.md](docs/PIVOT.md) | agy (AI agent on handoff), at the operator's direction | The architecture brief for this product, kept verbatim. |
+| [docs/SPEC.md](docs/SPEC.md) | SirKit (AI orchestrator) | The locked build scope, merged from PIVOT.md and korg's research, and reviewed by agy. |
+| [docs/research.md](docs/research.md) | korg (AI researcher) | The feasibility gates, each reproducible (fork probe `contracts/probes/quote-register/`). |
+| handoff project `de902056` (description, 7 goals, 18 task definitions of done) | SirKit | The task breakdown the swarm works from. |
+| [miniapp/STREAM.md](miniapp/STREAM.md) | impecc | The event schema the service and the miniapp share. |
 | [docs/NAMING.md](docs/NAMING.md) | SirKit, at the operator's direction | Name, voice and identifier map. |
+| The lease edition's plan: [docs/PLAN.md](docs/PLAN.md) and handoff project `2af16779` | handoff-advisor (research); SirKit (project) | Retired with that product; kept for the record. |
 
 ## Agents in the swarm
 
@@ -30,14 +33,14 @@ These are AI agents on handoff.lol, directed by the human operator.
 
 | Agent | Role (operator's binding role map) |
 |---|---|
-| SirKit | Orchestrator: planning, assignment, tracking, AI_USAGE.md, WORKLOG.md |
-| agent-smith | Makes the agents: fee, fi, fo, fum and the castle agent (code, service, stream, wallets, ENSv2 names) |
-| mister-anderson | Crypto: ICastleLease, router deploy, Castle.sol, FeeFiFoFumExtruction, JackHook, the CCA integration, and all their tests |
-| handoff-advisor | Validator: research (PLAN.md), plan review, on-chain verification and co-signing payouts |
-| agy | Validator: runs the suites, checks on-chain outcomes, the live CCA run as the outside Jack, rehearsals (no building) |
-| impecc | Presentation and miniapps: fee-fi-fo-fum.html, the deck, the video script, forward-facing copy |
-| handoff-claude | Fixes handoff properly: platform fixes on handoff.lol (ENSv2 ens_name, ethereum-sepolia settlement) |
-| korg | Researcher: ENSv2 probes, write-ups, FEEDBACK.md |
+| SirKit | Orchestrator: the spec, planning, assignment, tracking, AI_USAGE.md, WORKLOG.md |
+| agy | Architecture brief (PIVOT.md); validator: spec review, fork end-to-end runs, the outside Jack in the live run, live verification (no building) |
+| mister-anderson | Contracts: CastleVault, PriceExtruction, CastleJITHook, OffchainQuoteResolver, their tests and the deploy |
+| agent-smith | Agents: fee, fi, fo, fum and the castle service (CCIP-Read gateway, MCP tools, stream) |
+| impecc | Presentation: the miniapp, the deck, the video script, forward-facing copy |
+| handoff-claude | handoff.lol platform support (CORS, hosting, Sepolia payouts) |
+| korg | Research and write-ups: research.md, the sponsor docs, FEEDBACK.md |
+| handoff-advisor | Lease edition only: research (PLAN.md) and validation. Not part of this product. |
 
 ## Files
 
@@ -45,6 +48,11 @@ Commit identity: this repo's commits authored `34r7h` come from two sources. The
 
 | Path | Written by (per `git log`) | AI-written? | Notes |
 |---|---|---|---|
+| docs/SPEC.md | SirKit | yes | the locked build scope |
+| docs/PIVOT.md | agy (committed by SirKit) | yes | the architecture brief, verbatim |
+| docs/research.md, contracts/probes/quote-register/ | korg | yes | research gates and the fork probe |
+| contracts/src/CastleVault.sol, PriceExtruction.sol, CastleJITHook.sol, OffchainQuoteResolver.sol and their tests | mister-anderson | yes | this product's contracts (in progress) |
+| service/src/gateway.mjs, service/src/quote.mjs | agent-smith | yes | the CCIP-Read gateway and quote builder (in progress) |
 | README.md | SirKit, korg, impecc | yes | pitch and loop (SirKit), trust assumptions and technical sections (korg), Live section and voice (impecc) |
 | docs/PLAN.md | handoff-advisor | yes | research; the operator chose Option A |
 | docs/NAMING.md | SirKit | yes | from the operator's direction |

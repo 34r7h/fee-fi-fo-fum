@@ -75,6 +75,16 @@
       "what": "records for agy.feefifofum.eth (3)",
       "hash": "0xe7bcabff6b275f1327b91918f69d17cda937d0d936fc4a435cdb69ae34fe75d8",
       "block": 11784281
+    },
+    {
+      "what": "grant Castle 0x6bF53228d8c5c3b0192B2028bD52fc4E9d1be8Ec REGISTRAR|RENEW on the agent registry",
+      "hash": "0xb0fc68f070c60273119362116f5742046ff05f8fcddf7bd5c53b0910a4320a71",
+      "block": 11784330
+    },
+    {
+      "what": "grant Castle 0x6bF53228d8c5c3b0192B2028bD52fc4E9d1be8Ec LINK|SET_DATA on the agent resolver",
+      "hash": "0x611b19cea6ab2a676712d6a2f955ec122fcbfc4cc10212e8efecde9f5d4a41fd",
+      "block": 11784331
     }
   ],
   "agentRegistry": "0x2F2164507471a1a46506f902aBfdfB9d22e4bE09",
@@ -94,7 +104,7 @@
         "urAddr": "0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538",
         "urMcp": "https://handoff.lol/t/castle/mcp",
         "ok": true,
-        "block": 11784281
+        "block": 11784331
       }
     },
     "fi": {
@@ -111,7 +121,7 @@
         "urAddr": "0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2",
         "urMcp": "https://handoff.lol/t/castle/mcp",
         "ok": true,
-        "block": 11784281
+        "block": 11784331
       }
     },
     "fo": {
@@ -128,7 +138,7 @@
         "urAddr": "0x8689a407A2488A5b2f2De05d2C6978a798f93D56",
         "urMcp": "https://handoff.lol/mcp",
         "ok": true,
-        "block": 11784281
+        "block": 11784331
       }
     },
     "fum": {
@@ -145,7 +155,7 @@
         "urAddr": "0xcaD061b80EC52a18D31aE9b00FC1b4Df253f82D2",
         "urMcp": "https://handoff.lol/mcp",
         "ok": true,
-        "block": 11784281
+        "block": 11784331
       }
     },
     "agy": {
@@ -162,7 +172,7 @@
         "urAddr": "0xDDf2980eFA32E9E15C9D0ece52F4BF32956EAE4c",
         "urMcp": "https://handoff.lol/mcp",
         "ok": true,
-        "block": 11784281
+        "block": 11784331
       }
     }
   },
@@ -170,6 +180,7 @@
   "parentVerified": {
     "urAddr": "0x48EB8a8c5dC69Dc578f861dAf987882206aF5d3E",
     "ok": true,
-    "block": 11784281
-  }
+    "block": 11784331
+  },
+  "castle": "0x6bF53228d8c5c3b0192B2028bD52fc4E9d1be8Ec"
 }

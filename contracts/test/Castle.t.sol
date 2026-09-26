@@ -10,9 +10,12 @@ import { ISwapVM } from "@1inch/swap-vm/src/interfaces/ISwapVM.sol";
 
 import { Castle } from "../src/Castle.sol";
 import { FeeFiFoFumExtruction } from "../src/FeeFiFoFumExtruction.sol";
+import { JackHook } from "../src/JackHook.sol";
+import { AuctionParameters } from "../src/interfaces/ICCA.sol";
 import { ICastleLease, CastleLeaseTypes } from "../src/interfaces/ICastleLease.sol";
-import { ENSv2Roles } from "../src/interfaces/IENSv2.sol";
+import { ENSv2Roles, IENSv2Registry } from "../src/interfaces/IENSv2.sol";
 import { MockENSv2Registry, MockENSv2Resolver } from "./mocks/MockENSv2.sol";
+import { MockCCA, MockCCAFactory } from "./mocks/MockCCA.sol";
 import { CastleHelpers, ProgramMirror } from "./utils/CastleHelpers.sol";
 
 /// @dev Unit tests: real Aqua, real AquaSwapVMRouter 1.0.2, real fence; ENSv2 as a tag-accurate mock (including the
@@ -23,6 +26,7 @@ abstract contract CastleUnitBase is CastleHelpers {
     uint32 internal constant RANGE = 1e8; // band [P/1.1, P*1.1]
     uint32 internal constant WIND_DOWN_FEE = 5e7; // 5%
     uint16 internal constant DECAY = 60;
+    uint64 internal constant GRACE = 300;
     address internal constant LOW = 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238;
     address internal constant HIGH = 0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14;
 
@@ -30,6 +34,8 @@ abstract contract CastleUnitBase is CastleHelpers {
     AquaSwapVMRouter internal router;
     FeeFiFoFumExtruction internal fence;
     ProgramMirror internal mirror;
+    MockCCAFactory internal cca;
+    JackHook internal jackHook;
     TokenMock internal weth;
     TokenMock internal usdc;
     MockENSv2Registry internal registry;
@@ -56,8 +62,10 @@ abstract contract CastleUnitBase is CastleHelpers {
         router = new AquaSwapVMRouter(address(aqua), w, operator, "AquaSwapVMRouter", "1.0.2");
         fence = new FeeFiFoFumExtruction();
         mirror = new ProgramMirror();
+        cca = new MockCCAFactory();
         registry = new MockENSv2Registry();
         resolver = new MockENSv2Resolver();
+        jackHook = new JackHook(IENSv2Registry(address(registry)));
 
         // the agent registry already holds the crew's names and records (handoff-claude's script does this live)
         registry.grantRootRoles(ENSv2Roles.REGISTRY_REGISTRAR, address(this));
@@ -102,7 +110,10 @@ abstract contract CastleUnitBase is CastleHelpers {
             leasePeriod: LEASE,
             registryEpoch: registryEpoch,
             windDownFeeBps: WIND_DOWN_FEE,
-            decayPeriod: DECAY
+            decayPeriod: DECAY,
+            ccaFactory: address(cca),
+            jackHook: address(jackHook),
+            dissolveGrace: GRACE
         });
     }
 
@@ -704,6 +715,216 @@ abstract contract CastleUnitBase is CastleHelpers {
         calls[0] = hex"aabbcc";
         vm.expectRevert(abi.encodeWithSelector(Castle.SelectorNotAllowed.selector, bytes4(0)));
         castle.multicall(calls);
+    }
+
+    // ------------------------------------------------------------------ the exit: CCA auctions (p4)
+
+    function _auction() internal view returns (MockCCA) {
+        return MockCCA(castle.auction());
+    }
+
+    function test_openAuctionParamsAreCastles() public {
+        _fund();
+        vm.prank(fee);
+        castle.claim();
+        vm.prank(fee);
+        address a = castle.openAuction(2 ether);
+        assertEq(a, castle.auction());
+        assertEq(weth.balanceOf(a), 2 ether);
+        assertEq(weth.balanceOf(address(castle)), 8 ether);
+        assertTrue(MockCCA(a).tokensReceived());
+        AuctionParameters memory p = MockCCA(a).params();
+        assertEq(p.currency, address(usdc));
+        assertEq(p.tokensRecipient, address(castle));
+        assertEq(p.fundsRecipient, address(castle));
+        assertEq(p.validationHook, address(jackHook));
+        assertEq(p.floorPrice % p.tickSpacing, 0, "floor is a tick");
+        assertEq(p.floorPrice, ANCHOR_Q96 * 80 / 100 / 100 * 100);
+        assertEq(p.endBlock - p.startBlock, 25);
+        assertEq(p.claimBlock, p.endBlock);
+        assertEq(p.requiredCurrencyRaised, 0);
+        assertEq(p.auctionStepsData, abi.encodePacked(uint24(400_000), uint40(25)));
+    }
+
+    function test_revert_auctionOnlyFreeWeth() public {
+        _fund();
+        _claimAndShip(fee);
+        uint256 free = castle.freeBalance(IERC20(address(weth)));
+        assertEq(free, 10 ether - castle.committed(IERC20(address(weth))));
+        assertLt(free, 10 ether);
+        vm.prank(fee);
+        vm.expectRevert(Castle.BadAuctionAmount.selector);
+        castle.openAuction(uint128(free + 1));
+        vm.prank(fee);
+        castle.openAuction(uint128(free));
+        // the live book still fills: nothing it claims went to the auction
+        assertGe(weth.balanceOf(address(castle)), castle.committed(IERC20(address(weth))));
+    }
+
+    function test_shipNeverOverCommits() public {
+        _fund();
+        Castle.ShipParams memory half = _params();
+        (half.maxWeth, half.maxUsdc) = (5 ether, 15_000e6);
+        vm.startPrank(fee);
+        castle.claim();
+        castle.ship(half);
+        castle.ship(_params()); // asks for everything: gets only what the first book left free
+        assertLe(castle.committed(IERC20(address(weth))), weth.balanceOf(address(castle)));
+        assertLe(castle.committed(IERC20(address(usdc))), usdc.balanceOf(address(castle)));
+        assertEq(castle.activeStrategies().length, 2);
+        vm.stopPrank();
+    }
+
+    function test_revert_tooManyStrategies() public {
+        _fund();
+        Castle.ShipParams memory p = _params();
+        p.maxWeth = 1 ether;
+        p.maxUsdc = 3_000e6;
+        vm.startPrank(fee);
+        castle.claim();
+        for (uint256 i; i < castle.MAX_ACTIVE_STRATEGIES(); ++i) {
+            castle.ship(p);
+        }
+        vm.expectRevert(Castle.TooManyStrategies.selector);
+        castle.ship(p);
+        bytes32 h = castle.activeStrategies()[0];
+        castle.dock(h);
+        castle.ship(p);
+        vm.stopPrank();
+    }
+
+    function test_auctioneerOpensAndStrangersCannot() public {
+        _fund();
+        address fum = makeAddr("fum");
+        vm.prank(operator);
+        castle.setAuctioneer(fum);
+        vm.prank(fum); // no lease needed: fum is the auctioneer
+        castle.openAuction(1 ether);
+        vm.roll(block.number + 25);
+        castle.settleAuction();
+        vm.prank(jack);
+        vm.expectRevert(abi.encodeWithSelector(ICastleLease.NotHolder.selector, jack, address(0)));
+        castle.openAuction(1 ether);
+    }
+
+    function test_revert_oneAuctionAtATime() public {
+        _fund();
+        vm.startPrank(fee);
+        castle.claim();
+        address a = castle.openAuction(1 ether);
+        vm.expectRevert(abi.encodeWithSelector(Castle.AuctionRunning.selector, a));
+        castle.openAuction(1 ether);
+        vm.stopPrank();
+    }
+
+    function test_settleSweepsHomeAndWritesTheClearingPrice() public {
+        _fund();
+        vm.prank(fee);
+        castle.claim();
+        vm.prank(fee);
+        castle.openAuction(2 ether);
+        MockCCA a = _auction();
+        vm.expectRevert(abi.encodeWithSelector(Castle.AuctionNotOver.selector, a.endBlock()));
+        castle.settleAuction();
+
+        uint256 clearing = ANCHOR_Q96 * 11 / 10; // Jacks paid 10% over the anchor
+        usdc.mint(address(a), 3_300e6);
+        vm.prank(jack);
+        a.fill(3_300e6, 1 ether, clearing);
+        vm.roll(a.endBlock());
+        vm.prank(jack); // anyone settles
+        assertEq(castle.settleAuction(), clearing);
+        assertEq(usdc.balanceOf(address(castle)), 33_300e6);
+        assertEq(weth.balanceOf(address(castle)), 9 ether);
+        assertEq(castle.anchorPriceQ96(), clearing, "the next ship centres on the clearing price");
+        assertEq(castle.auction(), address(0));
+        vm.expectRevert(Castle.NoAuction.selector);
+        castle.settleAuction();
+    }
+
+    function test_settleWithNoSalesKeepsTheAnchor() public {
+        _fund();
+        vm.prank(fee);
+        castle.claim();
+        vm.prank(fee);
+        castle.openAuction(2 ether);
+        vm.roll(_auction().endBlock());
+        castle.settleAuction();
+        assertEq(castle.anchorPriceQ96(), ANCHOR_Q96);
+        assertEq(weth.balanceOf(address(castle)), 10 ether);
+    }
+
+    function test_dissolveIsPermissionlessAfterGrace() public {
+        _fund();
+        (bytes32 h,) = _claimAndShip(fee);
+        uint64 exp = castle.expiry();
+        vm.warp(exp + GRACE - 1);
+        vm.prank(jack);
+        vm.expectRevert(abi.encodeWithSelector(Castle.NotDissolvable.selector, uint256(exp) + GRACE));
+        castle.dissolve();
+
+        vm.warp(exp + GRACE);
+        vm.prank(jack); // not crew, not holder, not fum
+        address a = castle.dissolve();
+        (uint248 bal,) = aqua.rawBalances(address(castle), address(router), h, address(weth));
+        assertEq(bal, 0, "the stale book is docked");
+        assertEq(castle.activeStrategies().length, 0);
+        assertEq(weth.balanceOf(a), 10 ether, "all the WETH goes to auction");
+        assertEq(weth.balanceOf(address(castle)), 0);
+    }
+
+    function test_revert_dissolveBeforeAnyLease() public {
+        vm.expectRevert(abi.encodeWithSelector(Castle.NotDissolvable.selector, uint256(GRACE)));
+        castle.dissolve();
+    }
+
+    function test_dockThenAuctionInOneMulticall() public {
+        _fund();
+        (bytes32 h,) = _claimAndShip(fee);
+        bytes[] memory calls = new bytes[](2);
+        calls[0] = abi.encodeCall(Castle.dock, (h));
+        calls[1] = abi.encodeCall(Castle.openAuction, (uint128(10 ether)));
+        vm.prank(fee);
+        castle.multicall(calls);
+        assertEq(weth.balanceOf(castle.auction()), 10 ether);
+    }
+
+    function test_revert_auctionWithoutAnchor() public {
+        _fund();
+        vm.prank(operator);
+        castle.setAnchorPrice(0);
+        vm.prank(fee);
+        castle.claim();
+        vm.prank(fee);
+        vm.expectRevert(Castle.NoAnchor.selector);
+        castle.openAuction(1 ether);
+    }
+
+    // ------------------------------------------------------------------ JackHook (korg's vectors)
+
+    function test_jackHookNamedBidderPasses() public view {
+        jackHook.validate(0, 1, jack, address(0xdead), "jack");
+    }
+
+    function test_revert_jackHookUnnamed() public {
+        address nobody = makeAddr("nobody");
+        vm.expectRevert(abi.encodeWithSelector(JackHook.Unnamed.selector, nobody, bytes("nobody")));
+        jackHook.validate(0, 1, nobody, nobody, "nobody");
+    }
+
+    function test_revert_jackHookExpired() public {
+        address old = makeAddr("old");
+        uint64 exp = uint64(block.timestamp + 5);
+        registry.register("old", old, address(0), address(resolver), 0, exp);
+        jackHook.validate(0, 1, old, old, "old");
+        vm.warp(exp);
+        vm.expectRevert(abi.encodeWithSelector(JackHook.NameExpired.selector, old, bytes("old"), exp));
+        jackHook.validate(0, 1, old, old, "old");
+    }
+
+    function test_revert_jackHookSomeoneElsesName() public {
+        vm.expectRevert(abi.encodeWithSelector(JackHook.NotNameOwner.selector, jack, bytes("fee"), fee));
+        jackHook.validate(0, 1, jack, jack, "fee");
     }
 
     function test_theOldArbitraryShipIsGone() public {

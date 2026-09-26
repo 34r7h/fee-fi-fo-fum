@@ -3,6 +3,7 @@ pragma solidity 0.8.30;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import { Ownable, Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import { EIP712 } from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
@@ -15,6 +16,7 @@ import { XYCConcentrateArgsBuilder } from "@1inch/swap-vm/src/instructions/XYCCo
 
 import { ICastleLease, CastleLeaseTypes } from "./interfaces/ICastleLease.sol";
 import { IENSv2Registry, IENSv2Resolver, IDataResolver } from "./interfaces/IENSv2.sol";
+import { AuctionParameters, ICCAFactory, ICCA } from "./interfaces/ICCA.sol";
 
 interface IAquaApp {
     function AQUA() external view returns (address);
@@ -34,9 +36,12 @@ interface IAquaApp {
 ///      - claim() is crew-only: an owner-approved crew label that the caller owns, unexpired, in REGISTRY;
 ///      - the app is pinned to ROUTER and the tokens to [WETH, USDC]; Castle builds every program itself, fenced
 ///        and centred on the ENS anchor price; the holder picks only amounts, fee and band within hard bounds;
-///      - multicall accepts only claim, renew, relink, ship and dock (delegatecall to self; no external target);
-///      - relink() can only point castle.<parent> at the holder's own crew name;
-///      - the anchor is written only by Castle (the owner's seed now, the CCA clearing price in p4).
+///      - multicall accepts only claim, renew, relink, ship, dock and openAuction (delegatecall to self; no external
+///        target); relink() can only point castle.<parent> at the holder's own crew name;
+///      - the anchor is written only by Castle: the owner's genesis seed, then each settled auction's clearing price.
+///      The only exit for inventory is a Uniswap CCA (JackHook-gated, floor tied to the anchor, proceeds and unsold
+///      WETH returned to Castle): a shift-change auction of WETH no live strategy claims, or, if nobody claims the
+///      castle within DISSOLVE_GRACE of expiry, a permissionless dissolution that docks the book and auctions it all.
 contract Castle is ICastleLease, EIP712, Ownable2Step {
     using SafeERC20 for IERC20;
 
@@ -51,6 +56,14 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     uint32 public constant MIN_RANGE_BPS = 1e6; // band [P/1.001, P*1.001]
     uint32 public constant MAX_RANGE_BPS = 1e9; // band [P/2, P*2]
     uint32 public constant MAX_WIND_DOWN_FEE_BPS = 2e8; // 20%
+    /// @notice Live (undocked) strategies at once; bounds every loop over them.
+    uint256 public constant MAX_ACTIVE_STRATEGIES = 4;
+    /// @notice CCA length in blocks: one step selling 400_000 mps per block (25 * 400_000 = the CCA's 1e7 MPS).
+    uint64 public constant AUCTION_BLOCKS = 25;
+    uint24 internal constant AUCTION_MPS = 400_000;
+    /// @notice CCA floor = 80% of the anchor; tick spacing = floor / 100 (1% of the floor), so the floor is a tick.
+    uint256 public constant FLOOR_PCT = 80;
+    uint256 public constant TICKS_PER_FLOOR = 100;
 
     /// @dev AquaOpcodes indices of swap-vm 1.0.2; the program test checks them against the router's table.
     uint8 internal constant OP_JUMP = 10;
@@ -88,6 +101,11 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     uint32 public immutable WIND_DOWN_FEE_BPS;
     /// @notice DecayXD period on the live branch, in seconds (Mooniswap-style offsets against back-running).
     uint16 public immutable DECAY_PERIOD;
+    /// @notice Uniswap CCA factory (v2.1.0) and the bid validation hook every Castle auction uses.
+    ICCAFactory public immutable CCA_FACTORY;
+    address public immutable JACK_HOOK;
+    /// @notice Seconds after expiry with no claim before anyone may dissolve the book.
+    uint64 public immutable DISSOLVE_GRACE;
 
     string public label;
     /// @notice DNS-encoded castle.<parent>.
@@ -102,10 +120,17 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     uint64 public shipNonce;
     /// @notice The epoch each strategy was shipped under; 0 if never shipped here.
     mapping(bytes32 strategyHash => uint256) public shippedEpoch;
+    /// @notice Strategies shipped and not yet docked (at most MAX_ACTIVE_STRATEGIES).
+    bytes32[] internal _active;
+    /// @notice fum: may open shift-change auctions besides the live holder.
+    address public auctioneer;
+    /// @notice The auction Castle opened and has not settled yet; address(0) if none.
+    address public auction;
+    uint64 public auctionNonce;
 
     /// @notice What the holder chooses when shipping; everything else is fixed by Castle.
-    /// @param maxWeth  most WETH to commit (clamped to Castle's balance)
-    /// @param maxUsdc  most USDC to commit (clamped to Castle's balance)
+    /// @param maxWeth  most WETH to commit (clamped to what no active strategy claims)
+    /// @param maxUsdc  most USDC to commit (clamped to what no active strategy claims)
     /// @param feeBps   live flat fee on amountIn, in BPS units, within [MIN_FEE_BPS, MAX_FEE_BPS]
     /// @param rangeBps band half-width: prices [P/(1+r), P*(1+r)] around the anchor P, within [MIN, MAX]_RANGE_BPS
     struct ShipParams {
@@ -121,6 +146,17 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     event PriceWritten(uint256 priceQ96);
     event CrewSet(address indexed account, string crewLabel);
     event FoSet(address indexed fo);
+    event AuctioneerSet(address indexed auctioneer);
+    event AuctionOpened(
+        address indexed auction,
+        uint256 indexed epoch,
+        uint256 amount,
+        uint256 floorQ96,
+        uint64 endBlock,
+        bool dissolution
+    );
+    event AuctionSettled(address indexed auction, uint256 clearingPriceQ96, uint256 currencyRaised, bool priceWritten);
+    event Dissolved(uint256 indexed epoch, uint256 strategiesDocked, uint256 weth);
 
     error NotCrew(address caller);
     error EpochNotRegenerated(uint256 epoch);
@@ -131,6 +167,12 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     error NoAnchor();
     error BadShipParams();
     error EmptyBook();
+    error TooManyStrategies();
+    error AuctionRunning(address auction);
+    error NoAuction();
+    error AuctionNotOver(uint64 endBlock);
+    error NotDissolvable(uint256 at);
+    error BadAuctionAmount();
 
     struct Config {
         address aqua;
@@ -148,6 +190,9 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
         bool registryEpoch;
         uint32 windDownFeeBps;
         uint16 decayPeriod;
+        address ccaFactory;
+        address jackHook;
+        uint64 dissolveGrace;
     }
 
     constructor(Config memory c) EIP712(CastleLeaseTypes.NAME, CastleLeaseTypes.VERSION) Ownable(c.owner) {
@@ -158,7 +203,8 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
         if (
             IAquaApp(c.router).AQUA() != c.aqua || c.fence.code.length == 0 || c.weth == c.usdc
                 || c.windDownFeeBps < MIN_FEE_BPS || c.windDownFeeBps > MAX_WIND_DOWN_FEE_BPS || c.decayPeriod == 0
-                || c.leasePeriod == 0 || c.dnsName.length < 2
+                || c.leasePeriod == 0 || c.dnsName.length < 2 || c.ccaFactory.code.length == 0
+                || c.jackHook.code.length == 0
         ) revert BadConfig();
         AQUA = IAqua(c.aqua);
         ROUTER = c.router;
@@ -175,6 +221,9 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
         registryEpoch = c.registryEpoch;
         WIND_DOWN_FEE_BPS = c.windDownFeeBps;
         DECAY_PERIOD = c.decayPeriod;
+        CCA_FACTORY = ICCAFactory(c.ccaFactory);
+        JACK_HOOK = c.jackHook;
+        DISSOLVE_GRACE = c.dissolveGrace;
         label = c.label;
         dnsName = c.dnsName;
         fo = c.fo;
@@ -264,11 +313,15 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     // ------------------------------------------------------------------------------------------------
 
     modifier onlyLiveHolder() {
+        _checkLiveHolder();
+        _;
+    }
+
+    function _checkLiveHolder() internal view {
         address h = holder();
         if (msg.sender != h) revert NotHolder(msg.sender, h);
         uint64 current = expiry();
         if (block.timestamp >= current) revert LeaseExpired(current);
-        _;
     }
 
     /// @notice Ship a fenced strategy centred on the ENS anchor, with Castle as the Aqua maker and ROUTER as the app.
@@ -284,6 +337,7 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
         ) {
             revert BadShipParams();
         }
+        if (_active.length >= MAX_ACTIVE_STRATEGIES) revert TooManyStrategies();
         uint256 anchor = anchorPriceQ96();
         if (anchor == 0) revert NoAnchor();
         (uint256 sqrtMin, uint256 sqrtMax, uint256 wethAmt, uint256 usdcAmt) = _book(p, anchor);
@@ -293,6 +347,7 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
         bytes memory strategy = abi.encode(order);
         strategyHash = keccak256(strategy);
         shippedEpoch[strategyHash] = ep;
+        _active.push(strategyHash);
 
         (address[] memory tokens, uint256[] memory amounts) = (new address[](2), new uint256[](2));
         (tokens[0], tokens[1]) = (address(WETH), address(USDC));
@@ -303,10 +358,15 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
 
     /// @notice Dock a strategy (any epoch's): the new shift uses this to clear a stale shift's book.
     function dock(bytes32 strategyHash) external onlyLiveHolder {
-        address[] memory tokens = new address[](2);
-        (tokens[0], tokens[1]) = (address(WETH), address(USDC));
-        AQUA.dock(ROUTER, strategyHash, tokens);
-        emit Docked(strategyHash, shippedEpoch[strategyHash], msg.sender);
+        uint256 n = _active.length;
+        for (uint256 i; i < n; ++i) {
+            if (_active[i] == strategyHash) {
+                _active[i] = _active[n - 1];
+                _active.pop();
+                break;
+            }
+        }
+        _dock(strategyHash);
     }
 
     /// @notice Point castle.<parent> at the holder's own crew name, so resolving castle.* reaches this shift
@@ -332,6 +392,7 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
             if (
                 selector != this.claim.selector && selector != this.renew.selector && selector != this.relink.selector
                     && selector != this.ship.selector && selector != this.dock.selector
+                    && selector != this.openAuction.selector
             ) revert SelectorNotAllowed(selector);
             results[i] = Address.functionDelegateCall(address(this), data[i]);
         }
@@ -344,9 +405,80 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
         return raw.length == 32 ? abi.decode(raw, (uint256)) : 0;
     }
 
+    /// @notice Strategies shipped and not yet docked.
+    function activeStrategies() external view returns (bytes32[] memory) {
+        return _active;
+    }
+
+    /// @notice How much of `token` the active strategies may still pull (their Aqua virtual balances).
+    function committed(IERC20 token) public view returns (uint256 sum) {
+        for (uint256 i; i < _active.length; ++i) {
+            (uint248 bal,) = AQUA.rawBalances(address(this), ROUTER, _active[i], address(token));
+            sum += bal;
+        }
+    }
+
+    /// @notice Castle's balance of `token` that no active strategy claims: what may ship or go to auction.
+    function freeBalance(IERC20 token) public view returns (uint256) {
+        uint256 bal = token.balanceOf(address(this));
+        uint256 c = committed(token);
+        return bal > c ? bal - c : 0;
+    }
+
     // ------------------------------------------------------------------------------------------------
-    // Admin (the operator): crew, fo and the genesis anchor
+    // The exit: Uniswap CCA auctions of the WETH inventory (JackHook-gated, proceeds back to Castle)
     // ------------------------------------------------------------------------------------------------
+
+    /// @notice Shift-change auction of WETH the book does not need, opened by the live holder or the auctioneer (fum).
+    ///         Only WETH no active strategy claims can go in, so live fills never hit an over-committed balance.
+    function openAuction(uint128 amount) external returns (address) {
+        if (msg.sender != auctioneer) _checkLiveHolder();
+        if (amount == 0 || amount > freeBalance(WETH)) revert BadAuctionAmount();
+        return _openAuction(amount, false);
+    }
+
+    /// @notice Dissolution: if nobody has claimed the castle DISSOLVE_GRACE after the lease lapsed, ANYONE may dock the
+    ///         whole book and auction all the WETH. fum is only the default caller.
+    function dissolve() external returns (address a) {
+        uint64 exp = expiry();
+        uint256 at = uint256(exp) + DISSOLVE_GRACE;
+        if (exp == 0 || block.timestamp < at) revert NotDissolvable(at);
+        uint256 n = _active.length;
+        while (_active.length != 0) {
+            bytes32 h = _active[_active.length - 1];
+            _active.pop();
+            _dock(h);
+        }
+        uint256 amount = WETH.balanceOf(address(this));
+        emit Dissolved(epoch(), n, amount);
+        if (amount != 0) a = _openAuction(SafeCast.toUint128(amount), true);
+    }
+
+    /// @notice Once the auction has ended, anyone settles it: Castle sweeps the USDC raised and the unsold WETH home
+    ///         and, if anything sold, writes the clearing price to ENS as the next shift's anchor.
+    function settleAuction() external returns (uint256 clearingQ96) {
+        address a = auction;
+        if (a == address(0)) revert NoAuction();
+        uint64 end = ICCA(a).endBlock();
+        if (block.number < end) revert AuctionNotOver(end);
+        auction = address(0);
+        ICCA(a).sweepCurrency();
+        ICCA(a).sweepUnsoldTokens();
+        uint256 raised = ICCA(a).currencyRaised();
+        clearingQ96 = ICCA(a).clearingPrice();
+        bool written = raised != 0 && clearingQ96 != 0;
+        if (written) _writePrice(clearingQ96);
+        emit AuctionSettled(a, clearingQ96, raised, written);
+    }
+
+    // ------------------------------------------------------------------------------------------------
+    // Admin (the operator): crew, fo, the auctioneer and the genesis anchor
+    // ------------------------------------------------------------------------------------------------
+
+    function setAuctioneer(address auctioneer_) external onlyOwner {
+        auctioneer = auctioneer_;
+        emit AuctioneerSet(auctioneer_);
+    }
 
     /// @notice Make `account` crew under `crewLabel` (its name <crewLabel>.<parent> in REGISTRY); "" removes it.
     function setCrew(address account, string calldata crewLabel) external onlyOwner {
@@ -361,7 +493,7 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
         emit FoSet(fo_);
     }
 
-    /// @notice Seed or correct the anchor. The CCA clearing price replaces this path in p4.
+    /// @notice Seed or correct the anchor; after that, settled auctions write it.
     function setAnchorPrice(uint256 priceQ96) external onlyOwner {
         _writePrice(priceQ96);
     }
@@ -369,6 +501,41 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     // ------------------------------------------------------------------------------------------------
     // Internals
     // ------------------------------------------------------------------------------------------------
+
+    /// @dev Auction params are all Castle's: USDC for WETH, 25 blocks, floor 80% of the anchor on a 1%-of-floor tick,
+    ///      JackHook-gated, no graduation threshold, tokens and funds back to Castle.
+    function _openAuction(uint128 amount, bool dissolution) internal returns (address a) {
+        if (auction != address(0)) revert AuctionRunning(auction);
+        uint256 anchor = anchorPriceQ96();
+        if (anchor == 0) revert NoAnchor();
+        uint256 tick = anchor * FLOOR_PCT / 100 / TICKS_PER_FLOOR;
+        uint64 start = uint64(block.number);
+        AuctionParameters memory p = AuctionParameters({
+            currency: address(USDC),
+            tokensRecipient: address(this),
+            fundsRecipient: address(this),
+            startBlock: start,
+            endBlock: start + AUCTION_BLOCKS,
+            claimBlock: start + AUCTION_BLOCKS,
+            tickSpacing: tick,
+            validationHook: JACK_HOOK,
+            floorPrice: tick * TICKS_PER_FLOOR,
+            requiredCurrencyRaised: 0,
+            auctionStepsData: abi.encodePacked(AUCTION_MPS, uint40(AUCTION_BLOCKS))
+        });
+        a = CCA_FACTORY.create(address(WETH), amount, abi.encode(p), bytes32(uint256(++auctionNonce)));
+        auction = a;
+        WETH.safeTransfer(a, amount);
+        ICCA(a).onTokensReceived();
+        emit AuctionOpened(a, epoch(), amount, p.floorPrice, p.endBlock, dissolution);
+    }
+
+    function _dock(bytes32 strategyHash) internal {
+        address[] memory tokens = new address[](2);
+        (tokens[0], tokens[1]) = (address(WETH), address(USDC));
+        AQUA.dock(ROUTER, strategyHash, tokens);
+        emit Docked(strategyHash, shippedEpoch[strategyHash], msg.sender);
+    }
 
     function _writePrice(uint256 priceQ96) internal {
         RESOLVER.setData(dnsName, PRICE_KEY, priceQ96 == 0 ? bytes("") : abi.encode(priceQ96));
@@ -395,8 +562,8 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
         sqrtMax = Math.mulDiv(sqrtP, band, 1e18);
         if (sqrtMin == 0) revert NoAnchor();
 
-        uint256 availWeth = Math.min(p.maxWeth, WETH.balanceOf(address(this)));
-        uint256 availUsdc = Math.min(p.maxUsdc, USDC.balanceOf(address(this)));
+        uint256 availWeth = Math.min(p.maxWeth, freeBalance(WETH));
+        uint256 availUsdc = Math.min(p.maxUsdc, freeBalance(USDC));
         (uint256 l, uint256 amtLt, uint256 amtGt) = XYCConcentrateArgsBuilder.computeLiquidityFromAmounts(
             usdcIsLt ? availUsdc : availWeth, usdcIsLt ? availWeth : availUsdc, sqrtP, sqrtMin, sqrtMax
         );

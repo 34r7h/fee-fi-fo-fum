@@ -2,15 +2,29 @@
 pragma solidity 0.8.30;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IAqua } from "@1inch/aqua/src/interfaces/IAqua.sol";
 import { AquaSwapVMRouter } from "@1inch/swap-vm/src/routers/AquaSwapVMRouter.sol";
 import { ISwapVM } from "@1inch/swap-vm/src/interfaces/ISwapVM.sol";
 
 import { Castle } from "../../src/Castle.sol";
 import { FeeFiFoFumExtruction } from "../../src/FeeFiFoFumExtruction.sol";
+import { JackHook } from "../../src/JackHook.sol";
+import { ICCA } from "../../src/interfaces/ICCA.sol";
 import { ICastleLease } from "../../src/interfaces/ICastleLease.sol";
 import { IENSv2Registry, IENSv2Resolver, ENSv2Roles } from "../../src/interfaces/IENSv2.sol";
 import { CastleHelpers } from "../utils/CastleHelpers.sol";
+
+interface ICCABids {
+    function submitBid(uint256 maxPriceQ96, uint128 amount, address owner, bytes calldata hookData)
+        external
+        payable
+        returns (uint256 bidId);
+}
+
+interface IPermit2 {
+    function approve(address token, address spender, uint160 amount, uint48 expiration) external;
+}
 
 interface IEnhancedAccessControl {
     function grantRootRoles(uint256 roleBitmap, address account) external returns (bool);
@@ -41,8 +55,12 @@ contract CastleForkTest is CastleHelpers {
     address internal constant FEE = 0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538;
     address internal constant FI = 0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2;
     address internal constant FO_AGENT = 0x8689a407A2488A5b2f2De05d2C6978a798f93D56; // named, not crew
+    address internal constant CCA_FACTORY = 0x000000001F26a0044BaA66024e7b6599c61963F8; // Uniswap CCA v2.1.0
+    address internal constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
+    uint64 internal constant GRACE = 300;
 
     FeeFiFoFumExtruction internal fence;
+    JackHook internal jackHook;
     Castle internal castle;
     uint256 internal foKey = 0xF0;
     address internal jack = makeAddr("jack");
@@ -56,6 +74,7 @@ contract CastleForkTest is CastleHelpers {
         assertEq(address(AquaSwapVMRouter(payable(ROUTER)).AQUA()), AQUA);
 
         fence = new FeeFiFoFumExtruction();
+        jackHook = new JackHook(IENSv2Registry(REGISTRY));
         castle = new Castle(
             Castle.Config({
                 aqua: AQUA,
@@ -72,7 +91,10 @@ contract CastleForkTest is CastleHelpers {
                 leasePeriod: LEASE,
                 registryEpoch: true,
                 windDownFeeBps: 5e7,
-                decayPeriod: 60
+                decayPeriod: 60,
+                ccaFactory: CCA_FACTORY,
+                jackHook: address(jackHook),
+                dissolveGrace: GRACE
             })
         );
 
@@ -161,11 +183,10 @@ contract CastleForkTest is CastleHelpers {
         vm.expectRevert(abi.encodeWithSelector(FeeFiFoFumExtruction.WindDownReduceOnly.selector, WETH));
         AquaSwapVMRouter(payable(ROUTER)).quote(order, WETH, USDC, 0.005 ether, _takerData(jack, true));
 
-        // fi takes the castle in one tx: claim, relink, ship its own (fee's book is NOT docked yet)
-        bytes[] memory calls = new bytes[](3);
+        // fi takes the castle in one tx: claim and relink (fee's book is NOT docked yet)
+        bytes[] memory calls = new bytes[](2);
         calls[0] = abi.encodeCall(Castle.claim, ());
         calls[1] = abi.encodeCall(Castle.relink, ());
-        calls[2] = abi.encodeCall(Castle.ship, (_params()));
         vm.prank(FI);
         bytes[] memory results = castle.multicall(calls);
         uint256 fiEpoch = abi.decode(results[0], (uint256));
@@ -185,14 +206,20 @@ contract CastleForkTest is CastleHelpers {
         AquaSwapVMRouter(payable(ROUTER)).swap(order, USDC, WETH, 30e6, _takerData(jack, true));
         vm.stopPrank();
 
-        // docking is only cleanup: it returns fee's virtual balances, and Aqua then refuses the order too
+        // fee's book still claims the hoard, so fi cannot promise it twice: dock it, then re-ship, in one tx
+        Castle.ShipParams memory p = _params();
         vm.prank(FI);
-        castle.dock(feeBook);
+        vm.expectRevert(Castle.EmptyBook.selector);
+        castle.ship(p);
+        calls[0] = abi.encodeCall(Castle.dock, (feeBook));
+        calls[1] = abi.encodeCall(Castle.ship, (p));
+        vm.prank(FI);
+        results = castle.multicall(calls);
         (uint248 docked,) = IAqua(AQUA).rawBalances(address(castle), ROUTER, feeBook, USDC);
         assertEq(docked, 0);
 
         // fi's book fills
-        (, ISwapVM.Order memory fiOrder) = abi.decode(results[2], (bytes32, ISwapVM.Order));
+        (, ISwapVM.Order memory fiOrder) = abi.decode(results[1], (bytes32, ISwapVM.Order));
         q = _quote(fiOrder, USDC, 30e6);
         assertEq(_fill(fiOrder, USDC, 30e6), q, "quote == swap (fi's live book)");
     }
@@ -299,5 +326,78 @@ contract CastleForkTest is CastleHelpers {
         vm.prank(FEE);
         vm.expectRevert(); // EACUnauthorizedAccountRoles: the holder was registered with no roles
         IENSv2Registry(REGISTRY).renew(labelId, exp + 3600);
+    }
+
+    // ------------------------------------------------------------------ the exit, on the live CCA factory (p4)
+
+    function _bid(address a, address bidder, bytes memory label, uint256 maxPrice, uint128 amount)
+        internal
+        returns (uint256 bidId)
+    {
+        deal(USDC, bidder, amount);
+        vm.startPrank(bidder);
+        IERC20(USDC).approve(PERMIT2, type(uint256).max);
+        IPermit2(PERMIT2).approve(USDC, a, uint160(amount), uint48(block.timestamp + 1 days));
+        bidId = ICCABids(a).submitBid(maxPrice, amount, bidder, label);
+        vm.stopPrank();
+    }
+
+    function test_fork_shiftChangeAuctionWritesTheClearingPrice() public {
+        // an outside agent with a name in handoff's agent registry (its registrar registers Jacks)
+        vm.prank(ADMIN);
+        IENSv2Registry(REGISTRY).register("jack", jack, address(0), RESOLVER, 0, uint64(block.timestamp + 30 days));
+
+        vm.prank(FEE);
+        castle.claim();
+        vm.prank(FEE);
+        address a = castle.openAuction(0.5 ether);
+        assertEq(IERC20(WETH).balanceOf(a), 0.5 ether);
+        uint256 tick = ANCHOR_Q96 * 80 / 100 / 100;
+        uint256 floor = tick * 100;
+
+        // an unnamed bidder is turned away by JackHook, inside the live CCA
+        address anon = makeAddr("anon");
+        deal(USDC, anon, 100e6);
+        vm.startPrank(anon);
+        IERC20(USDC).approve(PERMIT2, type(uint256).max);
+        IPermit2(PERMIT2).approve(USDC, a, 100e6, uint48(block.timestamp + 1 days));
+        vm.expectPartialRevert(bytes4(keccak256("ValidationHookCallFailed(bytes)")));
+        ICCABids(a).submitBid(floor + 30 * tick, 100e6, anon, "anon");
+        vm.stopPrank();
+
+        // jack bids 2,000 USDC up to ~104% of the anchor for 0.5 WETH
+        _bid(a, jack, "jack", floor + 30 * tick, 2_000e6);
+
+        uint256 usdcBefore = IERC20(USDC).balanceOf(address(castle));
+        vm.roll(ICCA(a).endBlock());
+        vm.prank(anon); // anyone settles
+        uint256 clearing = castle.settleAuction();
+        uint256 raised = ICCA(a).currencyRaised();
+        assertGt(raised, 0);
+        assertGe(clearing, floor);
+        assertLe(clearing, floor + 30 * tick);
+        assertEq(castle.anchorPriceQ96(), clearing, "ENS now anchors the next shift on the discovered price");
+        assertGt(IERC20(USDC).balanceOf(address(castle)), usdcBefore, "proceeds swept home");
+        assertLe(IERC20(USDC).balanceOf(address(castle)) - usdcBefore, raised);
+
+        // the next ship centres on it
+        vm.prank(FEE);
+        (, ISwapVM.Order memory order) = castle.ship(_params());
+        uint256 out = _quote(order, WETH, 0.001 ether);
+        assertApproxEqRel(out, Math.mulDiv(0.001 ether, clearing, Q96) * uint256(1e9 - 3e6) / 1e9, 1e15);
+    }
+
+    function test_fork_dissolveOnTheLiveCCA() public {
+        vm.startPrank(FEE);
+        castle.claim();
+        (bytes32 h,) = castle.ship(_params());
+        vm.stopPrank();
+        vm.warp(uint256(castle.expiry()) + GRACE);
+        vm.prank(jack); // anyone: fum is only the default caller
+        address a = castle.dissolve();
+        (uint248 bal,) = IAqua(AQUA).rawBalances(address(castle), ROUTER, h, WETH);
+        assertEq(bal, 0, "the dead shift's book is docked");
+        assertEq(IERC20(WETH).balanceOf(a), 1 ether, "the whole WETH hoard is on auction");
+        assertEq(castle.auction(), a);
     }
 }

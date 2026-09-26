@@ -644,7 +644,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       case 'strategy.shipped': return { ev: ev, v: 'ship', tone: 'gold', ti: 'HERE ' + up(ev.shippedBy || 'fi') + ' SHIPS ' + up(the(ev.label || 'a strategy')), gl: [nm + ' promises ' + bagStr(ev.alloc), 'from the one hoard: no gold moves'] };
       case 'strategy.docked': return { ev: ev, v: 'dock', ti: 'HERE ' + up(ev.by || 'fi') + ' DOCKS ' + up(the((strat(ev.hash) || {}).label || 'a strategy')), gl: [nm + '’s promise comes home', ev.reason || 'the gold never left'] };
       case 'allocation.refused': return { ev: ev, v: 'refused', tone: 'madder', ti: 'HERE FUM REFUSES A PROMISE TOO MANY', gl: [(ev.label || 'A strategy') + ' asked for ' + bagStr(ev.asked), 'past fum’s line · reverted ' + errText(ev)] };
-      case 'quote.served': return { ev: ev, v: 'harp', tone: 'gold', ti: 'HERE THE HARP SINGS A PRICE', gl: [who(ev) + ' asked ' + (ev.name || S.config.quoteName || 'the castle’s name'), deal(ev) + ' at ' + fx(rate(ev)) + ', signed by fi'] };
+      case 'quote.served': return { ev: ev, v: 'harp', tone: 'gold', ti: 'HERE THE HARP SINGS A PRICE', gl: [who(ev) + ' asked ' + (ev.via === 'mcp' ? 'the castle’s castle_quote tool' : ev.name || S.config.quoteName || 'the castle’s name'), deal(ev) + ' at ' + fx(rate(ev)) + ', signed by fi'] };
       case 'intent.routed': return { ev: ev, v: 'order', tone: 'woad', ti: 'HERE FO CARRIES AN ORDER', gl: [who(ev) + ' offers ' + money(ev.amountIn, ev.tokenIn) + ' for ' + ev.tokenOut, (ev.source ? 'a ' + ev.source + '-style order, ' : '') + 'sent to ' + (ev.route === 'v4' ? 'the hen on Uniswap v4' : 'the harp')] };
       case 'fill':
         if (ev.status === 'reverted') return { ev: ev, v: 'no', tone: 'madder', ti: 'HERE THE GIANT SAYS NO', gl: [who(ev) + ' offered ' + money(ev.amountIn, ev.tokenIn), 'reverted ' + revText(ev.revert)] };
@@ -745,6 +745,9 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       g.trk.style.width = P(lim);
       g.twice.style.width = lim > bal ? (Number(lim - bal) / Number(lim) * 100).toFixed(3) + '%' : '0%';
       g.hd.style.left = P(bal); g.lim.style.left = P(lim);
+      // An empty castle has no line to draw yet: the markers would pile up at zero.
+      var none = top === Z;
+      g.trk.parentNode.style.display = none ? 'none' : '';
       g.hd.hidden = lim === bal;
       g.hd.firstChild.textContent = 'the hoard';
       g.lim.firstChild.textContent = 'fum’s line, ' + times(lev(sym));
@@ -764,7 +767,7 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       var room = lim > pr ? lim - pr : Z;
       fill(g.head, [h('b', { text: sym }), h('span', { class: 'pv' }, [amt(pr.toString(), sym), h('small', { text: ' promised · the hoard holds ' + money(bal.toString(), sym) })])]);
       flag(g.foot, 'data-over', !!over && ask > Z);
-      fill(g.foot, over && ask > Z ? [h('span', { text: (over.label || 'It') + ' asked ' + money(ask.toString(), sym) + ' more: ' + amt((pr + ask).toString(), sym) + ' would pass fum’s line of ' + amt(lim.toString(), sym) }), h('span', { text: 'refused' })]
+      fill(g.foot, none ? [h('span', { text: 'The castle holds no ' + sym + ' yet, so nothing can be promised.' })] : over && ask > Z ? [h('span', { text: (over.label || 'It') + ' asked ' + money(ask.toString(), sym) + ' more: ' + amt((pr + ask).toString(), sym) + ' would pass fum’s line of ' + amt(lim.toString(), sym) }), h('span', { text: 'refused' })]
         : [h('span', { text: (bal > Z ? fx(Number(pr * BigInt(10000) / bal) / 10000, 2) : '0') + '× the hoard promised' }), h('span', { text: money(room.toString(), sym) + ' of room under fum’s line' })]);
       fill(g.watch, past.indexOf(sym) >= 0 ? 'Fills pushed the ' + sym + ' promises past fum’s line: fum docks greedy first, then the harp, then the hen, until they fit.' : null);
     });
@@ -858,14 +861,18 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
         fill(el, h('div', { class: 'hen-top' }, [vignette('harp', 'big'), h('p', { class: 'empty', text: 'No Jack has asked yet. Resolve ' + (S.config.quoteName || 'quote.feefifofum.eth') + ' with any ENS client that follows CCIP-Read, and the harp sings a signed price.' })]));
         return;
       }
+      // Most Jacks ask the name (CCIP-Read); a Jack can also ask the castle's castle_quote tool over MCP for the same signed price.
+      var mcp = q.via === 'mcp';
       var fate = quoteFate(q), bar = h('i'), txt = h('span'), exp = h('div', { class: 'exp num', 'data-s': fate.s }, [h('div', { class: 'bar' }, bar), txt]);
       HP = { q: q, bar: bar, txt: txt, exp: exp, t0: q.t || clock() };
       var older = S.quotes.slice(-5, -1).reverse();
       fill(el, [
         h('div', { class: 'card' }, [
-          h('div', { class: 'qname num' }, [q.name || S.config.quoteName || 'quote.feefifofum.eth', h('span', { text: 'ENS · CCIP-Read · good 30 s' })]),
-          q.key ? h('div', { class: 'seal num', text: 'text record ' + q.key }) : null,
-          h('ol', { class: 'steps', 'aria-label': 'How the price was found' }, [
+          h('div', { class: 'qname num' }, mcp ? ['castle_quote', h('span', { text: 'the castle’s MCP tool · good 30 s' })] : [q.name || S.config.quoteName || 'quote.feefifofum.eth', h('span', { text: 'ENS · CCIP-Read · good 30 s' })]),
+          q.key && !mcp ? h('div', { class: 'seal num', text: 'text record ' + q.key }) : null,
+          h('ol', { class: 'steps', 'aria-label': 'How the price was found' }, mcp ? [
+            h('li', { text: who(q) + ' asks the castle’s castle_quote tool' }), h('li', { text: 'fee prices it; fi signs the quote' }),
+            h('li', { text: 'the router checks fi’s seal and the expiry when it fills' })] : [
             h('li', { text: who(q) + ' asks the name' }), h('li', { text: 'the resolver reverts OffchainLookup: ask the gateway' }),
             h('li', { text: 'the gateway answers; fi signs the quote' }), h('li', { text: 'the resolver checks fi’s seal and the expiry' })]),
           h('div', { class: 'deal num' }, [who(q) + ' pays ', h('b', { text: money(q.amountIn, q.tokenIn) }), ' and gets ', h('b', { text: money(q.amountOut, q.tokenOut) }),

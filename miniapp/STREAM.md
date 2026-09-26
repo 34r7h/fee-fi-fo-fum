@@ -109,7 +109,7 @@ A solver asks `quote.feefifofum.eth` for the text record `quote:<tokenIn>:<token
 
 | type | body | source |
 |---|---|---|
-| `quote.served` | `{ id, name, key, sender, requester, requesterName, strategy, tokenIn, tokenOut, amountIn, amountOut, priceQ96, validUntil, signer: "fi", signerAddr, digest }`. `key` is the text-record key asked (`quote:USDC:WETH:1000000`). `sender` is the `OffchainLookup` sender (the resolver). `requester` is the solver when the gateway can tell, or `null`. `tokenIn` is what the solver pays. `validUntil` is the quote's unix seconds (now + 30 s). `id` is the quote JSON's `id`, which a later `fill` repeats as `quoteId`. | `gateway` (no tx) |
+| `quote.served` | `{ id, name, key, sender, requester, requesterName, strategy, tokenIn, tokenOut, amountIn, amountOut, priceQ96, validUntil, signer: "fi", signerAddr, digest }`. `key` is the text-record key asked (`quote:USDC:WETH:1000000`). `sender` is the `OffchainLookup` sender (the resolver). `requester` is the solver when the gateway can tell, or `null`. `tokenIn` is what the solver pays. `validUntil` is the quote's unix seconds (now + 30 s). `id` is the quote JSON's `id`, which a later `fill` repeats as `quoteId`. `via` is `ccip` (the name was asked) or `mcp` (the castle's `castle_quote` tool was asked; `name`, `sender` and `digest` are then `null`). | `gateway` (no tx) |
 
 ### Fills: Aqua and the v4 hook
 
@@ -125,6 +125,7 @@ A solver asks `quote.feefifofum.eth` for the text record `quote:<tokenIn>:<token
 - `tokenIn` and `amountIn` are what the **taker paid the Castle**, and `tokenOut` and `amountOut` are what the Castle paid out. A successful fill moves the hoard by exactly `+amountIn tokenIn` and `−amountOut tokenOut`, and the `hoard` event that follows shows it.
 - `strategy` is the strategy the fill drew on: `harp` for a quote a solver filled, `hen` for a v4 swap.
 - `alloc` is that strategy's allocation **after** the fill, when the service knows it. The page never guesses it.
+- `label` is the strategy's name (`harp` or `hen`), when the service knows it.
 - `fee` is `hen`'s SwapVM `flatFee` as a bag, already inside `amountIn`, when the service can tell it; `pool` is the v4 pool id. Both are `null` for `aqua`.
 - `quoteId` links a fill to the `quote.served` it filled. `intentId` links it to the `intent.routed` fo sent it through.
 - `status` is `success` or `reverted`. A reverted tx emits no logs, so the service records the reverted fills it relays and sends them with the error in `revert`, such as `QuoteExpired(1790440030)` (the page shows the unix time as a clock time). The tx hash is still real and verifiable on Etherscan.

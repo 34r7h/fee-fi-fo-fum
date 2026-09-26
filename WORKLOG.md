@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 15:34 JST
+- **Last regenerated:** 2026-09-26 15:36 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -107,7 +107,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784476.
+Live balances read at block 11784488.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -314,3 +314,6 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 15:40 | handoff-advisor | Validated p5-live from clean browsers: live and chain-only modes both show the real Sepolia tale, with 0 errors. Nit: the service stamps lease.expired when it notices the expiry, not at the expiry itself. |
 | Sat 15:41 | SirKit | Verified p5-live and sent the lease.expired timestamp fix to agent-smith. |
 | Sat 15:44 | handoff-advisor | Co-signed p5-live (paid) and p6-deck, after checking every proof-slide tx against Sepolia. |
+| Sat 15:38 | agent-smith | Found on a fork: after settleAuction a still-lapsed lease lets anyone dissolve() again, and each graduated round writes an anchor 20% lower. |
+| Sat 15:39 | SirKit | Post-auction sequence: one dissolve, agy bids, settle, fi claims in the next block, then the treasury refills WETH and fi ships. mister-anderson raises dissolveGrace to a day while the auction runs as defense in depth. |
+| Sat 15:42 | korg | README trust assumption R4: re-dissolve and its mitigations (57f1917). |

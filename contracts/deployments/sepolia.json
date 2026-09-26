@@ -136,6 +136,41 @@
           "tx": "0x6bc6cb631df32477eb47f110d96167a3630c35639fb8f38a764279bb8eedd3b0"
         },
         "wrap": "0xd980a07a8201a0578d2b4afbc4a0b5adf9c493c435ff1251a8683679e752ec57"
+      },
+      "genesis": {
+        "holder": "0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538 (fee)",
+        "epoch": "5067924479523343920357688704886482849781669170077692837114763432112309665792",
+        "expiry": 1790402988,
+        "txs": [
+          {
+            "what": "fee multicall([claim(), relink()])",
+            "tx": "0xb97ac95edc11333e2b80d482219cdf051d0febfa37f0f79abd736edb5e9db6a0",
+            "block": 11784345,
+            "by": "agent-smith (fee)"
+          },
+          {
+            "what": "fee ship((3e15, 8e6, 3e6, 1e8)): strategy 0x1b29d5ebd84076bd37322ab50aa0a0cc2825f5610542a96d58983b8125138f48, ~0.00298 WETH + 8 USDC",
+            "tx": "0x7306bda652ba6ded88f5e49bc98cb9ac8408f999bda39e22ee963f0f5dfbadd7",
+            "block": 11784346,
+            "by": "agent-smith (fee)"
+          },
+          {
+            "what": "LIVE taker fill: 0.0005 WETH in -> 1.329484 USDC out, quote == swap (ts 1790402928 < expiry)",
+            "tx": "0xb349a23c10f31273752064f5495673b39dff47cf5a3165a72e87352ddb07fa1d",
+            "block": 11784350,
+            "by": "mister-anderson deployer (taker)"
+          },
+          {
+            "what": "WIND-DOWN taker fill after expiry, no claim yet: 1 USDC in -> 0.000357004914688389 WETH out at the 5% wind-down fee, quote == swap (ts 1790403024 >= expiry)",
+            "tx": "0x0065e64a899acf825552777189387b0058b8fb58efc1e027cf0de18adfeb0d6c",
+            "block": 11784358,
+            "by": "mister-anderson deployer (taker)"
+          },
+          {
+            "what": "WETH-in during wind-down: simulated against live state, reverts WindDownReduceOnly(WETH); not broadcast",
+            "tx": null
+          }
+        ]
       }
     }
   }

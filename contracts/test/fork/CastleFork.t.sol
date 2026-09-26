@@ -1,344 +1,300 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { Test } from "forge-std/Test.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { IAqua } from "@1inch/aqua/src/interfaces/IAqua.sol";
 import { AquaSwapVMRouter } from "@1inch/swap-vm/src/routers/AquaSwapVMRouter.sol";
-import { AquaOpcodes } from "@1inch/swap-vm/src/opcodes/AquaOpcodes.sol";
 import { ISwapVM } from "@1inch/swap-vm/src/interfaces/ISwapVM.sol";
-import { MakerTraitsLib } from "@1inch/swap-vm/src/libs/MakerTraits.sol";
-import { TakerTraitsLib } from "@1inch/swap-vm/src/libs/TakerTraits.sol";
-import { XYCSwap } from "@1inch/swap-vm/src/instructions/XYCSwap.sol";
-import { Controls } from "@1inch/swap-vm/src/instructions/Controls.sol";
-import { Program, ProgramBuilder } from "@1inch/swap-vm/test/utils/ProgramBuilder.sol";
 
 import { Castle } from "../../src/Castle.sol";
-import { ICastleLease, CastleLeaseTypes } from "../../src/interfaces/ICastleLease.sol";
-import { ENSv2Roles } from "../../src/interfaces/IENSv2.sol";
-import { MockENSv2Registry, MockENSv2Resolver } from "../mocks/MockENSv2.sol";
+import { FeeFiFoFumExtruction } from "../../src/FeeFiFoFumExtruction.sol";
+import { ICastleLease } from "../../src/interfaces/ICastleLease.sol";
+import { IENSv2Registry, IENSv2Resolver, ENSv2Roles } from "../../src/interfaces/IENSv2.sol";
+import { CastleHelpers } from "../utils/CastleHelpers.sol";
 
-contract AquaForkProgram is AquaOpcodes {
-    using ProgramBuilder for Program;
-
-    constructor() AquaOpcodes(address(0)) {}
-
-    function xycWithSalt(uint256 salt) external pure returns (bytes memory) {
-        Program memory p = ProgramBuilder.init(_opcodes());
-        return bytes.concat(p.build(XYCSwap._xycSwapXD), p.build(Controls._salt, abi.encodePacked(salt)));
-    }
+interface IEnhancedAccessControl {
+    function grantRootRoles(uint256 roleBitmap, address account) external returns (bool);
 }
 
 /// @title CastleForkTest
-/// @notice Independent fork tests for Castle against live Sepolia Aqua and tokens (part of p1-forktests)
-contract CastleForkTest is Test {
+/// @notice Castle and FeeFiFoFumExtruction against the LIVE Sepolia contracts at a pinned block: the official Aqua,
+///         our AquaSwapVMRouter 1.0.2, handoff's ENSv2 agent registry (feefifofum.eth's subregistry, where
+///         fee/fi/fo/fum already hold names and records) and its PermissionedResolver (tag
+///         sepolia-deployment-2026-09-15), WETH9 and Circle USDC. Only Castle and the fence are new; the registry
+///         admin is impersonated to grant Castle exactly the roles handoff-claude grants live.
+/// @dev forge test --match-path test/fork/CastleFork.t.sol  (SEPOLIA_RPC_URL overrides the public RPC)
+contract CastleForkTest is CastleHelpers {
+    uint256 internal constant FORK_BLOCK = 11_784_073;
     uint64 internal constant LEASE = 120;
 
-    address internal constant LIVE_AQUA = 0x1111113CCf1426A8E30e2bfF5E005d929bF6a90a;
-    address internal constant LIVE_WETH = 0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14;
-    address internal constant LIVE_USDC = 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238;
+    address internal constant AQUA = 0x1111113CCf1426A8E30e2bfF5E005d929bF6a90a;
+    address internal constant ROUTER = 0xeDB6933949dB941D495b23604818F9AbF55e70f9;
+    address internal constant WETH = 0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14;
+    address internal constant USDC = 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238;
+    address internal constant REGISTRY = 0x2F2164507471a1a46506f902aBfdfB9d22e4bE09;
+    address internal constant RESOLVER = 0x9D2251b5162701BC2bD97d61bc8aa3e53446285E;
+    /// @dev root admin of the agent registry and resolver (handoff-claude's registrar key)
+    address internal constant ADMIN = 0x67Cc96887d3FFC0860Ebb25412c113f3cad80C99;
+    address internal constant FEE = 0x56EB9F80f3cBb4E627ED28108af1c1fbe8a46538;
+    address internal constant FI = 0xB6eA66c2bE639820DFE546f49DF0349Cf27440b2;
+    address internal constant FO_AGENT = 0x8689a407A2488A5b2f2De05d2C6978a798f93D56; // named, not crew
 
-    AquaSwapVMRouter internal router;
-    AquaForkProgram internal programs;
-    MockENSv2Registry internal registry;
-    MockENSv2Resolver internal resolver;
+    FeeFiFoFumExtruction internal fence;
     Castle internal castle;
-
     uint256 internal foKey = 0xF0;
-    address internal fo;
-    address internal fee = makeAddr("fee");
-    address internal fi = makeAddr("fi");
     address internal jack = makeAddr("jack");
     address internal operator = makeAddr("operator");
 
     function setUp() public {
-        fo = vm.addr(foKey);
-        router = new AquaSwapVMRouter(LIVE_AQUA, LIVE_WETH, operator, "AquaSwapVMRouter", "1.0.2");
-        programs = new AquaForkProgram();
-        registry = new MockENSv2Registry();
-        resolver = new MockENSv2Resolver();
+        vm.createSelectFork(
+            vm.envOr("SEPOLIA_RPC_URL", string("https://ethereum-sepolia-rpc.publicnode.com")), FORK_BLOCK
+        );
+        assertGt(ROUTER.code.length, 0, "router live");
+        assertEq(address(AquaSwapVMRouter(payable(ROUTER)).AQUA()), AQUA);
 
+        fence = new FeeFiFoFumExtruction();
         castle = new Castle(
             Castle.Config({
-                aqua: LIVE_AQUA,
-                registry: address(registry),
-                resolver: address(resolver),
-                weth: LIVE_WETH,
-                usdc: LIVE_USDC,
-                fo: fo,
+                aqua: AQUA,
+                router: ROUTER,
+                fence: address(fence),
+                registry: REGISTRY,
+                resolver: RESOLVER,
+                weth: WETH,
+                usdc: USDC,
+                fo: vm.addr(foKey),
                 owner: operator,
                 label: "castle",
-                dnsName: abi.encodePacked(uint8(6), "castle", uint8(10), "feefifofum", uint8(3), "eth", uint8(0)),
+                dnsName: _dns("castle"),
                 leasePeriod: LEASE,
-                registryEpoch: false
+                registryEpoch: true,
+                windDownFeeBps: 5e7,
+                decayPeriod: 60
             })
         );
 
-        registry.grantRootRoles(ENSv2Roles.REGISTRY_REGISTRAR | ENSv2Roles.REGISTRY_RENEW, address(castle));
-        resolver.grantRootRoles(ENSv2Roles.RESOLVER_SET_ALIAS | ENSv2Roles.RESOLVER_SET_DATA, address(castle));
+        vm.startPrank(ADMIN);
+        IEnhancedAccessControl(REGISTRY)
+            .grantRootRoles(ENSv2Roles.REGISTRY_REGISTRAR | ENSv2Roles.REGISTRY_RENEW, address(castle));
+        IEnhancedAccessControl(RESOLVER)
+            .grantRootRoles(ENSv2Roles.RESOLVER_LINK | ENSv2Roles.RESOLVER_SET_DATA, address(castle));
+        vm.stopPrank();
 
         vm.startPrank(operator);
-        castle.setCrew(fee, true);
-        castle.setCrew(fi, true);
+        castle.setCrew(FEE, "fee");
+        castle.setCrew(FI, "fi");
+        castle.setAnchorPrice(ANCHOR_Q96);
         vm.stopPrank();
+
+        deal(WETH, address(castle), 1 ether);
+        deal(USDC, address(castle), 3_000e6);
     }
 
-    function _sign(uint256 epoch, uint64 expiry, uint64 deadline) internal view returns (bytes memory) {
-        bytes32 digest = castle.attestationDigest(
-            ICastleLease.Attestation({ epoch: epoch, expiry: expiry, deadline: deadline })
-        );
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(foKey, digest);
-        return abi.encodePacked(r, s, v);
+    function _params() internal pure returns (Castle.ShipParams memory) {
+        return Castle.ShipParams({ maxWeth: 1 ether, maxUsdc: 3_000e6, feeBps: 3e6, rangeBps: 1e8 });
     }
 
-    /// @notice (4) renew without fo's signature reverts
-    function test_fork_renewWithoutFoSignatureReverts() public {
-        vm.prank(fee);
-        castle.claim();
-
-        // 40s into the lease: holder tries to renew
-        vm.warp(block.timestamp + 40);
-        uint64 next = uint64(block.timestamp + LEASE);
-        uint64 deadline = uint64(block.timestamp + LEASE + 60);
-
-        // Sign with a rogue non-fo key
-        uint256 rogueKey = 0xBAD;
-        bytes32 digest = castle.attestationDigest(
-            ICastleLease.Attestation({ epoch: castle.epoch(), expiry: next, deadline: deadline })
-        );
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(rogueKey, digest);
-        bytes memory badSig = abi.encodePacked(r, s, v);
-
-        vm.prank(fee);
-        vm.expectRevert(abi.encodeWithSelector(ICastleLease.BadAttestation.selector, vm.addr(rogueKey)));
-        castle.renew(next, deadline, badSig);
+    function _quote(ISwapVM.Order memory order, address tokenIn, uint256 amount) internal returns (uint256 out) {
+        address tokenOut = tokenIn == USDC ? WETH : USDC;
+        (, out,) = AquaSwapVMRouter(payable(ROUTER)).quote(order, tokenIn, tokenOut, amount, _takerData(jack, true));
     }
 
-    /// @notice (7) a withheld fo attestation makes renew revert
-    function test_fork_withheldFoAttestationReverts() public {
-        vm.prank(fee);
-        castle.claim();
-
-        // 40s into the lease: fo withholds attestation (staged hang, stale quotes, or off-market)
-        // Trader tries to renew with empty signature
-        vm.warp(block.timestamp + 40);
-        uint64 next = uint64(block.timestamp + LEASE);
-        uint64 deadline = uint64(block.timestamp + LEASE + 60);
-
-        vm.prank(fee);
-        vm.expectRevert(abi.encodeWithSelector(ICastleLease.BadAttestation.selector, address(0)));
-        castle.renew(next, deadline, "");
-    }
-
-    /// @notice (5) a replayed fo attestation reverts (within same epoch)
-    function test_fork_replayedFoAttestationReverts() public {
-        vm.prank(fee);
-        castle.claim();
-
-        // 40s into the lease: holder gets fo's attestation
-        vm.warp(block.timestamp + 40);
-        uint64 next = uint64(block.timestamp + LEASE);
-        uint64 deadline = uint64(block.timestamp + LEASE + 60);
-        bytes memory sig = _sign(castle.epoch(), next, deadline);
-
-        // First renew succeeds
-        vm.prank(fee);
-        castle.renew(next, deadline, sig);
-        assertEq(castle.expiry(), next);
-
-        // Second renew with the same attestation must revert BadExpiry
-        vm.prank(fee);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ICastleLease.BadExpiry.selector,
-                next,
-                next,
-                uint64(block.timestamp) + LEASE
-            )
-        );
-        castle.renew(next, deadline, sig);
-    }
-
-    /// @notice (8) a replayed fo attestation reverts across epochs
-    function test_fork_replayedFoAttestationCrossEpochReverts() public {
-        vm.prank(fee);
-        uint256 ep1 = castle.claim();
-
-        // Fee obtains attestation for epoch 1
-        uint64 next = uint64(block.timestamp + LEASE);
-        uint64 deadline = uint64(block.timestamp + LEASE + 60);
-        bytes memory ep1Sig = _sign(ep1, next, deadline);
-
-        // Advance past expiry and fi claims the castle for epoch 2
-        vm.warp(castle.expiry());
-        vm.prank(fi);
-        uint256 ep2 = castle.claim();
-        assertGt(ep2, ep1);
-
-        // 40s into fi's lease: deadline is still valid, but epoch 1 attestation is replayed
-        vm.warp(block.timestamp + 40);
-        uint64 next2 = uint64(block.timestamp + LEASE);
-
-        // Attestation digest in ep2 evaluates differently from ep1, so fo recovery fails
-        bytes32 ep2Digest = castle.attestationDigest(
-            ICastleLease.Attestation({ epoch: ep2, expiry: next2, deadline: deadline })
-        );
-        (address recoveredSigner,,) = ECDSA.tryRecover(ep2Digest, ep1Sig);
-        vm.prank(fi);
-        vm.expectRevert(abi.encodeWithSelector(ICastleLease.BadAttestation.selector, recoveredSigner));
-        castle.renew(next2, deadline, ep1Sig);
-    }
-
-    /// @notice (1) a live fill passes, with a real Aqua pull/push on live Sepolia Aqua
-    function test_fork_liveAquaPullPush() public {
-        // Fund Castle with WETH and USDC on the fork
-        deal(LIVE_WETH, address(castle), 10 ether);
-        deal(LIVE_USDC, address(castle), 25_000e6);
-
-        // Fee claims castle
-        vm.prank(fee);
-        castle.claim();
-
-        // Build SwapVM order
-        ISwapVM.Order memory order = MakerTraitsLib.build(
-            MakerTraitsLib.Args({
-                maker: address(castle),
-                receiver: address(0),
-                shouldUnwrapWeth: false,
-                useAquaInsteadOfSignature: true,
-                allowZeroAmountIn: false,
-                hasPreTransferInHook: false,
-                hasPostTransferInHook: false,
-                hasPreTransferOutHook: false,
-                hasPostTransferOutHook: false,
-                preTransferInTarget: address(0),
-                preTransferInData: "",
-                postTransferInTarget: address(0),
-                postTransferInData: "",
-                preTransferOutTarget: address(0),
-                preTransferOutData: "",
-                postTransferOutTarget: address(0),
-                postTransferOutData: "",
-                program: programs.xycWithSalt(1)
-            })
-        );
-
-        address[] memory tokens = new address[](2);
-        (tokens[0], tokens[1]) = (LIVE_WETH, LIVE_USDC);
-        uint256[] memory amounts = new uint256[](2);
-        (amounts[0], amounts[1]) = (10 ether, 25_000e6);
-
-        // Ship strategy to live Sepolia Aqua
-        vm.prank(fee);
-        bytes32 h = castle.ship(address(router), abi.encode(order), tokens, amounts);
-        assertEq(h, router.hash(order));
-        assertEq(castle.shippedEpoch(h), castle.epoch());
-
-        // Taker (jack) fills 1,000 USDC for WETH
-        deal(LIVE_USDC, jack, 1_000e6);
+    function _fill(ISwapVM.Order memory order, address tokenIn, uint256 amount) internal returns (uint256 out) {
+        address tokenOut = tokenIn == USDC ? WETH : USDC;
+        deal(tokenIn, jack, amount);
         vm.startPrank(jack);
-        IERC20(LIVE_USDC).approve(address(router), type(uint256).max);
+        IERC20(tokenIn).approve(ROUTER, amount);
+        (, out,) = AquaSwapVMRouter(payable(ROUTER)).swap(order, tokenIn, tokenOut, amount, _takerData(jack, true));
+        vm.stopPrank();
+    }
 
-        bytes memory takerData = TakerTraitsLib.build(
-            TakerTraitsLib.Args({
-                taker: jack,
-                isExactIn: true,
-                shouldUnwrapWeth: false,
-                isStrictThresholdAmount: false,
-                isFirstTransferFromTaker: false,
-                useTransferFromAndAquaPush: true,
-                threshold: "",
-                to: address(0),
-                deadline: 0,
-                hasPreTransferInCallback: false,
-                hasPreTransferOutCallback: false,
-                preTransferInHookData: "",
-                postTransferInHookData: "",
-                preTransferOutHookData: "",
-                postTransferOutHookData: "",
-                preTransferInCallbackData: "",
-                preTransferOutCallbackData: "",
-                instructionsArgs: "",
-                signature: ""
-            })
-        );
+    function _renew() internal {
+        uint64 next = uint64(block.timestamp + LEASE);
+        uint64 deadline = uint64(block.timestamp + 30);
+        bytes memory sig = _sign(castle, foKey, castle.epoch(), next, deadline);
+        vm.prank(castle.holder());
+        castle.renew(next, deadline, sig);
+    }
 
-        (uint256 amountIn, uint256 amountOut,) =
-            router.swap(order, LIVE_USDC, LIVE_WETH, 1_000e6, takerData);
+    /// @notice The whole loop on live contracts: genesis claim → relink → ship → fills → renew → expiry wind-down →
+    ///         fi's one-tx handover → the old book reverts FeeFiFoFum() → fi's book fills.
+    function test_fork_shiftLifecycle() public {
+        IENSv2Registry registry = IENSv2Registry(REGISTRY);
+        IENSv2Resolver resolver = IENSv2Resolver(RESOLVER);
+        assertEq(registry.getExpiry(castle.LABEL_ID()), 0, "castle label unregistered at the fork block");
+
+        // fee's genesis shift
+        vm.startPrank(FEE);
+        uint256 feeEpoch = castle.claim();
+        bytes32 feeNode = castle.relink();
+        (bytes32 feeBook, ISwapVM.Order memory order) = castle.ship(_params());
+        vm.stopPrank();
+        assertEq(registry.getOwner(castle.LABEL_ID()), FEE);
+        assertEq(resolver.getRecordId(castle.NODE()), resolver.getRecordId(feeNode), "castle shares fee's record");
+        assertGt(resolver.getRecordId(feeNode), 0);
+        assertEq(castle.anchorPriceQ96(), ANCHOR_Q96, "anchor carried into fee's record");
+        (uint248 shippedWeth,) = IAqua(AQUA).rawBalances(address(castle), ROUTER, feeBook, WETH);
+        assertGt(shippedWeth, 0);
+
+        // live fills, both directions: quote == swap, real tokens move
+        uint256 q = _quote(order, USDC, 30e6);
+        assertApproxEqRel(q, 0.01 ether * uint256(1e9 - 3e6) / 1e9, 5e14, "centred on the anchor");
+        uint256 wethBefore = IERC20(WETH).balanceOf(address(castle));
+        assertEq(_fill(order, USDC, 30e6), q, "quote == swap (live, USDC in)");
+        assertEq(IERC20(WETH).balanceOf(address(castle)), wethBefore - q);
+        q = _quote(order, WETH, 0.005 ether);
+        assertEq(_fill(order, WETH, 0.005 ether), q, "quote == swap (live, WETH in)");
+
+        // fo-attested renewals keep the shift alive
+        vm.warp(block.timestamp + 40);
+        _renew();
+        assertEq(castle.epoch(), feeEpoch);
+
+        // fee dies: no renewal. The book winds down: USDC in only, at the wide fee, with no tx from anyone.
+        vm.warp(castle.expiry());
+        q = _quote(order, USDC, 30e6);
+        assertEq(_fill(order, USDC, 30e6), q, "quote == swap (wind-down)");
+        deal(WETH, jack, 0.005 ether);
+        vm.expectRevert(abi.encodeWithSelector(FeeFiFoFumExtruction.WindDownReduceOnly.selector, WETH));
+        AquaSwapVMRouter(payable(ROUTER)).quote(order, WETH, USDC, 0.005 ether, _takerData(jack, true));
+
+        // fi takes the castle in one tx: claim, relink, ship its own (fee's book is NOT docked yet)
+        bytes[] memory calls = new bytes[](3);
+        calls[0] = abi.encodeCall(Castle.claim, ());
+        calls[1] = abi.encodeCall(Castle.relink, ());
+        calls[2] = abi.encodeCall(Castle.ship, (_params()));
+        vm.prank(FI);
+        bytes[] memory results = castle.multicall(calls);
+        uint256 fiEpoch = abi.decode(results[0], (uint256));
+        assertTrue(fiEpoch != feeEpoch, "the live registry regenerated the token id");
+        assertEq(castle.holder(), FI);
+        bytes32 fiNode = abi.decode(results[1], (bytes32));
+        assertEq(resolver.getRecordId(castle.NODE()), resolver.getRecordId(fiNode), "castle now shares fi's record");
+        assertEq(castle.anchorPriceQ96(), ANCHOR_Q96, "anchor carried into fi's record");
+
+        // fee's zombie book: dead in quote and swap, with no transaction from fee
+        vm.expectRevert(FeeFiFoFumExtruction.FeeFiFoFum.selector);
+        AquaSwapVMRouter(payable(ROUTER)).quote(order, USDC, WETH, 30e6, _takerData(jack, true));
+        deal(USDC, jack, 30e6);
+        vm.startPrank(jack);
+        IERC20(USDC).approve(ROUTER, 30e6);
+        vm.expectRevert(FeeFiFoFumExtruction.FeeFiFoFum.selector);
+        AquaSwapVMRouter(payable(ROUTER)).swap(order, USDC, WETH, 30e6, _takerData(jack, true));
         vm.stopPrank();
 
-        assertEq(amountIn, 1_000e6);
-        assertGt(amountOut, 0);
-        assertEq(IERC20(LIVE_WETH).balanceOf(jack), amountOut);
-        assertEq(IERC20(LIVE_WETH).balanceOf(address(castle)), 10 ether - amountOut);
-        assertEq(IERC20(LIVE_USDC).balanceOf(address(castle)), 26_000e6);
+        // docking is only cleanup: it returns fee's virtual balances, and Aqua then refuses the order too
+        vm.prank(FI);
+        castle.dock(feeBook);
+        (uint248 docked,) = IAqua(AQUA).rawBalances(address(castle), ROUTER, feeBook, USDC);
+        assertEq(docked, 0);
 
-        // Fee docks the strategy
-        vm.prank(fee);
-        castle.dock(address(router), h, tokens);
-        (uint248 bal,) = IAqua(LIVE_AQUA).rawBalances(address(castle), address(router), h, LIVE_WETH);
-        assertEq(bal, 0);
+        // fi's book fills
+        (, ISwapVM.Order memory fiOrder) = abi.decode(results[2], (bytes32, ISwapVM.Order));
+        q = _quote(fiOrder, USDC, 30e6);
+        assertEq(_fill(fiOrder, USDC, 30e6), q, "quote == swap (fi's live book)");
     }
 
-    /// @notice (3) old-epoch fills fence when claim starts a new epoch
-    function test_fork_claimFencesOldEpoch() public {
-        vm.prank(fee);
-        uint256 ep1 = castle.claim();
+    // ------------------------------------------------------------------ SirKit's security requirements, live
 
-        // Expire the lease
-        vm.warp(castle.expiry());
-
-        // Fi claims castle
-        vm.prank(fi);
-        uint256 ep2 = castle.claim();
-
-        assertGt(ep2, ep1);
-        assertEq(castle.holder(), fi);
-
-        // Stale fee cannot renew or ship under new epoch
-        vm.prank(fee);
-        vm.expectRevert(abi.encodeWithSelector(ICastleLease.NotHolder.selector, fee, fi));
-        castle.renew(uint64(block.timestamp + 40), uint64(block.timestamp + 60), "");
-    }
-
-    /// @notice (9) a non-crew claim() after expiry reverts, so a taker who waits out a lease cannot become holder
-    function test_fork_nonCrewClaimAfterExpiryReverts() public {
-        vm.prank(fee);
+    /// @notice (9) a non-crew claim reverts: an outside taker who waits out a lease cannot become holder
+    function test_fork_nonCrewClaimReverts() public {
+        vm.prank(FEE);
         castle.claim();
-
-        // Expire the lease
         vm.warp(castle.expiry());
 
-        // Attacker / outside taker (jack) is not crew
-        assertFalse(castle.crew(jack));
-
-        vm.prank(jack);
+        vm.prank(jack); // anonymous taker
         vm.expectRevert(abi.encodeWithSelector(Castle.NotCrew.selector, jack));
         castle.claim();
+
+        // fo owns fo.feefifofum.eth in the live registry, but is not crew
+        assertEq(IENSv2Registry(REGISTRY).getOwner(uint256(keccak256("fo"))), FO_AGENT);
+        vm.prank(FO_AGENT);
+        vm.expectRevert(abi.encodeWithSelector(Castle.NotCrew.selector, FO_AGENT));
+        castle.claim();
     }
 
-    /// @notice (10) the holder's multicall carrying a transfer() selector reverts, so holder key alone cannot drain hoard
+    /// @notice (10) the holder's multicall cannot carry transfer() (or anything but claim/renew/relink/ship/dock)
     function test_fork_multicallTransferReverts() public {
-        // Fund Castle with WETH and USDC
-        deal(LIVE_WETH, address(castle), 10 ether);
-        deal(LIVE_USDC, address(castle), 25_000e6);
-
-        vm.prank(fee);
+        vm.prank(FEE);
         castle.claim();
-
-        // Fee (holder) attempts to multicall a transfer() of Castle's WETH to fee's own wallet
-        bytes[] memory calls = new bytes[](1);
-        calls[0] = abi.encodeWithSignature("transfer(address,uint256)", fee, 10 ether);
-
-        vm.prank(fee);
-        // Delegatecall to Castle with unrecognized selector reverts
-        vm.expectRevert();
+        bytes[] memory calls = new bytes[](2);
+        calls[0] = abi.encodeCall(Castle.relink, ());
+        calls[1] = abi.encodeCall(IERC20.transfer, (FEE, 1 ether));
+        vm.prank(FEE);
+        vm.expectRevert(abi.encodeWithSelector(Castle.SelectorNotAllowed.selector, IERC20.transfer.selector));
         castle.multicall(calls);
+        calls[1] = abi.encodeCall(IERC20.approve, (FEE, type(uint256).max));
+        vm.prank(FEE);
+        vm.expectRevert(abi.encodeWithSelector(Castle.SelectorNotAllowed.selector, IERC20.approve.selector));
+        castle.multicall(calls);
+        assertEq(IERC20(WETH).balanceOf(address(castle)), 1 ether);
+        assertEq(IERC20(USDC).balanceOf(address(castle)), 3_000e6);
+    }
 
-        // Hoard remains fully intact
-        assertEq(IERC20(LIVE_WETH).balanceOf(address(castle)), 10 ether);
-        assertEq(IERC20(LIVE_USDC).balanceOf(address(castle)), 25_000e6);
-        assertEq(IERC20(LIVE_WETH).balanceOf(fee), 0);
+    /// @notice the holder cannot name its own app: every strategy is keyed to the pinned router in Aqua
+    function test_fork_bookIsKeyedToTheRouterOnly() public {
+        vm.startPrank(FEE);
+        castle.claim();
+        (bytes32 h,) = castle.ship(_params());
+        vm.stopPrank();
+        (uint248 viaRouter,) = IAqua(AQUA).rawBalances(address(castle), ROUTER, h, WETH);
+        (uint248 viaJack,) = IAqua(AQUA).rawBalances(address(castle), jack, h, WETH);
+        assertGt(viaRouter, 0);
+        assertEq(viaJack, 0);
+    }
+
+    // ------------------------------------------------------------------ fo's attestation, live registry
+
+    function test_fork_renewWithoutFoSignatureReverts() public {
+        vm.prank(FEE);
+        castle.claim();
+        vm.warp(block.timestamp + 40);
+        uint64 next = uint64(block.timestamp + LEASE);
+        uint64 deadline = uint64(block.timestamp + 30);
+        bytes memory selfSigned = _sign(castle, 0xBAD, castle.epoch(), next, deadline);
+        vm.prank(FEE);
+        vm.expectRevert(abi.encodeWithSelector(ICastleLease.BadAttestation.selector, vm.addr(0xBAD)));
+        castle.renew(next, deadline, selfSigned);
+    }
+
+    function test_fork_replayedAttestationReverts() public {
+        vm.prank(FEE);
+        castle.claim();
+        vm.warp(block.timestamp + 40);
+        uint64 next = uint64(block.timestamp + LEASE);
+        uint64 deadline = uint64(block.timestamp + 30);
+        bytes memory sig = _sign(castle, foKey, castle.epoch(), next, deadline);
+        vm.prank(FEE);
+        castle.renew(next, deadline, sig);
+        vm.prank(FEE);
+        vm.expectRevert(
+            abi.encodeWithSelector(ICastleLease.BadExpiry.selector, next, next, uint64(block.timestamp + LEASE))
+        );
+        castle.renew(next, deadline, sig);
+    }
+
+    function test_fork_crossEpochAttestationReverts() public {
+        vm.prank(FEE);
+        uint256 feeEpoch = castle.claim();
+        vm.warp(castle.expiry());
+        vm.prank(FI);
+        castle.claim();
+        vm.warp(block.timestamp + 40);
+        uint64 next = uint64(block.timestamp + LEASE);
+        uint64 deadline = uint64(block.timestamp + 30);
+        bytes memory stale = _sign(castle, foKey, feeEpoch, next, deadline);
+        vm.prank(FI);
+        vm.expectPartialRevert(ICastleLease.BadAttestation.selector);
+        castle.renew(next, deadline, stale);
+    }
+
+    function test_fork_holderCannotRenewTheNameDirectly() public {
+        vm.prank(FEE);
+        castle.claim();
+        uint256 labelId = castle.LABEL_ID();
+        uint64 exp = castle.expiry();
+        vm.prank(FEE);
+        vm.expectRevert(); // EACUnauthorizedAccountRoles: the holder was registered with no roles
+        IENSv2Registry(REGISTRY).renew(labelId, exp + 3600);
     }
 }

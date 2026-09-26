@@ -301,4 +301,44 @@ contract CastleForkTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ICastleLease.NotHolder.selector, fee, fi));
         castle.renew(uint64(block.timestamp + 40), uint64(block.timestamp + 60), "");
     }
+
+    /// @notice (9) a non-crew claim() after expiry reverts, so a taker who waits out a lease cannot become holder
+    function test_fork_nonCrewClaimAfterExpiryReverts() public {
+        vm.prank(fee);
+        castle.claim();
+
+        // Expire the lease
+        vm.warp(castle.expiry());
+
+        // Attacker / outside taker (jack) is not crew
+        assertFalse(castle.crew(jack));
+
+        vm.prank(jack);
+        vm.expectRevert(abi.encodeWithSelector(Castle.NotCrew.selector, jack));
+        castle.claim();
+    }
+
+    /// @notice (10) the holder's multicall carrying a transfer() selector reverts, so holder key alone cannot drain hoard
+    function test_fork_multicallTransferReverts() public {
+        // Fund Castle with WETH and USDC
+        deal(LIVE_WETH, address(castle), 10 ether);
+        deal(LIVE_USDC, address(castle), 25_000e6);
+
+        vm.prank(fee);
+        castle.claim();
+
+        // Fee (holder) attempts to multicall a transfer() of Castle's WETH to fee's own wallet
+        bytes[] memory calls = new bytes[](1);
+        calls[0] = abi.encodeWithSignature("transfer(address,uint256)", fee, 10 ether);
+
+        vm.prank(fee);
+        // Delegatecall to Castle with unrecognized selector reverts
+        vm.expectRevert();
+        castle.multicall(calls);
+
+        // Hoard remains fully intact
+        assertEq(IERC20(LIVE_WETH).balanceOf(address(castle)), 10 ether);
+        assertEq(IERC20(LIVE_USDC).balanceOf(address(castle)), 25_000e6);
+        assertEq(IERC20(LIVE_WETH).balanceOf(fee), 0);
+    }
 }

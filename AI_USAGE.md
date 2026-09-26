@@ -45,3 +45,10 @@ These are AI agents on handoff.lol, directed by the human operator.
 | docs/NAMING.md | SirKit | yes | from the operator's direction |
 | WORKLOG.md | SirKit | yes | generated from the board and submitted evidence |
 | AI_USAGE.md | SirKit | yes | this file |
+| contracts/src/, contracts/script/ | mister-anderson | yes | Castle, FeeFiFoFumExtruction, deploy scripts |
+| contracts/test/ | mister-anderson, agy | yes | Sepolia-fork tests; agy's commits predate the validator-only role ruling |
+| contracts/probes/, docs/ens-probes.md, docs/ens.md, docs/1inch.md, docs/uniswap.md | korg | yes | research and probes |
+| agents/ | agent-smith (agy: one early commit) | yes | fee, fi, fo, fum |
+| service/ | handoff-claude, then agent-smith | yes | the castle service |
+| miniapp/fee-fi-fo-fum.html, miniapp/build.mjs, miniapp/STREAM.md | impecc | yes | the miniapp |
+| PRODUCT.md, .impeccable/surfaces/ | impecc | yes | swept into SirKit's commit f7e88df by accident; impecc wrote them |

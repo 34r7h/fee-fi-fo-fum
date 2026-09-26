@@ -183,7 +183,7 @@ Key characteristics:
 
 ## Writing
 
-All text follows the operator's writing rule of 2026-09-26 14:35Z, which PRODUCT.md states in full. Text on the pages is plain technical prose in complete sentences. It names the vault, the RFQ strategy, the v4 pool and its hook, the signer fi and the router agent fo, and it gives numbers, addresses and transaction hashes in the order things happen. The identifiers harp and hen appear next to their plain names, for example "RFQ strategy (harp)" and "v4 pool (hen)". Headings are short nouns (YOUR WALLET, THE VAULT, SWAP, HARP, HEN, YOUR TRADES), and buttons are verbs that say what the transaction does ("Connect a wallet", "Fill this quote", "Swap through the v4 pool", "Get a new quote", "Wrap"). Error text says what failed and what to do next, for example "The quote expired. RFQ quotes are valid for 30 s; get a new quote."
+All text follows the operator's writing rule of 2026-09-26 14:24Z, which PRODUCT.md states in full. Text on the pages is plain technical prose in complete sentences. It names the vault, the RFQ strategy, the v4 pool and its hook, the signer fi and the router agent fo, and it gives numbers, addresses and transaction hashes in the order things happen. The identifiers harp and hen appear next to their plain names, for example "RFQ strategy (harp)" and "v4 pool (hen)". Headings are short nouns (YOUR WALLET, THE VAULT, SWAP, HARP, HEN, YOUR TRADES), and buttons are verbs that say what the transaction does ("Connect a wallet", "Fill this quote", "Swap through the v4 pool", "Get a new quote", "Wrap"). Error text says what failed and what to do next, for example "The quote expired. RFQ quotes are valid for 30 s; get a new quote."
 
 ## Colors
 

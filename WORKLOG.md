@@ -8,7 +8,7 @@ The running record of the feefifofum build: what was done, who did it, which com
 - **Deadline:** Sun 27 Sep 00:00 UTC
 - **Pre-existing product:** handoff (private), baseline `079f8f0`
 - **Earlier product:** the lease edition, retired at 10:51Z on Sat 26 Sep. Its code and full worklog are at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition).
-- **Last regenerated:** Sat 18:14Z
+- **Last regenerated:** Sat 20:02Z
 
 All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified).
 
@@ -61,7 +61,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 | The one live run on Sepolia <br>`a-live` `a92e968f` | agent-smith | agent-smith | Sat 22:00Z | done | 4d1f983, cacf0f8 | agents/live-run/11786346: 17 txs |
 | **BLOCKER** Fork end-to-end of the whole demo (two passes) <br>`v-e2e` `48b54583` | agy | agy | Sat 20:00Z | done | dbb243d | two post-deploy fork passes, distinct txs |
 | Verify the live run on-chain <br>`v-live` `e113e331` | agy | agy | Sat 22:30Z | done |  | PASS: every live tx, balances, live CCIP-Read |
-| Validate the dapp live from a clean browser <br>`v-dapp` `93e81dc2` | agy | agy | Sat 19:30Z | review |  |  |
+| Validate the dapp live from a clean browser <br>`v-dapp` `93e81dc2` | agy |  | Sat 19:30Z | done |  |  |
 
 ### Submission
 
@@ -90,7 +90,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 ## Wallets
 
-Live balances read at block 11787892.
+Live balances read at block 11788430.
 
 | Wallet | handoff agent | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -219,3 +219,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 18:04Z | SirKit | Funding for four live demos, on the operator's instruction. Each demo is agy's RFQ fill and v4 swap (about 0.000614 ETH, measured in v-dapp) and a dapp fill and swap from the presenter's wallet, and each of the two hen swaps makes fi re-centre the hen (about 0.0003 ETH). The treasury sent fi 0.0025 ETH (0x0eaa0d2a…d398), so fi holds 0.00506 ETH, about 16 re-centres, and sent agy 0.0027 ETH (0x1d57659b…b0f6), so agy holds 0.00353 ETH, about 5 runs, with 13.9 USDC and 0.00053 WETH. fee (0.0030 ETH), fo (0.0020 ETH) and fum (0.00069 ETH) send no transactions in a demo and keep their balances. Spend: 0.0233 ETH, above the 0.02 ETH ceiling by the operator's instruction. |
 | Sat 18:08Z | SirKit | The operator's own wallet 0x7bAb…9879 was funded to present the dapp as a user in the four demos. The treasury sent it 0.008 ETH (0xcfab7f81…776e) and 0.3 USDC (0x41b5eadd…5f1f), and gave the five demo wallets from the video takes enough gas (0.00045 ETH in all) to send it their leftover 2.09 USDC and 0.0005 WETH in eight transfers. The wallet then held 0.0574 ETH, 17.39 USDC and 0.001316 WETH, which covers four fills and four swaps in either direction. Spend: 0.0319 ETH, above the 0.02 ETH ceiling by the operator's instruction. |
 | Sat 18:14Z | SirKit | At 18:08Z the operator's wallet swapped 5 USDC into the hen, 20 times a demo trade, for 0.000816 WETH at about 6,127 USDC per WETH (0xf83e…2971). The vault was left with about 0.00076 WETH, and fum docked harp, so quote.feefifofum.eth had nothing to price. The treasury wrapped 0.003 ETH (0x677e5ca6…13cd) and sent the WETH to the vault (0x0307a932…91ba), which then held 0.003762 WETH and 10.91 USDC. fi shipped harp again (0xe6f1101e…9a55, block 11787888) and re-centred hen (0x47904b60…70a8, block 11787889), each at fum's slot caps of 5 USDC and 0.001859 WETH, 0.99x the balance in all, and quote:USDC:WETH:250000 resolves again through ENS (q-1790446470-96). Demo trades stay at 0.25 USDC or 0.0001 WETH. Spend: 0.0349 ETH, above the 0.02 ETH ceiling by the operator's instruction. |
+| Sat 20:02Z | SirKit | v-dapp verified. agy's test of the published dapp 2.0.2 sent four transactions from 0xDDf2…AE4c at a 1.8 gwei maximum fee, and all four succeeded: approve 0x66f9863b…850d, RFQ fill 0x84bd78b6…1414 with Aqua's Pulled and Pushed, approve 0x9dd4e78a…3b5e, and v4 swap 0x2cc0d568…b86c with JitFill, the PoolManager Swap and Aqua's Pulled and Pushed. agy did not answer by the 20:00Z deadline for fixing its write-up, so SirKit rewrote docs/e2e/dapp/README.md in plain prose, corrected the swap hash and removed two duplicate screenshots (79f0da3). 20 of 22 tasks are verified; s-ai (SirKit) and s-submit (the operator) remain. |

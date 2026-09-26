@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import { ENSv2Roles } from "../../src/interfaces/IENSv2.sol";
+import { ENSv2Roles, IDataResolver } from "../../src/interfaces/IENSv2.sol";
 
-/// @notice The slice of ENSv2 PermissionedRegistry semantics Castle relies on, mirrored from contracts-v2 main:
+/// @notice The slice of ENSv2 PermissionedRegistry semantics Castle relies on, mirrored from contracts-v2 tag sepolia-deployment-2026-09-15:
 ///         root-role checks, AVAILABLE once block.timestamp >= expiry, no expiry reduction, and re-registration
 ///         of a name whose token still has an owner burning it and minting a new token id (version bits).
 ///         `regenerate = false` models a deployment that does NOT regenerate ids (the fallback case).
@@ -74,6 +74,11 @@ contract MockENSv2Registry {
         return _tokenId(anyId, _entries[_base(anyId)]);
     }
 
+    function getOwner(uint256 anyId) external view returns (address) {
+        Entry storage e = _entries[_base(anyId)];
+        return block.timestamp < e.expiry ? e.owner : address(0);
+    }
+
     function latestOwnerOf(uint256 tokenId) external view returns (address) {
         Entry storage e = _entries[_base(tokenId)];
         return _tokenId(tokenId, e) == tokenId ? e.owner : address(0);
@@ -88,45 +93,84 @@ contract MockENSv2Registry {
     }
 }
 
-/// @notice The slice of PermissionedResolver Castle uses: root-role alias, part-scoped data.
+/// @notice The slice of PermissionedResolver (tag sepolia-deployment-2026-09-15) Castle uses, including the record
+///         sharing linkToNode causes: a linked name resolves to, and writes through to, the target's record.
 contract MockENSv2Resolver {
+    struct Record {
+        mapping(string key => bytes) datas;
+    }
+
     mapping(address account => uint256) public rootRoles;
-    mapping(bytes32 node => mapping(string key => bytes)) internal _data;
-    mapping(bytes32 fromNode => bytes) internal _aliases;
+    mapping(uint256 resource => mapping(address account => uint256)) public roles;
+    mapping(bytes32 node => uint256) internal _recordIds;
+    mapping(uint256 recordId => Record) internal _records;
+    uint256 internal _recordCount;
 
-    error Unauthorized(uint256 roles, address account);
+    error Unauthorized(uint256 resource, uint256 roles, address account);
+    error InvalidRecord();
+    error UnsupportedResolverProfile(bytes4 selector);
 
-    function grantRootRoles(uint256 roles, address account) external {
-        rootRoles[account] |= roles;
+    function grantRootRoles(uint256 r, address account) external {
+        rootRoles[account] |= r;
     }
 
-    function hasRootRoles(uint256 roles, address account) public view returns (bool) {
-        return rootRoles[account] & roles == roles;
+    function grantRoles(uint256 resource, uint256 r, address account) external {
+        roles[resource][account] |= r;
     }
 
-    function hasRoles(uint256, uint256 roles, address account) external view returns (bool) {
-        return hasRootRoles(roles, account);
+    function hasRootRoles(uint256 r, address account) public view returns (bool) {
+        return rootRoles[account] & r == r;
     }
 
-    function setData(bytes32 node, string calldata key, bytes calldata value) external {
-        if (!hasRootRoles(ENSv2Roles.RESOLVER_SET_DATA, msg.sender)) {
-            revert Unauthorized(ENSv2Roles.RESOLVER_SET_DATA, msg.sender);
+    function setData(bytes calldata name, string calldata key, bytes calldata value) external {
+        uint256 resource = uint256(keccak256(bytes(key)));
+        if (
+            !hasRootRoles(ENSv2Roles.RESOLVER_SET_DATA, msg.sender)
+                && roles[resource][msg.sender] & ENSv2Roles.RESOLVER_SET_DATA == 0
+        ) {
+            revert Unauthorized(resource, ENSv2Roles.RESOLVER_SET_DATA, msg.sender);
         }
-        _data[node][key] = value;
+        _records[_ensureRecord(name)].datas[key] = value;
     }
 
-    function data(bytes32 node, string calldata key) external view returns (bytes memory) {
-        return _data[node][key];
-    }
-
-    function setAlias(bytes calldata fromName, bytes calldata toName) external {
-        if (!hasRootRoles(ENSv2Roles.RESOLVER_SET_ALIAS, msg.sender)) {
-            revert Unauthorized(ENSv2Roles.RESOLVER_SET_ALIAS, msg.sender);
+    function linkToNode(bytes calldata sourceName, bytes32 targetNode) external {
+        if (!hasRootRoles(ENSv2Roles.RESOLVER_LINK, msg.sender)) {
+            revert Unauthorized(0, ENSv2Roles.RESOLVER_LINK, msg.sender);
         }
-        _aliases[keccak256(fromName)] = toName;
+        uint256 recordId = _recordIds[targetNode];
+        if (recordId == 0) revert InvalidRecord();
+        _recordIds[namehash(sourceName, 0)] = recordId;
     }
 
-    function getAlias(bytes memory fromName) external view returns (bytes memory) {
-        return _aliases[keccak256(fromName)];
+    function resolve(bytes calldata name, bytes calldata data) external view returns (bytes memory) {
+        bytes4 selector = bytes4(data);
+        if (selector != IDataResolver.data.selector) revert UnsupportedResolverProfile(selector);
+        (, string memory key) = abi.decode(data[4:], (bytes32, string));
+        uint256 recordId = _recordIds[namehash(name, 0)];
+        if (recordId == 0) recordId = _recordIds[bytes32(0)];
+        return abi.encode(_records[recordId].datas[key]);
+    }
+
+    function getRecordId(bytes32 node) external view returns (uint256) {
+        return _recordIds[node];
+    }
+
+    function _ensureRecord(bytes calldata name) internal returns (uint256 recordId) {
+        bytes32 node = namehash(name, 0);
+        recordId = _recordIds[node];
+        if (recordId == 0) {
+            recordId = ++_recordCount;
+            _recordIds[node] = recordId;
+        }
+    }
+
+    function namehash(bytes memory name, uint256 offset) public pure returns (bytes32) {
+        uint256 len = uint8(name[offset]);
+        if (len == 0) return bytes32(0);
+        bytes32 labelHash;
+        assembly ("memory-safe") {
+            labelHash := keccak256(add(add(name, 33), offset), len)
+        }
+        return keccak256(abi.encodePacked(namehash(name, offset + 1 + len), labelHash));
     }
 }

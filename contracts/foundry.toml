@@ -26,3 +26,4 @@ sepolia = { key = "${ETHERSCAN_API_KEY}", chain = 11155111 }
 
 [fmt]
 line_length = 120
+bracket_spacing = true

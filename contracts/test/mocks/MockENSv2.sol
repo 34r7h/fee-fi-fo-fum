@@ -66,20 +66,6 @@ contract MockENSv2Registry {
         e.expiry = newExpiry;
     }
 
-    /// @dev As the tag's unregister: live names only, ROLE_UNREGISTER, burn and bump the version, expiry = now.
-    function unregister(uint256 anyId) external {
-        Entry storage e = _entries[_base(anyId)];
-        if (block.timestamp >= e.expiry) revert LabelExpired(_tokenId(anyId, e));
-        if (!hasRootRoles(ENSv2Roles.REGISTRY_UNREGISTER, msg.sender)) {
-            revert Unauthorized(ENSv2Roles.REGISTRY_UNREGISTER, msg.sender);
-        }
-        if (e.owner != address(0)) {
-            e.owner = address(0);
-            ++e.tokenVersion;
-        }
-        e.expiry = uint64(block.timestamp);
-    }
-
     function getExpiry(uint256 anyId) external view returns (uint64) {
         return _entries[_base(anyId)].expiry;
     }

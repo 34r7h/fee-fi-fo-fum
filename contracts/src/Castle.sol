@@ -25,12 +25,14 @@ interface IAquaApp {
 /// @title Castle, the giant's castle
 /// @notice The desk treasury, the Aqua maker and the ENSv2 lease of fee-fi-fo-fum, in one contract.
 /// @dev The book is this contract, not an agent's wallet: Aqua keys virtual balances to the maker and pulls
-///      real tokens from the maker, so the maker must outlive every shift. The lease is the ENSv2 name
-///      `castle.<parent>` in REGISTRY (handoff's agent registry), where Castle holds root REGISTRAR and RENEW:
-///      - the holder is the name's owner, registered with no roles, so it cannot renew or transfer by itself;
-///      - renew() needs the holder's call AND fo's EIP-712 attestation;
-///      - claim() after expiry re-registers the name to a crew member, which regenerates its token id: the
-///        fencing epoch FeeFiFoFumExtruction checks at fill time (the tag regenerates ids; Castle requires it);
+///      real tokens from the maker, so the maker must outlive every shift. v3: Castle registers the ENSv2 name
+///      `castle.<parent>` in REGISTRY (handoff's agent registry) to ITSELF and renews it rarely (NAME_PERIOD), with
+///      its root REGISTRAR and RENEW; the lease (holder, expiry, epoch) lives in Castle's storage, so a takeover never
+///      needs the registry to end a registration early:
+///      - renew() needs the holder's call AND fo's EIP-712 attestation, about once a LEASE_PERIOD (a day);
+///      - liveness between renewals is the holder's and fo's off-chain heartbeat, checked by the fence at fill time;
+///      - claim() after expiry, or after a challenge the holder left unanswered, makes a crew member holder and bumps
+///        the epoch FeeFiFoFumExtruction checks at fill time;
 ///      The holder's key alone must not be able to drain the hoard, so the holder chooses nothing that moves value:
 ///      - claim() is crew-only: an owner-approved crew label that the caller owns, unexpired, in REGISTRY;
 ///      - the app is pinned to ROUTER and the tokens to [WETH, USDC]; Castle builds every program itself, fenced
@@ -105,9 +107,9 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     /// @notice namehash of <parent>, under which the crew names live.
     bytes32 public immutable PARENT_NODE;
     uint64 internal immutable LEASE_PERIOD;
-    /// @notice The epoch is always the registry token id. v2's fallback counter is gone: the tag regenerates ids on
-    ///         every re-registration (probed live and covered by the fork suite), and Config.registryEpoch must be true.
-    bool public constant registryEpoch = true;
+    /// @notice How far ahead Castle keeps its own registration of castle.<parent>: renewed only when a lease would
+    ///         outlive it, so about once a year.
+    uint64 public constant NAME_PERIOD = 365 days;
     /// @notice The flat fee on the wind-down branch (the wide spread of an expired shift).
     uint32 public immutable WIND_DOWN_FEE_BPS;
     /// @notice DecayXD period on the live branch, in seconds (Mooniswap-style offsets against back-running).
@@ -120,6 +122,14 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     /// @notice DNS-encoded castle.<parent>.
     bytes public dnsName;
 
+    /// @dev The lease, in one slot: the fence reads it with one SLOAD per fill.
+    struct Lease {
+        address holder;
+        uint64 expiry;
+        uint32 epoch;
+    }
+
+    Lease internal _lease;
     address public fo;
     /// @notice Crew label (e.g. "fee" for fee.<parent>) per account; empty = not crew.
     mapping(address account => string) public crewLabelOf;
@@ -136,12 +146,11 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     uint64 public auctionNonce;
     /// @notice Seconds after an unclaimed expiry before anyone may dissolve the book (owner-tunable within bounds).
     uint64 public dissolveGrace;
-    /// @notice The open or unanswered challenge's response deadline; 0 = none. Cleared by respond() and claim().
+    /// @notice The open or unanswered challenge's response deadline; 0 = none. Cleared by respond() and claim(), and
+    ///         only claim() changes the epoch, so a challenge always belongs to the current epoch.
     uint64 public challengeDeadline;
     /// @notice No challenge before this: set by respond() to now + CHALLENGE_COOLDOWN.
     uint64 public challengeCooldownUntil;
-    /// @notice The epoch the challenge was opened in.
-    uint256 public challengedEpoch;
     /// @notice The last epoch that was dissolved: at most one dissolution per epoch.
     uint256 public dissolvedEpoch;
 
@@ -175,9 +184,10 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     );
     event AuctionSettled(address indexed auction, uint256 clearingPriceQ96, uint256 currencyRaised, bool priceWritten);
     event Dissolved(uint256 indexed epoch, uint256 strategiesDocked, uint256 weth);
+    /// @notice Castle (re-)registered or renewed its own name castle.<parent> up to `nameExpiry`.
+    event NameKept(uint64 nameExpiry);
 
     error NotCrew(address caller);
-    error EpochNotRegenerated(uint256 epoch);
     error ZeroAddress();
     error BadConfig();
     error UnexpectedStrategyHash();
@@ -207,7 +217,7 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
         string label;
         bytes dnsName;
         uint64 leasePeriod;
-        bool registryEpoch;
+        bool registryEpoch; // ignored since v3 (the epoch is Castle's own counter); kept so v2 config tuples still decode
         uint32 windDownFeeBps;
         uint16 decayPeriod;
         address ccaFactory;
@@ -223,8 +233,8 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
         if (
             IAquaApp(c.router).AQUA() != c.aqua || c.fence.code.length == 0 || c.weth == c.usdc
                 || c.windDownFeeBps < MIN_FEE_BPS || c.windDownFeeBps > MAX_WIND_DOWN_FEE_BPS || c.decayPeriod == 0
-                || c.leasePeriod == 0 || !c.registryEpoch || c.dnsName.length < 2 || c.ccaFactory.code.length == 0
-                || c.jackHook.code.length == 0
+                || c.leasePeriod == 0 || c.leasePeriod > NAME_PERIOD || c.dnsName.length < 2
+                || c.ccaFactory.code.length == 0 || c.jackHook.code.length == 0
         ) revert BadConfig();
         AQUA = IAqua(c.aqua);
         ROUTER = c.router;
@@ -256,16 +266,18 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     // Lease views (ICastleLease)
     // ------------------------------------------------------------------------------------------------
 
+    /// @notice The last holder, whether or not its lease is still live (as v2's latestOwnerOf).
     function holder() public view returns (address) {
-        return REGISTRY.latestOwnerOf(REGISTRY.getTokenId(LABEL_ID));
+        return _lease.holder;
     }
 
+    /// @notice Bumped by every claim; 0 before the first.
     function epoch() public view returns (uint256) {
-        return REGISTRY.getTokenId(LABEL_ID);
+        return _lease.epoch;
     }
 
     function expiry() public view returns (uint64) {
-        return REGISTRY.getExpiry(LABEL_ID);
+        return _lease.expiry;
     }
 
     function isLive() public view returns (bool) {
@@ -282,7 +294,8 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
 
     /// @inheritdoc ICastleLease
     function fenceState() external view returns (uint256, address, address) {
-        return (epoch(), REGISTRY.getOwner(LABEL_ID), fo);
+        Lease memory l = _lease;
+        return (l.epoch, block.timestamp < l.expiry ? l.holder : address(0), fo);
     }
 
     /// @inheritdoc ICastleLease
@@ -312,29 +325,45 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
         bytes32 digest = _digest(ep, newExpiry, deadline);
         (address signer, ECDSA.RecoverError err,) = ECDSA.tryRecover(digest, foSig);
         if (err != ECDSA.RecoverError.NoError || signer != fo) revert BadAttestation(signer);
-        REGISTRY.renew(LABEL_ID, newExpiry);
+        _lease.expiry = newExpiry;
+        _keepName(newExpiry);
         emit Renewed(ep, msg.sender, newExpiry, digest);
     }
 
     /// @inheritdoc ICastleLease
-    /// @dev Crew only: otherwise any taker who waits out a lease becomes holder. While the ENS lease is live, only an
-    ///      unanswered challenge opens it, and Castle ends the lease (unregister) before re-registering it.
+    /// @dev Crew only: otherwise any taker who waits out a lease becomes holder. While the lease is live, only an
+    ///      unanswered challenge opens it. Every claim bumps the epoch, which fences the previous shift's book.
     function claim() external returns (uint256 newEpoch) {
         if (!isCrew(msg.sender)) revert NotCrew(msg.sender);
-        uint64 current = expiry();
-        uint256 prevEpoch = epoch();
-        if (block.timestamp < current) {
-            if (!_unanswered()) revert LeaseStillLive(current);
-            REGISTRY.unregister(LABEL_ID);
-        }
+        Lease memory l = _lease;
+        if (block.timestamp < l.expiry && !_unanswered()) revert LeaseStillLive(l.expiry);
         (challengeDeadline, challengeCooldownUntil) = (0, 0);
         uint64 newExpiry = uint64(block.timestamp) + LEASE_PERIOD;
-        // No roles for the holder: it cannot renew, transfer or re-point the name except through Castle.
-        REGISTRY.register(label, msg.sender, address(0), address(RESOLVER), 0, newExpiry);
-        newEpoch = epoch();
-        // The very first registration (expiry 0) mints the name; every later claim must fence the old shift.
-        if (current != 0 && newEpoch == prevEpoch) revert EpochNotRegenerated(newEpoch);
-        emit Claimed(newEpoch, msg.sender, newExpiry, prevEpoch);
+        newEpoch = l.epoch + 1;
+        _lease = Lease(msg.sender, newExpiry, uint32(newEpoch));
+        _keepName(newExpiry);
+        emit Claimed(newEpoch, msg.sender, newExpiry, l.epoch);
+    }
+
+    /// @dev Keep castle.<parent> registered to Castle past `until`: register it when it is free (the first claim, or
+    ///      after a lapse), renew it only when a lease would outlive it. Castle's own registration never lapses while
+    ///      a lease is live, so nobody else can take the name out from under a shift.
+    function _keepName(uint64 until) internal {
+        uint64 nameExpiry = REGISTRY.getExpiry(LABEL_ID);
+        if (nameExpiry > until) return;
+        uint64 next = uint64(block.timestamp) + NAME_PERIOD;
+        if (nameExpiry <= block.timestamp) {
+            REGISTRY.register(label, address(this), address(0), address(RESOLVER), 0, next);
+        } else {
+            REGISTRY.renew(LABEL_ID, next);
+        }
+        emit NameKept(next);
+    }
+
+    /// @notice The registry mints castle.<parent> to Castle as an ERC-1155 token; accept it from REGISTRY only.
+    function onERC1155Received(address, address, uint256, uint256, bytes calldata) external view returns (bytes4) {
+        if (msg.sender != address(REGISTRY)) revert BadConfig();
+        return this.onERC1155Received.selector;
     }
 
     /// @inheritdoc ICastleLease
@@ -343,12 +372,11 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
         if (msg.sender == holder()) revert CannotChallengeSelf();
         uint64 current = expiry();
         if (block.timestamp >= current) revert LeaseExpired(current); // nothing to challenge: claim() is open
-        uint256 ep = epoch();
-        if (challengeDeadline != 0 && challengedEpoch == ep) revert ChallengePending(challengeDeadline);
+        if (challengeDeadline != 0) revert ChallengePending(challengeDeadline);
         if (block.timestamp < challengeCooldownUntil) revert ChallengeCooldown(challengeCooldownUntil);
         deadline = uint64(block.timestamp) + RESPONSE_WINDOW;
-        (challengedEpoch, challengeDeadline) = (ep, deadline);
-        emit Challenged(ep, msg.sender, deadline);
+        challengeDeadline = deadline;
+        emit Challenged(epoch(), msg.sender, deadline);
     }
 
     /// @inheritdoc ICastleLease
@@ -358,17 +386,17 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
         address h = holder();
         if (msg.sender != h) revert NotHolder(msg.sender, h);
         uint64 d = challengeDeadline;
-        if (d == 0 || challengedEpoch != epoch()) revert NoChallenge();
+        if (d == 0) revert NoChallenge();
         if (block.timestamp >= d) revert HolderUnresponsive(d);
         uint64 until = uint64(block.timestamp) + CHALLENGE_COOLDOWN;
         (challengeDeadline, challengeCooldownUntil) = (0, until);
-        emit Responded(challengedEpoch, h, until);
+        emit Responded(epoch(), h, until);
     }
 
-    /// @dev A challenge in the current epoch whose response window has closed.
+    /// @dev A challenge whose response window has closed.
     function _unanswered() internal view returns (bool) {
         uint64 d = challengeDeadline;
-        return d != 0 && block.timestamp >= d && challengedEpoch == epoch();
+        return d != 0 && block.timestamp >= d;
     }
 
     // ------------------------------------------------------------------------------------------------
@@ -509,13 +537,13 @@ contract Castle is ICastleLease, EIP712, Ownable2Step {
     ///      A challenge the holder left unanswered counts as the lease ending at its deadline.
     function dissolve() external returns (address a) {
         if (auction != address(0)) revert AuctionRunning(auction);
-        uint256 ep = epoch();
-        if (dissolvedEpoch == ep) revert AlreadyDissolved(ep);
         uint64 exp = expiry();
         uint256 at = uint256(exp) + dissolveGrace;
         uint64 d = challengeDeadline;
-        if (d != 0 && challengedEpoch == ep && uint256(d) + dissolveGrace < at) at = uint256(d) + dissolveGrace;
+        if (d != 0 && uint256(d) + dissolveGrace < at) at = uint256(d) + dissolveGrace;
         if (exp == 0 || block.timestamp < at) revert NotDissolvable(at);
+        uint256 ep = epoch();
+        if (dissolvedEpoch == ep) revert AlreadyDissolved(ep);
         dissolvedEpoch = ep;
         uint256 n = _active.length;
         while (_active.length != 0) {

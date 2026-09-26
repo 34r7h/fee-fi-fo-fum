@@ -8,13 +8,14 @@ import { FeeFiFoFumExtruction } from "../src/FeeFiFoFumExtruction.sol";
 import { JackHook } from "../src/JackHook.sol";
 import { IENSv2Registry } from "../src/interfaces/IENSv2.sol";
 
-/// @notice Deploys the fence, JackHook and Castle, then runs the owner steps that need no ENS role
-///         (setCrew for fee and fi, setAuctioneer fum). The registry admin grants Castle its roots roles next;
-///         only then can the owner seed the anchor (setAnchorPrice needs SET_DATA on the resolver).
+/// @notice Deploys the fence, JackHook (unless JACK_HOOK names a live one to reuse) and Castle, then runs the owner
+///         steps that need no ENS role (setCrew for fee and fi, setAuctioneer fum). The registry admin grants Castle
+///         its root roles next (the same as v2): REGISTRAR | RENEW on the registry, LINK | SET_DATA on
+///         the resolver. Only then can the owner seed the anchor (setAnchorPrice needs SET_DATA on the resolver).
 /// @dev Addresses come from deployments/<network>.json and deployments/ens-agents.<network>.json; the crew and fo from
 ///      the environment (defaults: agents/crew.json). The key comes from DEPLOYER_PK, never a file in the repo.
 contract DeployCastle is Script {
-    uint64 internal constant LEASE_PERIOD = 120;
+    uint64 internal constant LEASE_PERIOD = 1 days; // v3: one renew a day; heartbeats carry liveness
     uint32 internal constant WIND_DOWN_FEE_BPS = 5e7; // 5%
     uint16 internal constant DECAY_PERIOD = 60;
     uint64 internal constant DISSOLVE_GRACE = 1800; // owner-tunable later within [120s, 1 day]
@@ -57,7 +58,9 @@ contract DeployCastle is Script {
         c.owner = vm.addr(pk);
         vm.startBroadcast(pk);
         fence = new FeeFiFoFumExtruction();
-        jackHook = new JackHook(IENSv2Registry(registry));
+        address liveHook = vm.envOr("JACK_HOOK", address(0));
+        jackHook = liveHook == address(0) ? new JackHook(IENSv2Registry(registry)) : JackHook(liveHook);
+        require(address(jackHook.REGISTRY()) == registry, "JackHook reads another registry");
         c.fence = address(fence);
         c.jackHook = address(jackHook);
         castle = new Castle(c);

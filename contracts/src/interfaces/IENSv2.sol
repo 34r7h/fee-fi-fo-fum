@@ -19,9 +19,6 @@ interface IENSv2Registry {
 
     function renew(uint256 anyId, uint64 newExpiry) external;
 
-    /// @dev Needs ROLE_UNREGISTER. Burns the token, bumps its version (a new token id) and sets expiry to now.
-    function unregister(uint256 anyId) external;
-
     function getExpiry(uint256 anyId) external view returns (uint64);
 
     function getTokenId(uint256 anyId) external view returns (uint256);
@@ -61,7 +58,6 @@ interface IDataResolver {
 /// @notice Role bits at tag `sepolia-deployment-2026-09-15` (RegistryRolesLib, PermissionedResolverLib).
 library ENSv2Roles {
     uint256 internal constant REGISTRY_REGISTRAR = 1 << 0;
-    uint256 internal constant REGISTRY_UNREGISTER = 1 << 12;
     uint256 internal constant REGISTRY_RENEW = 1 << 16;
     uint256 internal constant RESOLVER_SET_DATA = 1 << 24;
     uint256 internal constant RESOLVER_LINK = 1 << 28;

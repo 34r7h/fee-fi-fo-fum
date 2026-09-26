@@ -78,9 +78,7 @@ abstract contract CastleUnitBase is CastleHelpers {
         _name("jack", jack); // named, but never made crew
 
         castle = new Castle(_config(true));
-        registry.grantRootRoles(
-            ENSv2Roles.REGISTRY_REGISTRAR | ENSv2Roles.REGISTRY_RENEW | ENSv2Roles.REGISTRY_UNREGISTER, address(castle)
-        );
+        registry.grantRootRoles(ENSv2Roles.REGISTRY_REGISTRAR | ENSv2Roles.REGISTRY_RENEW, address(castle));
         resolver.grantRootRoles(ENSv2Roles.RESOLVER_LINK | ENSv2Roles.RESOLVER_SET_DATA, address(castle));
         _crew(castle);
         vm.prank(operator);
@@ -174,12 +172,73 @@ abstract contract CastleUnitBase is CastleHelpers {
     // ------------------------------------------------------------------ lease
 
     function test_genesisClaim() public {
+        vm.expectEmit(address(castle));
+        emit Castle.NameKept(uint64(block.timestamp) + castle.NAME_PERIOD());
+        vm.expectEmit(address(castle));
+        emit ICastleLease.Claimed(1, fee, uint64(block.timestamp + LEASE), 0);
         vm.prank(fee);
         uint256 ep = castle.claim();
+        assertEq(ep, 1);
         assertEq(castle.holder(), fee);
         assertEq(castle.epoch(), ep);
         assertEq(castle.expiry(), block.timestamp + LEASE);
         assertTrue(castle.isLive());
+        uint256 id = castle.LABEL_ID();
+        assertEq(registry.getOwner(id), address(castle), "v3: Castle registers its name to itself");
+        assertEq(registry.getExpiry(id), block.timestamp + castle.NAME_PERIOD());
+    }
+
+    function test_everyClaimBumpsTheEpochAndSaysSo() public {
+        vm.prank(fee);
+        castle.claim();
+        vm.warp(castle.expiry());
+        vm.expectEmit(address(castle));
+        emit ICastleLease.Claimed(2, fi, uint64(block.timestamp + LEASE), 1);
+        vm.prank(fi);
+        assertEq(castle.claim(), 2);
+    }
+
+    /// @dev The name is renewed only when a lease would outlive it: a year of daily renewals touches it about once.
+    function test_nameIsRenewedRarely() public {
+        vm.prank(fee);
+        castle.claim();
+        uint256 id = castle.LABEL_ID();
+        uint64 nameExpiry = registry.getExpiry(id);
+        vm.warp(block.timestamp + 12 hours);
+        _renew(fee, uint64(block.timestamp + LEASE));
+        assertEq(registry.getExpiry(id), nameExpiry, "a daily renew does not touch the name");
+        // near the end of the name's year, the renew that would outlive it renews the name too
+        vm.warp(nameExpiry - 12 hours);
+        vm.prank(fee);
+        castle.claim(); // fee's lease lapsed long ago: a fresh claim, still inside the name's year
+        assertEq(registry.getExpiry(id), block.timestamp + castle.NAME_PERIOD(), "claim outliving the name renews it");
+    }
+
+    function test_lapsedNameIsRegisteredAgain() public {
+        vm.prank(fee);
+        castle.claim();
+        uint256 id = castle.LABEL_ID();
+        vm.warp(registry.getExpiry(id));
+        assertEq(registry.getOwner(id), address(0));
+        _name("fi", fi); // the crew's own names are a year long too: fi renews its name
+        vm.prank(fi);
+        castle.claim();
+        assertEq(registry.getOwner(id), address(castle));
+        assertEq(registry.getExpiry(id), block.timestamp + castle.NAME_PERIOD());
+    }
+
+    function test_revert_onlyTheRegistryMayMintToCastle() public {
+        vm.expectRevert(Castle.BadConfig.selector);
+        castle.onERC1155Received(address(0), address(0), 1, 1, "");
+        vm.prank(address(registry));
+        assertEq(castle.onERC1155Received(address(0), address(0), 1, 1, ""), castle.onERC1155Received.selector);
+    }
+
+    function test_revert_leaseLongerThanTheName() public {
+        Castle.Config memory cfg = _config(true);
+        cfg.leasePeriod = 365 days + 1;
+        vm.expectRevert(Castle.BadConfig.selector);
+        new Castle(cfg);
     }
 
     function test_renewWithFoAttestation() public {
@@ -396,22 +455,6 @@ abstract contract CastleUnitBase is CastleHelpers {
         vm.prank(fi);
         vm.expectPartialRevert(ICastleLease.BadAttestation.selector);
         castle.renew(next, deadline, staleSig);
-    }
-
-    function test_revert_configWithoutRegistryEpoch() public {
-        // v2's fallback counter is gone: the epoch is always the registry's regenerated token id
-        vm.expectRevert(Castle.BadConfig.selector);
-        new Castle(_config(false));
-    }
-
-    function test_revert_registryDidNotRegenerate() public {
-        registry.setRegenerate(false);
-        vm.prank(fee);
-        uint256 ep = castle.claim();
-        vm.warp(castle.expiry());
-        vm.prank(fi);
-        vm.expectRevert(abi.encodeWithSelector(Castle.EpochNotRegenerated.selector, ep));
-        castle.claim();
     }
 
     function test_namehashes() public view {
@@ -1106,22 +1149,6 @@ abstract contract CastleUnitBase is CastleHelpers {
         vm.prank(fee);
         vm.expectRevert(abi.encodeWithSelector(ICastleLease.HolderUnresponsive.selector, deadline));
         castle.renew(next, uint64(block.timestamp + 30), sig);
-    }
-
-    function test_revert_earlyClaimNeedsTheUnregisterRole() public {
-        Castle c = new Castle(_config(true));
-        registry.grantRootRoles(ENSv2Roles.REGISTRY_REGISTRAR | ENSv2Roles.REGISTRY_RENEW, address(c));
-        _crew(c);
-        vm.prank(fee);
-        c.claim();
-        vm.prank(fi);
-        uint64 deadline = c.challenge();
-        vm.warp(deadline);
-        vm.prank(fi);
-        vm.expectRevert(
-            abi.encodeWithSelector(MockENSv2Registry.Unauthorized.selector, ENSv2Roles.REGISTRY_UNREGISTER, address(c))
-        );
-        c.claim();
     }
 
     function test_revert_liveFeeAboveTheWindDownFee() public {

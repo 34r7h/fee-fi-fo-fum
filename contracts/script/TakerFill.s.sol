@@ -10,6 +10,7 @@ import { TakerTraitsLib } from "@1inch/swap-vm/src/libs/TakerTraits.sol";
 /// @notice A taker fill against one of Castle's strategies: quote, then swap exact-in, and require swap == quote.
 /// @dev STRATEGY is the `strategy` bytes of Aqua's Shipped(maker, app, strategyHash, strategy) event, i.e.
 ///      abi.encode(ISwapVM.Order). TOKEN_IN / TOKEN_OUT / AMOUNT_IN pick the direction; TAKER_PK signs.
+///      HEARTBEAT (v3) is the castle service's latest validUntil|holderSig|foSig; without it the fill winds down.
 contract TakerFill is Script {
     function run() external returns (uint256 amountIn, uint256 amountOut) {
         string memory network = vm.envOr("NETWORK", string("sepolia"));
@@ -22,7 +23,7 @@ contract TakerFill is Script {
         uint256 amount = vm.envUint("AMOUNT_IN");
         uint256 pk = vm.envUint("TAKER_PK");
         address taker = vm.addr(pk);
-        bytes memory takerData = _takerData(taker);
+        bytes memory takerData = _takerData(taker, vm.envOr("HEARTBEAT", bytes("")));
 
         (, uint256 quoted,) = router.quote(order, tokenIn, tokenOut, amount, takerData);
         console2.log("quote out", quoted);
@@ -37,7 +38,7 @@ contract TakerFill is Script {
         console2.log("swap out", amountOut);
     }
 
-    function _takerData(address taker) internal pure returns (bytes memory) {
+    function _takerData(address taker, bytes memory heartbeat) internal pure returns (bytes memory) {
         return TakerTraitsLib.build(
             TakerTraitsLib.Args({
                 taker: taker,
@@ -57,7 +58,7 @@ contract TakerFill is Script {
                 postTransferOutHookData: "",
                 preTransferInCallbackData: "",
                 preTransferOutCallbackData: "",
-                instructionsArgs: "",
+                instructionsArgs: heartbeat,
                 signature: ""
             })
         );

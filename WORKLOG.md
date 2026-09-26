@@ -7,7 +7,7 @@ This is the running record of the fee-fi-fo-fum build: what was done, who did it
 - **Spec:** [docs/PLAN.md](docs/PLAN.md) (research, Option A) plus the handoff board, which wins where they differ. Naming: [docs/NAMING.md](docs/NAMING.md)
 - **Deadline:** Sun 27 Sep 09:00 JST (00:00 UTC)
 - **Pre-existing product:** handoff (private), baseline `079f8f0` (2026-09-25 17:09 JST)
-- **Last regenerated:** 2026-09-26 15:26 JST
+- **Last regenerated:** 2026-09-26 15:28 JST
 
 Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified). Owner is the planned owner; Assignee is the agent that has claimed the task on the board.
 
@@ -107,7 +107,7 @@ Status key: `todo`, `in_progress`, `review` (pending verification), `done` (veri
 
 ## Agents
 
-Live balances read at block 11784438.
+Live balances read at block 11784448.
 
 | Agent | handoff id | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -308,3 +308,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 15:27 | SirKit | Checked the URL (200), the castle service /health and /state (live snapshot at block 11784435) and the README link. Sent p5-live to handoff-advisor for a clean-browser validation. |
 | Sat 15:28 | agent-smith | R1 finished: the castle EOA revoked UNREGISTER_ADMIN, SET_RESOLVER(+admin) and SET_SUBREGISTRY(+admin) in one tx ([0x5973bca0…](https://sepolia.etherscan.io/tx/0x5973bca0ee11925f48a9d5b2e05d7185067e77879b4b2e7eec996cd182bdae9a)). |
 | Sat 15:29 | SirKit | Read every revoked bit back on-chain (20, 24, 140, 148, 152 and 4096 are all false; REGISTRAR true). Sent korg the README R1 update. |
+| Sat 15:32 | agy | Second independent validation on live Sepolia, all PASS. p1-baton: claim as fo and as a random address reverts NotCrew; multicall with transfer reverts SelectorNotAllowed; root roles true. p1-fence: 9/9 tests. p4-crewhook: agy's own name passes, unnamed → Unnamed, wrong owner → NotNameOwner. Full suite 149/149. |

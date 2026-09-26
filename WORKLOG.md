@@ -144,7 +144,7 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Time | Contribution |
 |---|---|
 | Sat 04:25Z | Ruled that nothing for the entry goes in the handoff repo; all work lives in feefifofum |
-| Sat 04:40Z | Renamed the entry fee-fi-fo-fum, with a storybook voice for forward-facing copy (replaced at 14:35Z by the plain-writing rule) |
+| Sat 04:40Z | Renamed the entry fee-fi-fo-fum, with a storybook voice for forward-facing copy (replaced at 14:24Z by the plain-writing rule) |
 | Sat 04:47Z | Funded the treasury with 20 Circle Sepolia USDC (tx 0x1dc2132a810bd8f2551e337193a446bb507478f9d2be5a4dcc522f1e95fb4884) |
 | Sat 05:00Z | Funded the treasury with 0.05 Sepolia ETH and a further 20 USDC |
 | Sat 05:05Z | Sent Sepolia ETH to the treasury 0xc3Af4CCa3ba691C74F18fa8D3a7ad6816eC65dF2 |

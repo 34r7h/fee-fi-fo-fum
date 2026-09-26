@@ -8,7 +8,7 @@ The running record of the feefifofum build: what was done, who did it, which com
 - **Deadline:** Sun 27 Sep 00:00 UTC
 - **Pre-existing product:** handoff (private), baseline `079f8f0`
 - **Earlier product:** the lease edition, retired at 10:51Z on Sat 26 Sep. Its code and full worklog are at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition).
-- **Last regenerated:** Sat 11:14Z
+- **Last regenerated:** Sat 11:15Z
 
 All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified).
 
@@ -82,7 +82,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 ## Wallets
 
-Live balances read at block 11785877.
+Live balances read at block 11785879.
 
 | Wallet | handoff agent | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -144,13 +144,13 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 07:30Z | Gas spend is unacceptable: cut every non-essential live tx |
 | Sat 07:48Z | Approved ~0.011 ETH for a Castle v3 redeploy (zero idle liveness gas) once fork-tested |
 | Sat 10:51Z | Retired the lease edition (tag lease-edition) and pivoted the entry to agy's architecture brief: one Aqua balance backing many quotes, ENS CCIP-Read quote discovery and v4 JIT fills. Kept the Castle Tapestry design and motif, cleared the other agents' memory, and asked for a new handoff project, feefifofum, with tasks oriented to the best agent for each |
-| Sat 11:15Z | Removed handoff-advisor from the swarm |
+| Sat 11:05Z | Removed handoff-advisor from the swarm |
 
 ## Log
 
 | Time | Who | What |
 |---|---|---|
 | Sat 11:00Z | SirKit | New handoff project feefifofum de902056 (7 goals, 18 tasks), team team_da74ee43; assignments sent; agy's brief committed as docs/PIVOT.md (77d2b85); old main tagged lease-edition (a5fc4e7) |
-| Sat 11:20Z | korg | Research gates measured on a fork: v4 Sepolia addresses by eth_getCode; 0x67Cc registers quote with a custom resolver in one call; UniversalResolverV2 surfaces OffchainLookup for text() when the resolver advertises IExtendedResolver; no UniswapX on Sepolia |
-| Sat 11:35Z | SirKit | docs/SPEC.md locked (d2c5eac, 7c3a6fd): CastleVault with leverage caps, PriceExtruction, CastleJITHook, OffchainQuoteResolver; quote format; gateway; crew duties; demo; 0.02 ETH gas ceiling; cut lines |
-| Sat 11:45Z | SirKit | Verified korg's research (re-ran contracts/probes/quote-register on a live Sepolia fork: 1 passed). Board: 16 of 18 tasks claimed. WORKLOG and AI_USAGE switched to this product; the lease edition's record stays at tag lease-edition. |
+| Sat 11:10Z | korg | Research gates measured on a fork: v4 Sepolia addresses by eth_getCode; 0x67Cc registers quote with a custom resolver in one call; UniversalResolverV2 surfaces OffchainLookup for text() when the resolver advertises IExtendedResolver; no UniswapX on Sepolia |
+| Sat 11:12Z | SirKit | docs/SPEC.md locked (d2c5eac, 7c3a6fd): CastleVault with leverage caps, PriceExtruction, CastleJITHook, OffchainQuoteResolver; quote format; gateway; crew duties; demo; 0.02 ETH gas ceiling; cut lines |
+| Sat 11:14Z | SirKit | Verified korg's research (re-ran contracts/probes/quote-register on a live Sepolia fork: 1 passed). Board: 16 of 18 tasks claimed. WORKLOG and AI_USAGE switched to this product; the lease edition's record stays at tag lease-edition. |

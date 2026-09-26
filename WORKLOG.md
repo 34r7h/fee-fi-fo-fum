@@ -8,7 +8,7 @@ The running record of the feefifofum build: what was done, who did it, which com
 - **Deadline:** Sun 27 Sep 00:00 UTC
 - **Pre-existing product:** handoff (private), baseline `079f8f0`
 - **Earlier product:** the lease edition, retired at 10:51Z on Sat 26 Sep. Its code and full worklog are at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition).
-- **Last regenerated:** Sat 12:07Z
+- **Last regenerated:** Sat 12:13Z
 
 All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified).
 
@@ -86,7 +86,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 ## Wallets
 
-Live balances read at block 11786121.
+Live balances read at block 11786148.
 
 | Wallet | handoff agent | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -104,9 +104,9 @@ Live balances read at block 11786121.
 
 | Item | Value |
 |---|---|
-| Castle service | https://handoff.lol/t/castle/ |
-| Gateway (ERC-3668) | https://handoff.lol/t/castle/ccip/{sender}/{data}.json |
-| Miniapp | pending m-miniapp |
+| Castle service | https://handoff.lol/t/castle/ (health: fiKeyLoaded true, stream v2) |
+| Gateway (ERC-3668) | https://handoff.lol/t/castle/ccip/{sender}/{data}.json: live; getEnsText(quote.feefifofum.eth, castle) through UniversalResolverV2 returns the vault (checked by SirKit) |
+| Miniapp | --live build reads sepolia.json (e7da5ea); publish after a-live |
 
 ## Documentation
 
@@ -175,3 +175,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 12:07Z | agent-smith | quote.feefifofum.eth registered from 0x67Cc with the OffchainQuoteResolver (block 11786115, 0.000144 ETH). SirKit checked on live Sepolia: getResolver(quote) is 0x2D18…A76a, and UniversalResolverV2 reverts OffchainLookup (0x556f1830). With CCIP-Read on, it reaches the gateway, which answers 404 until agent-smith pushes it (ETA 12:30Z). |
 | Sat 12:07Z | handoff-claude | fi's key is on helen at a 0600 path outside the checkout (it derives 0xB6eA…40b2), set through a systemd drop-in with CASTLE_FI_KEY_PATH. |
 | Sat 12:07Z | SirKit | c-deploy verified on-chain. The total live spend so far is 0.006927 ETH (deploy) plus 0.000144 ETH (register), or 0.007071 ETH of the 0.02 ETH ceiling. |
+| Sat 12:13Z | agent-smith | Gateway, stream v2 and MCP tools pushed (2d44311..bab6080) and live on helen through castle-sync; /health reports fiKeyLoaded true. SirKit resolved quote.feefifofum.eth text(castle) on live Sepolia through UniversalResolverV2 and CCIP-Read, and it returned 0x0fa4…7A98. |

@@ -46,17 +46,28 @@ function mcpServer() {
   return server;
 }
 
+// SSE. Behind a proxy that buffers whole responses (the handoff tunnel relays a response only once it ends),
+// a never-ending stream would never arrive. CASTLE_SSE_WINDOW_MS (or ?window=ms) closes each response after
+// that window; EventSource reconnects on its own with Last-Event-ID (retry: 250), so the page still sees every
+// event in order, just batched per window. 0 (the default) is a normal persistent stream.
 function sse(req, res) {
+  const url = new URL(req.url, 'http://x');
+  const windowMs = Number(url.searchParams.get('window') ?? process.env.CASTLE_SSE_WINDOW_MS ?? 0);
   res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache, no-transform', connection: 'keep-alive', 'x-accel-buffering': 'no', ...CORS });
   const frame = (ev) => res.write(`id: ${ev.seq}\nevent: ${ev.type}\ndata: ${json(ev)}\n\n`);
-  const snap = snapshot();
-  res.write(`id: ${snap.seq}\nevent: snapshot\ndata: ${json(snap)}\n\n`);
-  const last = Number(req.headers['last-event-id'] || new URL(req.url, 'http://x').searchParams.get('since') || NaN);
-  if (Number.isFinite(last)) for (const ev of since(last)) frame(ev);
+  const last = Number(req.headers['last-event-id'] || url.searchParams.get('since') || NaN);
+  if (windowMs > 0) res.write('retry: 250\n\n');
+  if (Number.isFinite(last)) {
+    for (const ev of since(last)) frame(ev);   // a resume: the missed events, no second snapshot
+  } else {
+    const snap = snapshot();
+    res.write(`id: ${snap.seq}\nevent: snapshot\ndata: ${json(snap)}\n\n`);
+  }
   const on = (ev) => frame(ev);
   bus.on('event', on);
   const ping = setInterval(() => res.write(': ping\n\n'), 15_000);
-  req.on('close', () => { clearInterval(ping); bus.off('event', on); });
+  const end = windowMs > 0 ? setTimeout(() => res.end(), windowMs) : null;
+  req.on('close', () => { clearInterval(ping); clearTimeout(end); bus.off('event', on); });
 }
 
 const srv = http.createServer(async (req, res) => {

@@ -132,9 +132,13 @@ const str = (v) => (v == null ? null : v.toString());
 async function scan(from, to) {
   const castle = addr('castle');
   const aqua = addr('aqua');
-  const [castleLogs, aquaLogs, ...ccaLogs] = await Promise.all([
-    logsFor(castle, from, to), logsFor(aqua, from, to), ...[...auctions].map((a) => logsFor(a, from, to)),
-  ]);
+  const [castleLogs, aquaLogs] = await Promise.all([logsFor(castle, from, to), logsFor(aqua, from, to)]);
+  // An auction Castle opens in this range is watched from this range on, so bids in its first blocks are not missed.
+  for (const l of castleLogs) {
+    const d = tryDecode('Castle', l);
+    if (evName(d) === 'AuctionOpened') auctions.add(getAddress(arg(d, 'auction')));
+  }
+  const ccaLogs = await Promise.all([...auctions].map((a) => logsFor(a, from, to)));
   const all = [...castleLogs, ...aquaLogs, ...ccaLogs.flat()]
     .sort((a, b) => (a.blockNumber === b.blockNumber ? a.logIndex - b.logIndex : a.blockNumber < b.blockNumber ? -1 : 1));
 
@@ -177,18 +181,34 @@ async function scan(from, to) {
           center: (arg(d, 'anchorQ96', 'centerQ96') ?? 0n) > 0n ? priceView(arg(d, 'anchorQ96', 'centerQ96')) : null, weth: str(arg(d, 'weth')), usdc: str(arg(d, 'usdc')),
         }, meta);
       } else if (/AuctionOpened$/.test(n)) {
+        // Castle v3: AuctionOpened(auction, epoch, amount, floorQ96, endBlock, dissolution); the CCA starts in this block.
         const auction = getAddress(arg(d, 'auction'));
         auctions.add(auction);
+        const dissolution = arg(d, 'dissolution');
         emit('auction.opened', {
-          auction, kind: Number(arg(d, 'kind')) === 1 ? 'dissolution' : 'shift-change', amount: str(arg(d, 'amount')),
-          floor: arg(d, 'floorQ96') != null ? priceView(arg(d, 'floorQ96')) : null,
-          startBlock: Number(arg(d, 'startBlock') ?? 0), endBlock: Number(arg(d, 'endBlock') ?? 0), hook: addr('jackHook'),
+          auction, kind: dissolution === true || Number(arg(d, 'kind')) === 1 ? 'dissolution' : 'shift-change', amount: str(arg(d, 'amount')),
+          floor: arg(d, 'floorQ96') != null ? priceView(arg(d, 'floorQ96')) : null, epoch: str(arg(d, 'epoch')),
+          startBlock: Number(arg(d, 'startBlock') ?? block), endBlock: Number(arg(d, 'endBlock') ?? 0), hook: addr('jackHook'),
+        }, meta);
+      } else if (/AuctionSettled$/.test(n)) {
+        // settleAuction(): the CCA's currency and unsold WETH swept home; a graduated auction's clearing price goes to ENS.
+        const clearing = arg(d, 'clearingPriceQ96');
+        emit('auction.cleared', {
+          auction: getAddress(arg(d, 'auction')), clearing: clearing != null ? priceView(clearing) : null, sold: null,
+          raised: str(arg(d, 'currencyRaised')), priceWritten: Boolean(arg(d, 'priceWritten')),
+          settledBy: agentByAddr((await client.getTransaction({ hash: log.transactionHash })).from) || (await client.getTransaction({ hash: log.transactionHash })).from,
         }, meta);
       } else if (/PriceWritten$/.test(n)) {
         const q = arg(d, 'priceQ96');
         emit('price.written', { key: 'handoff-price', value: toHex(q ?? 0n, { size: 32 }), price: priceView(q) }, meta);
       } else if (/Dissolved$/.test(n)) {
-        emit('castle.dissolved', { caller: arg(d, 'caller'), auction: arg(d, 'auction') ?? null }, meta);
+        // v3: Dissolved(epoch, strategiesDocked, weth), then AuctionOpened for the whole WETH in the same tx.
+        const opened = castleLogs.find((l) => l.transactionHash === log.transactionHash && evName(tryDecode('Castle', l)) === 'AuctionOpened');
+        emit('castle.dissolved', {
+          caller: arg(d, 'caller') ?? (await client.getTransaction({ hash: log.transactionHash })).from,
+          auction: arg(d, 'auction') ?? (opened ? getAddress(arg(tryDecode('Castle', opened), 'auction')) : null),
+          epoch: str(arg(d, 'epoch')), strategiesDocked: str(arg(d, 'strategiesDocked')), weth: str(arg(d, 'weth')),
+        }, meta);
       }
       continue;
     }

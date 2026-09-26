@@ -20,8 +20,8 @@ import { OffchainQuoteResolver } from "../src/OffchainQuoteResolver.sol";
 ///         CREATE2 deployer at a mined address carrying exactly its flags, and the Castle's v4 pool initialized with no
 ///         liquidity. Registering `quote` is the registrar's own tx (0x67Cc), sent separately.
 /// @dev The deployer keeps no role: the treasury owns the vault and the resolver, fi ships and signs, fum bounds.
-///      forge script script/DeployHoard.s.sol --rpc-url <rpc> --account <keystore> --sender <deployer> [--broadcast]
-///      (fork rehearsal: --rpc-url <anvil fork> --unlocked --sender <deployer> --broadcast).
+///      live:  DEPLOYER_PK=… forge script script/DeployHoard.s.sol --rpc-url <sepolia> [--broadcast]
+///      fork:  forge script script/DeployHoard.s.sol --rpc-url <anvil fork> --unlocked --sender <deployer> --broadcast
 contract DeployHoard is Script {
     address internal constant AQUA = 0x1111113CCf1426A8E30e2bfF5E005d929bF6a90a;
     address internal constant ROUTER = 0xeDB6933949dB941D495b23604818F9AbF55e70f9;
@@ -52,7 +52,10 @@ contract DeployHoard is Script {
             require(a.code.length > 0, "an external contract has no code here");
         }
 
-        vm.startBroadcast();
+        // the live key comes from DEPLOYER_PK in the environment, never from a file in the repo or the command line
+        uint256 pk = vm.envOr("DEPLOYER_PK", uint256(0));
+        if (pk != 0) vm.startBroadcast(pk);
+        else vm.startBroadcast();
         d.priceExtruction = new PriceExtruction();
         d.vault = new CastleVault(AQUA, ROUTER, WETH, USDC, OWNER, FI, FUM);
         string[] memory urls = new string[](1);

@@ -8,7 +8,7 @@ The running record of the feefifofum build: what was done, who did it, which com
 - **Deadline:** Sun 27 Sep 00:00 UTC
 - **Pre-existing product:** handoff (private), baseline `079f8f0`
 - **Earlier product:** the lease edition, retired at 10:51Z on Sat 26 Sep. Its code and full worklog are at tag [`lease-edition`](https://github.com/34r7h/fee-fi-fo-fum/tree/lease-edition).
-- **Last regenerated:** Sat 20:02Z
+- **Last regenerated:** Sat 20:17Z
 
 All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verification), `done` (verified).
 
@@ -90,7 +90,7 @@ All times are UTC. Status key: `todo`, `in_progress`, `review` (pending verifica
 
 ## Wallets
 
-Live balances read at block 11788430.
+Live balances read at block 11788502.
 
 | Wallet | handoff agent | Sepolia address | ENSv2 name | Funding txs | Live balance (ETH / USDC / WETH) |
 |---|---|---|---|---|---|
@@ -168,6 +168,10 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 14:05Z | Filled in the ETHGlobal submission with SirKit (project details, images, tech stack, prizes: Continuity, Top 10 and partner prizes for ENS, Uniswap Foundation and 1inch, grants and incubator interest), rejected the first draft of the copy as AI-style prose and had it rewritten plainly |
 | Sat 14:18Z | Asked for a 3–4 minute screencast of the dapp as the demo video, with a voiceover and captions the operator will redub from, re-recorded from scratch whenever an issue turns up |
 | Sat 14:24Z | Ruled that no AI-slop prose ('broetry') may appear anywhere a person might read: the demo, the README, the docs, the apps and the deck |
+| Sat 15:41Z | Asked for the handoff and xmbl logos, small, at the bottom left of the cover image, in the style of the ETHGlobal showcase cards |
+| Sat 15:50Z | Asked that the demo video also show the handoff project and its agents, as a short account of how the entry was built |
+| Sat 17:56Z | Submitted the Uniswap developer feedback form with the link to FEEDBACK.md |
+| Sat 18:02Z | Asked for every agent to be funded for four live demos, and at 18:04Z for the operator's own wallet 0x7bAb…9879 to get what a user needs for them, which took the spend past the 0.02 ETH ceiling |
 
 ## Log
 
@@ -220,3 +224,4 @@ ETHGlobal may exclude entries that rely entirely on AI. The operator's own decis
 | Sat 18:08Z | SirKit | The operator's own wallet 0x7bAb…9879 was funded to present the dapp as a user in the four demos. The treasury sent it 0.008 ETH (0xcfab7f81…776e) and 0.3 USDC (0x41b5eadd…5f1f), and gave the five demo wallets from the video takes enough gas (0.00045 ETH in all) to send it their leftover 2.09 USDC and 0.0005 WETH in eight transfers. The wallet then held 0.0574 ETH, 17.39 USDC and 0.001316 WETH, which covers four fills and four swaps in either direction. Spend: 0.0319 ETH, above the 0.02 ETH ceiling by the operator's instruction. |
 | Sat 18:14Z | SirKit | At 18:08Z the operator's wallet swapped 5 USDC into the hen, 20 times a demo trade, for 0.000816 WETH at about 6,127 USDC per WETH (0xf83e…2971). The vault was left with about 0.00076 WETH, and fum docked harp, so quote.feefifofum.eth had nothing to price. The treasury wrapped 0.003 ETH (0x677e5ca6…13cd) and sent the WETH to the vault (0x0307a932…91ba), which then held 0.003762 WETH and 10.91 USDC. fi shipped harp again (0xe6f1101e…9a55, block 11787888) and re-centred hen (0x47904b60…70a8, block 11787889), each at fum's slot caps of 5 USDC and 0.001859 WETH, 0.99x the balance in all, and quote:USDC:WETH:250000 resolves again through ENS (q-1790446470-96). Demo trades stay at 0.25 USDC or 0.0001 WETH. Spend: 0.0349 ETH, above the 0.02 ETH ceiling by the operator's instruction. |
 | Sat 20:02Z | SirKit | v-dapp verified. agy's test of the published dapp 2.0.2 sent four transactions from 0xDDf2…AE4c at a 1.8 gwei maximum fee, and all four succeeded: approve 0x66f9863b…850d, RFQ fill 0x84bd78b6…1414 with Aqua's Pulled and Pushed, approve 0x9dd4e78a…3b5e, and v4 swap 0x2cc0d568…b86c with JitFill, the PoolManager Swap and Aqua's Pulled and Pushed. agy did not answer by the 20:00Z deadline for fixing its write-up, so SirKit rewrote docs/e2e/dapp/README.md in plain prose, corrected the swap hash and removed two duplicate screenshots (79f0da3). 20 of 22 tasks are verified; s-ai (SirKit) and s-submit (the operator) remain. |
+| Sat 20:17Z | SirKit | s-ai reconcile: AI_USAGE.md checked against git log, git blame and the board. It now gives the commit counts per identity (172 from the operator's local identity, all made by agents, and 72 empty task-sync commits), the blamed lines per path and author, the demo video and its tools, LICENSE, the rewrite of the dapp validation record, and the operator's later decisions. The video recorder and composer, the narration and take 5's records are committed under tools/demo-video/. |

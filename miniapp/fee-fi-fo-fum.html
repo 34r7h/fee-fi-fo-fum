@@ -393,9 +393,14 @@ table.led{width:100%;border-collapse:collapse;font-size:14px}
       if (i >= urls.length) return Promise.reject(new Error('No Sepolia RPC answered. Try again in a moment.'));
       var u = urls[(rpcAt + i) % urls.length];
       return fetch(u, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: ++rid, method: method, params: params || [] }) })
-        .then(function (r) { return r.json(); }, function () { return null; })
-        .then(function (j) {
-          if (!j) { rpcAt = (rpcAt + i + 1) % urls.length; return go(i + 1); }
+        .then(function (r) { return r.json().then(function (j) { return { status: r.status, j: j }; }, function () { return null; }); }, function () { return null; })
+        .then(function (x) {
+          // A public RPC that is rate-limited or down hands the read to the next one. A revert (it carries data, and
+          // CCIP-Read needs its OffchainLookup) is an answer, not an outage, so it is thrown as before.
+          var j = x && x.j, er = j && j.error;
+          var busy = !j || typeof j !== 'object' || (!er && !('result' in j)) || x.status === 429 ||
+            (er && er.data == null && (x.status >= 500 || /rate.?limit|too many|limit exceeded|exceeded .*limit|usage limit|capacity|free plan/i.test(er.message || '')));
+          if (busy) { rpcAt = (rpcAt + i + 1) % urls.length; return go(i + 1); }
           if (j.error) { var e = new Error(j.error.message || 'RPC error'); e.code = j.error.code; e.data = j.error.data; throw e; }
           return j.result;
         });

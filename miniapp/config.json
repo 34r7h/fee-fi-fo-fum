@@ -5,7 +5,7 @@
   "rpcs": [
     "https://ethereum-sepolia-rpc.publicnode.com",
     "https://sepolia.gateway.tenderly.co",
-    "https://ethereum-sepolia.gateway.tatum.io"
+    "https://sepolia.rpc.thirdweb.com"
   ],
   "decimals": {
     "USDC": 6,

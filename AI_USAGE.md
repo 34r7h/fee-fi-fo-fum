@@ -63,7 +63,7 @@ Commits authored `34r7h <i34r7h@gmail.com>` (174 of them as of the reconcile com
 | contracts/probes/ | korg (238) | yes | The quote-register and UniversalResolverV2 fork probe |
 | service/ | agent-smith (1341), mister-anderson (650), handoff-claude (493) | yes | The castle service. agent-smith wrote the ERC-3668 gateway, stream v2 and the MCP tools, mister-anderson wrote lib/ccip-sign.mjs and its tests, and handoff-claude wrote the original scaffold and the host deploy notes. |
 | agents/ | agent-smith (2707), agy (15) | yes | fee, fi, fo and fum, crew-fork.sh, jack.mjs, and the fork-run and live-run records. agy's 15 lines are a surviving part of roles/fo.mjs from a lease-edition commit (6376485). |
-| miniapp/ | impecc (2311), agent-smith (1047) | yes | impecc wrote fee-fi-fo-fum.html (the dapp), fee-fi-fo-fum-tale.html (the replay), build.mjs, config.json and most of STREAM.md. agent-smith wrote lib/dapplib.js, the dependency-free browser library the dapp inlines, with its tests. |
+| miniapp/ | impecc (2311), agent-smith (1047) | yes | impecc wrote fee-fi-fo-fum.html (the dapp), fee-fi-fo-fum-tale.html (the replay), build.mjs, config.json and most of STREAM.md. agent-smith wrote lib/dapplib.js, the dependency-free browser library the dapp inlines, with its tests. SirKit wrote the RPC failover in the dapp's read() for 2.0.3, after the deadline, when a rate-limited RPC broke the quotes during judging. |
 | docs/SPEC.md, docs/NAMING.md | SirKit (362) | yes | The locked build scope, and the writing rule with the map of names |
 | docs/PIVOT.md | agy, committed by SirKit (27) | yes | The architecture brief, verbatim |
 | docs/research.md | korg (143) | yes | The research gates |
